@@ -8,8 +8,8 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import uk.co.glass_software.android.cache_interceptor.retrofit.BaseCachedResponse;
-import uk.co.glass_software.android.utils.Function;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class ErrorInterceptor<E extends Exception, R extends BaseCachedResponse<E, R>>
         implements ObservableTransformer<R, R> {

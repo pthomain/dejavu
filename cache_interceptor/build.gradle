@@ -14,13 +14,40 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        consumerProguardFiles 'proguard-rules-lib.pro'
     }
 
     buildTypes {
         release {
+            shrinkResources true
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+            multiDexEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+        exclude 'META-INF/eclipse.inf'
+        exclude 'about_files/LICENSE-2.0.txt'
+        exclude 'plugin.xml'
+        exclude 'plugin.properties'
+    }
+
+    configurations.all {
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.1'
+        resolutionStrategy.force 'com.google.guava:guava:20.0'
     }
 
     compileOptions {

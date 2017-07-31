@@ -13,13 +13,14 @@ import java.util.Map;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
 import uk.co.glass_software.android.cache_interceptor.retrofit.BaseCachedResponse;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
-import uk.co.glass_software.android.utils.Function;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class CacheInterceptorBuilder<E extends Exception> {
     
     private final static String DATABASE_NAME = "http_cache.db";
-    private final ErrorInterceptor.Factory<E> errorInterceptorFactory;
+    private final Function<Throwable, E> errorFactory;
+    private final Class<E> errorClass;
     private final Function<E, Boolean> isNetworkError;
     
     private long timeToLiveInMinutes = 5;
@@ -27,15 +28,12 @@ public class CacheInterceptorBuilder<E extends Exception> {
     private Logger logger;
     private Gson gson;
     
-    public CacheInterceptorBuilder(Function<Throwable, E> errorFactory,
-                                   Class<E> errorClass,
-                                   Function<E, Boolean> isNetworkError) {
+    CacheInterceptorBuilder(Function<Throwable, E> errorFactory,
+                            Class<E> errorClass,
+                            Function<E, Boolean> isNetworkError) {
+        this.errorFactory = errorFactory;
+        this.errorClass = errorClass;
         this.isNetworkError = isNetworkError;
-        errorInterceptorFactory = new ErrorInterceptor.Factory<>(
-                errorFactory,
-                logger,
-                errorClass
-        );
     }
     
     public CacheInterceptorBuilder<E> gson(@NonNull Gson gson) {
@@ -104,6 +102,12 @@ public class CacheInterceptorBuilder<E extends Exception> {
                                                        Function<Class<? extends BaseCachedResponse>, String> apiUrlResolver) {
         CacheInterceptor.Factory<E> cacheInterceptorFactory = build(context);
         
+        ErrorInterceptor.Factory<E> errorInterceptorFactory = new ErrorInterceptor.Factory<>(
+                errorFactory,
+                getLogger(),
+                errorClass
+        );
+        
         return new RetrofitCacheAdapterFactory<>(
                 errorInterceptorFactory,
                 cacheInterceptorFactory,
@@ -117,22 +121,7 @@ public class CacheInterceptorBuilder<E extends Exception> {
             gson = new Gson();
         }
         
-        if (logger == null) {
-            logger = new Logger() {
-                @Override
-                public void e(Object caller, Throwable t, String message) {
-                }
-                
-                @Override
-                public void e(Object caller, String message) {
-                }
-                
-                @Override
-                public void d(Object caller, String message) {
-                }
-            };
-        }
-        
+        Logger logger = getLogger();
         
         SerialisationManager serialisationManager = new SerialisationManager(
                 logger,
@@ -164,5 +153,26 @@ public class CacheInterceptorBuilder<E extends Exception> {
                 true,
                 logger
         );
+    }
+    
+    private Logger getLogger() {
+        return logger != null
+               ? logger
+               : new Logger() {
+                   @Override
+                   public void e(Object caller, Throwable t, String message) {
+                
+                   }
+            
+                   @Override
+                   public void e(Object caller, String message) {
+                
+                   }
+            
+                   @Override
+                   public void d(Object caller, String message) {
+                
+                   }
+               };
     }
 }

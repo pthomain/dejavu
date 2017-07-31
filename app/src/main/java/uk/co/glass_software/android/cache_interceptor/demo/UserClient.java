@@ -5,7 +5,7 @@ import retrofit2.http.GET;
 
 public interface UserClient {
     
-    @GET
+    @GET("/")
     Observable<UserCachedResponse> get();
     
 }

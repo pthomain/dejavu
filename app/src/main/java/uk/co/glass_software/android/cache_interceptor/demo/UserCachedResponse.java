@@ -15,4 +15,8 @@ public class UserCachedResponse extends BaseCachedResponse<Exception, UserCached
         super(responseClass, apiUrl, cacheFactory);
     }
     
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

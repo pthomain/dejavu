@@ -9,8 +9,8 @@ import java.util.Date;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
-import uk.co.glass_software.android.utils.Function;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class CacheInterceptor<E extends Exception, R extends CacheToken.Holder<R, E>>
         implements ObservableTransformer<R, R> {

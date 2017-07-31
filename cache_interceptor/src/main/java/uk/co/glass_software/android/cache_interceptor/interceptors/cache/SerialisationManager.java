@@ -7,8 +7,8 @@ import com.google.gson.JsonSyntaxException;
 
 import org.iq80.snappy.Snappy;
 
-import uk.co.glass_software.android.utils.Action;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Action;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 class SerialisationManager {
     

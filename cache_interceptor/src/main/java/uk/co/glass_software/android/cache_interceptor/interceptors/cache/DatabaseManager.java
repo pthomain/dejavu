@@ -13,8 +13,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.reactivex.Observable;
-import uk.co.glass_software.android.utils.Function;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 

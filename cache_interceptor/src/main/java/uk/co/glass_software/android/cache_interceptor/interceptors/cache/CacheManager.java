@@ -8,8 +8,8 @@ import java.util.Date;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
-import uk.co.glass_software.android.utils.Function;
-import uk.co.glass_software.android.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 class CacheManager {
     
@@ -84,7 +84,7 @@ class CacheManager {
         return upstream
                 .doOnNext(response -> {
                     logger.d(this, "Finished fetching" + simpleName + ", now delivering");
-                    if (response.getError() != null) {
+                    if (response.getError() == null) {
                         Date fetchDate = dateFactory.get(null);
                         Date expiryDate = dateFactory.get(fetchDate.getTime() + timeToLiveInMs);
                         response.setCacheToken(CacheToken.caching(cacheToken,
@@ -96,7 +96,7 @@ class CacheManager {
                     }
                 })
                 .doAfterNext(response -> {
-                    if (response.getError() != null) {
+                    if (response.getError() == null) {
                         logger.d(this, simpleName + " successfully delivered, now caching");
                         databaseManager.cache(response);
                     }

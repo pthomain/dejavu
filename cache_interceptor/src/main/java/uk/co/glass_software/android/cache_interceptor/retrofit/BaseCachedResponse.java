@@ -14,7 +14,7 @@ public abstract class BaseCachedResponse<E extends Exception, R extends BaseCach
     
     @Nullable
     private final CacheInterceptor<E, R> interceptor;
- 
+    
     @Nullable
     private final E error;
     
@@ -65,5 +65,13 @@ public abstract class BaseCachedResponse<E extends Exception, R extends BaseCach
     @Override
     public E getError() {
         return error;
+    }
+    
+    @Override
+    public String toString() {
+        return "BaseCachedResponse{" +
+               "error=" + error +
+               ", token=" + cacheToken +
+               '}';
     }
 }

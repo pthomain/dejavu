@@ -10,7 +10,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 public class RetrofitCacheAdapterFactory<E extends Exception> extends CallAdapter.Factory {
     
@@ -45,13 +45,8 @@ public class RetrofitCacheAdapterFactory<E extends Exception> extends CallAdapte
             Type observableType = getParameterUpperBound(0, (ParameterizedType) returnType);
             Class<?> rawObservableType = getRawType(observableType);
             
-            if (rawObservableType == BaseCachedResponse.class) {
-                if (!(observableType instanceof ParameterizedType)) {
-                    throw new IllegalStateException("Response must be parameterized as BaseCachedResponse<Foo>");
-                }
-                Type responseType = getParameterUpperBound(0, (ParameterizedType) observableType);
-                
-                Class<? extends BaseCachedResponse> responseClass = (Class<? extends BaseCachedResponse>) getRawType(responseType);
+            if (BaseCachedResponse.class.isAssignableFrom(rawObservableType)) {
+                Class<? extends BaseCachedResponse> responseClass = (Class<? extends BaseCachedResponse>) rawObservableType;
                 
                 return new RetrofitCacheAdapter(errorFactory,
                                                 cacheInterceptorFactory,

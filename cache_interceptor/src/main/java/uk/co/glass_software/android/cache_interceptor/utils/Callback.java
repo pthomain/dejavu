@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.utils;
+package uk.co.glass_software.android.cache_interceptor.utils;
 
 public interface Callback<T> {
     

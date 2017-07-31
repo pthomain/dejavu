@@ -7,7 +7,7 @@ import retrofit2.Call;
 import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 class RetrofitCacheAdapter<E extends Exception, R extends BaseCachedResponse<E, R>>
         implements CallAdapter<R, Object> {
