@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.Map;
 
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.cache_interceptor.retrofit.BaseCachedResponse;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
@@ -20,20 +19,14 @@ public class CacheInterceptorBuilder<E extends Exception> {
     
     private final static String DATABASE_NAME = "http_cache.db";
     private final Function<Throwable, E> errorFactory;
-    private final Class<E> errorClass;
-    private final Function<E, Boolean> isNetworkError;
     
     private long timeToLiveInMinutes = 5;
     private String databaseName;
     private Logger logger;
     private Gson gson;
     
-    CacheInterceptorBuilder(Function<Throwable, E> errorFactory,
-                            Class<E> errorClass,
-                            Function<E, Boolean> isNetworkError) {
+    CacheInterceptorBuilder(Function<Throwable, E> errorFactory) {
         this.errorFactory = errorFactory;
-        this.errorClass = errorClass;
-        this.isNetworkError = isNetworkError;
     }
     
     public CacheInterceptorBuilder<E> gson(@NonNull Gson gson) {
@@ -98,21 +91,17 @@ public class CacheInterceptorBuilder<E extends Exception> {
         return values;
     }
     
-    public RetrofitCacheAdapterFactory<E> buildAdapter(Context context,
-                                                       Function<Class<? extends BaseCachedResponse>, String> apiUrlResolver) {
+    public RetrofitCacheAdapterFactory<E> buildAdapter(Context context) {
         CacheInterceptor.Factory<E> cacheInterceptorFactory = build(context);
         
         ErrorInterceptor.Factory<E> errorInterceptorFactory = new ErrorInterceptor.Factory<>(
                 errorFactory,
-                getLogger(),
-                errorClass
+                getLogger()
         );
         
         return new RetrofitCacheAdapterFactory<>(
                 errorInterceptorFactory,
-                cacheInterceptorFactory,
-                apiUrlResolver,
-                isNetworkError
+                cacheInterceptorFactory
         );
     }
     
@@ -156,23 +145,16 @@ public class CacheInterceptorBuilder<E extends Exception> {
     }
     
     private Logger getLogger() {
-        return logger != null
-               ? logger
-               : new Logger() {
-                   @Override
-                   public void e(Object caller, Throwable t, String message) {
-                
-                   }
+        return logger != null ? logger
+                              : new Logger() {
+                                  @Override
+                                  public void e(Object caller, Throwable t, String message) {}
             
-                   @Override
-                   public void e(Object caller, String message) {
-                
-                   }
+                                  @Override
+                                  public void e(Object caller, String message) {}
             
-                   @Override
-                   public void d(Object caller, String message) {
-                
-                   }
-               };
+                                  @Override
+                                  public void d(Object caller, String message) {}
+                              };
     }
 }

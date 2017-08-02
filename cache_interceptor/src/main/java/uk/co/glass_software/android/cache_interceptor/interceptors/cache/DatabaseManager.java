@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.reactivex.Observable;
+import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
@@ -47,8 +48,8 @@ class DatabaseManager {
     
     @Nullable
     @SuppressWarnings("unchecked")
-    <E, R extends CacheToken.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
-                                                               CacheToken cacheToken) {
+    <E extends Exception, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
+                                                                                       CacheToken cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
@@ -98,18 +99,18 @@ class DatabaseManager {
     
     @Nullable
     @SuppressWarnings("unchecked")
-    private <E, R extends CacheToken.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
-                                                            CacheToken<R> cacheToken,
-                                                            Date cacheDate,
-                                                            Date expiryDate,
-                                                            byte[] compressedData) {
+    private <E extends Exception, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
+                                                                                               CacheToken<R> cacheToken,
+                                                                                               Date cacheDate,
+                                                                                               Date expiryDate,
+                                                                                               byte[] compressedData) {
         R response = serialisationManager.uncompress(cacheToken.getResponseClass(),
                                                      compressedData,
                                                      this::flushCache
         );
         
         if (response != null) {
-            response.setCacheToken(CacheToken.cached(cacheToken,
+            response.getMetadata().setCacheToken(CacheToken.cached(cacheToken,
                                                      upstream,
                                                      cacheDate,
                                                      expiryDate
@@ -124,8 +125,8 @@ class DatabaseManager {
         return response;
     }
     
-    <E, R extends CacheToken.Holder<R, E>> void cache(R response) {
-        CacheToken<?> cacheToken = response.getCacheToken();
+    <E extends Exception, R extends ResponseMetadata.Holder<R, E>> void cache(R response) {
+        CacheToken<?> cacheToken = response.getMetadata().getCacheToken();
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Caching " + simpleName);
         

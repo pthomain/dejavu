@@ -46,6 +46,13 @@ public abstract class CacheToken<R> {
         }
     }
     
+    public interface Holder<R> {
+        void setCacheToken(@NonNull CacheToken<R> cacheToken);
+        
+        @NonNull
+        CacheToken<R> getCacheToken();
+    }
+    
     public static <R> CacheToken<R> newRequest(@NonNull Class<R> responseClass,
                                                @NonNull String apiUrl,
                                                @NonNull String... uniqueFields) {
@@ -168,14 +175,4 @@ public abstract class CacheToken<R> {
     
     @Override
     public abstract String toString();
-    
-    public interface Holder<R, E> {
-        
-        void setCacheToken(@NonNull CacheToken<R> cacheToken);
-        
-        CacheToken<R> getCacheToken();
-        
-        @Nullable
-        E getError();
-    }
 }

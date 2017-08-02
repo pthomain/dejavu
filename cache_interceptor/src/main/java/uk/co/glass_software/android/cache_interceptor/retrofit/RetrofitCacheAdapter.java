@@ -3,33 +3,28 @@ package uk.co.glass_software.android.cache_interceptor.retrofit;
 import java.lang.reflect.Type;
 
 import io.reactivex.Observable;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-class RetrofitCacheAdapter<E extends Exception, R extends BaseCachedResponse<E, R>>
+class RetrofitCacheAdapter<E extends Exception, R extends ResponseMetadata.Holder<R, E>>
         implements CallAdapter<R, Object> {
     
     private final Class<R> responseClass;
-    private final Function<Class<R>, String> apiUrlResolver;
-    private final Function<E, Boolean> isNetworkError;
     private final CallAdapter callAdapter;
     private final ErrorInterceptor.Factory<E> errorFactory;
-    private final CacheInterceptor.Factory interceptorFactory;
+    private final CacheInterceptor.Factory cacheFactory;
     
     RetrofitCacheAdapter(ErrorInterceptor.Factory<E> errorFactory,
-                         CacheInterceptor.Factory interceptorFactory,
+                         CacheInterceptor.Factory cacheFactory,
                          Class<R> responseClass,
-                         Function<Class<R>, String> apiUrlResolver,
-                         Function<E, Boolean> isNetworkError,
                          CallAdapter callAdapter) {
         this.errorFactory = errorFactory;
-        this.interceptorFactory = interceptorFactory;
+        this.cacheFactory = cacheFactory;
         this.responseClass = responseClass;
-        this.apiUrlResolver = apiUrlResolver;
-        this.isNetworkError = isNetworkError;
         this.callAdapter = callAdapter;
     }
     
@@ -42,12 +37,14 @@ class RetrofitCacheAdapter<E extends Exception, R extends BaseCachedResponse<E, 
     @SuppressWarnings("unchecked")
     public Object adapt(Call<R> call) {
         Observable<R> observable = (Observable<R>) callAdapter.adapt(call);
+        Request request = call.request();
+        
+        CacheToken<R> cacheToken = CacheToken.newRequest(responseClass,
+                                                         request.url().toString()
+        );
+        
         return observable
-                .compose(errorFactory.create(responseClass))
-                .compose(interceptorFactory.create(
-                        responseClass,
-                        apiUrlResolver.get(responseClass),
-                        isNetworkError
-                ));
+                .compose(errorFactory.create(cacheToken.getResponseClass()))
+                .compose(cacheFactory.create(cacheToken));
     }
 }

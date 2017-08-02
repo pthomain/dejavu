@@ -144,20 +144,21 @@ public class SimpleLogger implements Logger {
         }
     }
     
-    private String prettyPrint(String message) {
+    public String prettyPrint(String message) {
         if (message.contains("{")) {
+        
             int index = message.indexOf("{");
             int lastIndex = message.lastIndexOf("}");
             String messageBefore = message.substring(0, index);
             String messageMiddle = message.substring(index, lastIndex + 1);
             String messageAfter = message.substring(lastIndex + 1, message.length());
             return getPrettyJson(messageMiddle, messageBefore, messageAfter);
-        }
-        else {
+            }
+            else{
             return message;
+            }
         }
-    }
-    
+        
     private String getPrettyJson(String message,
                                  String messageBefore,
                                  String messageAfter) {
