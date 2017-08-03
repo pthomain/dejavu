@@ -1,17 +1,22 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
+import android.content.Context;
+
 import java.util.Date;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
+import uk.co.glass_software.android.cache_interceptor.utils.SimpleLogger;
 
 import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.DO_NOT_CACHE;
 
-public class CacheInterceptor<E extends Exception, R extends ResponseMetadata.Holder<R, E>>
+public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         implements ObservableTransformer<R, R> {
     
     private final CacheManager cacheManager;
@@ -63,7 +68,7 @@ public class CacheInterceptor<E extends Exception, R extends ResponseMetadata.Ho
         return cacheManager.getCachedResponse(upstream, cacheToken);
     }
     
-    public static class Factory<E extends Exception> {
+    public static class Factory<E extends Exception & Function<E, Boolean>> {
         
         private final CacheManager cacheManager;
         private final boolean isCacheEnabled;
@@ -86,11 +91,17 @@ public class CacheInterceptor<E extends Exception, R extends ResponseMetadata.Ho
         }
     }
     
-    public static <E extends Exception> CacheInterceptorBuilder<E> builder(Function<Throwable, E> errorFactory) {
+    public static <E extends Exception & Function<E, Boolean>> CacheInterceptorBuilder<E> builder(Function<Throwable, E> errorFactory) {
         return new CacheInterceptorBuilder<>(errorFactory);
     }
     
-    public static CacheInterceptorBuilder<Exception> builder() {
-        return new CacheInterceptorBuilder<>(throwable -> (Exception) throwable);
+    public static CacheInterceptorBuilder<ApiError> builder() {
+        return new CacheInterceptorBuilder<>(ApiError::new);
+    }
+    
+    public static RetrofitCacheAdapterFactory<ApiError> buildSimpleAdapterFactory(Context context) {
+        return new CacheInterceptorBuilder<>(ApiError::new)
+                .logger(new SimpleLogger(context))
+                .buildAdapter(context);
     }
 }

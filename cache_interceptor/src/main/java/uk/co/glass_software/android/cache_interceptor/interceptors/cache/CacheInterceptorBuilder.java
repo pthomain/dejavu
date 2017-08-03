@@ -15,7 +15,7 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdap
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
-public class CacheInterceptorBuilder<E extends Exception> {
+public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>> {
     
     private final static String DATABASE_NAME = "http_cache.db";
     private final Function<Throwable, E> errorFactory;
@@ -105,7 +105,7 @@ public class CacheInterceptorBuilder<E extends Exception> {
         );
     }
     
-    public CacheInterceptor.Factory<E> build(@NonNull Context context) {
+    private CacheInterceptor.Factory<E> build(@NonNull Context context) {
         if (gson == null) {
             gson = new Gson();
         }
@@ -121,17 +121,19 @@ public class CacheInterceptorBuilder<E extends Exception> {
                                                     databaseName == null ? DATABASE_NAME : databaseName
         ).getWritableDatabase();
         
+        Function<Long, Date> dateFactory = timestamp -> timestamp == null ? new Date() : new Date(timestamp);
+        
         DatabaseManager databaseManager = new DatabaseManager(
                 database,
                 serialisationManager,
                 logger,
-                Date::new,
+                dateFactory,
                 this::mapToContentValues
         );
         
         CacheManager cacheManager = new CacheManager(
                 databaseManager,
-                Date::new,
+                dateFactory,
                 gson,
                 logger,
                 timeToLiveInMinutes

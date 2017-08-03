@@ -12,6 +12,9 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.CACHED;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.STALE;
+
 class CacheManager {
     
     private final Function<Long, Date> dateFactory;
@@ -37,8 +40,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    <E extends Exception, R extends ResponseMetadata.Holder<R, E>> Observable<R> getCachedResponse(Observable<R> upstream,
-                                                                                                   @NonNull CacheToken<R> cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> getCachedResponse(Observable<R> upstream,
+                                                                                                                          @NonNull CacheToken<R> cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
@@ -56,7 +59,7 @@ class CacheManager {
             
             logger.d(this, "Found cached " + simpleName + ", status: " + status);
             
-            if (status == CacheToken.Status.STALE) {
+            if (status == STALE) {
                 return refreshStale(cachedResponse, upstream);
             }
             else {
@@ -66,17 +69,16 @@ class CacheManager {
     }
     
     @NonNull
-    <E extends Exception, R extends ResponseMetadata.Holder<R, E>> CacheToken.Status getCachedStatus(@NonNull CacheToken<R> cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheToken.Status getCachedStatus(@NonNull CacheToken<R> cacheToken) {
         Date expiryDate = cacheToken.getExpiryDate();
         if (expiryDate == null) {
-            return CacheToken.Status.STALE;
+            return STALE;
         }
-        return dateFactory.get(null).getTime() > expiryDate.getTime() ? CacheToken.Status.STALE
-                                                                      : CacheToken.Status.CACHED;
+        return dateFactory.get(null).getTime() > expiryDate.getTime() ? STALE : CACHED;
     }
     
-    private <E extends Exception, R extends ResponseMetadata.Holder<R, E>> Observable<R> fetchAndCache(Observable<R> upstream,
-                                                                                                       CacheToken<R> cacheToken) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> fetchAndCache(Observable<R> upstream,
+                                                                                                                              CacheToken<R> cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Fetching and caching new " + simpleName);
         
@@ -104,8 +106,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    private <E extends Exception, R extends ResponseMetadata.Holder<R, E>> Observable<R> refreshStale(R cachedResponse,
-                                                                                                      Observable<R> upstream) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> refreshStale(R cachedResponse,
+                                                                                                                             Observable<R> upstream) {
         String simpleName = cachedResponse.getClass().getSimpleName();
         ResponseMetadata<R, E> metadata = cachedResponse.getMetadata();
         CacheToken<R> cacheToken = metadata.getCacheToken();
@@ -117,7 +119,7 @@ class CacheManager {
                     E error = response.getMetadata().getError();
                     
                     boolean isCouldNotRefresh = error != null
-                                                && response.getMetadata().isNetworkError().get(error);
+                                                && response.getMetadata().getError().get(error);
                     
                     if (isCouldNotRefresh) {
                         return deepCopy(cachedResponse, CacheToken.Status.COULD_NOT_REFRESH);
@@ -132,8 +134,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    private <E extends Exception, R extends ResponseMetadata.Holder<R, E>> R deepCopy(R cachedResponse,
-                                                                                      CacheToken.Status newStatus) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R deepCopy(R cachedResponse,
+                                                                                                             CacheToken.Status newStatus) {
         R copiedResponse = gson.fromJson(gson.toJson(cachedResponse), (Class<R>) cachedResponse.getClass());
         ResponseMetadata<R, E> metadata = cachedResponse.getMetadata();
         CacheToken newToken = CacheToken.newStatus(metadata.getCacheToken(), newStatus);
@@ -141,8 +143,8 @@ class CacheManager {
         return copiedResponse;
     }
     
-    private <E extends Exception, R extends ResponseMetadata.Holder<R, E>> R updateRefreshed(R response,
-                                                                                             CacheToken.Status status) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R updateRefreshed(R response,
+                                                                                                                    CacheToken.Status status) {
         String simpleName = response.getClass().getSimpleName();
         ResponseMetadata<R, E> metadata = response.getMetadata();
         CacheToken<R> newToken = CacheToken.newStatus(metadata.getCacheToken(), status);

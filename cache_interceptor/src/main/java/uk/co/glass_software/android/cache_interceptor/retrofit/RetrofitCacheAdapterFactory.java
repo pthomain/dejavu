@@ -10,8 +10,9 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-public class RetrofitCacheAdapterFactory<E extends Exception> extends CallAdapter.Factory {
+public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>> extends CallAdapter.Factory {
     
     private final RxJava2CallAdapterFactory rxJava2CallAdapterFactory;
     private final ErrorInterceptor.Factory<E> errorFactory;

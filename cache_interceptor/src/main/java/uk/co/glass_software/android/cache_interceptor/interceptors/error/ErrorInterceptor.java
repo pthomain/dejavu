@@ -13,36 +13,37 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
-public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends Exception>
+public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends Exception & Function<E, Boolean>>
         implements ObservableTransformer<R, R> {
     
     private final int requestTimeout;
     private final Function<Throwable, E> errorFactory;
-    private final Class<R> responseClass;
     private final Logger logger;
+    private final ResponseMetadata<R, E> metadata;
     
     private ErrorInterceptor(Function<Throwable, E> errorFactory,
                              Logger logger,
-                             Class<R> responseClass) {
-        this(errorFactory, 15, logger, responseClass);
+                             ResponseMetadata<R, E> metadata) {
+        this(errorFactory, 15, logger, metadata);
     }
     
     private ErrorInterceptor(Function<Throwable, E> errorFactory,
                              int requestTimeout,
                              Logger logger,
-                             Class<R> responseClass) {
+                             ResponseMetadata<R, E> metadata) {
         this.errorFactory = errorFactory;
         this.requestTimeout = requestTimeout;
         this.logger = logger;
-        this.responseClass = responseClass;
+        this.metadata = metadata;
     }
     
     @Override
     public ObservableSource<R> apply(Observable<R> upstream) {
         return upstream
-                .timeout(requestTimeout, TimeUnit.MILLISECONDS) //fixing timeout not working in OkHttp
+                .timeout(requestTimeout, TimeUnit.SECONDS) //fixing timeout not working in OkHttp
+                .doOnNext(response -> response.setMetadata(metadata))
                 .onErrorResumeNext(throwable -> {
-                    return onError(throwable, responseClass);
+                    return onError(throwable, metadata.getResponseClass());
                 });
     }
     
@@ -50,7 +51,6 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
     private Observable<R> onError(Throwable throwable,
                                   Class<R> responseClass) {
         R errorResponse = getErrorResponse(throwable, responseClass);
-        errorResponse.getMetadata().setCacheToken(CacheToken.doNotCache(responseClass));
         return Observable.just(errorResponse);
     }
     
@@ -86,11 +86,12 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
             );
         }
         
-        response.setMetadata(ResponseMetadata.error(responseClass, apiError));
+        CacheToken<R> cacheToken = CacheToken.doNotCache(responseClass);
+        response.setMetadata(ResponseMetadata.create(cacheToken, apiError));
         return response;
     }
     
-    public static class Factory<E extends Exception> {
+    public static class Factory<E extends Exception & Function<E, Boolean>> {
         
         private final Function<Throwable, E> errorFactory;
         private final Logger logger;
@@ -101,10 +102,10 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
             this.logger = logger;
         }
         
-        public <R extends ResponseMetadata.Holder<R, E>> ErrorInterceptor<R, E> create(Class<R> responseClass) {
+        public <R extends ResponseMetadata.Holder<R, E>> ErrorInterceptor<R, E> create(ResponseMetadata<R, E> metadata) {
             return new ErrorInterceptor<>(errorFactory,
                                           logger,
-                                          responseClass
+                                          metadata
             );
         }
     }

@@ -9,8 +9,9 @@ import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-class RetrofitCacheAdapter<E extends Exception, R extends ResponseMetadata.Holder<R, E>>
+class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         implements CallAdapter<R, Object> {
     
     private final Class<R> responseClass;
@@ -43,8 +44,12 @@ class RetrofitCacheAdapter<E extends Exception, R extends ResponseMetadata.Holde
                                                          request.url().toString()
         );
         
+        ResponseMetadata<R, E> metadata = ResponseMetadata.create(cacheToken,
+                                                                  null
+        );
+        
         return observable
-                .compose(errorFactory.create(cacheToken.getResponseClass()))
+                .compose(errorFactory.create(metadata))
                 .compose(cacheFactory.create(cacheToken));
     }
 }
