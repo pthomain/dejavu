@@ -28,7 +28,18 @@ public class SimpleLogger implements Logger {
     private final Gson gson;
     private final JsonParser jsonParser;
     
+    public interface Printer {
+        void print(int priority,
+                   String tag,
+                   String message);
+    }
+    
     public SimpleLogger(Context applicationContext) {
+        this(applicationContext, Log::println);
+    }
+    
+    public SimpleLogger(Context applicationContext,
+                        Printer printer) {
         this.applicationContext = applicationContext;
         handler = new Handler(applicationContext.getMainLooper());
         gson = new GsonBuilder().setPrettyPrinting().create();
@@ -134,7 +145,8 @@ public class SimpleLogger implements Logger {
                 
                 logInternal(priority,
                             tag,
-                            " (" + file + ":" + line + ") " + (throwable == null ? prettyPrint(message) : message),
+                            " (" + file + ":" + line + ") " + (throwable == null ? prettyPrint(
+                                    message) : message),
                             throwable
                 );
             }
@@ -146,19 +158,19 @@ public class SimpleLogger implements Logger {
     
     public String prettyPrint(String message) {
         if (message.contains("{")) {
-        
+            
             int index = message.indexOf("{");
             int lastIndex = message.lastIndexOf("}");
             String messageBefore = message.substring(0, index);
             String messageMiddle = message.substring(index, lastIndex + 1);
             String messageAfter = message.substring(lastIndex + 1, message.length());
             return getPrettyJson(messageMiddle, messageBefore, messageAfter);
-            }
-            else{
-            return message;
-            }
         }
-        
+        else {
+            return message;
+        }
+    }
+    
     private String getPrettyJson(String message,
                                  String messageBefore,
                                  String messageAfter) {
@@ -184,7 +196,6 @@ public class SimpleLogger implements Logger {
             );
         }
         else {
-            Log.println(priority, tag, message);
             if (throwable != null) {
                 throwable.printStackTrace();
             }

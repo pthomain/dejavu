@@ -24,7 +24,7 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
     private ErrorInterceptor(Function<Throwable, E> errorFactory,
                              Logger logger,
                              ResponseMetadata<R, E> metadata) {
-        this(errorFactory, 15, logger, metadata);
+        this(errorFactory, 30, logger, metadata);
     }
     
     private ErrorInterceptor(Function<Throwable, E> errorFactory,

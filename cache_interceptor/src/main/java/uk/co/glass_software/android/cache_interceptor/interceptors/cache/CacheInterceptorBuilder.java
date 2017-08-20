@@ -100,6 +100,7 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
         );
         
         return new RetrofitCacheAdapterFactory<>(
+                logger,
                 errorInterceptorFactory,
                 cacheInterceptorFactory
         );
@@ -138,6 +139,8 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
                 logger,
                 timeToLiveInMinutes
         );
+        
+        cacheManager.clearOlderEntries();
         
         return new CacheInterceptor.Factory<>(
                 cacheManager,

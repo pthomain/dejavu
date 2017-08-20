@@ -6,9 +6,11 @@ import com.google.gson.Gson;
 
 import java.util.Date;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
@@ -35,8 +37,19 @@ class CacheManager {
         this.timeToLiveInMs = timeToLiveInMinutes * 60000L;
     }
     
+    public void clearOlderEntries() {
+        //FIXME
+//        runAsync(databaseManager::clearOlderEntries);
+    }
+    
     public void flushCache() {
-        databaseManager.flushCache();
+        runAsync(databaseManager::flushCache);
+    }
+    
+    private void runAsync(Action action) {
+        Completable.fromAction(action::act)
+                   .subscribeOn(Schedulers.io())
+                   .subscribe();
     }
     
     @SuppressWarnings("unchecked")
@@ -84,7 +97,7 @@ class CacheManager {
         
         return upstream
                 .doOnNext(response -> {
-                    logger.d(this, "Finished fetching" + simpleName + ", now delivering");
+                    logger.d(this, "Finished fetching " + simpleName + ", now delivering");
                     ResponseMetadata<R, E> metadata = response.getMetadata();
                     if (metadata.getError() == null) {
                         Date fetchDate = dateFactory.get(null);

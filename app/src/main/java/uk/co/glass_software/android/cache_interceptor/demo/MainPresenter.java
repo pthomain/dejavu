@@ -23,54 +23,47 @@ class MainPresenter {
     private final SimpleLogger simpleLogger;
     
     MainPresenter(Context context,
-                  Callback<String> onHttpLog) {
-        simpleLogger = new SimpleLogger(context);
+                  Callback<String> onLogOutput) {
+        simpleLogger = new SimpleLogger(context, (priority, tag, message) -> onLogOutput.call(message));
         
-        Retrofit retrofit = getRetrofit(context,
-                                        onHttpLog,
-                                        "https://www.metaweather.com/"
-        );
+        Retrofit retrofit = getRetrofit(context, "https://www.metaweather.com/");
         weatherClient = retrofit.create(WeatherClient.class);
     }
     
     private Retrofit getRetrofit(Context context,
-                                 Callback<String> onHttpLog,
                                  String baseUrl) {
-        RetrofitCacheAdapterFactory adapterFactory = CacheInterceptor.buildSimpleAdapterFactory(context);
+        RetrofitCacheAdapterFactory adapterFactory = CacheInterceptor.builder()
+                                                                     .logger(simpleLogger)
+                                                                     .buildAdapter(context);
         GsonConverterFactory gsonConverterFactory = GsonConverterFactory.create(new Gson());
         
         return new Retrofit.Builder()
                 .baseUrl(baseUrl)
-                .client(getOkHttpClient(onHttpLog))
+                .client(getOkHttpClient())
                 .addConverterFactory(gsonConverterFactory)
                 .addCallAdapterFactory(adapterFactory)
                 .build();
     }
     
     @NonNull
-    private OkHttpClient getOkHttpClient(Callback<String> onHttpLog) {
+    private OkHttpClient getOkHttpClient() {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         httpClientBuilder.followRedirects(true);
-        httpClientBuilder.addInterceptor(getHttpLoggingInterceptor(onHttpLog));
+        httpClientBuilder.addInterceptor(getHttpLoggingInterceptor());
         return httpClientBuilder.build();
     }
     
     @NonNull
-    private HttpLoggingInterceptor getHttpLoggingInterceptor(Callback<String> onHttpLog) {
-        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(s -> {
-            onHttpLog.call(s);
-            simpleLogger.d(this, s);
-        });
+    private HttpLoggingInterceptor getHttpLoggingInterceptor() {
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(s -> simpleLogger.d(this, s));
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         return interceptor;
     }
     
     void loadResponse(String location,
-                      Action onStart,
                       Callback<String> onNext,
                       Action onEnd) {
         weatherClient.get(location)
-                     .doOnSubscribe(ignore -> onStart.act())
                      .doOnNext(response -> {
                          if (response.getMetadata().getCacheToken().getStatus().isFinal) {
                              onEnd.act();
@@ -81,4 +74,7 @@ class MainPresenter {
                      .subscribe(response -> onNext.call(response.toString() + "\n\n" + response.getMetadata().getCacheToken().toString()));
     }
     
+    String prettyPrint(String output) {
+        return simpleLogger.prettyPrint(output);
+    }
 }

@@ -15,6 +15,11 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
     private CacheToken<R> cacheToken;
     
     public interface Holder<R, E extends Exception & Function<E, Boolean>> {
+        
+        CacheToken<R> getCacheToken(String url,
+                                    String[] params,
+                                    String body);
+        
         @NonNull
         ResponseMetadata<R, E> getMetadata();
         

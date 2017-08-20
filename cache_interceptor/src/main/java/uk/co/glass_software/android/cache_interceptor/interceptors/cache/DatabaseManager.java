@@ -18,13 +18,22 @@ import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.TABLE_CACHE;
 
 class DatabaseManager {
+    
+    private final static long DEFAULT_CLEANUP_THRESHOLD_IN_MINUTES = 7 * 24 * 60; // 1 week
+    private final static SimpleDateFormat CLEANUP_DATE_FORMAT = new SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss",
+            Locale.UK
+    );
     
     private final Logger logger;
     private final SQLiteDatabase db;
     private final SerialisationManager serialisationManager;
     private final DateFormat dateFormat;
+    private final long cleanUpThresholdInMillis;
     private final Function<Long, Date> dateFactory;
     private final Function<Map<String, ?>, ContentValues> contentValuesFactory;
     
@@ -33,36 +42,65 @@ class DatabaseManager {
                     Logger logger,
                     Function<Long, Date> dateFactory,
                     Function<Map<String, ?>, ContentValues> contentValuesFactory) {
+        this(db,
+             serialisationManager,
+             logger,
+             DEFAULT_CLEANUP_THRESHOLD_IN_MINUTES,
+             dateFactory,
+             contentValuesFactory
+        );
+    }
+    
+    DatabaseManager(SQLiteDatabase db,
+                    SerialisationManager serialisationManager,
+                    Logger logger,
+                    long cleanUpThresholdInMinutes,
+                    Function<Long, Date> dateFactory,
+                    Function<Map<String, ?>, ContentValues> contentValuesFactory) {
         this.db = db;
         this.serialisationManager = serialisationManager;
         this.logger = logger;
+        this.cleanUpThresholdInMillis = cleanUpThresholdInMinutes * 60 * 1000;
         this.dateFactory = dateFactory;
         this.contentValuesFactory = contentValuesFactory;
         dateFormat = new SimpleDateFormat("MMM dd h:m:s", Locale.UK);
     }
     
+    void clearOlderEntries() {
+        Date date = new Date(System.currentTimeMillis() + cleanUpThresholdInMillis);
+        String sqlDate = CLEANUP_DATE_FORMAT.format(date);
+        
+        int deleted = db.delete(TABLE_CACHE,
+                                COLUMN_CACHE_EXPIRY_DATE + " < ?",
+                                new String[]{"date('" + sqlDate + "')"}
+        );
+        
+        logger.d(this, "Cleared " + deleted + " old entrie(s) from HTTP cache");
+    }
+    
     void flushCache() {
-        db.execSQL("DELETE FROM " + SqlOpenHelper.TABLE_CACHE);
+        db.execSQL("DELETE FROM " + TABLE_CACHE);
         logger.d(this, "Cleared entire HTTP cache");
     }
     
     @Nullable
     @SuppressWarnings("unchecked")
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
-                                                                                                              CacheToken cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(
+            Observable<R> upstream,
+            CacheToken cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
         String[] projection = {
                 SqlOpenHelper.COLUMN_CACHE_DATE,
-                SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE,
+                COLUMN_CACHE_EXPIRY_DATE,
                 SqlOpenHelper.COLUMN_CACHE_DATA
         };
         
         String selection = SqlOpenHelper.COLUMN_CACHE_TOKEN + " = ?";
         String[] selectionArgs = {cacheToken.getKey()};
         
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_CACHE,
+        Cursor cursor = db.query(TABLE_CACHE,
                                  projection,
                                  selection,
                                  selectionArgs,
@@ -99,11 +137,12 @@ class DatabaseManager {
     
     @Nullable
     @SuppressWarnings("unchecked")
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
-                                                                                                                      CacheToken<R> cacheToken,
-                                                                                                                      Date cacheDate,
-                                                                                                                      Date expiryDate,
-                                                                                                                      byte[] compressedData) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(
+            Observable<R> upstream,
+            CacheToken<R> cacheToken,
+            Date cacheDate,
+            Date expiryDate,
+            byte[] compressedData) {
         R response = serialisationManager.uncompress(cacheToken.getResponseClass(),
                                                      compressedData,
                                                      this::flushCache
@@ -128,7 +167,8 @@ class DatabaseManager {
         return response;
     }
     
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(R response) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(
+            R response) {
         CacheToken<?> cacheToken = response.getMetadata().getCacheToken();
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Caching " + simpleName);
@@ -141,11 +181,11 @@ class DatabaseManager {
             Map<String, Object> values = new HashMap<>();
             values.put(SqlOpenHelper.COLUMN_CACHE_TOKEN, hash);
             values.put(SqlOpenHelper.COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
-            values.put(SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
+            values.put(COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
             values.put(SqlOpenHelper.COLUMN_CACHE_DATA, compressed);
             
             db.insertWithOnConflict(
-                    SqlOpenHelper.TABLE_CACHE,
+                    TABLE_CACHE,
                     null,
                     contentValuesFactory.get(values),
                     CONFLICT_REPLACE
