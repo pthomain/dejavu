@@ -1,28 +1,30 @@
-package uk.co.glass_software.android.cache_interceptor.interceptors.error;
+package uk.co.glass_software.android.cache_interceptor.response;
+
+import android.support.annotation.NonNull;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.io.IOException;
+import java.util.ArrayList;
 
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-public class ApiError extends Exception implements Function<ApiError, Boolean> {
+public abstract class CachedList<E extends Exception & Function<E, Boolean>, R, C>
+        extends ArrayList<C>
+        implements ResponseMetadata.Holder<R, E> {
     
-    private final Throwable throwable;
+    private ResponseMetadata<R, E> metadata;
     
-    public ApiError(Throwable throwable) {
-        this.throwable = throwable;
+    @NonNull
+    @Override
+    public ResponseMetadata<R, E> getMetadata() {
+        return metadata;
     }
     
     @Override
-    public Boolean get(ApiError apiError) {
-        return apiError.isNetworkError();
-    }
-    
-    private Boolean isNetworkError() {
-        return throwable instanceof IOException;
+    public void setMetadata(@NonNull ResponseMetadata<R, E> metadata) {
+        this.metadata = metadata;
     }
     
     @Override
@@ -35,24 +37,26 @@ public class ApiError extends Exception implements Function<ApiError, Boolean> {
             return false;
         }
         
-        ApiError apiError = (ApiError) o;
+        CachedList<?, ?, ?> that = (CachedList<?, ?, ?>) o;
         
         return new EqualsBuilder()
-                .append(throwable, apiError.throwable)
+                .appendSuper(super.equals(o))
+                .append(metadata, that.metadata)
                 .isEquals();
     }
     
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(throwable)
+                .appendSuper(super.hashCode())
+                .append(metadata)
                 .toHashCode();
     }
     
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .append("throwable", throwable)
+                .append("metadata", metadata)
                 .toString();
     }
 }

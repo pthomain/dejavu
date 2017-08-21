@@ -4,25 +4,40 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import uk.co.glass_software.android.cache_interceptor.demo.retrofit.RetrofitDemoPresenter;
+import uk.co.glass_software.android.cache_interceptor.demo.volley.VolleyDemoPresenter;
+
+public class DemoActivity extends AppCompatActivity {
+    
+    private Method method = Method.RETROFIT;
     
     private TextView resultText;
-    private MainPresenter presenter;
     private EditText editText;
     private Button button;
+    private DemoPresenter retrofitDemoPresenter;
+    private DemoPresenter volleyDemoPresenter;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        presenter = new MainPresenter(this, this::appendText);
         
         editText = (EditText) findViewById(R.id.text_input);
         resultText = ((TextView) findViewById(R.id.result));
         button = (Button) findViewById(R.id.load_button);
         button.setOnClickListener(ignore -> onButtonClick());
+        
+        RadioButton retrofitRadioButton = (RadioButton) findViewById(R.id.radio_button_retrofit);
+        RadioButton volleyRadioButton = (RadioButton) findViewById(R.id.radio_button_volley);
+        
+        retrofitRadioButton.setOnClickListener(ignore -> method = Method.RETROFIT);
+        volleyRadioButton.setOnClickListener(ignore -> method = Method.VOLLEY);
+        
+        retrofitDemoPresenter = new RetrofitDemoPresenter(this, this::appendText);
+        volleyDemoPresenter = new VolleyDemoPresenter(this, this::appendText);
     }
     
     private void onButtonClick() {
@@ -32,9 +47,9 @@ public class MainActivity extends AppCompatActivity {
             resultText.setText("");
             long start = System.currentTimeMillis();
             button.setEnabled(false);
-            appendText("Loading\n");
+            appendText(String.format("Loading request using %s\n", method));
             
-            presenter.loadResponse(
+            getDemoPresenter().loadResponse(
                     location,
                     this::appendText,
                     () -> {
@@ -48,8 +63,24 @@ public class MainActivity extends AppCompatActivity {
     private void appendText(String output) {
         resultText.post(() -> resultText.setText(resultText.getText()
                                                  + "\n"
-                                                 + presenter.prettyPrint(output)
+                                                 + output
         ));
     }
     
+    public DemoPresenter getDemoPresenter() {
+        switch (method) {
+            case RETROFIT:
+                return retrofitDemoPresenter;
+            
+            case VOLLEY:
+                return volleyDemoPresenter;
+        }
+        
+        throw new IllegalStateException("Unknown method: " + method);
+    }
+    
+    private enum Method {
+        RETROFIT,
+        VOLLEY
+    }
 }

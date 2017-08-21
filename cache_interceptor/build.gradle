@@ -62,6 +62,7 @@ dependencies {
     compile "com.android.support:support-compat:25.4.0"
 
     compile 'org.iq80.snappy:snappy:0.3'
+    compile "org.apache.commons:commons-lang3:3.3.2"
 
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile "com.squareup.retrofit2:converter-gson:2.3.0"

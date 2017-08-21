@@ -8,7 +8,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
@@ -24,10 +24,10 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
     private final Logger logger;
     private final CacheToken<R> cacheToken;
     
-    CacheInterceptor(CacheManager cacheManager,
-                     boolean isCacheEnabled,
-                     Logger logger,
-                     CacheToken<R> cacheToken) {
+    private CacheInterceptor(CacheManager cacheManager,
+                             boolean isCacheEnabled,
+                             Logger logger,
+                             CacheToken<R> cacheToken) {
         this.cacheManager = cacheManager;
         this.logger = logger;
         this.cacheToken = cacheToken;

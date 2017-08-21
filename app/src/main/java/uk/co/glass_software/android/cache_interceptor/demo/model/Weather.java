@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.cache_interceptor.demo;
+package uk.co.glass_software.android.cache_interceptor.demo.model;
 
 public class Weather {
     

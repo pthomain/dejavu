@@ -13,13 +13,11 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.reactivex.Observable;
-import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.TABLE_CACHE;
 
 class DatabaseManager {
     
@@ -70,8 +68,8 @@ class DatabaseManager {
         Date date = new Date(System.currentTimeMillis() + cleanUpThresholdInMillis);
         String sqlDate = CLEANUP_DATE_FORMAT.format(date);
         
-        int deleted = db.delete(TABLE_CACHE,
-                                COLUMN_CACHE_EXPIRY_DATE + " < ?",
+        int deleted = db.delete(SqlOpenHelper.TABLE_CACHE,
+                                SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE + " < ?",
                                 new String[]{"date('" + sqlDate + "')"}
         );
         
@@ -79,7 +77,7 @@ class DatabaseManager {
     }
     
     void flushCache() {
-        db.execSQL("DELETE FROM " + TABLE_CACHE);
+        db.execSQL("DELETE FROM " + SqlOpenHelper.TABLE_CACHE);
         logger.d(this, "Cleared entire HTTP cache");
     }
     
@@ -93,14 +91,14 @@ class DatabaseManager {
         
         String[] projection = {
                 SqlOpenHelper.COLUMN_CACHE_DATE,
-                COLUMN_CACHE_EXPIRY_DATE,
+                SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE,
                 SqlOpenHelper.COLUMN_CACHE_DATA
         };
         
         String selection = SqlOpenHelper.COLUMN_CACHE_TOKEN + " = ?";
         String[] selectionArgs = {cacheToken.getKey()};
         
-        Cursor cursor = db.query(TABLE_CACHE,
+        Cursor cursor = db.query(SqlOpenHelper.TABLE_CACHE,
                                  projection,
                                  selection,
                                  selectionArgs,
@@ -181,11 +179,13 @@ class DatabaseManager {
             Map<String, Object> values = new HashMap<>();
             values.put(SqlOpenHelper.COLUMN_CACHE_TOKEN, hash);
             values.put(SqlOpenHelper.COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
-            values.put(COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
+            values.put(SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE,
+                       cacheToken.getExpiryDate().getTime()
+            );
             values.put(SqlOpenHelper.COLUMN_CACHE_DATA, compressed);
             
             db.insertWithOnConflict(
-                    TABLE_CACHE,
+                    SqlOpenHelper.TABLE_CACHE,
                     null,
                     contentValuesFactory.get(values),
                     CONFLICT_REPLACE

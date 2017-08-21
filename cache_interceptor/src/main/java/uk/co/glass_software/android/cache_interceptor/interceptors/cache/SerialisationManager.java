@@ -7,7 +7,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.iq80.snappy.Snappy;
 
-import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
@@ -24,9 +24,10 @@ class SerialisationManager {
     }
     
     @Nullable
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R uncompress(Class<R> responseClass,
-                                                                                                       byte[] compressedData,
-                                                                                                       Action onError) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R uncompress(
+            Class<R> responseClass,
+            byte[] compressedData,
+            Action onError) {
         String simpleName = responseClass.getSimpleName();
         
         try {
@@ -49,7 +50,8 @@ class SerialisationManager {
         }
     }
     
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> byte[] compress(R response) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> byte[] compress(
+            R response) {
         String json = gson.toJson(response);
         String simpleName = response.getClass().getSimpleName();
         

@@ -9,7 +9,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
-import uk.co.glass_software.android.cache_interceptor.retrofit.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 

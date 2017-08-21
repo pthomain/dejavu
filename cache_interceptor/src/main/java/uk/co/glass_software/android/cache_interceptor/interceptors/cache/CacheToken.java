@@ -18,7 +18,7 @@ public abstract class CacheToken<R> {
     public enum Status {
         DO_NOT_CACHE(true, true),
         //use on requests that should not be cached
-        CACHE(false, true),
+        CACHE(true, true),
         //use on requests that should be cached
         NOT_CACHED(true, true),
         //use on requests that were not cached
@@ -30,7 +30,9 @@ public abstract class CacheToken<R> {
         //returned with responses coming straight from the cache after their expiry date
         REFRESHED(true, false),
         //returned after a STALE response with FRESH data from a successful network call
-        COULD_NOT_REFRESH(true, false);//returned after a STALE response with STALE data from an unsuccessful network call
+        COULD_NOT_REFRESH(true,
+                          false
+        );//returned after a STALE response with STALE data from an unsuccessful network call
         
         //Final responses will not be succeeded by any other response as part of the same call,
         //while non-final responses will be followed by at least another response.
@@ -50,7 +52,7 @@ public abstract class CacheToken<R> {
         void setCacheToken(@NonNull CacheToken<R> cacheToken);
         
         @NonNull
-        CacheToken<R> getCacheToken();
+        CacheToken<? extends R> getCacheToken();
     }
     
     public static <R> CacheToken<R> newRequest(@NonNull Class<R> responseClass,
@@ -143,7 +145,7 @@ public abstract class CacheToken<R> {
         );
     }
     
-    public String getKey() {
+     String getKey() {
         StringBuilder builder = new StringBuilder();
         builder.append(getApiUrl());
         for (String field : getUniqueFields()) {

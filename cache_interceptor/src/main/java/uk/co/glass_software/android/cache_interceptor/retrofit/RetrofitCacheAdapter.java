@@ -9,6 +9,7 @@ import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
@@ -47,9 +48,10 @@ class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends
         CacheToken<R> cacheToken;
         try {
             R response = responseClass.newInstance();
-            cacheToken = response.getCacheToken(request.url().toString(),
+            cacheToken = response.getCacheToken(responseClass,
+                                                request.url().toString(),
                                                 new String[0], //FIXME
-                                                null //FIXME
+                                                "" //FIXME
             );
         }
         catch (Exception e) {

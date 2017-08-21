@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
 
@@ -55,6 +56,7 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
     }
     
     //Used for unit testing
+    @VisibleForTesting
     ContentValues mapToContentValues(Map<String, ?> map) {
         ContentValues values = new ContentValues();
         for (Map.Entry<String, ?> entry : map.entrySet()) {
@@ -106,7 +108,7 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
         );
     }
     
-    private CacheInterceptor.Factory<E> build(@NonNull Context context) {
+    public CacheInterceptor.Factory<E> build(@NonNull Context context) {
         if (gson == null) {
             gson = new Gson();
         }

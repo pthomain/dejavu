@@ -25,6 +25,7 @@ public class SimpleLogger implements Logger {
     
     private final Context applicationContext;
     private final Handler handler;
+    private final Printer printer;
     private final Gson gson;
     private final JsonParser jsonParser;
     
@@ -41,6 +42,7 @@ public class SimpleLogger implements Logger {
     public SimpleLogger(Context applicationContext,
                         Printer printer) {
         this.applicationContext = applicationContext;
+        this.printer = printer;
         handler = new Handler(applicationContext.getMainLooper());
         gson = new GsonBuilder().setPrettyPrinting().create();
         jsonParser = new JsonParser();
@@ -158,7 +160,6 @@ public class SimpleLogger implements Logger {
     
     public String prettyPrint(String message) {
         if (message.contains("{")) {
-            
             int index = message.indexOf("{");
             int lastIndex = message.lastIndexOf("}");
             String messageBefore = message.substring(0, index);
@@ -188,7 +189,7 @@ public class SimpleLogger implements Logger {
                              String message,
                              Throwable throwable) {
         if (message.length() > MESSAGE_LENGTH_LIMIT) {
-            Log.println(priority, tag, message.substring(0, MESSAGE_LENGTH_LIMIT));
+            printer.print(priority, tag, message.substring(0, MESSAGE_LENGTH_LIMIT));
             logInternal(priority,
                         tag,
                         message.substring(MESSAGE_LENGTH_LIMIT),

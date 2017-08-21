@@ -10,10 +10,12 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
-public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>> extends CallAdapter.Factory {
+public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>>
+        extends CallAdapter.Factory {
     
     private final RxJava2CallAdapterFactory rxJava2CallAdapterFactory;
     private final Logger logger;
@@ -45,7 +47,7 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
             
             if (ResponseMetadata.Holder.class.isAssignableFrom(rawObservableType)) {
                 Class<?> responseClass = getRawType(rawObservableType);
-    
+                
                 return new RetrofitCacheAdapter(logger,
                                                 errorFactory,
                                                 cacheInterceptorFactory,

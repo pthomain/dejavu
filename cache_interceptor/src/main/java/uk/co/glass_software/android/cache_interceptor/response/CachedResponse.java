@@ -1,12 +1,14 @@
-package uk.co.glass_software.android.cache_interceptor.retrofit;
+package uk.co.glass_software.android.cache_interceptor.response;
 
 import android.support.annotation.NonNull;
 
-import java.util.ArrayList;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-public abstract class BaseCachedList<E extends Exception & Function<E, Boolean>, R> extends ArrayList<R>
+public abstract class CachedResponse<E extends Exception & Function<E, Boolean>, R>
         implements ResponseMetadata.Holder<R, E> {
     
     private ResponseMetadata<R, E> metadata;
@@ -27,27 +29,29 @@ public abstract class BaseCachedList<E extends Exception & Function<E, Boolean>,
         if (this == o) {
             return true;
         }
+        
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
-            return false;
-        }
         
-        BaseCachedList<?, ?> that = (BaseCachedList<?, ?>) o;
+        CachedResponse<?, ?> that = (CachedResponse<?, ?>) o;
         
-        return metadata != null ? metadata.equals(that.metadata) : that.metadata == null;
+        return new EqualsBuilder()
+                .append(metadata, that.metadata)
+                .isEquals();
     }
     
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (metadata != null ? metadata.hashCode() : 0);
-        return result;
+        return new HashCodeBuilder(17, 37)
+                .append(metadata)
+                .toHashCode();
     }
     
     @Override
     public String toString() {
-        return "BaseCachedList{\nmetadata=" + metadata + "\n}";
+        return new ToStringBuilder(this)
+                .append("metadata", metadata)
+                .toString();
     }
 }
