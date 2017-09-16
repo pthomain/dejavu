@@ -1,5 +1,9 @@
 package uk.co.glass_software.android.cache_interceptor.retrofit;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.support.annotation.RestrictTo;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -8,26 +12,20 @@ import io.reactivex.Observable;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
-public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>>
+public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         extends CallAdapter.Factory {
     
     private final RxJava2CallAdapterFactory rxJava2CallAdapterFactory;
-    private final Logger logger;
-    private final ErrorInterceptor.Factory<E> errorFactory;
-    private final CacheInterceptor.Factory cacheInterceptorFactory;
+    private final RxCacheInterceptor.Factory<E, R> rxCacheFactory;
     
-    public RetrofitCacheAdapterFactory(Logger logger,
-                                       ErrorInterceptor.Factory<E> errorFactory,
-                                       CacheInterceptor.Factory<E> cacheInterceptorFactory) {
-        this.logger = logger;
-        this.errorFactory = errorFactory;
-        this.cacheInterceptorFactory = cacheInterceptorFactory;
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    RetrofitCacheAdapterFactory(RxCacheInterceptor.Factory<E, R> rxCacheFactory) {
+        this.rxCacheFactory = rxCacheFactory;
         rxJava2CallAdapterFactory = RxJava2CallAdapterFactory.create();
     }
     
@@ -48,9 +46,7 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
             if (ResponseMetadata.Holder.class.isAssignableFrom(rawObservableType)) {
                 Class<?> responseClass = getRawType(rawObservableType);
                 
-                return new RetrofitCacheAdapter(logger,
-                                                errorFactory,
-                                                cacheInterceptorFactory,
+                return new RetrofitCacheAdapter(rxCacheFactory,
                                                 responseClass,
                                                 callAdapter
                 );
@@ -60,4 +56,8 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
         return callAdapter;
     }
     
+    @SuppressLint("RestrictedApi")
+    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> buildDefault(Context context) {
+        return new RetrofitCacheAdapterFactory<>(RxCacheInterceptor.<R>buildDefault(context));
+    }
 }

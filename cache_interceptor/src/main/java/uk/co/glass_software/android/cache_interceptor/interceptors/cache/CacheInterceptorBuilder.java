@@ -11,36 +11,33 @@ import com.google.gson.Gson;
 import java.util.Date;
 import java.util.Map;
 
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
-public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>> {
+public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> {
     
     private final static String DATABASE_NAME = "http_cache.db";
-    private final Function<Throwable, E> errorFactory;
     
-    private long timeToLiveInMinutes = 5;
+    private int timeToLiveInMinutes = 5;
     private String databaseName;
     private Logger logger;
     private Gson gson;
     
-    CacheInterceptorBuilder(Function<Throwable, E> errorFactory) {
-        this.errorFactory = errorFactory;
+    CacheInterceptorBuilder() {
     }
     
-    public CacheInterceptorBuilder<E> gson(@NonNull Gson gson) {
+    public CacheInterceptorBuilder<E, R> gson(@NonNull Gson gson) {
         this.gson = gson;
         return this;
     }
     
-    public CacheInterceptorBuilder<E> databaseName(@NonNull String databaseName) {
+    public CacheInterceptorBuilder<E, R> databaseName(@NonNull String databaseName) {
         this.databaseName = databaseName;
         return this;
     }
     
-    public CacheInterceptorBuilder<E> ttlInMinutes(@NonNull Integer timeToLiveInMinutes) {
+    public CacheInterceptorBuilder<E, R> ttlInMinutes(@NonNull Integer timeToLiveInMinutes) {
         if (timeToLiveInMinutes >= 0) {
             this.timeToLiveInMinutes = timeToLiveInMinutes;
         }
@@ -50,7 +47,7 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
         return this;
     }
     
-    public CacheInterceptorBuilder<E> logger(@NonNull Logger logger) {
+    public CacheInterceptorBuilder<E, R> logger(@NonNull Logger logger) {
         this.logger = logger;
         return this;
     }
@@ -93,34 +90,29 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
         return values;
     }
     
-    public RetrofitCacheAdapterFactory<E> buildAdapter(Context context) {
-        CacheInterceptor.Factory<E> cacheInterceptorFactory = build(context);
-        
-        ErrorInterceptor.Factory<E> errorInterceptorFactory = new ErrorInterceptor.Factory<>(
-                errorFactory,
-                getLogger()
-        );
-        
-        return new RetrofitCacheAdapterFactory<>(
-                logger,
-                errorInterceptorFactory,
-                cacheInterceptorFactory
-        );
-    }
-    
     public CacheInterceptor.Factory<E> build(@NonNull Context context) {
         if (gson == null) {
             gson = new Gson();
         }
         
-        Logger logger = getLogger();
+        Logger logger = this.logger != null ? this.logger
+                                            : new Logger() {
+                                                @Override
+                                                public void e(Object caller, Throwable t, String message) {}
+            
+                                                @Override
+                                                public void e(Object caller, String message) {}
+            
+                                                @Override
+                                                public void d(Object caller, String message) {}
+                                            };
         
         SerialisationManager serialisationManager = new SerialisationManager(
                 logger,
                 gson
         );
         
-        SQLiteDatabase database = new SqlOpenHelper(context,
+        SQLiteDatabase database = new SqlOpenHelper(context.getApplicationContext(),
                                                     databaseName == null ? DATABASE_NAME : databaseName
         ).getWritableDatabase();
         
@@ -142,26 +134,10 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>>
                 timeToLiveInMinutes
         );
         
-        cacheManager.clearOlderEntries();
-        
         return new CacheInterceptor.Factory<>(
                 cacheManager,
                 true,
                 logger
         );
-    }
-    
-    private Logger getLogger() {
-        return logger != null ? logger
-                              : new Logger() {
-                                  @Override
-                                  public void e(Object caller, Throwable t, String message) {}
-            
-                                  @Override
-                                  public void e(Object caller, String message) {}
-            
-                                  @Override
-                                  public void d(Object caller, String message) {}
-                              };
     }
 }

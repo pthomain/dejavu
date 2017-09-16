@@ -6,13 +6,12 @@ retrolambda {
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        applicationId "uk.co.glass_software.android.cache_interceptor.demo"
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
     }
@@ -58,9 +57,9 @@ android {
 dependencies {
     compile project(path: ':cache_interceptor')
 
-    compile "com.squareup.okhttp3:okhttp:3.6.0"
+    compile "com.squareup.okhttp3:okhttp:3.8.0"
     compile "com.squareup.okhttp3:logging-interceptor:3.6.0"
     compile 'com.android.volley:volley:1.0.0'
 
-    compile "com.android.support:appcompat-v7:25.4.0"
+    compile "com.android.support:appcompat-v7:$supportLibVersion"
 }

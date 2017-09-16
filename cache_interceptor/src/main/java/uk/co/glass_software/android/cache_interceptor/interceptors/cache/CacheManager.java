@@ -29,7 +29,7 @@ class CacheManager {
                  Function<Long, Date> dateFactory,
                  Gson gson,
                  Logger logger,
-                 long timeToLiveInMinutes) {
+                 int timeToLiveInMinutes) {
         this.databaseManager = databaseManager;
         this.dateFactory = dateFactory;
         this.gson = gson;

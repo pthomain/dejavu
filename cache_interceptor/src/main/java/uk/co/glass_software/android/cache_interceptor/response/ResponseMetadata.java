@@ -45,6 +45,10 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
         return metadata;
     }
 
+    public boolean hasError(){
+        return getError() != null;
+    }
+    
     @Nullable
     public abstract E getError();
 

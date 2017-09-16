@@ -1,38 +1,34 @@
 package uk.co.glass_software.android.cache_interceptor.demo.volley;
 
-import android.content.Context;
-import android.support.annotation.NonNull;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 
 import java.lang.reflect.Type;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.subjects.PublishSubject;
-import uk.co.glass_software.android.cache_interceptor.demo.ServiceLocator;
 import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
-import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 
-//TODO move to lib
+import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.BASE_URL;
+
 class VolleyObservable extends Observable<WeatherList> {
     
     private final PublishSubject<WeatherList> publishSubject;
-    private final ServiceLocator serviceLocator;
+    private final Gson gson;
     private final RequestQueue requestQueue;
     private final String location;
     
-    VolleyObservable(ServiceLocator serviceLocator,
-                     Context context,
-                     Callback<String> onLogOutput,
+    VolleyObservable(Gson gson,
+                     RequestQueue requestQueue,
                      String location) {
-        this.serviceLocator = serviceLocator;
+        this.gson = gson;
+        this.requestQueue = requestQueue;
         this.location = location;
-        requestQueue = serviceLocator.getRequestQueue(context);
         publishSubject = PublishSubject.create();
     }
     
@@ -46,9 +42,14 @@ class VolleyObservable extends Observable<WeatherList> {
         ));
     }
     
+    static String getUrl(String location) {
+        return String.format(BASE_URL + "api/location/search/?query=%s", location);
+    }
+    
     private void onResponse(String response) {
-        Type type = new TypeToken<WeatherList>() {}.getType();
-        WeatherList list = serviceLocator.getGson().fromJson(response, type);
+        Type type = new TypeToken<WeatherList>() {
+        }.getType();
+        WeatherList list = gson.fromJson(response, type);
         publishSubject.onNext(list);
     }
     
@@ -56,8 +57,4 @@ class VolleyObservable extends Observable<WeatherList> {
         publishSubject.onError(volleyError);
     }
     
-    @NonNull
-    public static String getUrl(String param) {
-        return String.format(ServiceLocator.baseUrl + "api/location/search/?query=%s", param);
-    }
 }

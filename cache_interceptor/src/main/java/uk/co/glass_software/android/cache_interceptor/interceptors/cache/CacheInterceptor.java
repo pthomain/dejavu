@@ -1,18 +1,13 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
-import android.content.Context;
-
 import java.util.Date;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
-import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
-import uk.co.glass_software.android.cache_interceptor.utils.SimpleLogger;
 
 import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.DO_NOT_CACHE;
 
@@ -68,6 +63,10 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
         return cacheManager.getCachedResponse(upstream, cacheToken);
     }
     
+    public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheInterceptorBuilder<E, R> builder() {
+        return new CacheInterceptorBuilder<>();
+    }
+    
     public static class Factory<E extends Exception & Function<E, Boolean>> {
         
         private final CacheManager cacheManager;
@@ -89,19 +88,5 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
                                           cacheToken
             );
         }
-    }
-    
-    public static <E extends Exception & Function<E, Boolean>> CacheInterceptorBuilder<E> builder(Function<Throwable, E> errorFactory) {
-        return new CacheInterceptorBuilder<>(errorFactory);
-    }
-    
-    public static CacheInterceptorBuilder<ApiError> builder() {
-        return new CacheInterceptorBuilder<>(ApiError::new);
-    }
-    
-    public static RetrofitCacheAdapterFactory<ApiError> buildSimpleAdapterFactory(Context context) {
-        return new CacheInterceptorBuilder<>(ApiError::new)
-                .logger(new SimpleLogger(context))
-                .buildAdapter(context);
     }
 }

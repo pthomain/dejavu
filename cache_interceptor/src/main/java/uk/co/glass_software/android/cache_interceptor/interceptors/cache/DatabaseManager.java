@@ -83,9 +83,8 @@ class DatabaseManager {
     
     @Nullable
     @SuppressWarnings("unchecked")
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(
-            Observable<R> upstream,
-            CacheToken cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
+                                                                                                              CacheToken cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
@@ -135,12 +134,11 @@ class DatabaseManager {
     
     @Nullable
     @SuppressWarnings("unchecked")
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(
-            Observable<R> upstream,
-            CacheToken<R> cacheToken,
-            Date cacheDate,
-            Date expiryDate,
-            byte[] compressedData) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(Observable<R> upstream,
+                                                                                                                      CacheToken<R> cacheToken,
+                                                                                                                      Date cacheDate,
+                                                                                                                      Date expiryDate,
+                                                                                                                      byte[] compressedData) {
         R response = serialisationManager.uncompress(cacheToken.getResponseClass(),
                                                      compressedData,
                                                      this::flushCache
@@ -165,8 +163,7 @@ class DatabaseManager {
         return response;
     }
     
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(
-            R response) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(R response) {
         CacheToken<?> cacheToken = response.getMetadata().getCacheToken();
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Caching " + simpleName);
