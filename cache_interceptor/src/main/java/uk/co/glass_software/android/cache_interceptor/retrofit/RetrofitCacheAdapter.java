@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.retrofit;
 import java.lang.reflect.Type;
 
 import io.reactivex.Observable;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
@@ -33,10 +34,10 @@ class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends
     @SuppressWarnings("unchecked")
     public Object adapt(Call<R> call) {
         Observable<R> observable = (Observable<R>) callAdapter.adapt(call);
+        RequestBody body = call.request().body();
         RxCacheInterceptor<E, R> rxCacheInterceptor = rxCacheFactory.create(responseClass,
                                                                             call.request().url().toString(),
-                                                                            new String[0], //FIXME
-                                                                            "" //FIXME
+                                                                            body == null ? null : body.toString()
         );
         
         return observable.compose(rxCacheInterceptor);

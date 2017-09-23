@@ -8,13 +8,9 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
-import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 import uk.co.glass_software.android.cache_interceptor.utils.SimpleLogger;
-
-import static uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor.buildDefault;
 
 public abstract class DemoPresenter {
     
@@ -39,9 +35,12 @@ public abstract class DemoPresenter {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> onNext.call(response.toString() + "\n\n" + response.getMetadata()
-                                                                                          .getCacheToken()
-                                                                                          .toString()));
+                .subscribe(response -> onNext.call(response.toString()
+                                                   + "\n\n"
+                                                   + response.getMetadata()
+                                                             .getCacheToken()
+                                                             .toString())
+                );
     }
     
     protected abstract Observable<WeatherList> getResponseObservable(String location);

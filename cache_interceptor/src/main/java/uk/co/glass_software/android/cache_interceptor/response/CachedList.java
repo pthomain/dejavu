@@ -16,6 +16,11 @@ public abstract class CachedList<E extends Exception & Function<E, Boolean>, R, 
     
     private ResponseMetadata<R, E> metadata;
     
+    @Override
+    public int getTtlInMinutes() {
+        return DEFAULT_TTL_IN_MINUTES;
+    }
+    
     @NonNull
     @Override
     public ResponseMetadata<R, E> getMetadata() {

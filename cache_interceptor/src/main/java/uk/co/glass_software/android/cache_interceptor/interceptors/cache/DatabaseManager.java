@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.Nullable;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,6 +36,7 @@ class DatabaseManager {
     private final long cleanUpThresholdInMillis;
     private final Function<Long, Date> dateFactory;
     private final Function<Map<String, ?>, ContentValues> contentValuesFactory;
+    private final Hasher hasher;
     
     DatabaseManager(SQLiteDatabase db,
                     SerialisationManager serialisationManager,
@@ -62,6 +65,37 @@ class DatabaseManager {
         this.dateFactory = dateFactory;
         this.contentValuesFactory = contentValuesFactory;
         dateFormat = new SimpleDateFormat("MMM dd h:m:s", Locale.UK);
+        hasher = getHasher();
+    }
+    
+    private Hasher getHasher() {
+        MessageDigest messageDigest;
+        try {
+            messageDigest = MessageDigest.getInstance("SHA-1");
+            logger.d(this, "Using SHA-1 hasher");
+        }
+        catch (NoSuchAlgorithmException e) {
+            logger.e(this, "Could not create a SHA-1 message digest");
+            messageDigest = null;
+        }
+        
+        if (messageDigest == null) {
+            try {
+                messageDigest = MessageDigest.getInstance("MD5");
+                logger.d(this, "Using MD5 hasher");
+            }
+            catch (NoSuchAlgorithmException e) {
+                logger.e(this, "Could not create a MD5 message digest");
+                messageDigest = null;
+            }
+        }
+        
+        if (messageDigest == null) {
+            return null; //TODO
+        }
+        else {
+            return new Hasher(messageDigest);
+        }
     }
     
     void clearOlderEntries() {
@@ -95,7 +129,7 @@ class DatabaseManager {
         };
         
         String selection = SqlOpenHelper.COLUMN_CACHE_TOKEN + " = ?";
-        String[] selectionArgs = {cacheToken.getKey()};
+        String[] selectionArgs = {cacheToken.getKey(hasher)};
         
         Cursor cursor = db.query(SqlOpenHelper.TABLE_CACHE,
                                  projection,
@@ -171,7 +205,7 @@ class DatabaseManager {
         byte[] compressed = serialisationManager.compress(response);
         
         if (compressed != null) {
-            String hash = cacheToken.getKey();
+            String hash = cacheToken.getKey(hasher);
             
             Map<String, Object> values = new HashMap<>();
             values.put(SqlOpenHelper.COLUMN_CACHE_TOKEN, hash);
