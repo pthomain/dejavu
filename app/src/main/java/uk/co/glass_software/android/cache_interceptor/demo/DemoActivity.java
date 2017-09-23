@@ -25,13 +25,13 @@ public class DemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        editText = (EditText) findViewById(R.id.text_input);
-        resultText = ((TextView) findViewById(R.id.result));
-        button = (Button) findViewById(R.id.load_button);
+        editText = findViewById(R.id.text_input);
+        resultText = findViewById(R.id.result);
+        button = findViewById(R.id.load_button);
         button.setOnClickListener(ignore -> onButtonClick());
         
-        RadioButton retrofitRadioButton = (RadioButton) findViewById(R.id.radio_button_retrofit);
-        RadioButton volleyRadioButton = (RadioButton) findViewById(R.id.radio_button_volley);
+        RadioButton retrofitRadioButton = findViewById(R.id.radio_button_retrofit);
+        RadioButton volleyRadioButton = findViewById(R.id.radio_button_volley);
         
         retrofitRadioButton.setOnClickListener(ignore -> method = Method.RETROFIT);
         volleyRadioButton.setOnClickListener(ignore -> method = Method.VOLLEY);

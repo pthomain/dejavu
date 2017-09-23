@@ -5,10 +5,7 @@ import android.support.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import io.reactivex.Observable;
 
@@ -30,9 +27,7 @@ public abstract class CacheToken<R> {
         //returned with responses coming straight from the cache after their expiry date
         REFRESHED(true, false),
         //returned after a STALE response with FRESH data from a successful network call
-        COULD_NOT_REFRESH(true,
-                          false
-        );//returned after a STALE response with STALE data from an unsuccessful network call
+        COULD_NOT_REFRESH(true, false);//returned after a STALE response with STALE data from an unsuccessful network call
         
         //Final responses will not be succeeded by any other response as part of the same call,
         //while non-final responses will be followed by at least another response.
@@ -46,23 +41,28 @@ public abstract class CacheToken<R> {
             this.isSingle = isSingle;
             this.isFinal = isSingle || isFinal;
         }
+        
     }
     
     public interface Holder<R> {
+        
         void setCacheToken(@NonNull CacheToken<R> cacheToken);
         
         @NonNull
         CacheToken<? extends R> getCacheToken();
+        
     }
     
     public static <R> CacheToken<R> newRequest(@NonNull Class<R> responseClass,
                                                @NonNull String apiUrl,
-                                               @NonNull String... uniqueFields) {
+                                               @Nullable String body,
+                                               int ttlInMinutes) {
         return new AutoValue_CacheToken<>(
                 apiUrl,
+                body,
+                ttlInMinutes,
                 Status.CACHE,
                 responseClass,
-                Arrays.asList(uniqueFields),
                 null,
                 null,
                 null,
@@ -73,9 +73,10 @@ public abstract class CacheToken<R> {
     public static <R> CacheToken<R> doNotCache(Class<R> responseClass) {
         return new AutoValue_CacheToken<>(
                 "",
+                null,
+                0,
                 Status.DO_NOT_CACHE,
                 responseClass,
-                new ArrayList<>(),
                 null,
                 null,
                 null,
@@ -88,9 +89,10 @@ public abstract class CacheToken<R> {
                                        @NonNull Date fetchDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
+                null,
+                cacheToken.getTtlInMinutes(),
                 Status.NOT_CACHED,
                 cacheToken.getResponseClass(),
-                cacheToken.getUniqueFields(),
                 fetchDate,
                 null,
                 null,
@@ -105,9 +107,10 @@ public abstract class CacheToken<R> {
                                      @NonNull Date expiryDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
+                null,
+                cacheToken.getTtlInMinutes(),
                 Status.FRESH,
                 cacheToken.getResponseClass(),
-                cacheToken.getUniqueFields(),
                 fetchDate,
                 cacheDate,
                 expiryDate,
@@ -121,9 +124,10 @@ public abstract class CacheToken<R> {
                                     @NonNull Date expiryDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
+                null,
+                cacheToken.getTtlInMinutes(),
                 Status.CACHED,
                 cacheToken.getResponseClass(),
-                cacheToken.getUniqueFields(),
                 cacheDate,
                 cacheDate,
                 expiryDate,
@@ -135,9 +139,10 @@ public abstract class CacheToken<R> {
                                        Status status) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
+                null,
+                cacheToken.getTtlInMinutes(),
                 status,
                 cacheToken.getResponseClass(),
-                cacheToken.getUniqueFields(),
                 cacheToken.getFetchDate(),
                 cacheToken.getCacheDate(),
                 cacheToken.getExpiryDate(),
@@ -145,23 +150,39 @@ public abstract class CacheToken<R> {
         );
     }
     
-     String getKey() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getApiUrl());
-        for (String field : getUniqueFields()) {
-            builder.append("$");
-            builder.append(String.valueOf(field));
+    String getKey(Hasher hasher) {
+        String apiUrl = getApiUrl();
+        String body = getBody();
+        int urlHash = apiUrl.hashCode();
+        
+        try {
+            if (body == null) {
+                return hasher.hash(apiUrl);
+            }
+            else {
+                return hasher.hash(apiUrl + "$" + body);
+            }
         }
-        return builder.toString();
+        catch (Exception e) {
+            if (body == null) {
+                return urlHash + "";
+            }
+            else {
+                return String.valueOf(urlHash * 7 + body.hashCode());
+            }
+        }
     }
     
-    public abstract String getApiUrl();
+    protected abstract String getApiUrl();
+    
+    @Nullable
+    protected abstract String getBody();
+    
+    public abstract int getTtlInMinutes();
     
     public abstract Status getStatus();
     
     public abstract Class<R> getResponseClass();
-    
-    public abstract List<String> getUniqueFields();
     
     @Nullable
     public abstract Date getFetchDate();

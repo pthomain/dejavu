@@ -19,7 +19,6 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
     
     private final static String DATABASE_NAME = "http_cache.db";
     
-    private int timeToLiveInMinutes = 5;
     private String databaseName;
     private Logger logger;
     private Gson gson;
@@ -34,16 +33,6 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
     
     public CacheInterceptorBuilder<E, R> databaseName(@NonNull String databaseName) {
         this.databaseName = databaseName;
-        return this;
-    }
-    
-    public CacheInterceptorBuilder<E, R> ttlInMinutes(@NonNull Integer timeToLiveInMinutes) {
-        if (timeToLiveInMinutes >= 0) {
-            this.timeToLiveInMinutes = timeToLiveInMinutes;
-        }
-        else {
-            throw new IllegalArgumentException("timeToLiveInMinutes should be positive");
-        }
         return this;
     }
     
@@ -130,8 +119,7 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
                 databaseManager,
                 dateFactory,
                 gson,
-                logger,
-                timeToLiveInMinutes
+                logger
         );
         
         return new CacheInterceptor.Factory<>(

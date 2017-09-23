@@ -17,7 +17,6 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
     private Logger logger;
     private Function<Throwable, E> errorFactory;
     private String databaseName;
-    private int timeToLiveInMinutes = 5;
     private Gson gson;
     
     RxCacheInterceptorBuilder() {
@@ -56,16 +55,6 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
         return this;
     }
     
-    public RxCacheInterceptorBuilder<E, R> ttlInMinutes(@NonNull Integer timeToLiveInMinutes) {
-        if (timeToLiveInMinutes >= 0) {
-            this.timeToLiveInMinutes = timeToLiveInMinutes;
-        }
-        else {
-            throw new IllegalArgumentException("timeToLiveInMinutes should be positive");
-        }
-        return this;
-    }
-    
     public RxCacheInterceptor.Factory<E, R> build(Context context) {
         if (logger == null) {
             logger = new SimpleLogger(context.getApplicationContext());
@@ -83,7 +72,6 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
                 .logger(logger)
                 .databaseName(databaseName)
                 .gson(gson)
-                .ttlInMinutes(timeToLiveInMinutes)
                 .build(context.getApplicationContext());
         
         return new RxCacheInterceptor.Factory<>(errorInterceptorFactory,

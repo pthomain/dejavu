@@ -29,8 +29,7 @@ public class VolleyDemoPresenter extends DemoPresenter {
         RxCacheInterceptor<ApiError, WeatherList> interceptor = rxCacheInterceptorFactory.create(
                 WeatherList.class,
                 VolleyObservable.getUrl(location),
-                new String[]{location},
-                ""
+                null
         );
         
         return new VolleyObservable(gson, requestQueue, location)

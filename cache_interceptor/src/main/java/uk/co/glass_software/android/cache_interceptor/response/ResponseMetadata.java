@@ -15,52 +15,48 @@ import uk.co.glass_software.android.cache_interceptor.utils.Function;
 @AutoValue
 public abstract class ResponseMetadata<R, E extends Exception & Function<E, Boolean>>
         implements CacheToken.Holder<R> {
-
+    
     private CacheToken<R> cacheToken;
-
-    public interface Holder<R, E extends Exception & Function<E, Boolean>> {
-
-        CacheToken<R> getCacheToken(@NonNull Class<R> responseClass,
-                                    @NonNull String url,
-                                    @NonNull String[] params,
-                                    @NonNull String body);
-
-        @NonNull
-        ResponseMetadata<R, E> getMetadata();
-
-        void setMetadata(ResponseMetadata<R, E> metadata);
-    }
-
+    
     ResponseMetadata() {
     }
-
+    
     public static <R, E extends Exception & Function<E, Boolean>> ResponseMetadata<R, E> create(CacheToken<R> cacheToken,
                                                                                                 E error) {
         ResponseMetadata<R, E> metadata = new AutoValue_ResponseMetadata<>(
                 error,
-                cacheToken.getResponseClass(),
-                cacheToken.getApiUrl()
+                cacheToken.getResponseClass()
         );
         metadata.setCacheToken(cacheToken);
         return metadata;
     }
-
-    public boolean hasError(){
+    
+    public interface Holder<R, E extends Exception & Function<E, Boolean>> {
+        int DEFAULT_TTL_IN_MINUTES = 5;
+        
+        int getTtlInMinutes();
+        
+        @NonNull
+        ResponseMetadata<R, E> getMetadata();
+        
+        void setMetadata(ResponseMetadata<R, E> metadata);
+        
+    }
+    
+    public boolean hasError() {
         return getError() != null;
     }
     
     @Nullable
     public abstract E getError();
-
+    
     public abstract Class<R> getResponseClass();
-
-    public abstract String getUrl();
-
+    
     @Override
     public void setCacheToken(@NonNull CacheToken<R> cacheToken) {
         this.cacheToken = cacheToken;
     }
-
+    
     @NonNull
     @Override
     public CacheToken<R> getCacheToken() {

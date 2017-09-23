@@ -22,19 +22,16 @@ class CacheManager {
     private final Function<Long, Date> dateFactory;
     private final Gson gson;
     private final Logger logger;
-    private final long timeToLiveInMs;
     private final DatabaseManager databaseManager;
     
     CacheManager(DatabaseManager databaseManager,
                  Function<Long, Date> dateFactory,
                  Gson gson,
-                 Logger logger,
-                 int timeToLiveInMinutes) {
+                 Logger logger) {
         this.databaseManager = databaseManager;
         this.dateFactory = dateFactory;
         this.gson = gson;
         this.logger = logger;
-        this.timeToLiveInMs = timeToLiveInMinutes * 60000L;
     }
     
     public void clearOlderEntries() {
@@ -53,9 +50,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> getCachedResponse(
-            Observable<R> upstream,
-            @NonNull CacheToken<R> cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> getCachedResponse(Observable<R> upstream,
+                                                                                                                          @NonNull CacheToken<R> cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
@@ -83,8 +79,7 @@ class CacheManager {
     }
     
     @NonNull
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheToken.Status getCachedStatus(
-            @NonNull CacheToken<? extends R> cacheToken) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheToken.Status getCachedStatus(@NonNull CacheToken<? extends R> cacheToken) {
         Date expiryDate = cacheToken.getExpiryDate();
         if (expiryDate == null) {
             return STALE;
@@ -92,9 +87,8 @@ class CacheManager {
         return dateFactory.get(null).getTime() > expiryDate.getTime() ? STALE : CACHED;
     }
     
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> fetchAndCache(
-            Observable<R> upstream,
-            CacheToken<R> cacheToken) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> fetchAndCache(Observable<R> upstream,
+                                                                                                                              CacheToken<R> cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Fetching and caching new " + simpleName);
         
@@ -104,6 +98,7 @@ class CacheManager {
                     ResponseMetadata<R, E> metadata = response.getMetadata();
                     if (metadata.getError() == null) {
                         Date fetchDate = dateFactory.get(null);
+                        long timeToLiveInMs = cacheToken.getTtlInMinutes() * 60000L;
                         Date expiryDate = dateFactory.get(fetchDate.getTime() + timeToLiveInMs);
                         metadata.setCacheToken(CacheToken.caching(cacheToken,
                                                                   upstream,
@@ -122,9 +117,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> refreshStale(
-            R cachedResponse,
-            Observable<R> upstream) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> refreshStale(R cachedResponse,
+                                                                                                                             Observable<R> upstream) {
         String simpleName = cachedResponse.getClass().getSimpleName();
         ResponseMetadata<R, E> metadata = cachedResponse.getMetadata();
         CacheToken<R> cacheToken = metadata.getCacheToken();
@@ -151,9 +145,8 @@ class CacheManager {
     }
     
     @SuppressWarnings("unchecked")
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R deepCopy(
-            R cachedResponse,
-            CacheToken.Status newStatus) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R deepCopy(R cachedResponse,
+                                                                                                             CacheToken.Status newStatus) {
         R copiedResponse = gson.fromJson(gson.toJson(cachedResponse),
                                          (Class<R>) cachedResponse.getClass()
         );
@@ -163,9 +156,8 @@ class CacheManager {
         return copiedResponse;
     }
     
-    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R updateRefreshed(
-            R response,
-            CacheToken.Status status) {
+    private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R updateRefreshed(R response,
+                                                                                                                    CacheToken.Status status) {
         String simpleName = response.getClass().getSimpleName();
         ResponseMetadata<R, E> metadata = response.getMetadata();
         CacheToken<R> newToken = CacheToken.newStatus(metadata.getCacheToken(), status);

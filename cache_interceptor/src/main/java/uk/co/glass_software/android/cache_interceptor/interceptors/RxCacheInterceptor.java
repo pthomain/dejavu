@@ -28,13 +28,10 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     @NonNull
     private final String url;
     
-    @NonNull
-    private final String[] params;
-    
-    @NonNull
+    @Nullable
     private final String body;
     
-    @Nullable
+    @NonNull
     private final Logger logger;
     
     @NonNull
@@ -46,14 +43,12 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     @RestrictTo(RestrictTo.Scope.TESTS)
     RxCacheInterceptor(@NonNull Class<R> responseClass,
                        @NonNull String url,
-                       @NonNull String[] params,
-                       @NonNull String body,
-                       @Nullable Logger logger,
+                       @Nullable String body,
+                       @NonNull Logger logger,
                        @NonNull ErrorInterceptor.Factory<E> errorInterceptorFactory,
                        @NonNull CacheInterceptor.Factory<E> cacheInterceptorFactory) {
         this.responseClass = responseClass;
         this.url = url;
-        this.params = params;
         this.body = body;
         this.logger = logger;
         this.errorInterceptorFactory = errorInterceptorFactory;
@@ -62,24 +57,26 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     
     @Override
     public ObservableSource<R> apply(Observable<R> observable) {
-        CacheToken<R> cacheToken;
+        Integer ttlInMinutes;
         try {
             R response = responseClass.newInstance();
-            cacheToken = response.getCacheToken(responseClass,
-                                                url,
-                                                params,
-                                                body
-            );
+            ttlInMinutes = response.getTtlInMinutes();
         }
         catch (Exception e) {
             logger.e(this,
                      e,
                      "Could not instantiate response of type: "
                      + responseClass.getName()
-                     + "; not caching it"
+                     + "; using default TTL"
             );
-            cacheToken = CacheToken.doNotCache(responseClass);
+            ttlInMinutes = ResponseMetadata.Holder.DEFAULT_TTL_IN_MINUTES;
         }
+        
+        CacheToken<R> cacheToken = CacheToken.newRequest(responseClass,
+                                                         url,
+                                                         body,
+                                                         ttlInMinutes
+        );
         
         ResponseMetadata<R, E> metadata = ResponseMetadata.create(cacheToken, null);
         
@@ -112,7 +109,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         
         Factory(@NonNull ErrorInterceptor.Factory<E> errorInterceptorFactory,
                 @NonNull CacheInterceptor.Factory<E> cacheInterceptorFactory,
-                @Nullable Logger logger) {
+                @NonNull Logger logger) {
             this.errorInterceptorFactory = errorInterceptorFactory;
             this.cacheInterceptorFactory = cacheInterceptorFactory;
             this.logger = logger;
@@ -121,11 +118,9 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         @SuppressLint("RestrictedApi")
         public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
                                                @NonNull String url,
-                                               @NonNull String[] params,
-                                               @NonNull String body) {
+                                               @Nullable String body) {
             return new RxCacheInterceptor<>(responseClass,
                                             url,
-                                            params,
                                             body,
                                             logger,
                                             errorInterceptorFactory,
