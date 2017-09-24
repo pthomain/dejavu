@@ -16,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import uk.co.glass_software.android.cache_interceptor.BuildConfig;
 import uk.co.glass_software.android.cache_interceptor.base.network.MockClient;
 import uk.co.glass_software.android.cache_interceptor.base.network.retrofit.TestClient;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
@@ -29,12 +30,13 @@ public abstract class BaseIntegrationTest {
     public static final String ASSETS_FOLDER = "src/main/assets/";
     public static final String BASE_URL = "http://test.com";
     
-    private final Application application;
+    protected final Application application;
     private final OkHttpClient okHttpClient;
     private final Retrofit retrofit;
     
     protected final TestClient testClient;
     protected final AssetHelper assetHelper;
+    private final RetrofitCacheAdapterFactory<ApiError, ?> cacheFactory;
     
     private MockClient mockClient;
     
@@ -45,15 +47,16 @@ public abstract class BaseIntegrationTest {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.addInterceptor(mockClient);
         okHttpClient = builder.build();
-    
+        
         Gson gson = new Gson();
+        cacheFactory = RetrofitCacheAdapterFactory.buildDefault(application);
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(RetrofitCacheAdapterFactory.buildDefault(application))
+                .addCallAdapterFactory(cacheFactory)
                 .build();
-    
+        
         testClient = retrofit.create(TestClient.class);
         assetHelper = new AssetHelper(
                 ASSETS_FOLDER,

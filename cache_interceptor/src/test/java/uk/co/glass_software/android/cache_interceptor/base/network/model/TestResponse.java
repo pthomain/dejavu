@@ -8,4 +8,5 @@ public class TestResponse extends CachedList<ApiError, TestResponse, User> {
     
     public static String STUB_FILE = "api_stub_test.json";
     
+    
 }
