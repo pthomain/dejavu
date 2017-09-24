@@ -210,9 +210,7 @@ class DatabaseManager {
             Map<String, Object> values = new HashMap<>();
             values.put(SqlOpenHelper.COLUMN_CACHE_TOKEN, hash);
             values.put(SqlOpenHelper.COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
-            values.put(SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE,
-                       cacheToken.getExpiryDate().getTime()
-            );
+            values.put(SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
             values.put(SqlOpenHelper.COLUMN_CACHE_DATA, compressed);
             
             db.insertWithOnConflict(
