@@ -171,33 +171,27 @@ public abstract class CacheToken<R> {
     }
     
     String getKey(Hasher hasher) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getApiUrl());
-        return builder.toString();
+        String apiUrl = getApiUrl();
+        String body = getBody();
+        
+        int urlHash = apiUrl.hashCode();
+        try {
+            if (body == null) {
+                return hasher.hash(apiUrl);
+            }
+            else {
+                return hasher.hash(apiUrl + "$" + body);
+            }
+        }
+        catch (Exception e) {
+            if (body == null) {
+                return urlHash + "";
+            }
+            else {
+                return String.valueOf(urlHash * 7 + body.hashCode());
+            }
+        }
     }
-
-//    String getKey(Hasher hasher) {
-//        String apiUrl = getApiUrl();
-//        String body = getBody();
-//
-//            int urlHash = apiUrl.hashCode();
-//        try {
-//            if (body == null) {
-//                return hasher.hash(apiUrl);
-//            }
-//            else {
-//                return hasher.hash(apiUrl + "$" + body);
-//            }
-//        }
-//        catch (Exception e) {
-//            if (body == null) {
-//                return urlHash + "";
-//            }
-//            else {
-//                return String.valueOf(urlHash * 7 + body.hashCode());
-//            }
-//        }
-//    }
     
     protected abstract String getApiUrl();
     
