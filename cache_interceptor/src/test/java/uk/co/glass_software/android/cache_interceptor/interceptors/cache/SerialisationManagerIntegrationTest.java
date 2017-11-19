@@ -1,6 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
 
+import android.support.annotation.Nullable;
+
 import com.google.gson.Gson;
 
 import org.junit.Before;
@@ -8,6 +10,8 @@ import org.junit.Test;
 
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
@@ -24,7 +28,8 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
     
     @Before
     public void setUp() throws Exception {
-        stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class).blockingFirst();
+        stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class)
+                                     .blockingFirst();
         
         target = new SerialisationManager(mock(Logger.class), new Gson());
     }
@@ -42,6 +47,7 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
         
         TestResponse uncompressed = target.uncompress(TestResponse.class, compressed, mockAction);
         
+        stubbedResponse.setMetadata(null); //no need to test metadata in this test
         assertEquals("Responses didn't match", stubbedResponse, uncompressed);
         verify(mockAction, never()).act();
     }

@@ -20,6 +20,12 @@ import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.REFRESH;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_DATA;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_DATE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_TOKEN;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.TABLE_CACHE;
 
 class DatabaseManager {
     
@@ -102,8 +108,8 @@ class DatabaseManager {
         Date date = new Date(System.currentTimeMillis() + cleanUpThresholdInMillis);
         String sqlDate = CLEANUP_DATE_FORMAT.format(date);
         
-        int deleted = db.delete(SqlOpenHelper.TABLE_CACHE,
-                                SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE + " < ?",
+        int deleted = db.delete(TABLE_CACHE,
+                                COLUMN_CACHE_EXPIRY_DATE + " < ?",
                                 new String[]{"date('" + sqlDate + "')"}
         );
         
@@ -111,7 +117,7 @@ class DatabaseManager {
     }
     
     void flushCache() {
-        db.execSQL("DELETE FROM " + SqlOpenHelper.TABLE_CACHE);
+        db.execSQL("DELETE FROM " + TABLE_CACHE);
         logger.d(this, "Cleared entire HTTP cache");
     }
     
@@ -121,17 +127,18 @@ class DatabaseManager {
                                                                                                               CacheToken cacheToken) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
+        checkInvalidation(cacheToken);
         
         String[] projection = {
-                SqlOpenHelper.COLUMN_CACHE_DATE,
-                SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE,
-                SqlOpenHelper.COLUMN_CACHE_DATA
+                COLUMN_CACHE_DATE,
+                COLUMN_CACHE_EXPIRY_DATE,
+                COLUMN_CACHE_DATA
         };
         
-        String selection = SqlOpenHelper.COLUMN_CACHE_TOKEN + " = ?";
+        String selection = COLUMN_CACHE_TOKEN + " = ?";
         String[] selectionArgs = {cacheToken.getKey(hasher)};
         
-        Cursor cursor = db.query(SqlOpenHelper.TABLE_CACHE,
+        Cursor cursor = db.query(TABLE_CACHE,
                                  projection,
                                  selection,
                                  selectionArgs,
@@ -163,6 +170,29 @@ class DatabaseManager {
         }
         finally {
             cursor.close();
+        }
+    }
+    
+    private void checkInvalidation(CacheToken cacheToken) {
+        if (cacheToken.getStatus() == REFRESH) {
+            Map<String, Object> map = new HashMap<>();
+            map.put(COLUMN_CACHE_EXPIRY_DATE, 0);
+            
+            String selection = COLUMN_CACHE_TOKEN + " = ?";
+            String[] selectionArgs = {cacheToken.getKey(hasher)};
+            
+            int update = db.update(TABLE_CACHE,
+                                   contentValuesFactory.get(map),
+                                   selection,
+                                   selectionArgs
+            );
+            
+            logger.d(this,
+                     "Invalidating cache for "
+                     + cacheToken.getKey(hasher)
+                     + ": "
+                     + (update > 0 ? "DONE" : "NOT FOUND")
+            );
         }
     }
     
@@ -208,13 +238,13 @@ class DatabaseManager {
             String hash = cacheToken.getKey(hasher);
             
             Map<String, Object> values = new HashMap<>();
-            values.put(SqlOpenHelper.COLUMN_CACHE_TOKEN, hash);
-            values.put(SqlOpenHelper.COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
-            values.put(SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
-            values.put(SqlOpenHelper.COLUMN_CACHE_DATA, compressed);
+            values.put(COLUMN_CACHE_TOKEN, hash);
+            values.put(COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
+            values.put(COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
+            values.put(COLUMN_CACHE_DATA, compressed);
             
             db.insertWithOnConflict(
-                    SqlOpenHelper.TABLE_CACHE,
+                    TABLE_CACHE,
                     null,
                     contentValuesFactory.get(values),
                     CONFLICT_REPLACE

@@ -1,5 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
+import android.annotation.SuppressLint;
+import android.support.annotation.RestrictTo;
+
 import java.util.Date;
 
 import io.reactivex.Observable;
@@ -17,14 +20,18 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
     private final CacheManager cacheManager;
     private final boolean isCacheEnabled;
     private final Logger logger;
+    private final Function<E, Boolean> isNetworkError;
     private final CacheToken<R> cacheToken;
     
-    private CacheInterceptor(CacheManager cacheManager,
-                             boolean isCacheEnabled,
-                             Logger logger,
-                             CacheToken<R> cacheToken) {
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    CacheInterceptor(CacheManager cacheManager,
+                     boolean isCacheEnabled,
+                     Logger logger,
+                     Function<E, Boolean> isNetworkError,
+                     CacheToken<R> cacheToken) {
         this.cacheManager = cacheManager;
         this.logger = logger;
+        this.isNetworkError = isNetworkError;
         this.cacheToken = cacheToken;
         this.isCacheEnabled = isCacheEnabled;
     }
@@ -60,7 +67,7 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
     
     private Observable<R> cache(Observable<R> upstream,
                                 CacheToken<R> cacheToken) {
-        return cacheManager.getCachedResponse(upstream, cacheToken);
+        return cacheManager.getCachedResponse(upstream, cacheToken, isNetworkError);
     }
     
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheInterceptorBuilder<E, R> builder() {
@@ -81,10 +88,13 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
             this.logger = logger;
         }
         
-        public <R extends ResponseMetadata.Holder<R, E>> CacheInterceptor<E, R> create(CacheToken<R> cacheToken) {
+        @SuppressLint("RestrictedApi")
+        public <R extends ResponseMetadata.Holder<R, E>> CacheInterceptor<E, R> create(CacheToken<R> cacheToken,
+                                                                                       Function<E, Boolean> isNetworkError) {
             return new CacheInterceptor<>(cacheManager,
                                           isCacheEnabled,
                                           logger,
+                                          isNetworkError,
                                           cacheToken
             );
         }

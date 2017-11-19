@@ -2,8 +2,6 @@ package uk.co.glass_software.android.cache_interceptor.response;
 
 import android.support.annotation.NonNull;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
@@ -14,7 +12,7 @@ public abstract class CachedList<E extends Exception & Function<E, Boolean>, R, 
         extends ArrayList<C>
         implements ResponseMetadata.Holder<R, E> {
     
-    private ResponseMetadata<R, E> metadata;
+    private transient ResponseMetadata<R, E> metadata;
     
     @Override
     public int getTtlInMinutes() {
@@ -30,32 +28,6 @@ public abstract class CachedList<E extends Exception & Function<E, Boolean>, R, 
     @Override
     public void setMetadata(@NonNull ResponseMetadata<R, E> metadata) {
         this.metadata = metadata;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        
-        CachedList<?, ?, ?> that = (CachedList<?, ?, ?>) o;
-        
-        return new EqualsBuilder()
-                .appendSuper(super.equals(o))
-                .append(metadata, that.metadata)
-                .isEquals();
-    }
-    
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .appendSuper(super.hashCode())
-                .append(metadata)
-                .toHashCode();
     }
     
     @Override

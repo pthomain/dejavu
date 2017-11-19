@@ -32,18 +32,20 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
     
     @Before
     public void setUp() throws Exception {
-        stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class).blockingFirst();
-        mockUpstream = mock(Observable.class);
-        
-        Date fetchDate = new Date();
-        Date expiryDate = new Date(fetchDate.getTime() + 12345);
-        
         CacheToken requestToken = CacheToken.newRequest(
                 TestResponse.class,
                 "apiUrl",
                 "",
                 5
         );
+        
+        stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class).blockingFirst();
+        stubbedResponse.setMetadata(ResponseMetadata.create(requestToken, null));
+        
+        mockUpstream = mock(Observable.class);
+        
+        Date fetchDate = new Date();
+        Date expiryDate = new Date(fetchDate.getTime() + 12345);
         
         cacheToken = CacheToken.caching(requestToken,
                                         mockUpstream,
@@ -65,7 +67,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
         assertNull("Cache should not contain anything", target.getCachedResponse(mockUpstream, cacheToken));
         
         target.cache(stubbedResponse);
-    
+        
         TestResponse cachedResponse = target.getCachedResponse(mockUpstream, cacheToken);
         cachedResponse.setMetadata(stubbedResponse.getMetadata()); //ignore metadata, covered by unit test
         assertEquals("Cached response didn't match the original", stubbedResponse, cachedResponse);
@@ -80,7 +82,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(DatabaseManager databaseManager,
                                                                                                                    R response,
                                                                                                                    CacheToken cacheToken) {
-        response.getMetadata().setCacheToken(cacheToken);
+        response.setMetadata(ResponseMetadata.create(cacheToken, null));
         databaseManager.cache(response);
     }
     
@@ -104,7 +106,6 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
                                  expiryDate
         );
     }
-    
     //used by other tests to preserve encapsulation
     @VisibleForTesting
     public static void prepareSpyCacheManagerToReturnStale(CacheManager spyCacheManager) {

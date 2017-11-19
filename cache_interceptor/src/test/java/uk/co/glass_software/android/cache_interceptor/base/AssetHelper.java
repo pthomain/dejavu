@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import io.reactivex.Observable;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
@@ -32,9 +31,7 @@ public class AssetHelper {
     
     public <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> getStubbedResponse(String fileName,
                                                                                                                                   Class<R> responseClass) {
-        return observeFile(fileName)
-                .map(json -> gson.fromJson(json, responseClass))
-                .doOnNext(response->response.setMetadata(ResponseMetadata.create(CacheToken.doNotCache(responseClass), null)));
+        return observeFile(fileName).map(json -> gson.fromJson(json, responseClass));
     }
     
     Observable<String> observeFile(String fileName) {
