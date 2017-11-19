@@ -79,10 +79,12 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         );
         
         ResponseMetadata<R, E> metadata = ResponseMetadata.create(cacheToken, null);
+    
+        Function<E, Boolean> isNetworkError = error -> error != null && error.get(error);
         
         return observable
                 .compose(errorInterceptorFactory.create(metadata))
-                .compose(cacheInterceptorFactory.create(cacheToken));
+                .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));
     }
     
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> RxCacheInterceptorBuilder<E, R> builder() {

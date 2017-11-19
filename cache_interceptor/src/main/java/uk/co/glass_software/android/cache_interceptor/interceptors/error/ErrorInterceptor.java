@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.error;
 import android.support.annotation.NonNull;
 
 import java.lang.reflect.Constructor;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -40,6 +41,8 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
     @Override
     public ObservableSource<R> apply(Observable<R> upstream) {
         return upstream
+                .filter(o -> o != null) //see https://github.com/square/retrofit/issues/2242
+                .switchIfEmpty(Observable.error(new NoSuchElementException("Response was empty")))
                 .timeout(requestTimeout, TimeUnit.SECONDS) //fixing timeout not working in OkHttp
                 .doOnNext(response -> response.setMetadata(metadata))
                 .onErrorResumeNext(throwable -> {

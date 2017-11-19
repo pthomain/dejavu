@@ -51,7 +51,8 @@ class CacheManager {
     
     @SuppressWarnings("unchecked")
     <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> getCachedResponse(Observable<R> upstream,
-                                                                                                                          @NonNull CacheToken<R> cacheToken) {
+                                                                                                                          @NonNull CacheToken<R> cacheToken,
+                                                                                                                          Function<E, Boolean> isNetworkError) {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Checking for cached " + simpleName);
         
@@ -70,7 +71,10 @@ class CacheManager {
             logger.d(this, "Found cached " + simpleName + ", status: " + status);
             
             if (status == STALE) {
-                return refreshStale(cachedResponse, upstream);
+                return refreshStale(cachedResponse,
+                                    upstream,
+                                    isNetworkError
+                );
             }
             else {
                 return Observable.just(cachedResponse);
@@ -118,7 +122,8 @@ class CacheManager {
     
     @SuppressWarnings("unchecked")
     private <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> refreshStale(R cachedResponse,
-                                                                                                                             Observable<R> upstream) {
+                                                                                                                             Observable<R> upstream,
+                                                                                                                             Function<E, Boolean> isNetworkError) {
         String simpleName = cachedResponse.getClass().getSimpleName();
         ResponseMetadata<R, E> metadata = cachedResponse.getMetadata();
         CacheToken<R> cacheToken = metadata.getCacheToken();
@@ -128,9 +133,7 @@ class CacheManager {
         Observable<R> fetchAndCache = fetchAndCache(upstream, cacheToken)
                 .map(response -> {
                     E error = response.getMetadata().getError();
-                    
-                    boolean isCouldNotRefresh = error != null
-                                                && response.getMetadata().getError().get(error);
+                    boolean isCouldNotRefresh = error != null && isNetworkError.get(error);
                     
                     if (isCouldNotRefresh) {
                         return deepCopy(cachedResponse, CacheToken.Status.COULD_NOT_REFRESH);
@@ -152,7 +155,8 @@ class CacheManager {
         );
         ResponseMetadata<R, E> metadata = cachedResponse.getMetadata();
         CacheToken newToken = CacheToken.newStatus(metadata.getCacheToken(), newStatus);
-        metadata.setCacheToken(newToken);
+        ResponseMetadata<R, E> copiedMetadata = ResponseMetadata.create(newToken, null);
+        copiedResponse.setMetadata(copiedMetadata);
         return copiedResponse;
     }
     

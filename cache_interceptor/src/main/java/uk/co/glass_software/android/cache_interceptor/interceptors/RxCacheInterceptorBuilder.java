@@ -1,7 +1,10 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 
 import com.google.gson.Gson;
 
@@ -55,7 +58,14 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
         return this;
     }
     
+    @SuppressLint("RestrictedApi")
     public RxCacheInterceptor.Factory<E, R> build(Context context) {
+        return build(context, null);
+    }
+    
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    RxCacheInterceptor.Factory<E, R> build(Context context,
+                                           @Nullable DependencyHolder holder) {
         if (logger == null) {
             logger = new SimpleLogger(context.getApplicationContext());
         }
@@ -74,9 +84,24 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
                 .gson(gson)
                 .build(context.getApplicationContext());
         
+        if (holder != null) {
+            holder.gson = gson;
+            holder.errorFactory = this.errorFactory;
+            holder.errorInterceptorFactory = errorInterceptorFactory;
+            holder.cacheInterceptorFactory = cacheInterceptorFactory;
+        }
+        
         return new RxCacheInterceptor.Factory<>(errorInterceptorFactory,
                                                 cacheInterceptorFactory,
                                                 logger
         );
+    }
+    
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    class DependencyHolder {
+        Function<Throwable, E> errorFactory;
+        Gson gson;
+        ErrorInterceptor.Factory<E> errorInterceptorFactory;
+        CacheInterceptor.Factory<E> cacheInterceptorFactory;
     }
 }

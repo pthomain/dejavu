@@ -17,6 +17,8 @@ public abstract class CacheToken<R> {
         //use on requests that should not be cached
         CACHE(true, true),
         //use on requests that should be cached
+        REFRESH(true, true),
+        //use on requests that should be refreshed regardless of whether they've expired
         NOT_CACHED(true, true),
         //use on requests that were not cached
         FRESH(true, true),
@@ -70,6 +72,23 @@ public abstract class CacheToken<R> {
         );
     }
     
+    public static <R> CacheToken<R> refresh(@NonNull Class<R> responseClass,
+                                            @NonNull String apiUrl,
+                                            @Nullable String body,
+                                            int ttlInMinutes) {
+        return new AutoValue_CacheToken<>(
+                apiUrl,
+                body,
+                ttlInMinutes,
+                Status.REFRESH,
+                responseClass,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+    
     public static <R> CacheToken<R> doNotCache(Class<R> responseClass) {
         return new AutoValue_CacheToken<>(
                 "",
@@ -89,7 +108,7 @@ public abstract class CacheToken<R> {
                                        @NonNull Date fetchDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
-                null,
+                cacheToken.getBody(),
                 cacheToken.getTtlInMinutes(),
                 Status.NOT_CACHED,
                 cacheToken.getResponseClass(),
@@ -100,6 +119,7 @@ public abstract class CacheToken<R> {
         );
     }
     
+    
     static <R> CacheToken<R> caching(CacheToken<R> cacheToken,
                                      @NonNull Observable<R> refreshObservable,
                                      @NonNull Date fetchDate,
@@ -107,7 +127,7 @@ public abstract class CacheToken<R> {
                                      @NonNull Date expiryDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
-                null,
+                cacheToken.getBody(),
                 cacheToken.getTtlInMinutes(),
                 Status.FRESH,
                 cacheToken.getResponseClass(),
@@ -124,7 +144,7 @@ public abstract class CacheToken<R> {
                                     @NonNull Date expiryDate) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
-                null,
+                cacheToken.getBody(),
                 cacheToken.getTtlInMinutes(),
                 Status.CACHED,
                 cacheToken.getResponseClass(),
@@ -139,7 +159,7 @@ public abstract class CacheToken<R> {
                                        Status status) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
-                null,
+                cacheToken.getBody(),
                 cacheToken.getTtlInMinutes(),
                 status,
                 cacheToken.getResponseClass(),
@@ -153,8 +173,8 @@ public abstract class CacheToken<R> {
     String getKey(Hasher hasher) {
         String apiUrl = getApiUrl();
         String body = getBody();
-        int urlHash = apiUrl.hashCode();
         
+        int urlHash = apiUrl.hashCode();
         try {
             if (body == null) {
                 return hasher.hash(apiUrl);

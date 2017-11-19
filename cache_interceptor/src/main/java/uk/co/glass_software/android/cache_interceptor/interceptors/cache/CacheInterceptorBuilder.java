@@ -1,9 +1,12 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import com.google.gson.Gson;
@@ -79,7 +82,14 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
         return values;
     }
     
+    @SuppressLint("RestrictedApi")
     public CacheInterceptor.Factory<E> build(@NonNull Context context) {
+        return build(context, null);
+    }
+    
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    CacheInterceptor.Factory<E> build(@NonNull Context context,
+                                      @Nullable Holder holder) {
         if (gson == null) {
             gson = new Gson();
         }
@@ -122,10 +132,29 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
                 logger
         );
         
+        if (holder != null) {
+            holder.gson = gson;
+            holder.serialisationManager = serialisationManager;
+            holder.database = database;
+            holder.dateFactory = dateFactory;
+            holder.databaseManager = databaseManager;
+            holder.cacheManager = cacheManager;
+        }
+        
         return new CacheInterceptor.Factory<>(
                 cacheManager,
                 true,
                 logger
         );
+    }
+    
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    static class Holder {
+        Gson gson;
+        SerialisationManager serialisationManager;
+        SQLiteDatabase database;
+        Function<Long, Date> dateFactory;
+        DatabaseManager databaseManager;
+        CacheManager cacheManager;
     }
 }
