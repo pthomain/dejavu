@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.RestrictTo;
 
+import com.google.gson.Gson;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -16,6 +18,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterc
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
+import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         extends CallAdapter.Factory {
@@ -59,5 +62,17 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
     @SuppressLint("RestrictedApi")
     public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> buildDefault(Context context) {
         return new RetrofitCacheAdapterFactory<>(RxCacheInterceptor.<R>buildDefault(context));
+    }
+    
+    @SuppressLint("RestrictedApi")
+    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> build(Context context,
+                                                                                                                  Logger logger) {
+        return new RetrofitCacheAdapterFactory<>(
+                RxCacheInterceptor.<ApiError, R>builder()
+                        .gson(new Gson())
+                        .logger(logger)
+                        .errorFactory(ApiError::new)
+                        .build(context)
+        );
     }
 }

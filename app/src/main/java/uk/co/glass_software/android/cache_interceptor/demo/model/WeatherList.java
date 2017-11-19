@@ -6,8 +6,8 @@ import uk.co.glass_software.android.cache_interceptor.response.CachedList;
 public class WeatherList extends CachedList<ApiError, WeatherList, Weather> {
     
     @Override
-    public int getTtlInMinutes() {
-        return 10;
+    public float getTtlInMinutes() {
+        return 1f / 6f; //10s
     }
     
 }

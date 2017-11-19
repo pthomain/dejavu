@@ -34,7 +34,7 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
     public interface Holder<R, E extends Exception & Function<E, Boolean>> {
         int DEFAULT_TTL_IN_MINUTES = 5;
         
-        int getTtlInMinutes();
+        float getTtlInMinutes();
         
         @NonNull
         ResponseMetadata<R, E> getMetadata();

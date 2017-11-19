@@ -13,23 +13,24 @@ import io.reactivex.Observable;
 public abstract class CacheToken<R> {
     
     public enum Status {
-        DO_NOT_CACHE(true, true),
         //use on requests that should not be cached
-        CACHE(true, true),
+        DO_NOT_CACHE(true, true),
         //use on requests that should be cached
-        REFRESH(true, true),
+        CACHE(true, true),
         //use on requests that should be refreshed regardless of whether they've expired
-        NOT_CACHED(true, true),
+        REFRESH(true, true),
         //use on requests that were not cached
-        FRESH(true, true),
+        NOT_CACHED(true, true),
         //returned with responses coming straight from the network
-        CACHED(true, true),
+        FRESH(true, true),
         //returned with responses coming straight from the cache within their expiry date
-        STALE(false, false),
+        CACHED(true, true),
         //returned with responses coming straight from the cache after their expiry date
-        REFRESHED(true, false),
+        STALE(false, false),
         //returned after a STALE response with FRESH data from a successful network call
-        COULD_NOT_REFRESH(true, false);//returned after a STALE response with STALE data from an unsuccessful network call
+        REFRESHED(true, false),
+        //returned after a STALE response with STALE data from an unsuccessful network call
+        COULD_NOT_REFRESH(true, false);
         
         //Final responses will not be succeeded by any other response as part of the same call,
         //while non-final responses will be followed by at least another response.
@@ -58,7 +59,7 @@ public abstract class CacheToken<R> {
     public static <R> CacheToken<R> newRequest(@NonNull Class<R> responseClass,
                                                @NonNull String apiUrl,
                                                @Nullable String body,
-                                               int ttlInMinutes) {
+                                               float ttlInMinutes) {
         return new AutoValue_CacheToken<>(
                 apiUrl,
                 body,
@@ -75,7 +76,7 @@ public abstract class CacheToken<R> {
     public static <R> CacheToken<R> refresh(@NonNull Class<R> responseClass,
                                             @NonNull String apiUrl,
                                             @Nullable String body,
-                                            int ttlInMinutes) {
+                                            float ttlInMinutes) {
         return new AutoValue_CacheToken<>(
                 apiUrl,
                 body,
@@ -198,7 +199,7 @@ public abstract class CacheToken<R> {
     @Nullable
     protected abstract String getBody();
     
-    public abstract int getTtlInMinutes();
+    public abstract float getTtlInMinutes();
     
     public abstract Status getStatus();
     

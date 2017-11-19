@@ -102,8 +102,8 @@ class CacheManager {
                     ResponseMetadata<R, E> metadata = response.getMetadata();
                     if (metadata.getError() == null) {
                         Date fetchDate = dateFactory.get(null);
-                        long timeToLiveInMs = cacheToken.getTtlInMinutes() * 60000L;
-                        Date expiryDate = dateFactory.get(fetchDate.getTime() + timeToLiveInMs);
+                        float timeToLiveInMs = cacheToken.getTtlInMinutes() * 60000L;
+                        Date expiryDate = dateFactory.get(fetchDate.getTime() + (long) timeToLiveInMs);
                         metadata.setCacheToken(CacheToken.caching(cacheToken,
                                                                   upstream,
                                                                   fetchDate,

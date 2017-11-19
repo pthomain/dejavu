@@ -21,7 +21,10 @@ public class VolleyDemoPresenter extends DemoPresenter {
                                Callback<String> onLogOutput) {
         super(context, onLogOutput);
         requestQueue = Volley.newRequestQueue(context);
-        rxCacheInterceptorFactory = RxCacheInterceptor.buildDefault(context);
+        rxCacheInterceptorFactory = RxCacheInterceptor.<ApiError, WeatherList>builder()
+                .logger(simpleLogger)
+                .errorFactory(ApiError::new)
+                .build(context);
     }
     
     @Override

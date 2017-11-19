@@ -57,7 +57,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     
     @Override
     public ObservableSource<R> apply(Observable<R> observable) {
-        Integer ttlInMinutes;
+        float ttlInMinutes;
         try {
             R response = responseClass.newInstance();
             ttlInMinutes = response.getTtlInMinutes();

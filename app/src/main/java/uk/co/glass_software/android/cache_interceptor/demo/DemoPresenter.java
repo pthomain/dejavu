@@ -8,7 +8,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
-import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 import uk.co.glass_software.android.cache_interceptor.utils.SimpleLogger;
 
@@ -20,27 +19,18 @@ public abstract class DemoPresenter {
     
     protected DemoPresenter(Context context,
                             Callback<String> onLogOutput) {
-        simpleLogger = new SimpleLogger(context, (priority, tag, message) -> onLogOutput.call(message));
+        simpleLogger = new SimpleLogger(context, (priority, tag, message) -> onLogOutput.call(clean(message)));
         gson = new Gson();
     }
     
-    void loadResponse(String location,
-                      Callback<String> onNext,
-                      Action onEnd) {
-        getResponseObservable(location)
-                .doOnNext(response -> {
-                    if (response.getMetadata().getCacheToken().getStatus().isFinal) {
-                        onEnd.act();
-                    }
-                })
+    private String clean(String message) {
+        return message.replaceAll("(\\([^)]+\\))", "");
+    }
+    
+    Observable<WeatherList> loadResponse(String location) {
+        return getResponseObservable(location)
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> onNext.call(response.toString()
-                                                   + "\n\n"
-                                                   + response.getMetadata()
-                                                             .getCacheToken()
-                                                             .toString())
-                );
+                .observeOn(AndroidSchedulers.mainThread());
     }
     
     protected abstract Observable<WeatherList> getResponseObservable(String location);

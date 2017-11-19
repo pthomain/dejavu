@@ -29,7 +29,7 @@ public class RetrofitDemoPresenter extends DemoPresenter {
                 .baseUrl(BASE_URL)
                 .client(getOkHttpClient(simpleLogger))
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(RetrofitCacheAdapterFactory.buildDefault(context))
+                .addCallAdapterFactory(RetrofitCacheAdapterFactory.build(context, simpleLogger))
                 .build();
     }
     
