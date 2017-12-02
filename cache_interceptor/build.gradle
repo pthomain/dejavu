@@ -76,6 +76,8 @@ dependencies {
     provided "javax.annotation:jsr250-api:$jsr250Version"
     compile "com.android.support:support-annotations:$supportLibVersion"
 
+    compile 'com.github.pthomain:SharedPreferenceStore:1.0.2'
+
     compile 'com.google.auto.factory:auto-factory:1.0-beta5'
     compile 'com.google.auto.value:auto-value:1.4-rc2'
 

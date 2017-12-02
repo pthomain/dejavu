@@ -59,12 +59,21 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
     }
     
     @SuppressLint("RestrictedApi")
-    public RxCacheInterceptor.Factory<E, R> build(Context context) {
-        return build(context, null);
+    public RxCacheInterceptor.Factory<E, R> build(Context context){
+        return build(context, true, true);
+    }
+    
+    @SuppressLint("RestrictedApi")
+    public RxCacheInterceptor.Factory<E, R> build(Context context,
+                                                  boolean compressData,
+                                                  boolean encryptData) {
+        return build(context, compressData, encryptData, null);
     }
     
     @RestrictTo(RestrictTo.Scope.TESTS)
     RxCacheInterceptor.Factory<E, R> build(Context context,
+                                           boolean compressData,
+                                           boolean encryptData,
                                            @Nullable DependencyHolder holder) {
         if (logger == null) {
             logger = new SimpleLogger(context.getApplicationContext());
@@ -82,7 +91,7 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
                 .logger(logger)
                 .databaseName(databaseName)
                 .gson(gson)
-                .build(context.getApplicationContext());
+                .build(context.getApplicationContext(), compressData, encryptData);
         
         if (holder != null) {
             holder.gson = gson;

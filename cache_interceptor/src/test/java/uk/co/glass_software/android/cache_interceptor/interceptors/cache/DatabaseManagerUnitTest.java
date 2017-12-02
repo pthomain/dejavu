@@ -122,7 +122,7 @@ public class DatabaseManagerUnitTest {
     
     @Test
     public void testCache() throws Exception {
-        when(mockSerialisationManager.compress(eq(mockResponse))).thenReturn(mockBlob);
+        when(mockSerialisationManager.serialise(eq(mockResponse))).thenReturn(mockBlob);
         when(mockContentValuesFactory.get(any())).thenReturn(mock(ContentValues.class));
         
         target.cache(mockResponse);
@@ -184,9 +184,9 @@ public class DatabaseManagerUnitTest {
             when(mockExpiryDate.getTime()).thenReturn(mockExpiryDateTime);
             
             doReturn(mockResponse).when(mockSerialisationManager)
-                                  .uncompress(eq(TestResponse.class),
-                                              eq(mockBlob),
-                                              any()
+                                  .deserialise(eq(TestResponse.class),
+                                               eq(mockBlob),
+                                               any()
                                   );
             
             when(mockCurrentDate.getTime()).thenReturn(mockExpiryDateTime + (isStale ? 1 : -1));

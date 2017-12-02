@@ -49,9 +49,10 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
             if (ResponseMetadata.Holder.class.isAssignableFrom(rawObservableType)) {
                 Class<?> responseClass = getRawType(rawObservableType);
                 
-                return new RetrofitCacheAdapter(rxCacheFactory,
-                                                responseClass,
-                                                callAdapter
+                return new RetrofitCacheAdapter(
+                        rxCacheFactory,
+                        responseClass,
+                        callAdapter
                 );
             }
         }
@@ -60,13 +61,15 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
     }
     
     @SuppressLint("RestrictedApi")
-    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> buildDefault(Context context) {
+    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> buildDefault(
+            Context context) {
         return new RetrofitCacheAdapterFactory<>(RxCacheInterceptor.<R>buildDefault(context));
     }
     
     @SuppressLint("RestrictedApi")
-    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> build(Context context,
-                                                                                                                  Logger logger) {
+    public static <R extends ResponseMetadata.Holder<R, ApiError>> RetrofitCacheAdapterFactory<ApiError, R> build(
+            Context context,
+            Logger logger) {
         return new RetrofitCacheAdapterFactory<>(
                 RxCacheInterceptor.<ApiError, R>builder()
                         .gson(new Gson())
