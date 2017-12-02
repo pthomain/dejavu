@@ -1,5 +1,5 @@
 # RxCacheInterceptor (alpha)
-## An RxJava/JSON/Retrofit HTTP cache
+**An RxJava/JSON/Retrofit HTTP cache**
 
 Provides an HTTP cache with client-side cache control, overriding the default HTTP Cache-Control directives set on the server-side.
 This is useful when trying to cache responses coming from an API on which the cache control is absent or badly implemented.
