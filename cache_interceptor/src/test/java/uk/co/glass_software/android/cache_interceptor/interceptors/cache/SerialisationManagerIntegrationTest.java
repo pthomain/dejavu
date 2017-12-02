@@ -1,8 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
 
-import android.support.annotation.Nullable;
-
 import com.google.gson.Gson;
 
 import org.junit.Before;
@@ -10,10 +8,9 @@ import org.junit.Test;
 
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
+import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -31,21 +28,27 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
         stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class)
                                      .blockingFirst();
         
-        target = new SerialisationManager(mock(Logger.class), new Gson());
+        target = new SerialisationManager(
+                mock(Logger.class),
+                mock(StoreEntryFactory.class),
+                true,
+                true,
+                new Gson()
+        );
     }
     
     @Test
     public void testCompress() throws Exception {
-        byte[] compressed = target.compress(stubbedResponse);
+        byte[] compressed = target.serialise(stubbedResponse);
         assertEquals("Wrong compressed size", 2566, compressed.length);
     }
     
     @Test
     public void testUncompressSuccess() throws Exception {
-        byte[] compressed = target.compress(stubbedResponse);
+        byte[] compressed = target.serialise(stubbedResponse);
         Action mockAction = mock(Action.class);
         
-        TestResponse uncompressed = target.uncompress(TestResponse.class, compressed, mockAction);
+        TestResponse uncompressed = target.deserialise(TestResponse.class, compressed, mockAction);
         
         stubbedResponse.setMetadata(null); //no need to test metadata in this test
         assertEquals("Responses didn't match", stubbedResponse, uncompressed);
@@ -54,13 +57,13 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
     
     @Test
     public void testUncompressFailure() throws Exception {
-        byte[] compressed = target.compress(stubbedResponse);
+        byte[] compressed = target.serialise(stubbedResponse);
         for (int i = 0; i < 50; i++) {
             compressed[i] = 0;
         }
         Action mockAction = mock(Action.class);
         
-        target.uncompress(TestResponse.class, compressed, mockAction);
+        target.deserialise(TestResponse.class, compressed, mockAction);
         
         verify(mockAction).act();
     }

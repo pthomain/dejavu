@@ -203,9 +203,10 @@ class DatabaseManager {
                                                                                                                       Date cacheDate,
                                                                                                                       Date expiryDate,
                                                                                                                       byte[] compressedData) {
-        R response = serialisationManager.uncompress(cacheToken.getResponseClass(),
-                                                     compressedData,
-                                                     this::flushCache
+        R response = serialisationManager.deserialise(
+                cacheToken.getResponseClass(),
+                compressedData,
+                this::flushCache
         );
         
         if (response != null) {
@@ -232,16 +233,16 @@ class DatabaseManager {
         String simpleName = cacheToken.getResponseClass().getSimpleName();
         logger.d(this, "Caching " + simpleName);
         
-        byte[] compressed = serialisationManager.compress(response);
+        byte[] data = serialisationManager.serialise(response);
         
-        if (compressed != null) {
+        if (data != null) {
             String hash = cacheToken.getKey(hasher);
             
             Map<String, Object> values = new HashMap<>();
             values.put(COLUMN_CACHE_TOKEN, hash);
             values.put(COLUMN_CACHE_DATE, cacheToken.getCacheDate().getTime());
             values.put(COLUMN_CACHE_EXPIRY_DATE, cacheToken.getExpiryDate().getTime());
-            values.put(COLUMN_CACHE_DATA, compressed);
+            values.put(COLUMN_CACHE_DATA, data);
             
             db.insertWithOnConflict(
                     TABLE_CACHE,
@@ -251,7 +252,7 @@ class DatabaseManager {
             );
         }
         else {
-            logger.e(this, "Could not compress and store data for " + simpleName);
+            logger.e(this, "Could not serialise and store data for " + simpleName);
         }
     }
     

@@ -14,7 +14,7 @@ public abstract class CachedResponse<E extends Exception & Function<E, Boolean>,
     private ResponseMetadata<R, E> metadata;
     
     @Override
-    public int getTtlInMinutes() {
+    public float getTtlInMinutes() {
         return DEFAULT_TTL_IN_MINUTES;
     }
     

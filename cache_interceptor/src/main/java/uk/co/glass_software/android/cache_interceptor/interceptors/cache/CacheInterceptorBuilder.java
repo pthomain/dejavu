@@ -17,6 +17,7 @@ import java.util.Map;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
+import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
 
 public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> {
     
@@ -84,11 +85,20 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
     
     @SuppressLint("RestrictedApi")
     public CacheInterceptor.Factory<E> build(@NonNull Context context) {
-        return build(context, null);
+        return build(context, false, false);
+    }
+    
+    @SuppressLint("RestrictedApi")
+    public CacheInterceptor.Factory<E> build(@NonNull Context context,
+                                             boolean compressData,
+                                             boolean encryptData) {
+        return build(context, compressData, encryptData, null);
     }
     
     @RestrictTo(RestrictTo.Scope.TESTS)
     CacheInterceptor.Factory<E> build(@NonNull Context context,
+                                      boolean compressData,
+                                      boolean encryptData,
                                       @Nullable Holder holder) {
         if (gson == null) {
             gson = new Gson();
@@ -106,16 +116,22 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
                                                 public void d(Object caller, String message) {}
                                             };
         
+        StoreEntryFactory storeEntryFactory = new StoreEntryFactory(context);
         SerialisationManager serialisationManager = new SerialisationManager(
                 logger,
+                storeEntryFactory,
+                encryptData,
+                compressData,
                 gson
         );
         
-        SQLiteDatabase database = new SqlOpenHelper(context.getApplicationContext(),
-                                                    databaseName == null ? DATABASE_NAME : databaseName
+        SQLiteDatabase database = new SqlOpenHelper(
+                context.getApplicationContext(),
+                databaseName == null ? DATABASE_NAME : databaseName
         ).getWritableDatabase();
         
         Function<Long, Date> dateFactory = timestamp -> timestamp == null ? new Date() : new Date(timestamp);
+        
         
         DatabaseManager databaseManager = new DatabaseManager(
                 database,

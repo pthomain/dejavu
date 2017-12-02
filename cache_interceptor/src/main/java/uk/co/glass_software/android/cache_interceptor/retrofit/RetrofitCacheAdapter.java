@@ -35,9 +35,10 @@ class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends
     public Object adapt(Call<R> call) {
         Observable<R> observable = (Observable<R>) callAdapter.adapt(call);
         RequestBody body = call.request().body();
-        RxCacheInterceptor<E, R> rxCacheInterceptor = rxCacheFactory.create(responseClass,
-                                                                            call.request().url().toString(),
-                                                                            body == null ? null : body.toString()
+        RxCacheInterceptor<E, R> rxCacheInterceptor = rxCacheFactory.create(
+                responseClass,
+                call.request().url().toString(),
+                body == null ? null : body.toString()
         );
         
         return observable.compose(rxCacheInterceptor);

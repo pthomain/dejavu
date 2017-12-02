@@ -11,57 +11,89 @@ import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
+import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
 
 class SerialisationManager {
     
     private final Logger logger;
+    private final StoreEntryFactory storeEntryFactory;
+    private final boolean encryptData;
+    private final boolean compressData;
     private final Gson gson;
     
     SerialisationManager(Logger logger,
+                         StoreEntryFactory storeEntryFactory,
+                         boolean encryptData,
+                         boolean compressData,
                          Gson gson) {
         this.logger = logger;
+        this.storeEntryFactory = storeEntryFactory;
+        this.encryptData = encryptData;
+        this.compressData = compressData;
         this.gson = gson;
     }
     
     @Nullable
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R uncompress(Class<R> responseClass,
-                                                                                                       byte[] compressedData,
-                                                                                                       Action onError) {
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R deserialise(Class<R> responseClass,
+                                                                                                        byte[] data,
+                                                                                                        Action onError) {
         String simpleName = responseClass.getSimpleName();
         
         try {
-            byte[] uncompressed = Snappy.uncompress(compressedData, 0, compressedData.length);
-            logCompression(compressedData, simpleName, uncompressed);
+            byte[] uncompressed;
+            
+            if (compressData) {
+                uncompressed = Snappy.uncompress(data, 0, data.length);
+                logCompression(data, simpleName, uncompressed);
+            }
+            else {
+                uncompressed = data;
+            }
+            
+            if (encryptData) {
+                uncompressed = storeEntryFactory.decrypt(uncompressed);
+            }
+            
             return gson.fromJson(new String(uncompressed), responseClass);
         }
         catch (JsonSyntaxException e) {
-            logger.e(this, "Cached data didn't match "
-                           + simpleName
-                           + ": flushing cache"
+            logger.e(this,
+                     e,
+                     "Cached data didn't match "
+                     + simpleName
+                     + ": flushing cache"
             );
             onError.act();
             return null;
         }
         catch (Exception e) {
+            logger.e(this,
+                     e,
+                     "Could not deserialise "
+                     + simpleName
+                     + ": flushing cache"
+            );
             onError.act();
-            logger.e(this, "Could not uncompress " + simpleName);
             return null;
         }
     }
     
-    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> byte[] compress(R response) {
-        String json = gson.toJson(response);
+    <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> byte[] serialise(R response) {
         String simpleName = response.getClass().getSimpleName();
         
-        try {
-            byte[] compressed = Snappy.compress(json.getBytes());
-            logCompression(compressed, simpleName, json.getBytes());
-            return compressed;
+        byte[] data = gson.toJson(response).getBytes();
+        
+        if (encryptData) {
+            data = storeEntryFactory.encrypt(data);
         }
-        catch (Exception e) {
-            logger.e(this, "Could not compress " + simpleName);
-            return json.getBytes();
+        
+        if (compressData) {
+            byte[] compressed = Snappy.compress(data);
+            logCompression(compressed, simpleName, data);
+            data = compressed;
         }
+        
+        return data;
     }
     
     private void logCompression(byte[] compressedData,

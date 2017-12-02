@@ -20,6 +20,7 @@ import uk.co.glass_software.android.cache_interceptor.BuildConfig;
 public class SimpleLogger implements Logger {
     
     private static final int MESSAGE_LENGTH_LIMIT = 4000;
+    private static final boolean ALWAYS_OUTPUT = true;
     private static boolean FORCE_STACK_TRACE_OUTPUT = false;
     private final static int STACK_TRACE_DESCRIPTION_LENGTH = 4;
     
@@ -130,7 +131,7 @@ public class SimpleLogger implements Logger {
                      String message,
                      Throwable throwable,
                      boolean forceOutput) {
-        if (BuildConfig.DEBUG || forceOutput) {
+        if (BuildConfig.DEBUG || forceOutput || ALWAYS_OUTPUT) {
             try {
                 String file = null;
                 Integer line = null;
@@ -188,8 +189,8 @@ public class SimpleLogger implements Logger {
                              String tag,
                              String message,
                              Throwable throwable) {
+        printer.print(priority, tag, message.substring(0, Math.min(message.length(), MESSAGE_LENGTH_LIMIT)));
         if (message.length() > MESSAGE_LENGTH_LIMIT) {
-            printer.print(priority, tag, message.substring(0, MESSAGE_LENGTH_LIMIT));
             logInternal(priority,
                         tag,
                         message.substring(MESSAGE_LENGTH_LIMIT),
