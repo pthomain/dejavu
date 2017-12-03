@@ -3,9 +3,9 @@ package uk.co.glass_software.android.cache_interceptor.demo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.RadioButton;
+import android.widget.TextView;
 
 import uk.co.glass_software.android.cache_interceptor.demo.retrofit.RetrofitDemoPresenter;
 import uk.co.glass_software.android.cache_interceptor.demo.volley.VolleyDemoPresenter;
@@ -14,8 +14,8 @@ public class DemoActivity extends AppCompatActivity {
     
     private Method method = Method.RETROFIT;
     
-    private EditText editText;
-    private Button button;
+    private Button loadButton;
+    private Button refreshButton;
     private DemoPresenter retrofitDemoPresenter;
     private DemoPresenter volleyDemoPresenter;
     private ExpandableListAdapter listAdapter;
@@ -25,10 +25,11 @@ public class DemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        editText = findViewById(R.id.text_input);
         ExpandableListView result = findViewById(R.id.result);
-        button = findViewById(R.id.load_button);
-        button.setOnClickListener(ignore -> onButtonClick());
+        loadButton = findViewById(R.id.load_button);
+        refreshButton = findViewById(R.id.refresh_button);
+        loadButton.setOnClickListener(ignore -> onLoadButtonClick());
+        refreshButton.setOnClickListener(ignore -> onRefreshButtonClick());
         
         RadioButton retrofitRadioButton = findViewById(R.id.radio_button_retrofit);
         RadioButton volleyRadioButton = findViewById(R.id.radio_button_volley);
@@ -36,9 +37,11 @@ public class DemoActivity extends AppCompatActivity {
         retrofitRadioButton.setOnClickListener(ignore -> method = Method.RETROFIT);
         volleyRadioButton.setOnClickListener(ignore -> method = Method.VOLLEY);
         
+        TextView jokeView = findViewById(R.id.joke);
         listAdapter = new ExpandableListAdapter(
                 this,
-                () -> button.setEnabled(true)
+                jokeView::setText,
+                () -> setButtonsEnabled(true)
         );
         
         retrofitDemoPresenter = new RetrofitDemoPresenter(this, listAdapter::log);
@@ -48,12 +51,19 @@ public class DemoActivity extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }
     
-    private void onButtonClick() {
-        String location = editText.getText().toString();
-        if (!location.isEmpty()) {
-            button.setEnabled(false);
-            listAdapter.loadCity(getDemoPresenter().loadResponse(location));
-        }
+    private void onRefreshButtonClick() {
+        setButtonsEnabled(false);
+        listAdapter.loadJoke(getDemoPresenter().loadResponse(true));
+    }
+    
+    private void onLoadButtonClick() {
+        setButtonsEnabled(false);
+        listAdapter.loadJoke(getDemoPresenter().loadResponse(false));
+    }
+    
+    private void setButtonsEnabled(boolean isEnabled) {
+        loadButton.setEnabled(isEnabled);
+        refreshButton.setEnabled(isEnabled);
     }
     
     public DemoPresenter getDemoPresenter() {

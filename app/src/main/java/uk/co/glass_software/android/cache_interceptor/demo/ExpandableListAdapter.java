@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.demo;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,13 +17,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import io.reactivex.Observable;
-import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
+import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
+import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 
 class ExpandableListAdapter extends BaseExpandableListAdapter {
     
+    private final Callback<String> jokeCallback;
     private final Action onComplete;
     private final LinkedList<String> headers;
     private final LinkedList<String> logs;
@@ -31,7 +34,9 @@ class ExpandableListAdapter extends BaseExpandableListAdapter {
     private final SimpleDateFormat simpleDateFormat;
     
     ExpandableListAdapter(Context context,
+                          Callback<String> jokeCallback,
                           Action onComplete) {
+        this.jokeCallback = jokeCallback;
         this.onComplete = onComplete;
         headers = new LinkedList<>();
         logs = new LinkedList<>();
@@ -40,41 +45,45 @@ class ExpandableListAdapter extends BaseExpandableListAdapter {
         simpleDateFormat = new SimpleDateFormat("hh:mm:ss");
     }
     
-    void loadCity(Observable<WeatherList> observable) {
+    void loadJoke(Observable<? extends JokeResponse> observable) {
         headers.clear();
         children.clear();
         logs.clear();
         long start = System.currentTimeMillis();
-        observable
-                .doOnComplete(() -> onComplete(start))
-                .subscribe(weathers -> onNext( start, weathers));
+        observable.doOnComplete(() -> onComplete(start))
+                  .subscribe(joke -> onJokeReady(start, joke));
     }
     
-    private void onNext(long start,
-                        WeatherList weathers) {
-        CacheToken<WeatherList> cacheToken = weathers.getMetadata().getCacheToken();
-        String ellapsed = " (" + cacheToken.getStatus() + ", " + (System.currentTimeMillis() - start) + "ms)";
+    private void onJokeReady(long start,
+                             JokeResponse jokeResponse) {
+        CacheToken<JokeResponse> cacheToken = jokeResponse.getMetadata().getCacheToken();
+        String ellapsed = cacheToken.getStatus() + ", " + (System.currentTimeMillis() - start) + "ms";
         List<String> info = new ArrayList<>();
         String header;
         
-        if (weathers.getMetadata().hasError()) {
-            header = "An error occurred" + ellapsed;
+        if (jokeResponse.getMetadata().hasError()) {
+            header = "An error occurred: " + ellapsed;
             
-            ApiError error = weathers.getMetadata().getError();
+            ApiError error = jokeResponse.getMetadata().getError();
             info.add("Description: " + error.getDescription());
             info.add("Message: " + error.getMessage());
             info.add("Cause: " + error.getCause());
         }
         else {
-            header = weathers.size() + " result(s)" + ellapsed;
+            String joke = String.valueOf(Html.fromHtml(jokeResponse.getValue().getJoke()));
+            jokeCallback.call(joke);
+            header = ellapsed;
             
             info.add("Cache token status: " + cacheToken.getStatus());
             info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.getCacheDate()));
-            info.add("Cache token expiry date: " + simpleDateFormat.format(cacheToken.getExpiryDate()));
+            info.add("Cache token expiry date: "
+                     + simpleDateFormat.format(cacheToken.getExpiryDate())
+                     + " (TTL: "
+                     + (int) (jokeResponse.getTtlInMinutes() * 60f)
+                     + "s)"
+            );
             
-            for (int i = 0; i < weathers.size(); i++) {
-                info.add("Weather " + i + ": " + weathers.get(i));
-            }
+            info.add("Joke: " + joke);
         }
         
         headers.add(header);
@@ -97,9 +106,9 @@ class ExpandableListAdapter extends BaseExpandableListAdapter {
     
     @Override
     public Object getChild(int groupPosition,
-                           int childPosititon) {
+                           int childPosition) {
         String key = headers.get(groupPosition);
-        return children.get(key).get(childPosititon);
+        return children.get(key).get(childPosition);
     }
     
     @Override

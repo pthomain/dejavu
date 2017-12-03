@@ -58,9 +58,11 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     @Override
     public ObservableSource<R> apply(Observable<R> observable) {
         float ttlInMinutes;
+        boolean isRefresh;
         try {
             R response = responseClass.newInstance();
             ttlInMinutes = response.getTtlInMinutes();
+            isRefresh = response.isRefresh();
         }
         catch (Exception e) {
             logger.e(this,
@@ -70,16 +72,22 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                      + "; using default TTL"
             );
             ttlInMinutes = ResponseMetadata.Holder.DEFAULT_TTL_IN_MINUTES;
+            isRefresh = false;
         }
         
-        CacheToken<R> cacheToken = CacheToken.newRequest(responseClass,
-                                                         url,
-                                                         body,
-                                                         ttlInMinutes
-        );
+        CacheToken<R> cacheToken = isRefresh ? CacheToken.refresh(responseClass,
+                                                                  url,
+                                                                  body,
+                                                                  ttlInMinutes
+        )
+                                             : CacheToken.newRequest(responseClass,
+                                                                     url,
+                                                                     body,
+                                                                     ttlInMinutes
+                                             );
         
         ResponseMetadata<R, E> metadata = ResponseMetadata.create(cacheToken, null);
-    
+        
         Function<E, Boolean> isNetworkError = error -> error != null && error.get(error);
         
         return observable
@@ -106,7 +114,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         @NonNull
         private final CacheInterceptor.Factory<E> cacheInterceptorFactory;
         
-        @Nullable
+        @NonNull
         private final Logger logger;
         
         Factory(@NonNull ErrorInterceptor.Factory<E> errorInterceptorFactory,
@@ -118,15 +126,16 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         }
         
         @SuppressLint("RestrictedApi")
-        public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
+        public RxCacheInterceptor<E, R> create(@NonNull Class<? extends R> responseClass,
                                                @NonNull String url,
                                                @Nullable String body) {
-            return new RxCacheInterceptor<>(responseClass,
-                                            url,
-                                            body,
-                                            logger,
-                                            errorInterceptorFactory,
-                                            cacheInterceptorFactory
+            return new RxCacheInterceptor<>(
+                    (Class<R>) responseClass,
+                    url,
+                    body,
+                    logger,
+                    errorInterceptorFactory,
+                    cacheInterceptorFactory
             );
         }
     }

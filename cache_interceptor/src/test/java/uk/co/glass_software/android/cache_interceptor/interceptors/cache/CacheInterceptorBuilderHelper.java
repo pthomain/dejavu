@@ -8,7 +8,12 @@ public class CacheInterceptorBuilderHelper {
     
     public <E extends Exception & Function<E, Boolean>> CacheInterceptor.Factory<E> build(Context context,
                                                                                           CacheInterceptorBuilder.Holder holder) {
-        return (CacheInterceptor.Factory<E>) new CacheInterceptorBuilder<>().build(context.getApplicationContext(), holder);
+        return (CacheInterceptor.Factory<E>) new CacheInterceptorBuilder<>().build(
+                context.getApplicationContext(),
+                true,
+                true,
+                holder
+        );
     }
     
 }
