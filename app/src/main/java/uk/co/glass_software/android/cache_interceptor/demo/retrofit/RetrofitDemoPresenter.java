@@ -9,19 +9,19 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter;
-import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
+import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class RetrofitDemoPresenter extends DemoPresenter {
     
-    private final WeatherClient weatherClient;
+    private final JokeClient jokeClient;
     
     public RetrofitDemoPresenter(Context context,
                                  Callback<String> onLogOutput) {
         super(context, onLogOutput);
-        weatherClient = getRetrofit(context).create(WeatherClient.class);
+        jokeClient = getRetrofit(context).create(JokeClient.class);
     }
     
     private Retrofit getRetrofit(Context context) {
@@ -49,8 +49,8 @@ public class RetrofitDemoPresenter extends DemoPresenter {
     }
     
     @Override
-    protected Observable<WeatherList> getResponseObservable(String location) {
-        return weatherClient.get(location);
+    protected Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh) {
+        return isRefresh ? jokeClient.refresh() : jokeClient.get();
     }
     
 }

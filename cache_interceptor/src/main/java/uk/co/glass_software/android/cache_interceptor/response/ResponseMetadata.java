@@ -36,6 +36,8 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
         
         float getTtlInMinutes();
         
+        boolean isRefresh();
+        
         @NonNull
         ResponseMetadata<R, E> getMetadata();
         

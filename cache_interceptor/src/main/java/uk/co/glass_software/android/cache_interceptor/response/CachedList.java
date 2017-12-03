@@ -15,6 +15,11 @@ public abstract class CachedList<E extends Exception & Function<E, Boolean>, R, 
     private transient ResponseMetadata<R, E> metadata;
     
     @Override
+    public boolean isRefresh() {
+        return false;
+    }
+    
+    @Override
     public float getTtlInMinutes() {
         return DEFAULT_TTL_IN_MINUTES;
     }

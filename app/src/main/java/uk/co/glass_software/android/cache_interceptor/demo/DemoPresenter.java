@@ -7,13 +7,15 @@ import com.google.gson.Gson;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
-import uk.co.glass_software.android.cache_interceptor.demo.model.WeatherList;
+import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 import uk.co.glass_software.android.cache_interceptor.utils.SimpleLogger;
 
 public abstract class DemoPresenter {
     
-    public final static String BASE_URL = "https://www.metaweather.com/";
+    protected final static String BASE_URL = "http://api.icndb.com/";
+    public final static String ENDPOINT = "jokes/random";
+    
     protected final SimpleLogger simpleLogger;
     protected final Gson gson;
     
@@ -27,11 +29,11 @@ public abstract class DemoPresenter {
         return message.replaceAll("(\\([^)]+\\))", "");
     }
     
-    Observable<WeatherList> loadResponse(String location) {
-        return getResponseObservable(location)
+    Observable<? extends JokeResponse> loadResponse(boolean isRefresh) {
+        return getResponseObservable(isRefresh)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
     
-    protected abstract Observable<WeatherList> getResponseObservable(String location);
+    protected abstract Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh);
 }

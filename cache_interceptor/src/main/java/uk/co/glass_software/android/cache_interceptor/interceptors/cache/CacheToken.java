@@ -90,7 +90,7 @@ public abstract class CacheToken<R> {
         );
     }
     
-    public static <R> CacheToken<R> doNotCache(Class<R> responseClass) {
+    public static <R> CacheToken<R> doNotCache(@NonNull Class<R> responseClass) {
         return new AutoValue_CacheToken<>(
                 "",
                 null,
@@ -104,7 +104,7 @@ public abstract class CacheToken<R> {
         );
     }
     
-    static <R> CacheToken<R> notCached(CacheToken<R> cacheToken,
+    static <R> CacheToken<R> notCached(@NonNull CacheToken<R> cacheToken,
                                        @NonNull Observable<R> refreshObservable,
                                        @NonNull Date fetchDate) {
         return new AutoValue_CacheToken<>(
@@ -121,7 +121,7 @@ public abstract class CacheToken<R> {
     }
     
     
-    static <R> CacheToken<R> caching(CacheToken<R> cacheToken,
+    static <R> CacheToken<R> caching(@NonNull CacheToken<R> cacheToken,
                                      @NonNull Observable<R> refreshObservable,
                                      @NonNull Date fetchDate,
                                      @NonNull Date cacheDate,
@@ -139,7 +139,7 @@ public abstract class CacheToken<R> {
         );
     }
     
-    static <R> CacheToken<R> cached(CacheToken<R> cacheToken,
+    static <R> CacheToken<R> cached(@NonNull CacheToken<R> cacheToken,
                                     @NonNull Observable<R> refreshObservable,
                                     @NonNull Date cacheDate,
                                     @NonNull Date expiryDate) {
@@ -156,8 +156,8 @@ public abstract class CacheToken<R> {
         );
     }
     
-    static <R> CacheToken<R> newStatus(CacheToken<R> cacheToken,
-                                       Status status) {
+    static <R> CacheToken<R> newStatus(@NonNull CacheToken<R> cacheToken,
+                                       @NonNull Status status) {
         return new AutoValue_CacheToken<>(
                 cacheToken.getApiUrl(),
                 cacheToken.getBody(),

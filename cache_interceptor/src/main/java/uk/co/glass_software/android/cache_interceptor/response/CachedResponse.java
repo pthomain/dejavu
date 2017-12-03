@@ -11,7 +11,12 @@ import uk.co.glass_software.android.cache_interceptor.utils.Function;
 public abstract class CachedResponse<E extends Exception & Function<E, Boolean>, R>
         implements ResponseMetadata.Holder<R, E> {
     
-    private ResponseMetadata<R, E> metadata;
+    private transient ResponseMetadata<R, E> metadata;
+    
+    @Override
+    public boolean isRefresh() {
+        return false;
+    }
     
     @Override
     public float getTtlInMinutes() {
