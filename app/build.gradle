@@ -14,6 +14,12 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        vectorDrawables.useSupportLibrary = true
+
+        aaptOptions {
+            additionalParameters "--no-version-vectors"
+        }
     }
 
     buildTypes {
@@ -62,4 +68,5 @@ dependencies {
     compile 'com.android.volley:volley:1.0.0'
 
     compile "com.android.support:appcompat-v7:$supportLibVersion"
+    compile "com.android.support:customtabs:$supportLibVersion"
 }

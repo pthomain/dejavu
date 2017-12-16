@@ -1,6 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.demo;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.ExpandableListView;
@@ -28,8 +30,9 @@ public class DemoActivity extends AppCompatActivity {
         ExpandableListView result = findViewById(R.id.result);
         loadButton = findViewById(R.id.load_button);
         refreshButton = findViewById(R.id.refresh_button);
-        loadButton.setOnClickListener(ignore -> onLoadButtonClick());
-        refreshButton.setOnClickListener(ignore -> onRefreshButtonClick());
+        loadButton.setOnClickListener(ignore -> onButtonClick(false));
+        refreshButton.setOnClickListener(ignore -> onButtonClick(true));
+        findViewById(R.id.github).setOnClickListener(ignore -> openGithub());
         
         RadioButton retrofitRadioButton = findViewById(R.id.radio_button_retrofit);
         RadioButton volleyRadioButton = findViewById(R.id.radio_button_volley);
@@ -51,14 +54,9 @@ public class DemoActivity extends AppCompatActivity {
         listAdapter.notifyDataSetChanged();
     }
     
-    private void onRefreshButtonClick() {
+    private void onButtonClick(boolean isRefresh) {
         setButtonsEnabled(false);
-        listAdapter.loadJoke(getDemoPresenter().loadResponse(true));
-    }
-    
-    private void onLoadButtonClick() {
-        setButtonsEnabled(false);
-        listAdapter.loadJoke(getDemoPresenter().loadResponse(false));
+        listAdapter.loadJoke(getDemoPresenter().loadResponse(isRefresh));
     }
     
     private void setButtonsEnabled(boolean isEnabled) {
@@ -76,6 +74,12 @@ public class DemoActivity extends AppCompatActivity {
         }
         
         throw new IllegalStateException("Unknown method: " + method);
+    }
+    
+    private void openGithub() {
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        CustomTabsIntent customTabsIntent = builder.build();
+        customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/RxCacheInterceptor"));
     }
     
     private enum Method {
