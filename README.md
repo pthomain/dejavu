@@ -8,6 +8,8 @@ Enable offline access to your app and speed up screen loading by caching each of
 All responses are automatically cached to disk and refreshed once they expire. 
 Snappy compression and AES encryption are supported and optional.
 
+<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
+
 Retrofit support
 ----------------
 
