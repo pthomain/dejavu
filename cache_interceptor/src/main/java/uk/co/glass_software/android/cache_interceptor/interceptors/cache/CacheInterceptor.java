@@ -98,5 +98,13 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
                                           cacheToken
             );
         }
+    
+        public void clearOlderEntries() {
+            cacheManager.clearOlderEntries();
+        }
+    
+        public void flushCache() {
+            cacheManager.flushCache();
+        }
     }
 }

@@ -13,28 +13,33 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.subjects.PublishSubject;
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
-import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.ENDPOINT;
-
-class VolleyObservable extends Observable<JokeResponse> {
+class VolleyObservable<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
+        extends Observable<R> {
     
-    private final PublishSubject<JokeResponse> publishSubject;
+    private final PublishSubject<R> publishSubject;
     private final Gson gson;
     private final RequestQueue requestQueue;
+    private final String url;
     
-    VolleyObservable(Gson gson,
-                     RequestQueue requestQueue) {
+    private VolleyObservable(RequestQueue requestQueue,
+                             Gson gson,
+                             String url) {
+        this.url = url;
         this.gson = gson;
         this.requestQueue = requestQueue;
         publishSubject = PublishSubject.create();
     }
     
     @Override
-    protected void subscribeActual(Observer<? super JokeResponse> observer) {
+    protected void subscribeActual(Observer<? super R> observer) {
         publishSubject.subscribe(observer);
         requestQueue.add(new StringRequest(
                 Request.Method.GET,
-                ENDPOINT,
+                url,
                 this::onResponse,
                 this::onError
         ));
@@ -42,12 +47,19 @@ class VolleyObservable extends Observable<JokeResponse> {
     
     private void onResponse(String response) {
         Type type = new TypeToken<JokeResponse>() {}.getType();
-        JokeResponse list = gson.fromJson(response, type);
-        publishSubject.onNext(list);
+        R deserialisedResponse = gson.fromJson(response, type);
+        publishSubject.onNext(deserialisedResponse);
+        publishSubject.onComplete();
     }
     
     private void onError(VolleyError volleyError) {
         publishSubject.onError(volleyError);
     }
     
+    public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> Observable<R> create(RequestQueue requestQueue,
+                                                                                                                             Gson gson,
+                                                                                                                             RxCacheInterceptor<E, R> cacheInterceptor,
+                                                                                                                             String url) {
+        return new VolleyObservable<E, R>(requestQueue, gson, url).compose(cacheInterceptor);
+    }
 }

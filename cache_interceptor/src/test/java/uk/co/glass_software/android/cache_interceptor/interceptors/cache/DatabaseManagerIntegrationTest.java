@@ -56,10 +56,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
         
         stubbedResponse.getMetadata().setCacheToken(cacheToken);
         
-        CacheInterceptorBuilder.Holder holder = new CacheInterceptorBuilder.Holder();
-        new CacheInterceptorBuilderHelper().build(application, holder);
-        
-        target = holder.databaseManager;
+        target = dependencyHelper.databaseManager;
     }
     
     @Test

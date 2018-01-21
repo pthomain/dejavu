@@ -6,22 +6,32 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.io.IOException;
-
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 public class ApiError extends Exception implements Function<ApiError, Boolean> {
     
+    public final static int NON_HTTP_STATUS = -1;
+    
     private final Throwable throwable;
+    private final int httpStatus;
+    private final ErrorCode errorCode;
     @Nullable private final String description;
     
     public ApiError(Throwable throwable) {
-        this(throwable, null);
+        this(throwable,
+             NON_HTTP_STATUS,
+             ErrorCode.UNKNOWN,
+             null
+        );
     }
     
     public ApiError(Throwable throwable,
+                    int httpStatus,
+                    ErrorCode errorCode,
                     @Nullable String description) {
         this.throwable = throwable;
+        this.httpStatus = httpStatus;
+        this.errorCode = errorCode;
         this.description = description;
     }
     
@@ -30,13 +40,34 @@ public class ApiError extends Exception implements Function<ApiError, Boolean> {
         return apiError.isNetworkError();
     }
     
-    private Boolean isNetworkError() {
-        return throwable instanceof IOException;
+    public int getHttpStatus() {
+        return httpStatus;
+    }
+    
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
     
     @Nullable
     public String getDescription() {
         return description;
+    }
+    
+    public Boolean isNetworkError() {
+        return errorCode == ErrorCode.NETWORK;
+    }
+    
+    @Nullable
+    public static ApiError from(Throwable throwable) {
+        if (throwable instanceof ApiError) {
+            return (ApiError) throwable;
+        }
+        return null;
+    }
+    
+    public static boolean isNetworkError(Throwable throwable) {
+        ApiError apiError = from(throwable);
+        return apiError != null && apiError.isNetworkError();
     }
     
     @Override
@@ -52,7 +83,9 @@ public class ApiError extends Exception implements Function<ApiError, Boolean> {
         ApiError apiError = (ApiError) o;
         
         return new EqualsBuilder()
+                .append(httpStatus, apiError.httpStatus)
                 .append(throwable, apiError.throwable)
+                .append(errorCode, apiError.errorCode)
                 .append(description, apiError.description)
                 .isEquals();
     }
@@ -61,6 +94,8 @@ public class ApiError extends Exception implements Function<ApiError, Boolean> {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(throwable)
+                .append(httpStatus)
+                .append(errorCode)
                 .append(description)
                 .toHashCode();
     }
@@ -69,6 +104,8 @@ public class ApiError extends Exception implements Function<ApiError, Boolean> {
     public String toString() {
         return new ToStringBuilder(this)
                 .append("throwable", throwable)
+                .append("httpStatus", httpStatus)
+                .append("errorCode", errorCode)
                 .append("description", description)
                 .toString();
     }

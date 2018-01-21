@@ -36,4 +36,7 @@ public abstract class DemoPresenter {
     }
     
     protected abstract Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh);
+    
+    public abstract void clearEntries();
+    
 }

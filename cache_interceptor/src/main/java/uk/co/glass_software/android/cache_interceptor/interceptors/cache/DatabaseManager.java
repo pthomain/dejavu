@@ -96,21 +96,14 @@ class DatabaseManager {
             }
         }
         
-        if (messageDigest == null) {
-            return null; //TODO
-        }
-        else {
-            return new Hasher(messageDigest);
-        }
+        return new Hasher(messageDigest);
     }
     
     void clearOlderEntries() {
-        Date date = new Date(System.currentTimeMillis() + cleanUpThresholdInMillis);
-        String sqlDate = CLEANUP_DATE_FORMAT.format(date);
-        
+        String date = System.currentTimeMillis() + cleanUpThresholdInMillis + "";
         int deleted = db.delete(TABLE_CACHE,
                                 COLUMN_CACHE_EXPIRY_DATE + " < ?",
-                                new String[]{"date('" + sqlDate + "')"}
+                                new String[]{date}
         );
         
         logger.d(this, "Cleared " + deleted + " old entrie(s) from HTTP cache");

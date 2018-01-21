@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
@@ -30,8 +31,8 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
         
         target = new SerialisationManager(
                 mock(Logger.class),
-                mock(StoreEntryFactory.class),
-                true,
+                new StoreEntryFactory(RuntimeEnvironment.application),
+                false,
                 true,
                 new Gson()
         );

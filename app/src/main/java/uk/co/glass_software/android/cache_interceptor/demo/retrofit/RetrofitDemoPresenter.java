@@ -17,20 +17,21 @@ import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 public class RetrofitDemoPresenter extends DemoPresenter {
     
     private final JokeClient jokeClient;
+    private final RetrofitCacheAdapterFactory adapterFactory;
     
     public RetrofitDemoPresenter(Context context,
                                  Callback<String> onLogOutput) {
         super(context, onLogOutput);
-        jokeClient = getRetrofit(context).create(JokeClient.class);
-    }
+        adapterFactory = RetrofitCacheAdapterFactory.build(context, simpleLogger);
     
-    private Retrofit getRetrofit(Context context) {
-        return new Retrofit.Builder()
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(getOkHttpClient(simpleLogger))
                 .addConverterFactory(GsonConverterFactory.create(gson))
-                .addCallAdapterFactory(RetrofitCacheAdapterFactory.build(context, simpleLogger))
+                .addCallAdapterFactory(adapterFactory)
                 .build();
+    
+        jokeClient = retrofit.create(JokeClient.class);
     }
     
     @NonNull
@@ -51,6 +52,11 @@ public class RetrofitDemoPresenter extends DemoPresenter {
     @Override
     protected Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh) {
         return isRefresh ? jokeClient.refresh() : jokeClient.get();
+    }
+    
+    @Override
+    public void clearEntries() {
+        adapterFactory.clearOlderEntries();
     }
     
 }

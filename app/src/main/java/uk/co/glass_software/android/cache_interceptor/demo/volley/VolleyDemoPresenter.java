@@ -15,6 +15,7 @@ import uk.co.glass_software.android.cache_interceptor.utils.Callback;
 
 public class VolleyDemoPresenter extends DemoPresenter {
     
+    private final static String URL = BASE_URL + ENDPOINT;
     private final RxCacheInterceptor.Factory<ApiError, JokeResponse> rxCacheInterceptorFactory;
     private final RequestQueue requestQueue;
     
@@ -22,21 +23,24 @@ public class VolleyDemoPresenter extends DemoPresenter {
                                Callback<String> onLogOutput) {
         super(context, onLogOutput);
         requestQueue = Volley.newRequestQueue(context);
-        rxCacheInterceptorFactory = RxCacheInterceptor.<ApiError, JokeResponse>builder()
-                .logger(simpleLogger)
-                .errorFactory(ApiError::new)
-                .build(context);
+        rxCacheInterceptorFactory = RxCacheInterceptor.buildDefault(context);
     }
     
     @Override
     protected Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh) {
-        RxCacheInterceptor<ApiError, JokeResponse> interceptor = rxCacheInterceptorFactory.create(
-                isRefresh ? RefreshedJokeResponse.class : JokeResponse.class,
-                BASE_URL + ENDPOINT,
-                null
-        );
+        Class<? extends JokeResponse> responseClass = isRefresh ? RefreshedJokeResponse.class : JokeResponse.class;
         
-        return new VolleyObservable(gson, requestQueue).compose(interceptor);
+        return VolleyObservable.create(
+                requestQueue,
+                gson,
+                rxCacheInterceptorFactory.create(responseClass, URL, null),
+                URL
+        );
+    }
+    
+    @Override
+    public void clearEntries() {
+        rxCacheInterceptorFactory.clearOlderEntries();
     }
     
 }

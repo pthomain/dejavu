@@ -12,6 +12,7 @@ import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
@@ -40,15 +41,12 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
     
     @Before
     public void setUp() throws Exception {
-        CacheInterceptorBuilder.Holder holder = new CacheInterceptorBuilder.Holder();
-        new CacheInterceptorBuilderHelper().build(application, holder);
-        
-        databaseManager = holder.databaseManager;
+        databaseManager = dependencyHelper.databaseManager;
         cachedResponse = getResponse();
         networkResponse = getResponse();
         networkResponse.remove(0);//removing element to test an updated response
         
-        spyCacheManager = spy(holder.cacheManager);
+        spyCacheManager = spy(dependencyHelper.cacheManager);
     }
     
     private TestResponse getResponse() {
@@ -193,8 +191,9 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
         }
         
         TestResponse errorResponse = new TestResponse();
-        errorResponse.setMetadata(ResponseMetadata.create(getToken(true),
-                                                          new ApiError(new IOException("test"), "some Exception")
+        errorResponse.setMetadata(ResponseMetadata.create(
+                getToken(true),
+                new ApiError(new IOException("test"), 404, ErrorCode.NOT_FOUND, "some Exception")
         ));
         
         TestResponse expectedResponse;

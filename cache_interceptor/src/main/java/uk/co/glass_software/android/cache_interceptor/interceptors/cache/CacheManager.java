@@ -35,8 +35,7 @@ class CacheManager {
     }
     
     public void clearOlderEntries() {
-        //FIXME
-//        runAsync(databaseManager::clearOlderEntries);
+        runAsync(databaseManager::clearOlderEntries);
     }
     
     public void flushCache() {

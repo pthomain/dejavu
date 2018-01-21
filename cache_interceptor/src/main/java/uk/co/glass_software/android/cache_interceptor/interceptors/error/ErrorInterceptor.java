@@ -20,22 +20,22 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
     private final int requestTimeout;
     private final Function<Throwable, E> errorFactory;
     private final Logger logger;
-    private final ResponseMetadata<R, E> metadata;
+    private final CacheToken<R> cacheToken;
     
     private ErrorInterceptor(Function<Throwable, E> errorFactory,
                              Logger logger,
-                             ResponseMetadata<R, E> metadata) {
-        this(errorFactory, 30, logger, metadata);
+                             CacheToken<R> cacheToken) {
+        this(errorFactory, 30, logger, cacheToken);
     }
     
     private ErrorInterceptor(Function<Throwable, E> errorFactory,
                              int requestTimeout,
                              Logger logger,
-                             ResponseMetadata<R, E> metadata) {
+                             CacheToken<R> cacheToken) {
         this.errorFactory = errorFactory;
         this.requestTimeout = requestTimeout;
         this.logger = logger;
-        this.metadata = metadata;
+        this.cacheToken = cacheToken;
     }
     
     @Override
@@ -44,9 +44,9 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
                 .filter(o -> o != null) //see https://github.com/square/retrofit/issues/2242
                 .switchIfEmpty(Observable.error(new NoSuchElementException("Response was empty")))
                 .timeout(requestTimeout, TimeUnit.SECONDS) //fixing timeout not working in OkHttp
-                .doOnNext(response -> response.setMetadata(metadata))
+                .doOnNext(response -> response.setMetadata(ResponseMetadata.create(cacheToken, null)))
                 .onErrorResumeNext(throwable -> {
-                    return onError(throwable, metadata.getResponseClass());
+                    return onError(throwable, cacheToken.getResponseClass());
                 });
     }
     
@@ -105,10 +105,11 @@ public class ErrorInterceptor<R extends ResponseMetadata.Holder<R, E>, E extends
             this.logger = logger;
         }
         
-        public <R extends ResponseMetadata.Holder<R, E>> ErrorInterceptor<R, E> create(ResponseMetadata<R, E> metadata) {
-            return new ErrorInterceptor<>(errorFactory,
-                                          logger,
-                                          metadata
+        public <R extends ResponseMetadata.Holder<R, E>> ErrorInterceptor<R, E> create(CacheToken<R> cacheToken) {
+            return new ErrorInterceptor<>(
+                    errorFactory,
+                    logger,
+                    cacheToken
             );
         }
     }

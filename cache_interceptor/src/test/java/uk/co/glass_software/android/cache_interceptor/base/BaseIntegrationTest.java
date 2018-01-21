@@ -16,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import uk.co.glass_software.android.cache_interceptor.BuildConfig;
 import uk.co.glass_software.android.cache_interceptor.base.network.MockClient;
 import uk.co.glass_software.android.cache_interceptor.base.network.retrofit.TestClient;
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptorBuilderHelper;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
@@ -37,6 +38,7 @@ public abstract class BaseIntegrationTest {
     protected final TestClient testClient;
     protected final AssetHelper assetHelper;
     private final RetrofitCacheAdapterFactory<ApiError, ?> cacheFactory;
+    protected final CacheInterceptorBuilderHelper dependencyHelper;
     
     private MockClient mockClient;
     
@@ -63,6 +65,8 @@ public abstract class BaseIntegrationTest {
                 gson,
                 mock(Logger.class)
         );
+    
+        dependencyHelper = new CacheInterceptorBuilderHelper(RuntimeEnvironment.application);
     }
     
     protected void enqueueResponse(String response,

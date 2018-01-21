@@ -18,6 +18,7 @@ public class DemoActivity extends AppCompatActivity {
     
     private Button loadButton;
     private Button refreshButton;
+    
     private DemoPresenter retrofitDemoPresenter;
     private DemoPresenter volleyDemoPresenter;
     private ExpandableListAdapter listAdapter;
@@ -27,11 +28,14 @@ public class DemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        ExpandableListView result = findViewById(R.id.result);
         loadButton = findViewById(R.id.load_button);
         refreshButton = findViewById(R.id.refresh_button);
         loadButton.setOnClickListener(ignore -> onButtonClick(false));
         refreshButton.setOnClickListener(ignore -> onButtonClick(true));
+        
+        Button clearButton = findViewById(R.id.clear_button);
+        clearButton.setOnClickListener(ignore -> getDemoPresenter().clearEntries());
+        
         findViewById(R.id.github).setOnClickListener(ignore -> openGithub());
         
         RadioButton retrofitRadioButton = findViewById(R.id.radio_button_retrofit);
@@ -49,7 +53,8 @@ public class DemoActivity extends AppCompatActivity {
         
         retrofitDemoPresenter = new RetrofitDemoPresenter(this, listAdapter::log);
         volleyDemoPresenter = new VolleyDemoPresenter(this, listAdapter::log);
-        
+    
+        ExpandableListView result = findViewById(R.id.result);
         result.setAdapter(listAdapter);
         listAdapter.notifyDataSetChanged();
     }

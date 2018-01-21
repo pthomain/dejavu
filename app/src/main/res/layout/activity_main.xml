@@ -28,14 +28,24 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Load a joke"/>
+            android:text="Load a joke"
+            android:textSize="11sp"/>
 
         <Button
             android:id="@+id/refresh_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Force a refresh"/>
+            android:text="Force a refresh"
+            android:textSize="12sp"/>
+
+        <Button
+            android:id="@+id/clear_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Clear cache"
+            android:textSize="12sp"/>
 
     </LinearLayout>
 

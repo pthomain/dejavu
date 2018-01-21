@@ -76,4 +76,12 @@ public class RetrofitCacheAdapterFactory<E extends Exception & Function<E, Boole
                         .build(context)
         );
     }
+    
+    public void clearOlderEntries() {
+        rxCacheFactory.clearOlderEntries();
+    }
+    
+    public void flushCache() {
+        rxCacheFactory.flushCache();
+    }
 }

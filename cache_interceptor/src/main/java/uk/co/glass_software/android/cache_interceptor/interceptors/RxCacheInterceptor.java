@@ -14,6 +14,7 @@ import io.reactivex.ObservableTransformer;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
 import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
@@ -86,12 +87,10 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                                                                      ttlInMinutes
                                              );
         
-        ResponseMetadata<R, E> metadata = ResponseMetadata.create(cacheToken, null);
-        
         Function<E, Boolean> isNetworkError = error -> error != null && error.get(error);
         
         return observable
-                .compose(errorInterceptorFactory.create(metadata))
+                .compose(errorInterceptorFactory.create(cacheToken))
                 .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));
     }
     
@@ -102,7 +101,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     public static <R extends ResponseMetadata.Holder<R, ApiError>> RxCacheInterceptor.Factory<ApiError, R> buildDefault(Context context) {
         return RxCacheInterceptor.<ApiError, R>builder()
                 .gson(new Gson())
-                .errorFactory(ApiError::new)
+                .errorFactory(new ApiErrorFactory())
                 .build(context);
     }
     
@@ -137,6 +136,14 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                     errorInterceptorFactory,
                     cacheInterceptorFactory
             );
+        }
+    
+        public void clearOlderEntries() {
+            cacheInterceptorFactory.clearOlderEntries();
+        }
+    
+        public void flushCache() {
+            cacheInterceptorFactory.flushCache();
         }
     }
 }
