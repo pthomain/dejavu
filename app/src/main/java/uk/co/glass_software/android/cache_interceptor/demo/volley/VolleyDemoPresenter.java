@@ -8,10 +8,10 @@ import com.android.volley.toolbox.Volley;
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter;
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
-import uk.co.glass_software.android.cache_interceptor.demo.model.RefreshedJokeResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
+import uk.co.glass_software.android.cache_interceptor.volley.VolleyObservable;
 
 public class VolleyDemoPresenter extends DemoPresenter {
     
@@ -28,12 +28,10 @@ public class VolleyDemoPresenter extends DemoPresenter {
     
     @Override
     protected Observable<? extends JokeResponse> getResponseObservable(boolean isRefresh) {
-        Class<? extends JokeResponse> responseClass = isRefresh ? RefreshedJokeResponse.class : JokeResponse.class;
-        
         return VolleyObservable.create(
                 requestQueue,
                 gson,
-                rxCacheInterceptorFactory.create(responseClass, URL, null),
+                rxCacheInterceptorFactory.create(JokeResponse.class, URL, null, isRefresh),
                 URL
         );
     }

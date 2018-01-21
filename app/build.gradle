@@ -65,7 +65,6 @@ dependencies {
 
     compile "com.squareup.okhttp3:okhttp:3.8.0"
     compile "com.squareup.okhttp3:logging-interceptor:3.6.0"
-    compile 'com.android.volley:volley:1.0.0'
 
     compile "com.android.support:appcompat-v7:$supportLibVersion"
     compile "com.android.support:customtabs:$supportLibVersion"

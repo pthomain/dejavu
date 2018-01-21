@@ -92,6 +92,7 @@ dependencies {
     compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
     compile "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     compile "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    compile 'com.android.volley:volley:1.0.0'
 
     compile "com.google.code.gson:gson:2.8.1"
 

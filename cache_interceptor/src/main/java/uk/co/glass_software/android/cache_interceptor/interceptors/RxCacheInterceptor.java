@@ -32,6 +32,8 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     @Nullable
     private final String body;
     
+    private final boolean isRefresh;
+    
     @NonNull
     private final Logger logger;
     
@@ -45,12 +47,14 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     RxCacheInterceptor(@NonNull Class<R> responseClass,
                        @NonNull String url,
                        @Nullable String body,
+                       boolean isRefresh,
                        @NonNull Logger logger,
                        @NonNull ErrorInterceptor.Factory<E> errorInterceptorFactory,
                        @NonNull CacheInterceptor.Factory<E> cacheInterceptorFactory) {
         this.responseClass = responseClass;
         this.url = url;
         this.body = body;
+        this.isRefresh = isRefresh;
         this.logger = logger;
         this.errorInterceptorFactory = errorInterceptorFactory;
         this.cacheInterceptorFactory = cacheInterceptorFactory;
@@ -63,7 +67,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         try {
             R response = responseClass.newInstance();
             ttlInMinutes = response.getTtlInMinutes();
-            isRefresh = response.isRefresh();
+            isRefresh = this.isRefresh || response.isRefresh();
         }
         catch (Exception e) {
             logger.e(this,
@@ -73,7 +77,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                      + "; using default TTL"
             );
             ttlInMinutes = ResponseMetadata.Holder.DEFAULT_TTL_IN_MINUTES;
-            isRefresh = false;
+            isRefresh = this.isRefresh;
         }
         
         CacheToken<R> cacheToken = isRefresh ? CacheToken.refresh(responseClass,
@@ -92,6 +96,11 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         return observable
                 .compose(errorInterceptorFactory.create(cacheToken))
                 .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));
+    }
+    
+    @NonNull
+    public Class<R> getResponseClass() {
+        return responseClass;
     }
     
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> RxCacheInterceptorBuilder<E, R> builder() {
@@ -125,23 +134,37 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         }
         
         @SuppressLint("RestrictedApi")
-        public RxCacheInterceptor<E, R> create(@NonNull Class<? extends R> responseClass,
+        public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
                                                @NonNull String url,
                                                @Nullable String body) {
-            return new RxCacheInterceptor<>(
-                    (Class<R>) responseClass,
+            return create(
+                    responseClass,
                     url,
                     body,
+                    false
+            );
+        }
+        
+        @SuppressLint("RestrictedApi")
+        public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
+                                               @NonNull String url,
+                                               @Nullable String body,
+                                               boolean isRefresh) {
+            return new RxCacheInterceptor<>(
+                    responseClass,
+                    url,
+                    body,
+                    isRefresh,
                     logger,
                     errorInterceptorFactory,
                     cacheInterceptorFactory
             );
         }
-    
+        
         public void clearOlderEntries() {
             cacheInterceptorFactory.clearOlderEntries();
         }
-    
+        
         public void flushCache() {
             cacheInterceptorFactory.flushCache();
         }
