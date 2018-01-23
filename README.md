@@ -72,7 +72,7 @@ CachedResponse
 The simplest way to enable caching on your responses is to have them extend from the ```CachedResponse``` object.
 This class contains all the needed metadata, including the duration for which to cache the response.
 
-See the *Advanced configuration* section if your responses are already extending from a base class or for special cases.
+See the [Advanced configuration](#advanced-configuration) section if your responses are already extending from a base class or for special cases.
 
 Request metadata
 ----------------
@@ -82,7 +82,7 @@ Request metadata
 - ```getTtlInMinutes()```: returns how long to cache responses for (5 minutes by default).
 - ```isRefresh()```: set to true to force a refresh of the response regardless of how old it is (false by default).
 - ```getMetadata()```: contains metadata related to errors and cache status. 
-- ```splitOnNextOnError()```: see the *Error handling* section.
+- ```splitOnNextOnError()```: see the [Error handling](#error-handling) section.
 
 CacheToken
 ----------
@@ -110,13 +110,13 @@ This allows the possibility to show expired data in the UI while it is being ref
 
 What it also means is that another response will follow: either ```REFRESHED``` or ```COULD_NOT_REFRESH``` depending on the success of the subsequent API call.
 
-If the ```STALE``` data is irrelevant, then it should be filter like so: 
+If the ```STALE``` data is irrelevant, then it should be filtered like so: 
 ```java
 cachedResponseObservable.filter(response -> response.getMetadata().getCacheToken().getStatus().isFinal)
 ```
 Responses containing errors are never cached.
 
-For more explanation about the ```CacheToken``` mechanism, see the *Sequence diagrams* section.
+For more explanation about the ```CacheToken``` mechanism, see the [Sequence diagrams](#sequence-diagrams) section.
 
 Error handling
 --------------
@@ -167,3 +167,7 @@ public class UserResponse extends BaseResponse implements ResponseMetadata.Holde
 
 Custom JSON response deserialisation
 ------------------------------------
+
+
+Sequence diagrams
+-----------------
