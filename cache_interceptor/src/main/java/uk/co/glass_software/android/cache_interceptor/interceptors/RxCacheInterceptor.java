@@ -64,10 +64,13 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
     public ObservableSource<R> apply(Observable<R> observable) {
         float ttlInMinutes;
         boolean isRefresh;
+        boolean splitOnNextOnError;
+        
         try {
             R response = responseClass.newInstance();
             ttlInMinutes = response.getTtlInMinutes();
             isRefresh = this.isRefresh || response.isRefresh();
+            splitOnNextOnError = response.splitOnNextOnError();
         }
         catch (Exception e) {
             logger.e(this,
@@ -78,6 +81,7 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
             );
             ttlInMinutes = ResponseMetadata.Holder.DEFAULT_TTL_IN_MINUTES;
             isRefresh = this.isRefresh;
+            splitOnNextOnError = false;
         }
         
         CacheToken<R> cacheToken = isRefresh ? CacheToken.refresh(responseClass,
@@ -92,9 +96,17 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                                              );
         
         Function<E, Boolean> isNetworkError = error -> error != null && error.get(error);
-        return observable
-                .compose(errorInterceptorFactory.create(cacheToken))
-                .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));
+        
+        Observable<R> interceptedObservable = observable.compose(errorInterceptorFactory.create(cacheToken))
+                                                        .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));
+        
+        if (splitOnNextOnError) {
+            return interceptedObservable.flatMap(response -> response.getMetadata().hasError()
+                                                             ? Observable.error(response.getMetadata().getError())
+                                                             : Observable.just(response));
+        }
+        
+        return interceptedObservable;
     }
     
     @NonNull

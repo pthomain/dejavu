@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Those jokes are coming randomly from an API, I'm not responsible for their content :)"
+        android:text="These jokes are coming randomly from an API, I'm not responsible for their content :)"
         android:textSize="10sp"
         android:textStyle="italic"/>
 

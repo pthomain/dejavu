@@ -9,6 +9,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import io.reactivex.functions.Predicate;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
@@ -38,6 +39,8 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
         
         boolean isRefresh();
         
+        boolean splitOnNextOnError();
+        
         @NonNull
         ResponseMetadata<R, E> getMetadata();
         
@@ -63,6 +66,15 @@ public abstract class ResponseMetadata<R, E extends Exception & Function<E, Bool
     @Override
     public CacheToken<R> getCacheToken() {
         return cacheToken;
+    }
+    
+    
+    public static <T extends ResponseMetadata.Holder> Predicate<T> filterError() {
+        return response -> !response.getMetadata().hasError();
+    }
+    
+    public static <T extends ResponseMetadata.Holder> Predicate<T> filterFinal() {
+        return response -> response.getMetadata().getCacheToken().getStatus().isFinal;
     }
     
     @Override

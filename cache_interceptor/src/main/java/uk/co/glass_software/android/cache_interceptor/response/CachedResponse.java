@@ -14,6 +14,11 @@ public abstract class CachedResponse<E extends Exception & Function<E, Boolean>,
     private transient ResponseMetadata<R, E> metadata;
     
     @Override
+    public boolean splitOnNextOnError() {
+        return false;
+    }
+    
+    @Override
     public boolean isRefresh() {
         return false;
     }
