@@ -1,10 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.base;
 
 
-import org.mockito.ArgumentCaptor;
-
-import io.reactivex.Observable;
-import io.reactivex.Observer;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 
 import static junit.framework.Assert.assertEquals;
@@ -53,16 +49,6 @@ public class TestUtils {
             }
         }
         fail("Expected exception was not caught: " + exceptionType);
-    }
-    
-    
-    public static <T> Observable<T> getMockObservable(ArgumentCaptor<T> returnValueCaptor) {
-        return new Observable<T>() {
-            @Override
-            protected void subscribeActual(Observer<? super T> observer) {
-                observer.onNext(returnValueCaptor.capture());
-            }
-        };
     }
     
 }

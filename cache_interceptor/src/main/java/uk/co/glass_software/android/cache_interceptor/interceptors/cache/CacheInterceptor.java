@@ -91,18 +91,19 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
         @SuppressLint("RestrictedApi")
         public <R extends ResponseMetadata.Holder<R, E>> CacheInterceptor<E, R> create(CacheToken<R> cacheToken,
                                                                                        Function<E, Boolean> isNetworkError) {
-            return new CacheInterceptor<>(cacheManager,
-                                          isCacheEnabled,
-                                          logger,
-                                          isNetworkError,
-                                          cacheToken
+            return new CacheInterceptor<>(
+                    cacheManager,
+                    isCacheEnabled,
+                    logger,
+                    isNetworkError,
+                    cacheToken
             );
         }
-    
+        
         public void clearOlderEntries() {
             cacheManager.clearOlderEntries();
         }
-    
+        
         public void flushCache() {
             cacheManager.flushCache();
         }

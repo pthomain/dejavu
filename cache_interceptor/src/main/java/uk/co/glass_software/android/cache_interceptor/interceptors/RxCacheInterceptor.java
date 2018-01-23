@@ -92,7 +92,6 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
                                              );
         
         Function<E, Boolean> isNetworkError = error -> error != null && error.get(error);
-        
         return observable
                 .compose(errorInterceptorFactory.create(cacheToken))
                 .compose(cacheInterceptorFactory.create(cacheToken, isNetworkError));

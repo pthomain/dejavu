@@ -21,6 +21,8 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
     private Function<Throwable, E> errorFactory;
     private String databaseName;
     private Gson gson;
+    private boolean compressData = true;
+    private boolean encryptData = false;
     
     RxCacheInterceptorBuilder() {
     }
@@ -58,22 +60,23 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
         return this;
     }
     
-    @SuppressLint("RestrictedApi")
-    public RxCacheInterceptor.Factory<E, R> build(Context context){
-        return build(context, true, true);
+    public RxCacheInterceptorBuilder<E, R> compress(boolean compressData) {
+        this.compressData = compressData;
+        return this;
+    }
+    
+    public RxCacheInterceptorBuilder<E, R> encrypt(boolean encryptData) {
+        this.encryptData = encryptData;
+        return this;
     }
     
     @SuppressLint("RestrictedApi")
-    public RxCacheInterceptor.Factory<E, R> build(Context context,
-                                                  boolean compressData,
-                                                  boolean encryptData) {
-        return build(context, compressData, encryptData, null);
+    public RxCacheInterceptor.Factory<E, R> build(Context context) {
+        return build(context, null);
     }
     
     @RestrictTo(RestrictTo.Scope.TESTS)
     RxCacheInterceptor.Factory<E, R> build(Context context,
-                                           boolean compressData,
-                                           boolean encryptData,
                                            @Nullable DependencyHolder holder) {
         if (logger == null) {
             logger = new SimpleLogger(context.getApplicationContext());
@@ -87,11 +90,13 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
                 errorFactory,
                 logger
         );
+        
         CacheInterceptor.Factory<E> cacheInterceptorFactory = CacheInterceptor.<E, R>builder()
                 .logger(logger)
                 .databaseName(databaseName)
                 .gson(gson)
                 .build(context.getApplicationContext(), compressData, encryptData);
+        
         
         if (holder != null) {
             holder.gson = gson;
