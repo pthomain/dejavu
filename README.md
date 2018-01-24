@@ -25,6 +25,28 @@ The documentation below will refer exclusively to the Retrofit implementation.
 
 *Note: This library needs to be used in conjunction with RxJava and Gson.*
 
+Adding the dependency
+---------------------
+
+To add the library to your project, add the following block to your root gradle file:
+
+```
+allprojects {
+ repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+ }
+}
+ ```
+ 
+ Then add the following dependency to your module:
+ 
+ ```
+ dependencies {
+    compile 'com.github.pthomain:RxCacheInterceptor:1.0.0'
+}
+```
+
 Overview
 --------
 
