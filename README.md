@@ -171,3 +171,6 @@ Custom JSON response deserialisation
 
 Sequence diagrams
 -----------------
+
+![CACHE -> CACHED](https://raw.githubusercontent.com/pthomain/RxCacheInterceptor/master/github/diagrams/cache_cached.png)
+
