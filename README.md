@@ -1,12 +1,12 @@
-# RxCacheInterceptor (beta)
-**A versatile RxJava/Retrofit HTTP cache**
+# RxCacheInterceptor
+**A simple RxJava/Retrofit HTTP cache**
 
 TL;DR
 -----
 
-Enable offline access to your app and speed up screen loading by caching each of your API responses for a specific time.
+Enable offline access and speed up screen loading by caching your API responses for a specific amount of time.
 All responses are automatically cached to disk and refreshed once they expire. 
-Snappy compression and AES encryption are supported and optional.
+Snappy compression (https://github.com/google/snappy) and AES encryption are supported and optional.
 
 <a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
 
@@ -14,12 +14,13 @@ Retrofit support
 ----------------
 
 This library provides an adapter to be used during the setup of Retrofit which handles the cache transparently.
-This means caching can be added to existing codebases using Retrofit/RxJava with minimal effort and very little refactoring.
+This means caching can be added to existing codebases using Retrofit/RxJava with minimal effort and almost no refactoring.
 
 Volley / other networking lib support
 -------------------------------------
 
 It is possible to use the cache interceptor with other networking libs, take a look at the demo app for an example implementation for Volley.
+
 The documentation below will refer exclusively to the Retrofit implementation.
 
 *Note: This library needs to be used in conjunction with RxJava and Gson.*
@@ -27,7 +28,7 @@ The documentation below will refer exclusively to the Retrofit implementation.
 Overview
 --------
 
-Replace ```RxJava2CallAdapterFactory``` with ```RetrofitCacheAdapterFactory``` during your Retrofit setup:
+Just replace ```RxJava2CallAdapterFactory``` with ```RetrofitCacheAdapterFactory``` during your Retrofit setup:
 
 ```java
 Retrofit retrofit = new Retrofit.Builder()
@@ -36,7 +37,7 @@ Retrofit retrofit = new Retrofit.Builder()
                                 .build();
 ```
 
-Assuming that your Retrofit client looks like:
+Assuming that your Retrofit client looks like this:
 
 ```java
 interface UserClient {  
@@ -47,7 +48,7 @@ interface UserClient {
 }
 ```
 
-Then you need to define you ```UserResponse``` class as such:
+Then you need to define your ```UserResponse``` class as such:
 
 ```java
   public class UserResponse extends CachedResponse<ApiError, UserResponse> {
@@ -63,12 +64,71 @@ Then you need to define you ```UserResponse``` class as such:
 }
 ```
 
-And that's it, any call to ```UserClient.get()``` will return a ```FRESH``` response for the first call followed by a ```CACHED``` response (straight from the disk) for any subsquent called made during the TTL interval from the point of the last ```FRESH``` response.
+And that's it. Any call to ```UserClient.get()``` will return a ```FRESH``` response for the first call followed by a ```CACHED``` response (straight from the disk) for any subsquent called made during the TTL interval from the point the request was last refreshed.
 
-About ResponseMetadata, CacheToken and statuses
------------------------------------------------------------
+CachedResponse
+--------------
 
-The ```ResponseMetada``` object, accessible through ```CachedResponse.getMetadata()``` contains metadata related to errors and cache status. Note that the default error is ApiError but you can provide your own implementation, see *Advanced configuration* for details.
+The simplest way to enable caching on your responses is to have them extend from the ```CachedResponse``` object.
+This class contains all the needed metadata, including the duration for which to cache the response.
+
+See the [Advanced configuration](#advanced-configuration) section if your responses are already extending from a base class or for special cases.
+
+Request metadata
+----------------
+
+```CachedResponse``` contains the following methods to be overridden if needed:
+
+- ```getTtlInMinutes()```: returns how long to cache responses for (5 minutes by default).
+- ```isRefresh()```: set to true to force a refresh of the response regardless of how old it is (false by default).
+- ```getMetadata()```: contains metadata related to errors and cache status. 
+- ```splitOnNextOnError()```: see the [Error handling](#error-handling) section.
+
+CacheToken
+----------
+
+```CacheToken``` is available on the ```ResponseMetadata``` object for both requests and responses.
+It provides information about the cache status of the response or act as an instruction to the ```CacheManager```.
+
+A request ```CacheToken``` can be:
+- ```CACHE```: default value, instructs the ```CacheManager``` to cache the response. 
+- ```DO_NOT_CACHE```: instructs the ```CacheManager``` not to cache the response.
+- ```REFRESH```: instructs the ```CacheManager``` to invalidate the cached response and request a new response from the API.
+
+A response ```CacheToken``` can be:
+- ```NOT_CACHED```(final): indicates that the response was not cached (as a result of a ```DO_NOT_CACHE``` request token)
+- ```FRESH```(final): indicates that the response is coming straight from the network
+- ```CACHED```(final): indicates that the response is coming straight from the cache (within their expiry window)
+- ```STALE```(*non-final*): indicates a response coming straight from the cache (after their expiry date)
+- ```REFRESHED```(final): returned after a STALE response with FRESH data from a successful network call
+- ```COULD_NOT_REFRESH```(final): returned after a STALE response with STALE data from an unsuccessful network call
+
+*IMPORTANT: All response ```CacheToken``` are final except for ```STALE```*
+
+This means that ```STALE``` is the only "temporary response" and is emitted to onNext() while another API call is attempted.
+This allows the possibility to show expired data in the UI while it is being refreshed (if applicable).
+
+What it also means is that another response will follow: either ```REFRESHED``` or ```COULD_NOT_REFRESH``` depending on the success of the subsequent API call.
+
+If the ```STALE``` data is irrelevant, then it should be filtered like so: 
+```java
+cachedResponseObservable.filter(response -> response.getMetadata().getCacheToken().getStatus().isFinal)
+```
+Responses containing errors are never cached.
+
+For more explanation about the ```CacheToken``` mechanism, see the [Sequence diagrams](#sequence-diagrams) section.
+
+Error handling
+--------------
+
+By default, this interceptor overrides the default RxJava error handling mechanism and does not emit errors.
+Instead any error emitted upstream is intercepted and re-delivered as an ApiError object in the response metadata. 
+
+Because of this, developers would always expect a valid response through onNext() for any call made even if it resulted in an error and as such should always check that the response metadata has no error (hasError() == false) before trying to read the response's fields.
+
+This simplifies error handling in most cases by allowing the observable to only be subscribed with a single callback for onNext().
+
+If you would rather use both the onNext() and onError() callbacks, override the ```splitOnNextOnError()``` method on the CachedResponse object to return true.
 
 Advanced configuration
 ----------------------
@@ -104,3 +164,10 @@ public class UserResponse extends BaseResponse implements ResponseMetadata.Holde
     /* Add your response fields below */
 }
 ```
+
+Custom JSON response deserialisation
+------------------------------------
+
+
+Sequence diagrams
+-----------------
