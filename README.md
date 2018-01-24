@@ -172,5 +172,33 @@ Custom JSON response deserialisation
 Sequence diagrams
 -----------------
 
-![CACHE -> CACHED](https://raw.githubusercontent.com/pthomain/RxCacheInterceptor/master/github/diagrams/cache_cached.png)
+### CACHE → FRESH
+
+![CACHE → FRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_fresh.png)
+
+### CACHE → CACHED
+
+![CACHE → CACHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_cached.png)
+
+### CACHE → STALE → REFRESHED
+
+![CACHE → STALE → REFRESHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_refreshed.png)
+
+### CACHE → STALE → COULD_NOT_REFRESH
+
+![CACHE → STALE → COULD_NOT_REFRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_could_not_refresh.png)
+
+### REFRESH → REFRESHED
+
+![REFRESH → REFRESHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/refresh_refreshed.png)
+
+### REFRESH → COULD_NOT_REFRESH
+
+![REFRESH → COULD_NOT_REFRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/refresh_could_not_refresh.png)
+
+### DO_NOT_CACHE → NOT_CACHED
+
+![DO_NOT_CACHE → NOT_CACHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/do_not_cache.png)
+
+
 
