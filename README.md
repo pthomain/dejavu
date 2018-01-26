@@ -73,7 +73,7 @@ interface UserClient {
 Then you need to define your ```UserResponse``` class as such:
 
 ```java
-  public class UserResponse extends CachedResponse<ApiError, UserResponse> {
+  public class UserResponse extends CachedResponse<UserResponse> {
     
     //This method only needs to be overriden if you want to implement a different
     //TTL than the default one, which is set to 5 min.
@@ -185,6 +185,53 @@ public class UserResponse extends BaseResponse implements ResponseMetadata.Holde
     
     /* Add your response fields below */
 }
+```
+
+ApiError
+--------
+
+By default, all HTTP/GSON/Retrofit exceptions thrown as part of the call are all converted to an `ApiError` which provides generic metadata about the cause of the error and allows for error catching/checking to be done on a single type of exception.
+This is done by `ApiErrorParser` which implements `Function<Throwable, ApiError>`. The function interface is needed for the cache manager to work properly and given a `Throwable` should return `true` if the argument is a network-related error or `false` otherwise.
+
+If you want to use your own custom error parsing and POJO, for instance `MyCustomError`, then you need to define it as such:
+
+```java
+public class MyCustomError extends Exception implements Function<MyCustomError, Boolean> {
+
+    private final boolean isNetworkError;
+
+    public MyCustomError(boolean isNetworkError) {
+        this.isNetworkError = isNetworkError;
+    }
+
+    @Override
+    public Boolean get(MyCustomError error) {
+        return error.isNetworkError;
+    }
+}
+```
+
+Then you need to implement a factory for it:
+
+```java
+    public class MyCustomErrorFactory implements Function<Throwable, MyCustomError>{
+
+        @Override
+        public MyCustomError get(Throwable throwable) {
+            boolean isNetworkError = throwable instanceof IOException; //or whichever other check makes sense to you implementation
+            return new MyCustomError(isNetworkError);
+        }
+    }
+```
+
+You can then build the interceptor this way:
+
+```java
+ public <R extends BaseCachedResponse<MyCustomError, R>> RxCacheInterceptor.Factory<MyCustomError, R> buildInterceptor(Context context) {
+        return RxCacheInterceptor.<MyCustomError, R>builder()
+                                 .errorFactory(new MyCustomErrorFactory())
+                                 .build(context);
+    }
 ```
 
 Edge-case JSON responses
