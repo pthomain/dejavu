@@ -155,7 +155,7 @@ If you would rather use both the onNext() and onError() callbacks, override the 
 Advanced configuration
 ----------------------
 
-If for your response classes are already extending from a parent class (say ```BaseResponse```), then implement the ```ResponseMetadata.Holder``` interface instead:
+If your response classes are already extending from a parent class (say ```BaseResponse```), then implement the ```ResponseMetadata.Holder``` interface instead:
 
 ```java
 public class UserResponse extends BaseResponse implements ResponseMetadata.Holder<ApiError, UserResponse> {
