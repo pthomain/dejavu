@@ -187,12 +187,15 @@ public class UserResponse extends BaseResponse implements ResponseMetadata.Holde
 }
 ```
 
-Custom JSON response deserialisation
-------------------------------------
+Edge-case JSON responses
+------------------------
 
+Some base classes are included to support JSON responses with an array as its root element (`CachedList<T>`, extending `ArrayList<T>`) and for endpoints returning an empty body (`EmptyResponse`). Both of those classes will provide cache metadata and can be used with the interceptor.
 
 Sequence diagrams
 -----------------
+
+The sequence diagrams below illustrate the cache mechanism with all the possible request/response `CacheToken` combinations:
 
 ### CACHE → FRESH
 
