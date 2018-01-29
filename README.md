@@ -25,6 +25,28 @@ The documentation below will refer exclusively to the Retrofit implementation.
 
 *Note: This library needs to be used in conjunction with RxJava and Gson.*
 
+Adding the dependency [![](https://jitpack.io/v/pthomain/RxCacheInterceptor.svg)](https://jitpack.io/#pthomain/RxCacheInterceptor)
+---------------------
+
+To add the library to your project, add the following block to your root gradle file:
+
+```
+allprojects {
+ repositories {
+    jcenter()
+    maven { url "https://jitpack.io" }
+ }
+}
+ ```
+ 
+ Then add the following dependency to your module:
+ 
+ ```
+ dependencies {
+    compile 'com.github.pthomain:RxCacheInterceptor:1.0.0'
+}
+```
+
 Overview
 --------
 
@@ -51,7 +73,7 @@ interface UserClient {
 Then you need to define your ```UserResponse``` class as such:
 
 ```java
-  public class UserResponse extends CachedResponse<ApiError, UserResponse> {
+  public class UserResponse extends CachedResponse<UserResponse> {
     
     //This method only needs to be overriden if you want to implement a different
     //TTL than the default one, which is set to 5 min.
@@ -133,7 +155,7 @@ If you would rather use both the onNext() and onError() callbacks, override the 
 Advanced configuration
 ----------------------
 
-If for your response classes are already extending from a parent class (say ```BaseResponse```), then implement the ```ResponseMetadata.Holder``` interface instead:
+If your response classes are already extending from a parent class (say ```BaseResponse```), then implement the ```ResponseMetadata.Holder``` interface instead:
 
 ```java
 public class UserResponse extends BaseResponse implements ResponseMetadata.Holder<ApiError, UserResponse> {
@@ -165,9 +187,104 @@ public class UserResponse extends BaseResponse implements ResponseMetadata.Holde
 }
 ```
 
-Custom JSON response deserialisation
-------------------------------------
+ApiError
+--------
 
+By default, all HTTP/GSON/Retrofit exceptions thrown as part of the call are all converted to an `ApiError` which provides generic metadata about the cause of the error and allows for error catching/checking to be done on a single type of exception.
+This is done by `ApiErrorParser` which implements `Function<Throwable, ApiError>`. 
+
+The `Function` interface is needed for the cache manager to work properly and given a `Throwable` should return `true` if the argument is a network-related error or `false` otherwise.
+
+If you want to use your own custom error parsing and POJO, for instance `MyCustomError`, then you need to define it as such:
+
+```java
+public class MyCustomError extends Exception implements Function<MyCustomError, Boolean> {
+
+    private final boolean isNetworkError;
+
+    public MyCustomError(boolean isNetworkError) { //add any extra information parsed from the error as parameters
+        this.isNetworkError = isNetworkError;
+    }
+
+    @Override
+    public Boolean get(MyCustomError error) {
+        return error.isNetworkError;
+    }
+}
+```
+
+Then you need to implement a factory for it:
+
+```java
+public class MyCustomErrorFactory implements Function<Throwable, MyCustomError>{
+
+    @Override
+    public MyCustomError get(Throwable throwable) {
+    boolean isNetworkError = throwable instanceof IOException; //or whichever other check makes sense to you implementation
+        return new MyCustomError(isNetworkError);
+    }
+}
+```
+
+You can then build the interceptor this way:
+
+```java
+public <R extends BaseCachedResponse<MyCustomError, R>> RxCacheInterceptor.Factory<MyCustomError, R> buildInterceptor(Context context) {
+    return RxCacheInterceptor.<MyCustomError, R>builder()
+                             .errorFactory(new MyCustomErrorFactory())
+                             .build(context);
+}
+```
+
+Edge-case JSON responses
+------------------------
+
+Some base classes are included to support JSON responses with an array as its root element (`CachedList<T>`, extending `ArrayList<T>`) and for endpoints returning an empty body (`EmptyResponse`). Both of those classes will provide cache metadata and can be used with the interceptor.
 
 Sequence diagrams
 -----------------
+
+The sequence diagrams below illustrate the cache mechanism with all the possible request/response `CacheToken` combinations:
+
+### CACHE → FRESH
+
+![CACHE → FRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_fresh.png)
+
+---
+
+### CACHE → CACHED
+
+![CACHE → CACHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_cached.png)
+
+---
+
+### CACHE → STALE → REFRESHED
+
+![CACHE → STALE → REFRESHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_refreshed.png)
+
+---
+
+### CACHE → STALE → COULD_NOT_REFRESH
+
+![CACHE → STALE → COULD_NOT_REFRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/cache_could_not_refresh.png)
+
+---
+
+### REFRESH → REFRESHED
+
+![REFRESH → REFRESHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/refresh_refreshed.png)
+
+---
+
+### REFRESH → COULD_NOT_REFRESH
+
+![REFRESH → COULD_NOT_REFRESH](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/refresh_could_not_refresh.png)
+
+---
+
+### DO_NOT_CACHE → NOT_CACHED
+
+![DO_NOT_CACHE → NOT_CACHED](https://github.com/pthomain/RxCacheInterceptor/blob/master/github/diagrams/do_not_cache.png)
+
+
+
