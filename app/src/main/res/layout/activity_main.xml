@@ -8,14 +8,6 @@
               android:orientation="vertical"
               android:padding="10dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="These jokes are coming randomly from an API, I'm not responsible for their content :)"
-        android:textSize="10sp"
-        android:textStyle="italic"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -120,6 +112,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:textStyle="italic"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="5dp"
+        android:text="DISCLAIMER: These jokes are coming randomly from a third-party API"
+        android:textSize="9sp"
         android:textStyle="italic"/>
 
     <ExpandableListView

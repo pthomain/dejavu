@@ -10,7 +10,7 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.subjects.PublishSubject;
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 public class VolleyObservable<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>

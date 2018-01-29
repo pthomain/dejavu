@@ -56,7 +56,7 @@ class ExpandableListAdapter extends BaseExpandableListAdapter {
     
     private void onJokeReady(long start,
                              JokeResponse jokeResponse) {
-        CacheToken<JokeResponse> cacheToken = jokeResponse.getMetadata().getCacheToken();
+        CacheToken<?> cacheToken = jokeResponse.getMetadata().getCacheToken();
         String ellapsed = cacheToken.getStatus() + ", " + (System.currentTimeMillis() - start) + "ms";
         List<String> info = new ArrayList<>();
         String header;

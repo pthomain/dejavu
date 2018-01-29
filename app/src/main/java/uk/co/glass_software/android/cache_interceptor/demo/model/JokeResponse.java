@@ -6,10 +6,9 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.response.CachedResponse;
+import uk.co.glass_software.android.cache_interceptor.response.EmptyResponse;
 
-public class JokeResponse extends CachedResponse<ApiError, JokeResponse> {
+public class JokeResponse extends EmptyResponse {
     
     @Override
     public float getTtlInMinutes() {
