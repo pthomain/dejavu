@@ -23,7 +23,8 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
     private Gson gson;
     private boolean compressData = true;
     private boolean encryptData = false;
-    
+    private boolean isCacheEnabled = true;
+
     RxCacheInterceptorBuilder() {
     }
     
@@ -49,22 +50,27 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
         this.logger = logger;
         return this;
     }
-    
+
     public RxCacheInterceptorBuilder<E, R> gson(@NonNull Gson gson) {
         this.gson = gson;
         return this;
     }
-    
+
     public RxCacheInterceptorBuilder<E, R> databaseName(@NonNull String databaseName) {
         this.databaseName = databaseName;
         return this;
     }
-    
+
+    public RxCacheInterceptorBuilder<E, R> cache(boolean isCacheEnabled) {
+        this.isCacheEnabled = isCacheEnabled;
+        return this;
+    }
+
     public RxCacheInterceptorBuilder<E, R> compress(boolean compressData) {
         this.compressData = compressData;
         return this;
     }
-    
+
     public RxCacheInterceptorBuilder<E, R> encrypt(boolean encryptData) {
         this.encryptData = encryptData;
         return this;
@@ -107,7 +113,8 @@ public class RxCacheInterceptorBuilder<E extends Exception & Function<E, Boolean
         
         return new RxCacheInterceptor.Factory<>(errorInterceptorFactory,
                                                 cacheInterceptorFactory,
-                                                logger
+                                                logger,
+                                                isCacheEnabled
         );
     }
     

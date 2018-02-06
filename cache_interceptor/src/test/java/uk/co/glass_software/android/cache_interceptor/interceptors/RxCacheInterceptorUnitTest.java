@@ -54,6 +54,7 @@ public class RxCacheInterceptorUnitTest {
     
     private RxCacheInterceptor getTarget(boolean isRefresh) {
         return new RxCacheInterceptor(
+                true,
                 responseClass,
                 mockUrl,
                 mockBody,

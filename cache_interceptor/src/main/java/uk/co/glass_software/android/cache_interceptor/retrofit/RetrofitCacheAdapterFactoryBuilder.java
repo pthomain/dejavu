@@ -20,6 +20,7 @@ public class RetrofitCacheAdapterFactoryBuilder<E extends Exception & Function<E
     private Function<Throwable, E> errorFactory;
     private Gson gson;
     private Logger logger;
+    private boolean isCacheEnabled = true;
 
     RetrofitCacheAdapterFactoryBuilder(Context context,
                                        Function<Throwable, E> errorFactory) {
@@ -37,12 +38,18 @@ public class RetrofitCacheAdapterFactoryBuilder<E extends Exception & Function<E
         return this;
     }
 
+    public RetrofitCacheAdapterFactoryBuilder<E> cache(boolean isCacheEnabled) {
+        this.isCacheEnabled = isCacheEnabled;
+        return this;
+    }
+
     @SuppressLint("RestrictedApi")
     public <R extends ResponseMetadata.Holder<R, E>> RetrofitCacheAdapterFactory<E, R> build() {
         RxCacheInterceptor.Factory<E, R> cacheInterceptorFactory = RxCacheInterceptor.<E, R>builder()
                 .gson(gson == null ? new Gson() : gson)
                 .logger(logger == null ? new SimpleLogger(context) : logger)
                 .errorFactory(errorFactory)
+                .cache(isCacheEnabled)
                 .build(context);
 
         return new RetrofitCacheAdapterFactory<>(
