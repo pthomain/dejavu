@@ -8,7 +8,7 @@ import java.util.Date;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 

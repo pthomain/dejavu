@@ -16,7 +16,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheTo
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 

@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 import java.util.Date;
 import java.util.Map;
 
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;

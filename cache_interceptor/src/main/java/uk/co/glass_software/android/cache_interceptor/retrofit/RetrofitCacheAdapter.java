@@ -7,7 +7,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>

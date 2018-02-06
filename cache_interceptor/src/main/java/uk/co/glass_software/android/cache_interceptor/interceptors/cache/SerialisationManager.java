@@ -7,7 +7,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.iq80.snappy.Snappy;
 
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;

@@ -15,7 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.reactivex.Observable;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 

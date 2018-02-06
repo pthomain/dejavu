@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.cache_interceptor.response;
+package uk.co.glass_software.android.cache_interceptor.response.base;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

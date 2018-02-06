@@ -11,7 +11,7 @@ import java.util.Date;
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
-import uk.co.glass_software.android.cache_interceptor.response.ResponseMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 import static junit.framework.Assert.assertEquals;
