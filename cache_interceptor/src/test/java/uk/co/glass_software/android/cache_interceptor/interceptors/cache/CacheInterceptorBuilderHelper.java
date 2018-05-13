@@ -22,7 +22,7 @@ public class CacheInterceptorBuilderHelper {
     
     public CacheInterceptorBuilderHelper(Context context) {
         CacheInterceptorBuilder.Holder holder = new CacheInterceptorBuilder.Holder();
-        new CacheInterceptorBuilder<ApiError, TestResponse>().build(
+        new CacheInterceptorBuilder<ApiError>().build(
                 context.getApplicationContext(),
                 true,
                 false,

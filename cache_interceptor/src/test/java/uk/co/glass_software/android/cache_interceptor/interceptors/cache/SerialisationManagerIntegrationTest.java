@@ -31,7 +31,7 @@ public class SerialisationManagerIntegrationTest extends BaseIntegrationTest {
         
         target = new SerialisationManager(
                 mock(Logger.class),
-                new StoreEntryFactory(RuntimeEnvironment.application),
+                StoreEntryFactory.buildDefault(RuntimeEnvironment.application),
                 false,
                 true,
                 new Gson()

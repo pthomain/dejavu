@@ -13,11 +13,11 @@ import uk.co.glass_software.android.cache_interceptor.utils.Function;
 class RetrofitCacheAdapter<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         implements CallAdapter<R, Object> {
     
-    private final RxCacheInterceptor.Factory<E, R> rxCacheFactory;
+    private final RxCacheInterceptor.Factory<E> rxCacheFactory;
     private final CallAdapter callAdapter;
     private final Class<R> responseClass;
     
-    RetrofitCacheAdapter(RxCacheInterceptor.Factory<E, R> rxCacheFactory,
+    RetrofitCacheAdapter(RxCacheInterceptor.Factory<E> rxCacheFactory,
                          Class<R> responseClass,
                          CallAdapter callAdapter) {
         this.rxCacheFactory = rxCacheFactory;

@@ -14,44 +14,45 @@ import com.google.gson.Gson;
 import java.util.Date;
 import java.util.Map;
 
+import uk.co.glass_software.android.cache_interceptor.R;
 import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
 
-public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> {
-    
+public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>> {
+
     private final static String DATABASE_NAME = "http_cache.db";
-    
+
     private String databaseName;
     private Logger logger;
     private Gson gson;
-    
+
     CacheInterceptorBuilder() {
     }
-    
-    public CacheInterceptorBuilder<E, R> gson(@NonNull Gson gson) {
+
+    public CacheInterceptorBuilder<E> gson(@NonNull Gson gson) {
         this.gson = gson;
         return this;
     }
-    
-    public CacheInterceptorBuilder<E, R> databaseName(@NonNull String databaseName) {
+
+    public CacheInterceptorBuilder<E> databaseName(@NonNull String databaseName) {
         this.databaseName = databaseName;
         return this;
     }
-    
-    public CacheInterceptorBuilder<E, R> logger(@NonNull Logger logger) {
+
+    public CacheInterceptorBuilder<E> logger(@NonNull Logger logger) {
         this.logger = logger;
         return this;
     }
-    
+
     //Used for unit testing
     @VisibleForTesting
     ContentValues mapToContentValues(Map<String, ?> map) {
         ContentValues values = new ContentValues();
         for (Map.Entry<String, ?> entry : map.entrySet()) {
             Object value = entry.getValue();
-            
+
             if (value instanceof Boolean) {
                 values.put(entry.getKey(), (Boolean) value);
             }
@@ -82,19 +83,19 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
         }
         return values;
     }
-    
+
     @SuppressLint("RestrictedApi")
     public CacheInterceptor.Factory<E> build(@NonNull Context context) {
         return build(context, false, false);
     }
-    
+
     @SuppressLint("RestrictedApi")
     public CacheInterceptor.Factory<E> build(@NonNull Context context,
                                              boolean compressData,
                                              boolean encryptData) {
         return build(context, compressData, encryptData, null);
     }
-    
+
     @RestrictTo(RestrictTo.Scope.TESTS)
     CacheInterceptor.Factory<E> build(@NonNull Context context,
                                       boolean compressData,
@@ -103,20 +104,39 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
         if (gson == null) {
             gson = new Gson();
         }
-        
+
         Logger logger = this.logger != null ? this.logger
                                             : new Logger() {
                                                 @Override
                                                 public void e(Object caller, Throwable t, String message) {}
-            
+
                                                 @Override
                                                 public void e(Object caller, String message) {}
-            
+
                                                 @Override
                                                 public void d(Object caller, String message) {}
                                             };
-        
-        StoreEntryFactory storeEntryFactory = new StoreEntryFactory(context);
+
+        StoreEntryFactory storeEntryFactory = StoreEntryFactory.builder(context)
+                .customSerialiser(new GsonSerialiser(gson))
+                .logger(new uk.co.glass_software.android.shared_preferences.utils.Logger() {
+                    @Override
+                    public void e(Object caller, Throwable t, String message) {
+                        logger.e(caller, t, message);
+                    }
+
+                    @Override
+                    public void e(Object caller, String message) {
+                        logger.e(caller, message);
+                    }
+
+                    @Override
+                    public void d(Object caller, String message) {
+                        logger.d(caller, message);
+                    }
+                })
+                .build();
+
         SerialisationManager serialisationManager = new SerialisationManager(
                 logger,
                 storeEntryFactory,
@@ -124,15 +144,15 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
                 compressData,
                 gson
         );
-        
+
         SQLiteDatabase database = new SqlOpenHelper(
                 context.getApplicationContext(),
                 databaseName == null ? DATABASE_NAME : databaseName
         ).getWritableDatabase();
-        
+
         Function<Long, Date> dateFactory = timestamp -> timestamp == null ? new Date() : new Date(timestamp);
-        
-        
+
+
         DatabaseManager databaseManager = new DatabaseManager(
                 database,
                 serialisationManager,
@@ -140,14 +160,14 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
                 dateFactory,
                 this::mapToContentValues
         );
-        
+
         CacheManager cacheManager = new CacheManager(
                 databaseManager,
                 dateFactory,
                 gson,
                 logger
         );
-        
+
         if (holder != null) {
             holder.gson = gson;
             holder.serialisationManager = serialisationManager;
@@ -156,14 +176,14 @@ public class CacheInterceptorBuilder<E extends Exception & Function<E, Boolean>,
             holder.databaseManager = databaseManager;
             holder.cacheManager = cacheManager;
         }
-        
+
         return new CacheInterceptor.Factory<>(
                 cacheManager,
                 true,
                 logger
         );
     }
-    
+
     @RestrictTo(RestrictTo.Scope.TESTS)
     static class Holder {
         Gson gson;

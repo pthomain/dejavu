@@ -16,13 +16,13 @@ import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.
 
 public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>>
         implements ObservableTransformer<R, R> {
-    
+
     private final CacheManager cacheManager;
     private final boolean isCacheEnabled;
     private final Logger logger;
     private final Function<E, Boolean> isNetworkError;
     private final CacheToken<R> cacheToken;
-    
+
     @RestrictTo(RestrictTo.Scope.TESTS)
     CacheInterceptor(CacheManager cacheManager,
                      boolean isCacheEnabled,
@@ -35,14 +35,14 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
         this.cacheToken = cacheToken;
         this.isCacheEnabled = isCacheEnabled;
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public ObservableSource<R> apply(Observable<R> upstream) {
         Observable<R> observable = isCacheEnabled && cacheToken.getStatus() != DO_NOT_CACHE
                                    ? cache(upstream, cacheToken)
                                    : doNotCache(upstream, cacheToken);
-        
+
         return observable.doOnNext(response -> {
             ResponseMetadata<R, E> metadata = response.getMetadata();
             if (metadata.getCacheToken().getStatus() == DO_NOT_CACHE) {
@@ -54,7 +54,7 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
             logger.d(this, "Returning: " + cacheToken.toString());
         });
     }
-    
+
     @SuppressWarnings("unchecked")
     private Observable<R> doNotCache(Observable<R> upstream,
                                      CacheToken<R> cacheToken) {
@@ -64,22 +64,22 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
                                                                                          new Date()
                                                      )));
     }
-    
+
     private Observable<R> cache(Observable<R> upstream,
                                 CacheToken<R> cacheToken) {
         return cacheManager.getCachedResponse(upstream, cacheToken, isNetworkError);
     }
-    
-    public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheInterceptorBuilder<E, R> builder() {
+
+    public static <E extends Exception & Function<E, Boolean>> CacheInterceptorBuilder<E> builder() {
         return new CacheInterceptorBuilder<>();
     }
-    
+
     public static class Factory<E extends Exception & Function<E, Boolean>> {
-        
+
         private final CacheManager cacheManager;
         private final boolean isCacheEnabled;
         private final Logger logger;
-        
+
         Factory(CacheManager cacheManager,
                 boolean isCacheEnabled,
                 Logger logger) {
@@ -87,7 +87,7 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
             this.isCacheEnabled = isCacheEnabled;
             this.logger = logger;
         }
-        
+
         @SuppressLint("RestrictedApi")
         public <R extends ResponseMetadata.Holder<R, E>> CacheInterceptor<E, R> create(CacheToken<R> cacheToken,
                                                                                        Function<E, Boolean> isNetworkError) {
@@ -99,11 +99,11 @@ public class CacheInterceptor<E extends Exception & Function<E, Boolean>, R exte
                     cacheToken
             );
         }
-        
+
         public void clearOlderEntries() {
             cacheManager.clearOlderEntries();
         }
-        
+
         public void flushCache() {
             cacheManager.flushCache();
         }

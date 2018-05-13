@@ -44,8 +44,8 @@ public class RetrofitCacheAdapterFactoryBuilder<E extends Exception & Function<E
     }
 
     @SuppressLint("RestrictedApi")
-    public <R extends ResponseMetadata.Holder<R, E>> RetrofitCacheAdapterFactory<E, R> build() {
-        RxCacheInterceptor.Factory<E, R> cacheInterceptorFactory = RxCacheInterceptor.<E, R>builder()
+    public RetrofitCacheAdapterFactory<E> build() {
+        RxCacheInterceptor.Factory<E> cacheInterceptorFactory = RxCacheInterceptor.<E>builder()
                 .gson(gson == null ? new Gson() : gson)
                 .logger(logger == null ? new SimpleLogger(context) : logger)
                 .errorFactory(errorFactory)

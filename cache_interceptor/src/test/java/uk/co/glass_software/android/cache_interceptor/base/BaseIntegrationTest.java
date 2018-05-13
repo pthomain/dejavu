@@ -37,7 +37,7 @@ public abstract class BaseIntegrationTest {
     
     protected final TestClient testClient;
     protected final AssetHelper assetHelper;
-    private final RetrofitCacheAdapterFactory<ApiError, ?> cacheFactory;
+    private final RetrofitCacheAdapterFactory<ApiError> cacheFactory;
     protected final CacheInterceptorBuilderHelper dependencyHelper;
     
     private MockClient mockClient;

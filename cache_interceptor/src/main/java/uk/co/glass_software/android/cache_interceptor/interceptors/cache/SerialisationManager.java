@@ -12,15 +12,18 @@ import uk.co.glass_software.android.cache_interceptor.utils.Action;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
+import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager;
 
 class SerialisationManager {
-    
+
+    private final static String DATA_TAG = "DATA_TAG";
+
     private final Logger logger;
     private final StoreEntryFactory storeEntryFactory;
     private final boolean encryptData;
     private final boolean compressData;
     private final Gson gson;
-    
+
     SerialisationManager(Logger logger,
                          StoreEntryFactory storeEntryFactory,
                          boolean encryptData,
@@ -32,83 +35,82 @@ class SerialisationManager {
         this.compressData = compressData;
         this.gson = gson;
     }
-    
+
     @Nullable
     <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R deserialise(Class<R> responseClass,
                                                                                                         byte[] data,
                                                                                                         Action onError) {
         String simpleName = responseClass.getSimpleName();
-        
+
         try {
             byte[] uncompressed;
-            
+
             if (compressData) {
                 uncompressed = Snappy.uncompress(data, 0, data.length);
                 logCompression(data, simpleName, uncompressed);
-            }
-            else {
+            } else {
                 uncompressed = data;
             }
-            
-            if (encryptData) {
-                uncompressed = storeEntryFactory.decrypt(uncompressed);
+
+            EncryptionManager encryptionManager = storeEntryFactory.getEncryptionManager();
+            if (encryptData && encryptionManager != null) {
+                uncompressed = encryptionManager.decryptBytes(uncompressed, DATA_TAG);
             }
-            
+
             return gson.fromJson(new String(uncompressed), responseClass);
-        }
-        catch (JsonSyntaxException e) {
+        } catch (JsonSyntaxException e) {
             logger.e(this,
-                     e,
-                     "Cached data didn't match "
-                     + simpleName
-                     + ": flushing cache"
+                    e,
+                    "Cached data didn't match "
+                            + simpleName
+                            + ": flushing cache"
             );
             onError.act();
             return null;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.e(this,
-                     e,
-                     "Could not deserialise "
-                     + simpleName
-                     + ": flushing cache"
+                    e,
+                    "Could not deserialise "
+                            + simpleName
+                            + ": flushing cache"
             );
             onError.act();
             return null;
         }
     }
-    
+
     <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> byte[] serialise(R response) {
         String simpleName = response.getClass().getSimpleName();
-        
+
         byte[] data = gson.toJson(response).getBytes();
-        
-        if (encryptData) {
-            data = storeEntryFactory.encrypt(data);
+
+        EncryptionManager encryptionManager = storeEntryFactory.getEncryptionManager();
+        if (encryptData && encryptionManager != null) {
+            data = encryptionManager.encryptBytes(data, DATA_TAG);
         }
-        
+
         if (compressData) {
             byte[] compressed = Snappy.compress(data);
             logCompression(compressed, simpleName, data);
             data = compressed;
         }
-        
+
         return data;
     }
-    
+
     private void logCompression(byte[] compressedData,
                                 String simpleName,
                                 byte[] uncompressed) {
         logger.d(this,
-                 "Compressed/uncompressed "
-                 + simpleName
-                 + ": "
-                 + compressedData.length
-                 + "B/"
-                 + uncompressed.length
-                 + "B ("
-                 + (100 * compressedData.length / uncompressed.length)
-                 + "%)"
+                "Compressed/uncompressed "
+                        + simpleName
+                        + ": "
+                        + compressedData.length
+                        + "B/"
+                        + uncompressed.length
+                        + "B ("
+                        + (100 * compressedData.length / uncompressed.length)
+                        + "%)"
         );
     }
 }

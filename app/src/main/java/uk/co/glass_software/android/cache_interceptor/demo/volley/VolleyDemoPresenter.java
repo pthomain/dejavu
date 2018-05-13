@@ -16,7 +16,7 @@ import uk.co.glass_software.android.cache_interceptor.volley.VolleyObservable;
 public class VolleyDemoPresenter extends DemoPresenter {
     
     private final static String URL = BASE_URL + ENDPOINT;
-    private final RxCacheInterceptor.Factory<ApiError, JokeResponse> rxCacheInterceptorFactory;
+    private final RxCacheInterceptor.Factory<ApiError> rxCacheInterceptorFactory;
     private final RequestQueue requestQueue;
     
     public VolleyDemoPresenter(Context context,

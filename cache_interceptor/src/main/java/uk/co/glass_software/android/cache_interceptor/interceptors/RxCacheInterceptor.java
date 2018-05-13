@@ -125,18 +125,18 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         return responseClass;
     }
 
-    public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> RxCacheInterceptorBuilder<E, R> builder() {
+    public static <E extends Exception & Function<E, Boolean>> RxCacheInterceptorBuilder<E> builder() {
         return new RxCacheInterceptorBuilder<>();
     }
 
-    public static <R extends ResponseMetadata.Holder<R, ApiError>> RxCacheInterceptor.Factory<ApiError, R> buildDefault(Context context) {
-        return RxCacheInterceptor.<ApiError, R>builder()
+    public static  RxCacheInterceptor.Factory<ApiError> buildDefault(Context context) {
+        return RxCacheInterceptor.<ApiError>builder()
                 .gson(new Gson())
                 .errorFactory(new ApiErrorFactory())
                 .build(context);
     }
 
-    public static class Factory<E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> {
+    public static class Factory<E extends Exception & Function<E, Boolean>> {
 
         @NonNull
         private final ErrorInterceptor.Factory<E> errorInterceptorFactory;
@@ -160,9 +160,9 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         }
 
         @SuppressLint("RestrictedApi")
-        public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
-                                               @NonNull String url,
-                                               @Nullable String body) {
+        public <R extends ResponseMetadata.Holder<R, E>> RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
+                                                                                         @NonNull String url,
+                                                                                         @Nullable String body) {
             return create(
                     responseClass,
                     url,
@@ -172,10 +172,10 @@ public class RxCacheInterceptor<E extends Exception & Function<E, Boolean>, R ex
         }
 
         @SuppressLint("RestrictedApi")
-        public RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
-                                               @NonNull String url,
-                                               @Nullable String body,
-                                               boolean isRefresh) {
+        public <R extends ResponseMetadata.Holder<R, E>> RxCacheInterceptor<E, R> create(@NonNull Class<R> responseClass,
+                                                                                         @NonNull String url,
+                                                                                         @Nullable String body,
+                                                                                         boolean isRefresh) {
             return new RxCacheInterceptor<>(
                     isCacheEnabled,
                     responseClass,
