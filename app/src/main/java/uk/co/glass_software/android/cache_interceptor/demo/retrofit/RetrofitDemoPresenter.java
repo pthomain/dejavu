@@ -13,7 +13,6 @@ import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 import uk.co.glass_software.android.cache_interceptor.utils.Callback;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class RetrofitDemoPresenter extends DemoPresenter {
 
@@ -23,7 +22,7 @@ public class RetrofitDemoPresenter extends DemoPresenter {
     public RetrofitDemoPresenter(Context context,
                                  Callback<String> onLogOutput) {
         super(context, onLogOutput);
-        adapterFactory = RetrofitCacheAdapterFactory.build(context, new ApiErrorFactory())
+        adapterFactory = RetrofitCacheAdapterFactory.Companion.build(context, new ApiErrorFactory())
                 .logger(simpleLogger)
                 .build();
 

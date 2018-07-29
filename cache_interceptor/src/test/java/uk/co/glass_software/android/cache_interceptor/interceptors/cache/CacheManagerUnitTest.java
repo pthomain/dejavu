@@ -8,15 +8,14 @@ import org.junit.Test;
 import java.util.Date;
 
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.CACHED;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.STALE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.CACHED;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.STALE;
 
 @SuppressWarnings("unchecked")
 public class CacheManagerUnitTest {

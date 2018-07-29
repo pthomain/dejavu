@@ -11,7 +11,6 @@ import java.util.Date;
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
-import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 import static junit.framework.Assert.assertEquals;
@@ -19,7 +18,7 @@ import static junit.framework.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.STALE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.STALE;
 
 @SuppressWarnings("unchecked")
 public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
@@ -32,7 +31,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
     
     @Before
     public void setUp() throws Exception {
-        CacheToken requestToken = CacheToken.newRequest(
+        CacheToken requestToken = CacheToken.Companion.newRequest(
                 TestResponse.class,
                 "apiUrl",
                 "",
@@ -47,7 +46,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
         Date fetchDate = new Date();
         Date expiryDate = new Date(fetchDate.getTime() + 12345);
         
-        cacheToken = CacheToken.caching(requestToken,
+        cacheToken = CacheToken.Companion.caching(requestToken,
                                         mockUpstream,
                                         fetchDate,
                                         fetchDate,
@@ -97,7 +96,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
                                                                                                                                           @NonNull Observable<R> refreshObservable,
                                                                                                                                           @NonNull Date cacheDate,
                                                                                                                                           @NonNull Date expiryDate) {
-        return CacheToken.cached(cacheToken,
+        return CacheToken.Companion.cached(cacheToken,
                                  refreshObservable,
                                  cacheDate,
                                  expiryDate

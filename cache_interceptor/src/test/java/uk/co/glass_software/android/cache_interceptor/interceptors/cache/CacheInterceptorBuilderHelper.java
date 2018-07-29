@@ -29,12 +29,12 @@ public class CacheInterceptorBuilderHelper {
                 holder
         );
         
-        gson = holder.gson;
-        serialisationManager = holder.serialisationManager;
-        database = holder.database;
-        dateFactory = holder.dateFactory;
-        databaseManager = holder.databaseManager;
-        cacheManager = holder.cacheManager;
+        gson = holder.getGson();
+        serialisationManager = holder.getSerialisationManager();
+        database = holder.getDatabase();
+        dateFactory = holder.getDateFactory();
+        databaseManager = holder.getDatabaseManager();
+        cacheManager = holder.getCacheManager();
     }
     
 }

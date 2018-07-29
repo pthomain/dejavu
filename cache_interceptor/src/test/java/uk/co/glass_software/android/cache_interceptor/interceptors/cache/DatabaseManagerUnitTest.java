@@ -13,9 +13,7 @@ import java.util.Map;
 
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
-import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 import static junit.framework.Assert.assertEquals;
@@ -27,11 +25,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_DATA;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_DATE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_EXPIRY_DATE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.COLUMN_CACHE_TOKEN;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.TABLE_CACHE;
 
 @SuppressWarnings("unchecked")
 public class DatabaseManagerUnitTest {
@@ -117,7 +110,7 @@ public class DatabaseManagerUnitTest {
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(mockDb).execSQL(captor.capture());
         
-        assertEquals("Cache flush SQL command was wrong", "DELETE FROM " + TABLE_CACHE, captor.getValue());
+        assertEquals("Cache flush SQL command was wrong", "DELETE FROM " + Companion.getTABLE_CACHE(), captor.getValue());
     }
     
     @Test
@@ -128,7 +121,7 @@ public class DatabaseManagerUnitTest {
         target.cache(mockResponse);
         
         verify(mockDb).insertWithOnConflict(
-                eq(TABLE_CACHE),
+                eq(Companion.getTABLE_CACHE()),
                 eq(null),
                 any(),
                 eq(CONFLICT_REPLACE)
@@ -138,10 +131,10 @@ public class DatabaseManagerUnitTest {
         verify(mockContentValuesFactory).get(mapCaptor.capture());
         Map<String, Object> values = mapCaptor.getValue();
         
-        assertEquals("Cache key didn't match", cacheKey, values.get(COLUMN_CACHE_TOKEN));
-        assertEquals("Cache date didn't match", mockCacheDateTime, values.get(COLUMN_CACHE_DATE));
-        assertEquals("Expiry date didn't match", mockExpiryDateTime, values.get(COLUMN_CACHE_EXPIRY_DATE));
-        assertEquals("Cached data didn't match", mockBlob, values.get(COLUMN_CACHE_DATA));
+        assertEquals("Cache key didn't match", cacheKey, values.get(Companion.getCOLUMN_CACHE_TOKEN()));
+        assertEquals("Cache date didn't match", mockCacheDateTime, values.get(Companion.getCOLUMN_CACHE_DATE()));
+        assertEquals("Expiry date didn't match", mockExpiryDateTime, values.get(Companion.getCOLUMN_CACHE_EXPIRY_DATE()));
+        assertEquals("Cached data didn't match", mockBlob, values.get(Companion.getCOLUMN_CACHE_DATA()));
     }
     
     @Test
@@ -164,7 +157,7 @@ public class DatabaseManagerUnitTest {
         String mockUrl = "mockUrl";
         
         doReturn(mockCursor).when(mockDb)
-                            .query(eq(TABLE_CACHE),
+                            .query(eq(Companion.getTABLE_CACHE()),
                                    any(),
                                    any(),
                                    any(),
@@ -204,7 +197,7 @@ public class DatabaseManagerUnitTest {
         ArgumentCaptor<String> selectionCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String[]> selectionArgsCaptor = ArgumentCaptor.forClass(String[].class);
         
-        verify(mockDb).query(eq(TABLE_CACHE),
+        verify(mockDb).query(eq(Companion.getTABLE_CACHE()),
                              projectionCaptor.capture(),
                              selectionCaptor.capture(),
                              selectionArgsCaptor.capture(),
@@ -241,7 +234,7 @@ public class DatabaseManagerUnitTest {
             assertEquals("Refresh observable didn't match", mockObservable, cacheToken.getRefreshObservable());
             assertEquals("Response class didn't match", TestResponse.class, cacheToken.getResponseClass());
             assertEquals("Url didn't match", mockUrl, cacheToken.getApiUrl());
-            assertEquals("Cached response should be CACHED", CacheToken.Status.CACHED, cacheToken.getStatus());
+            assertEquals("Cached response should be CACHED", CacheStatus.CACHED, cacheToken.getStatus());
         }
         else {
             assertNull("Cached response should be null", cachedResponse);

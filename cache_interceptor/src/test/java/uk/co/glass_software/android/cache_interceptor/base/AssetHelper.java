@@ -12,9 +12,7 @@ import java.io.InputStreamReader;
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode;
-import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 public class AssetHelper {
     
@@ -60,7 +58,7 @@ public class AssetHelper {
             );
             return Observable.error(new ApiError(
                     e,
-                    ApiError.NON_HTTP_STATUS,
+                    ApiError.Companion.getNON_HTTP_STATUS(),
                     ErrorCode.UNKNOWN,
                     message
             ));

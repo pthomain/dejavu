@@ -10,14 +10,12 @@ import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
-import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.DO_NOT_CACHE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.DO_NOT_CACHE;
 import static uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactoryUnitTest.assertApiError;
 import static uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode.NETWORK;
 
@@ -30,7 +28,7 @@ public class ErrorInterceptorIntegrationTest extends BaseIntegrationTest {
     
     @Before
     public void setUp() throws Exception {
-        CacheToken<TestResponse> cacheToken = CacheToken.newRequest(
+        CacheToken<TestResponse> cacheToken = CacheToken.Companion.newRequest(
                 TestResponse.class,
                 TestResponse.URL,
                 null,
@@ -77,7 +75,7 @@ public class ErrorInterceptorIntegrationTest extends BaseIntegrationTest {
                     true
             );
             
-            assertEquals("Cache token should be DO_NOT_CACHE",
+            assertEquals("Cache token should be DoNotCache",
                          DO_NOT_CACHE,
                          metadata.getCacheToken().getStatus()
             );

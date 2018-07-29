@@ -12,15 +12,14 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheTo
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.CACHE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.REFRESH;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.CACHE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.REFRESH;
 
 @SuppressWarnings("unchecked")
 public class RxCacheInterceptorUnitTest {

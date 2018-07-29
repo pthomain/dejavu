@@ -13,22 +13,20 @@ import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode;
-import uk.co.glass_software.android.cache_interceptor.response.base.ResponseMetadata;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.CACHED;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.COULD_NOT_REFRESH;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.DO_NOT_CACHE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.FRESH;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.NOT_CACHED;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.REFRESHED;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken.Status.STALE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.CACHED;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.COULD_NOT_REFRESH;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.DO_NOT_CACHE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.FRESH;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.NOT_CACHED;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.REFRESHED;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.STALE;
 
 public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
     
@@ -72,8 +70,8 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
     
     private CacheToken<TestResponse> getToken(boolean isDoNotCache) {
         return isDoNotCache
-               ? CacheToken.doNotCache(TestResponse.class)
-               : CacheToken.newRequest(TestResponse.class, apiUrl, body, 5);
+               ? CacheToken.Companion.doNotCache(TestResponse.class)
+               : CacheToken.Companion.newRequest(TestResponse.class, apiUrl, body, 5);
     }
     
     @Test
@@ -157,7 +155,7 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
                                  boolean isDoNotCache,
                                  boolean hasCachedResponse,
                                  boolean isCachedResponseStale,
-                                 CacheToken.Status expectedStatus,
+                                 CacheStatus expectedStatus,
                                  boolean isNetworkError) {
         CacheToken<TestResponse> existingCacheToken;
         
@@ -166,7 +164,7 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
             existingCacheToken = getToken(false);
         }
         else if (hasCachedResponse) {
-            existingCacheToken = CacheToken.cached(getToken(false),
+            existingCacheToken = CacheToken.Companion.cached(getToken(false),
                                                    null,
                                                    new Date(),
                                                    new Date(System.currentTimeMillis() + 5000 * 60)
@@ -243,7 +241,7 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
     
     private void assertResponse(TestResponse testResponse,
                                 TestResponse expectedResponse,
-                                CacheToken.Status expectedStatus) {
+                                CacheStatus expectedStatus) {
         assertEquals("Responses didn't match", expectedResponse, testResponse);
         
         ResponseMetadata<TestResponse, ApiError> metadata = expectedResponse.getMetadata();

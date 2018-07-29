@@ -60,7 +60,7 @@ public class RetrofitCacheAdapterFactoryUnitTest {
         
         when(spyTarget.create(
                 eq(mockRxCacheFactory),
-                eq(TestResponse.class),
+                instruction, eq(TestResponse.class),
                 eq(mockCallAdapter)
         )).thenReturn(mockAdapter);
         

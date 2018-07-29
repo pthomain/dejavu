@@ -17,7 +17,7 @@ public class CacheTokenHelper {
                                         Date fetchDate,
                                         Observable expectedObservable,
                                         Class expectedResponseClass,
-                                        CacheToken.Status expectedStatus,
+                                        CacheStatus expectedStatus,
                                         float expectedTtl) {
         assertEquals("CacheToken URL didn't match", expectedUrl, cacheToken.getApiUrl());
         assertEquals("CacheToken body didn't match", expectedBody, cacheToken.getBody());

@@ -19,7 +19,6 @@ import uk.co.glass_software.android.cache_interceptor.base.network.retrofit.Test
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptorBuilderHelper;
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -51,7 +50,7 @@ public abstract class BaseIntegrationTest {
         okHttpClient = builder.build();
         
         Gson gson = new Gson();
-        cacheFactory = RetrofitCacheAdapterFactory.buildDefault(application);
+        cacheFactory = RetrofitCacheAdapterFactory.Companion.buildDefault(application);
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .client(okHttpClient)

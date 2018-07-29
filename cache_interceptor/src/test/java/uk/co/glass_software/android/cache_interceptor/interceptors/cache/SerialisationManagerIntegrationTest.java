@@ -10,7 +10,6 @@ import org.robolectric.RuntimeEnvironment;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.utils.Action;
-import uk.co.glass_software.android.cache_interceptor.utils.Logger;
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory;
 
 import static junit.framework.Assert.assertEquals;
