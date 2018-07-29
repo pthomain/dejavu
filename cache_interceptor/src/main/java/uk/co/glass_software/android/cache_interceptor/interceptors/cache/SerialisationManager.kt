@@ -12,15 +12,17 @@ import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.utils.Logger
 
-internal class SerialisationManager(private val logger: Logger,
-                                    private val storeEntryFactory: StoreEntryFactory,
-                                    private val encryptData: Boolean,
-                                    private val compressData: Boolean,
-                                    private val gson: Gson) {
+internal class SerialisationManager<E>(private val logger: Logger,
+                                       private val storeEntryFactory: StoreEntryFactory,
+                                       private val encryptData: Boolean,
+                                       private val compressData: Boolean,
+                                       private val gson: Gson)
+        where E : Exception,
+              E : (E) -> kotlin.Boolean {
 
     fun deserialise(responseClass: Class<*>,
                     data: ByteArray,
-                    onError: () -> Unit): ResponseWrapper? {
+                    onError: () -> Unit): ResponseWrapper<E>? {
         val simpleName = responseClass.simpleName
 
         try {

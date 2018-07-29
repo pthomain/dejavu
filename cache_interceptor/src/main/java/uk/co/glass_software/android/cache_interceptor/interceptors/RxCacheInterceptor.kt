@@ -7,6 +7,7 @@ import uk.co.glass_software.android.cache_interceptor.R
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor
@@ -19,7 +20,7 @@ class RxCacheInterceptor<E> constructor(private val isCacheEnabled: Boolean,
                                         private val url: String,
                                         private val body: String?,
                                         private val logger: Logger,
-                                        private val responseDecorator: ResponseDecorator,
+                                        private val responseDecorator: ResponseDecorator<E>,
                                         private val errorInterceptorFactory: ErrorInterceptor.Factory<E>,
                                         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>)
     : ObservableTransformer<Any, Any>,
@@ -28,16 +29,15 @@ class RxCacheInterceptor<E> constructor(private val isCacheEnabled: Boolean,
               E : (E) -> Boolean {
 
     override fun apply(observable: Observable<Any>): ObservableSource<Any> {
-        val instruction = if (isCacheEnabled) instruction else instruction.copy(operation = DoNotCache)
+        val instructionToken = CacheToken.fromInstruction(
+                if (isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+                url,
+                body
+        )
 
         val composedObservable = observable
-                .compose(errorInterceptorFactory.create(responseClass))
-                .compose(cacheInterceptorFactory.create(
-                        responseClass,
-                        instruction,
-                        url,
-                        body
-                ))
+                .compose(errorInterceptorFactory.create(instructionToken))
+                .compose(cacheInterceptorFactory.create(instructionToken))
 
         val wrappedObservable = if (instruction.mergeOnNextOnError)
             composedObservable

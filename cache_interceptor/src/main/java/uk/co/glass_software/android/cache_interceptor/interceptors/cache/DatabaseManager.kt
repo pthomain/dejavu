@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import org.bouncycastle.asn1.cms.CMSObjectIdentifiers.compressedData
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_DATA
@@ -17,18 +18,21 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DatabaseManager(private val db: SQLiteDatabase,
-                               private val serialisationManager: SerialisationManager,
-                               private val logger: Logger,
-                               cleanUpThresholdInMinutes: Long,
-                               private val dateFactory: (Long) -> Date,
-                               private val contentValuesFactory: (Map<String, *>) -> ContentValues) {
+internal class DatabaseManager<E>(private val db: SQLiteDatabase,
+                                  private val serialisationManager: SerialisationManager<E>,
+                                  private val logger: Logger,
+                                  cleanUpThresholdInMinutes: Long,
+                                  private val dateFactory: (Long) -> Date,
+                                  private val contentValuesFactory: (Map<String, *>) -> ContentValues)
+        where E : Exception,
+              E : (E) -> Boolean {
+
     private val dateFormat: DateFormat
     private val cleanUpThresholdInMillis = cleanUpThresholdInMinutes * 60 * 1000
     private val hasher: Hasher
 
     constructor(db: SQLiteDatabase,
-                serialisationManager: SerialisationManager,
+                serialisationManager: SerialisationManager<E>,
                 logger: Logger,
                 dateFactory: (Long) -> Date,
                 contentValuesFactory: (Map<String, *>) -> ContentValues) : this(
@@ -61,7 +65,7 @@ internal class DatabaseManager(private val db: SQLiteDatabase,
         logger.d(this, "Cleared entire HTTP cache")
     }
 
-    fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper? {
+    fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
         logger.d(this, "Checking for cached $simpleName")
@@ -98,7 +102,7 @@ internal class DatabaseManager(private val db: SQLiteDatabase,
                 val compressedData = cursor.getBlob(2)
 
                 return getCachedResponse(
-                        instruction,
+                        instructionToken,
                         cacheDate,
                         expiryDate,
                         compressedData
@@ -133,19 +137,18 @@ internal class DatabaseManager(private val db: SQLiteDatabase,
         }
     }
 
-    private fun getCachedResponse(instruction: CacheInstruction,
+    private fun getCachedResponse(instructionToken: CacheToken,
                                   cacheDate: Date,
                                   expiryDate: Date,
-                                  compressedData: ByteArray): ResponseWrapper? {
+                                  compressedData: ByteArray): ResponseWrapper<E>? {
         val responseWrapper = serialisationManager.deserialise(
-                instruction.responseClass,
+                instructionToken.instruction.responseClass,
                 compressedData,
                 this::flushCache
         )?.also {
             it.metadata = CacheMetadata(
-                    instruction,
                     CacheToken.cached(
-                            instruction,
+                            instructionToken,
                             cacheDate,
                             expiryDate
                     ),
@@ -155,14 +158,14 @@ internal class DatabaseManager(private val db: SQLiteDatabase,
 
         logger.d(
                 this,
-                "Returning cached ${instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
+                "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
         )
 
         return responseWrapper
     }
 
     fun cache(instructionToken: CacheToken,
-              response: ResponseWrapper) {
+              response: ResponseWrapper<E>) {
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
         logger.d(this, "Caching $simpleName")

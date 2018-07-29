@@ -14,8 +14,10 @@ class ResponseSubtyper {
         const val propertyGetter = "getRxCacheInterceptorCacheMetadata"
     }
 
-    fun <R : Any> subtypeForMetadata(responseClass: Class<R>): Pair<Class<out Class<out R>>, (R, CacheMetadata) -> Unit> {
-        val type = object : TypeToken<CacheMetadata>() {}.rawType
+    fun <R : Any, E> subtypeForMetadata(responseClass: Class<R>): Pair<Class<out Class<out R>>, (R, CacheMetadata<E>) -> Unit>
+            where E : Exception,
+                  E : (E) -> Boolean {
+        val type = object : TypeToken<CacheMetadata<E>>() {}.rawType
         val subtype = byteBuddy
                 .subclass(responseClass)
                 .defineProperty(propertyName, type)

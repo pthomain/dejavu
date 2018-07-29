@@ -4,9 +4,11 @@ import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
+import javolution.util.stripped.FastMap.logger
 import uk.co.glass_software.android.cache_interceptor.R
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.utils.Logger
@@ -15,22 +17,23 @@ import java.util.concurrent.TimeUnit
 
 class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwable) -> E,
                                               private val logger: Logger,
-                                              private val responseClass: Class<*>)
-    : ObservableTransformer<Any, ResponseWrapper>
+                                              private val instructionToken: CacheToken)
+    : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
               E : (E) -> Boolean {
 
-    override fun apply(upstream: Observable<Any>): ObservableSource<ResponseWrapper> {
+    override fun apply(upstream: Observable<Any>): ObservableSource<ResponseWrapper<E>> {
         return upstream
                 .filter { o -> o != null } //see https://github.com/square/retrofit/issues/2242
                 .switchIfEmpty(Observable.error(NoSuchElementException("Response was empty")))
                 .timeout(30, TimeUnit.SECONDS) //fixing timeout not working in OkHttp
-                .map { ResponseWrapper(responseClass, it) }
+                .map { ResponseWrapper<E>(instructionToken.instruction.responseClass, it) }
                 .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })
     }
 
-    private fun getErrorResponse(throwable: Throwable): ResponseWrapper {
+    private fun getErrorResponse(throwable: Throwable): ResponseWrapper<E> {
         val apiError = errorFactory(throwable)
+        val responseClass = instructionToken.instruction.responseClass
 
         logger.e(
                 this,
@@ -38,17 +41,17 @@ class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwab
                 "An error occurred during the network request for $responseClass"
         )
 
-        val instruction = CacheInstruction(
+        val instructionToken = CacheToken.fromInstruction(
+                CacheInstruction(responseClass, DoNotCache),
+                instructionToken.apiUrl,
+                instructionToken.body
+        )
+
+        return ResponseWrapper(
                 responseClass,
-                DoNotCache
+                null,
+                CacheMetadata(instructionToken, apiError)
         )
-
-        val metadata = CacheMetadata(
-                instruction,
-                exception = apiError
-        )
-
-        return ResponseWrapper(responseClass, null, metadata)
     }
 
     class Factory<E>(private val errorFactory: (Throwable) -> E,
@@ -56,10 +59,10 @@ class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwab
             where E : Exception,
                   E : (E) -> Boolean {
 
-        fun create(responseClass: Class<*>) = ErrorInterceptor(
+        fun create(instructionToken: CacheToken) = ErrorInterceptor(
                 errorFactory,
                 logger,
-                responseClass
+                instructionToken
         )
     }
 }

@@ -8,8 +8,7 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
 
-data class CacheToken constructor(val responseClass: Class<*>,
-                                  val instruction: CacheInstruction,
+data class CacheToken constructor(val instruction: CacheInstruction,
                                   val status: CacheStatus,
                                   val apiUrl: String = "",
                                   val body: String? = null,
@@ -24,7 +23,6 @@ data class CacheToken constructor(val responseClass: Class<*>,
         internal fun fromInstruction(instruction: CacheInstruction,
                                      apiUrl: String,
                                      body: String?) = CacheToken(
-                instruction.responseClass,
                 instruction,
                 INSTRUCTION,
                 apiUrl,

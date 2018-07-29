@@ -72,7 +72,7 @@ class CacheInterceptorBuilder<E> internal constructor()
     internal fun build(context: Context,
                        compressData: Boolean,
                        encryptData: Boolean,
-                       holder: Holder?): CacheInterceptor.Factory<E> {
+                       holder: Holder<E>?): CacheInterceptor.Factory<E> {
         val gson = gson ?: Gson()
 
         val logger = this.logger ?: object : Logger {
@@ -86,7 +86,7 @@ class CacheInterceptorBuilder<E> internal constructor()
                 .logger(logger)
                 .build()
 
-        val serialisationManager = SerialisationManager(
+        val serialisationManager = SerialisationManager<E>(
                 logger,
                 storeEntryFactory,
                 encryptData,
@@ -109,7 +109,7 @@ class CacheInterceptorBuilder<E> internal constructor()
                 this::mapToContentValues
         )
 
-        val cacheManager = CacheManager(
+        val cacheManager = CacheManager<E>(
                 databaseManager,
                 dateFactory,
                 gson,
@@ -133,13 +133,15 @@ class CacheInterceptorBuilder<E> internal constructor()
     }
 
     @RestrictTo(RestrictTo.Scope.TESTS)
-    internal class Holder {
+    internal class Holder<E>
+            where E : Exception,
+                  E : (E) -> Boolean {
         var gson: Gson? = null
-        var serialisationManager: SerialisationManager? = null
+        var serialisationManager: SerialisationManager<E>? = null
         var database: SQLiteDatabase? = null
         var dateFactory: ((Long?) -> Date)? = null
-        var databaseManager: DatabaseManager? = null
-        var cacheManager: CacheManager? = null
+        var databaseManager: DatabaseManager<E>? = null
+        var cacheManager: CacheManager<E>? = null
     }
 
     companion object {
