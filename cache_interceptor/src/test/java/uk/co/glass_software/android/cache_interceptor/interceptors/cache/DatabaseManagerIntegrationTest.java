@@ -68,7 +68,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
         cachedResponse.setMetadata(stubbedResponse.getMetadata()); //ignore metadata, covered by unit test
         assertEquals("Cached response didn't match the original", stubbedResponse, cachedResponse);
         
-        target.flushCache();
+        target.clearCache();
         
         assertNull("Cache should not contain anything", target.getCachedResponse(mockUpstream, cacheToken));
     }

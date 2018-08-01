@@ -17,9 +17,7 @@ import java.util.*
 class CacheInterceptor<E> internal constructor(private val cacheManager: CacheManager<E>,
                                                private val isCacheEnabled: Boolean,
                                                private val logger: Logger,
-                                               private val instructionToken: CacheToken,
-                                               private val apiUrl: String,
-                                               private val body: String?)
+                                               private val instructionToken: CacheToken)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : (E) -> Boolean {
@@ -32,23 +30,16 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
             when (instruction.operation) {
                 is Expiring -> cacheManager.getCachedResponse(
                         upstream,
-                        instruction,
+                        instructionToken,
                         instruction.operation,
-                        apiUrl,
-                        body,
                         isNetworkError
                 )
-                is CacheInstruction.Operation.Clear -> doNotCache(upstream) //TODO
-                is CacheInstruction.Operation.DoNotCache -> doNotCache(upstream)
+                is CacheInstruction.Operation.Clear -> doNotCache(instructionToken, upstream) //TODO
+                is CacheInstruction.Operation.DoNotCache -> doNotCache(instructionToken, upstream)
             }
-        } else doNotCache(upstream)
+        } else doNotCache(instructionToken, upstream)
 
         return observable.doOnNext { wrapper ->
-            val instructionToken = CacheToken.fromInstruction(
-                    instruction,
-                    apiUrl,
-                    body
-            )
             if (wrapper.metadata!!.cacheToken!!.instruction.operation === DoNotCache) {
                 wrapper.metadata = wrapper.metadata!!.copy(
                         cacheToken = CacheToken.notCached(
@@ -62,16 +53,15 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
     }
 
     private fun doNotCache(instructionToken: CacheToken,
-                           upstream: Observable<ResponseWrapper<E>>): Observable<ResponseWrapper<E>> {
-        return upstream.doOnNext { responseWrapper ->
-            responseWrapper.metadata = CacheMetadata(
-                    CacheToken.notCached(
-                            instructionToken,
-                            Date()
-                    )
-            )
-        }
-    }
+                           upstream: Observable<ResponseWrapper<E>>) =
+            upstream.doOnNext { responseWrapper ->
+                responseWrapper.metadata = CacheMetadata(
+                        CacheToken.notCached(
+                                instructionToken,
+                                Date()
+                        )
+                )
+            }
 
     class Factory<E> internal constructor(private val cacheManager: CacheManager<E>,
                                           private val isCacheEnabled: Boolean,
@@ -79,7 +69,7 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
             where E : Exception,
                   E : (E) -> Boolean {
 
-        fun create(instructionToken: CacheToken) = CacheInterceptor<E>(
+        fun create(instructionToken: CacheToken) = CacheInterceptor(
                 cacheManager,
                 isCacheEnabled,
                 logger,
@@ -90,8 +80,6 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
     companion object {
         fun <E> builder(): CacheInterceptorBuilder<E>
                 where E : Exception,
-                      E : (E) -> Boolean {
-            return CacheInterceptorBuilder()
-        }
+                      E : (E) -> Boolean = CacheInterceptorBuilder()
     }
 }

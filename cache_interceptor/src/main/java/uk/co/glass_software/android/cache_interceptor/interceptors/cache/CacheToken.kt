@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import javolution.util.stripped.FastMap.logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
 import uk.co.glass_software.android.shared_preferences.utils.Logger
@@ -16,7 +15,7 @@ data class CacheToken constructor(val instruction: CacheInstruction,
                                   val cacheDate: Date? = null,
                                   val expiryDate: Date? = null) {
 
-    internal fun getKey(hasher: Hasher): String = getKey(hasher, apiUrl, body)
+    internal fun getKey(hasher: Hasher) = getKey(hasher, apiUrl, body)
 
     companion object {
 
@@ -56,22 +55,15 @@ data class CacheToken constructor(val instruction: CacheInstruction,
 
         internal fun getKey(hasher: Hasher,
                             apiUrl: String,
-                            body: String?): String {
-            val urlHash = apiUrl.hashCode()
-            return try {
-                if (body == null) {
-                    hasher.hash(apiUrl)
-                } else {
-                    hasher.hash("$apiUrl$$body")
+                            body: String?) =
+                apiUrl.hashCode().let {
+                    try {
+                        body?.let { hasher.hash("$apiUrl$$body") } ?: hasher.hash(apiUrl)
+                    } catch (e: Exception) {
+                        if (body == null) it.toString()
+                        else (it * 7 + body.hashCode()).toString()
+                    }
                 }
-            } catch (e: Exception) {
-                if (body == null) {
-                    urlHash.toString() + ""
-                } else {
-                    (urlHash * 7 + body.hashCode()).toString()
-                }
-            }
-        }
 
         internal fun getHasher(logger: Logger): Hasher {
             var messageDigest: MessageDigest?

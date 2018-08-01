@@ -15,14 +15,14 @@ data class CacheInstruction(val responseClass: Class<*>,
                               val freshOnly: Boolean = false,
                               type: Type) : Operation(type) {
 
-            sealed class Cache(durationInMillis: Float = DEFAULT_DURATION,
-                               freshOnly: Boolean = false,
-                               val encrypt: Boolean = false,
-                               val compress: Boolean = false)
+            class Cache(durationInMillis: Float = DEFAULT_DURATION,
+                        freshOnly: Boolean = false,
+                        val encrypt: Boolean = false,
+                        val compress: Boolean = false)
                 : Expiring(durationInMillis, freshOnly, CACHE)
 
-            sealed class Refresh(durationInMillis: Float = DEFAULT_DURATION,
-                                 freshOnly: Boolean = false)
+            class Refresh(durationInMillis: Float = DEFAULT_DURATION,
+                          freshOnly: Boolean = false)
                 : Expiring(durationInMillis, freshOnly, REFRESH)
         }
 

@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import javolution.util.stripped.FastMap.logger
+import org.bouncycastle.crypto.tls.ECPointFormat.uncompressed
 
 import org.iq80.snappy.Snappy
 import uk.co.glass_software.android.cache_interceptor.R
@@ -26,14 +27,11 @@ internal class SerialisationManager<E>(private val logger: Logger,
         val simpleName = responseClass.simpleName
 
         try {
-            var uncompressed: ByteArray
-
-            if (compressData) {
-                uncompressed = Snappy.uncompress(data, 0, data.size)
-                logCompression(data, simpleName, uncompressed)
-            } else {
-                uncompressed = data
-            }
+            var uncompressed = if (compressData)
+                Snappy.uncompress(data, 0, data.size).apply {
+                    logCompression(data, simpleName, this)
+                }
+            else data
 
             val encryptionManager = storeEntryFactory.encryptionManager
             if (encryptData && encryptionManager != null) {
@@ -41,12 +39,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
             }
 
             val response = gson.fromJson(String(uncompressed), responseClass)
-            return ResponseWrapper(responseClass, response)
-
-        } catch (e: JsonSyntaxException) {
-            logger.e(this, e, "Cached data didn't match $simpleName: clearing the cache")
-            onError()
-            return null
+            return ResponseWrapper(responseClass, response, null)
         } catch (e: Exception) {
             logger.e(this, e, "Could not deserialise $simpleName: clearing the cache")
             onError()

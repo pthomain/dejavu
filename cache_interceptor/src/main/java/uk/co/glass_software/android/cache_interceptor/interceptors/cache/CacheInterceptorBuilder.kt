@@ -22,20 +22,9 @@ class CacheInterceptorBuilder<E> internal constructor()
     private var logger: Logger? = null
     private var gson: Gson? = null
 
-    fun gson(gson: Gson): CacheInterceptorBuilder<E> {
-        this.gson = gson
-        return this
-    }
-
-    fun databaseName(databaseName: String): CacheInterceptorBuilder<E> {
-        this.databaseName = databaseName
-        return this
-    }
-
-    fun logger(logger: Logger): CacheInterceptorBuilder<E> {
-        this.logger = logger
-        return this
-    }
+    fun gson(gson: Gson) = apply { this.gson = gson }
+    fun databaseName(databaseName: String) = apply { this.databaseName = databaseName }
+    fun logger(logger: Logger) = apply { this.logger = logger }
 
     //Used for unit testing
     @VisibleForTesting

@@ -7,6 +7,7 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
 import io.reactivex.Observer
 import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
@@ -43,17 +44,17 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
     companion object {
         fun <E, R> create(requestQueue: RequestQueue,
                           gson: Gson,
-                          cacheInterceptor: RxCacheInterceptor<E, R>,
+                          cacheInterceptor: RxCacheInterceptor<E>,
                           url: String)
                 : Observable<R>
                 where E : Exception,
-                      E : (E) -> Boolean = VolleyObservable<E, R>(
-                requestQueue,
-                gson,
-                cacheInterceptor.responseClass,
-                url
-        )
-                .compose(cacheInterceptor)
-                .map { it.response }
+                      E : (E) -> Boolean =
+                VolleyObservable<E, R>(
+                        requestQueue,
+                        gson,
+                        cacheInterceptor.responseClass as Class<R>,
+                        url
+                )
+                        .compose(cacheInterceptor as ObservableTransformer<in R, out R>)
     }
 }

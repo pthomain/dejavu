@@ -3,7 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import org.bouncycastle.asn1.cms.CMSObjectIdentifiers.compressedData
+import javolution.util.stripped.FastMap.logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_DATA
@@ -60,7 +60,7 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         logger.d(this, "Cleared $deleted old ${if (deleted > 1) "entries" else "entry"} from HTTP cache")
     }
 
-    fun flushCache() {
+    fun clearCache() {
         db.execSQL("DELETE FROM $TABLE_CACHE")
         logger.d(this, "Cleared entire HTTP cache")
     }
@@ -140,29 +140,26 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
     private fun getCachedResponse(instructionToken: CacheToken,
                                   cacheDate: Date,
                                   expiryDate: Date,
-                                  compressedData: ByteArray): ResponseWrapper<E>? {
-        val responseWrapper = serialisationManager.deserialise(
-                instructionToken.instruction.responseClass,
-                compressedData,
-                this::flushCache
-        )?.also {
-            it.metadata = CacheMetadata(
-                    CacheToken.cached(
-                            instructionToken,
-                            cacheDate,
-                            expiryDate
-                    ),
-                    null
-            )
-        }
+                                  compressedData: ByteArray) =
+            serialisationManager.deserialise(
+                    instructionToken.instruction.responseClass,
+                    compressedData,
+                    this::clearCache
+            )?.also {
+                it.metadata = CacheMetadata(
+                        CacheToken.cached(
+                                instructionToken,
+                                cacheDate,
+                                expiryDate
+                        ),
+                        null
+                )
 
-        logger.d(
-                this,
-                "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
-        )
-
-        return responseWrapper
-    }
+                logger.d(
+                        this,
+                        "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
+                )
+            }
 
     fun cache(instructionToken: CacheToken,
               response: ResponseWrapper<E>) {

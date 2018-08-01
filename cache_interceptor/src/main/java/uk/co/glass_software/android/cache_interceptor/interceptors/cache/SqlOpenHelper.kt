@@ -45,9 +45,8 @@ internal class SqlOpenHelper(context: Context,
         const val COLUMN_CACHE_EXPIRY_DATE = "expiry_date"
         const val COLUMN_CACHE_DATA = "data"
 
-        private val cursorFactory: SQLiteDatabase.CursorFactory
-            get() = SQLiteDatabase.CursorFactory { _, driver, editTable, query ->
-                SQLiteCursor(driver, editTable, query)
-            }
+        private val cursorFactory = SQLiteDatabase.CursorFactory { _, driver, editTable, query ->
+            SQLiteCursor(driver, editTable, query)
+        }
     }
 }

@@ -38,6 +38,7 @@ ext {
 
     //shared
     daggerVersion = '2.9'
+    gsonVersion = '2.8.2'
     jsr250Version = '1.0'
     rxJavaVersion = '2.0.6'
     rxAndroidVersion = '2.0.2'

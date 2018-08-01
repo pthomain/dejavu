@@ -4,10 +4,9 @@ import io.reactivex.Observable;
 import retrofit2.http.GET;
 import uk.co.glass_software.android.cache_interceptor.annotations.Cache;
 import uk.co.glass_software.android.cache_interceptor.annotations.Clear;
-import uk.co.glass_software.android.cache_interceptor.annotations.Metadata;
 import uk.co.glass_software.android.cache_interceptor.annotations.Refresh;
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
-import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata;
+import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper;
 
 import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.ENDPOINT;
 

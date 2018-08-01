@@ -48,17 +48,14 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
     }
 
     private fun create(rxCacheFactory: RxCacheInterceptor.Factory<E>,
-                           instruction: CacheInstruction,
-                           responseClass: Class<*>,
-                           callAdapter: CallAdapter<*, *>)
-            : RetrofitCacheAdapter<E> {
-        return RetrofitCacheAdapter(
-                rxCacheFactory,
-                instruction,
-                responseClass,
-                callAdapter
-        )
-    }
+                       instruction: CacheInstruction,
+                       responseClass: Class<*>,
+                       callAdapter: CallAdapter<*, *>) = RetrofitCacheAdapter(
+            rxCacheFactory,
+            instruction,
+            responseClass,
+            callAdapter
+    )
 
     private fun getCallAdapter(returnType: Type,
                                annotations: Array<Annotation>,
@@ -79,7 +76,7 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                 errorFactory
         )
 
-        fun buildDefault(context: Context): RetrofitCacheAdapterFactory<ApiError> = RetrofitCacheAdapterFactory(
+        fun buildDefault(context: Context) = RetrofitCacheAdapterFactory(
                 RxJava2CallAdapterFactory.create(),
                 RxCacheInterceptor.buildDefault(context),
                 AnnotationHelper()

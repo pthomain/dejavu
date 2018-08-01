@@ -33,18 +33,17 @@ class RetrofitCacheAdapterFactoryBuilder<E> internal constructor(private val con
         return this
     }
 
-    fun build(): RetrofitCacheAdapterFactory<E> {
-        val cacheInterceptorFactory = RxCacheInterceptor.builder<E>()
-                .gson(gson ?: Gson())
-                .logger(logger ?: SimpleLogger())
-                .errorFactory(errorFactory)
-                .cache(isCacheEnabled)
-                .build(context)
-
-        return RetrofitCacheAdapterFactory(
-                RxJava2CallAdapterFactory.create(),
-                cacheInterceptorFactory,
-                AnnotationHelper()
-        )
-    }
+    fun build() = RxCacheInterceptor.builder<E>()
+            .gson(gson ?: Gson())
+            .logger(logger ?: SimpleLogger())
+            .errorFactory(errorFactory)
+            .cache(isCacheEnabled)
+            .build(context)
+            .let {
+                RetrofitCacheAdapterFactory(
+                        RxJava2CallAdapterFactory.create(),
+                        it,
+                        AnnotationHelper()
+                )
+            }
 }

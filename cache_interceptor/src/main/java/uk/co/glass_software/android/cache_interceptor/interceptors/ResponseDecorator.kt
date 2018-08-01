@@ -17,7 +17,7 @@ class ResponseDecorator<E> : ObservableTransformer<ResponseWrapper<E>, Any>,
 
     private fun decorate(wrapper: ResponseWrapper<E>): Observable<Any> {
         return if (wrapper.response != null) {
-            Observable.just(wrapper.response)
+            Observable.just(wrapper.response) //TODO extend and add metadata on response
         } else {
             Observable.error(NoSuchElementException("No response found"))// TODO check merging situation
         }

@@ -105,7 +105,7 @@ public class DatabaseManagerUnitTest {
     
     @Test
     public void testFlushCache() throws Exception {
-        target.flushCache();
+        target.clearCache();
         
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(mockDb).execSQL(captor.capture());

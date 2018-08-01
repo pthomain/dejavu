@@ -58,9 +58,9 @@ internal class AnnotationHelper {
         return when (annotation) {
             is Cache -> CacheInstruction(
                     responseClass,
-                    Operation.Cache(
+                    Operation.Expiring.Cache(
+                            annotation.durationInMillis,
                             annotation.freshOnly,
-                            annotation.duration,
                             annotation.encrypt,
                             annotation.compress
                     ),
@@ -69,7 +69,8 @@ internal class AnnotationHelper {
 
             is Refresh -> CacheInstruction(
                     responseClass,
-                    Operation.Refresh(
+                    Operation.Expiring.Refresh(
+                            annotation.durationInMillis,
                             annotation.freshOnly
                     ),
                     annotation.mergeOnNextOnError
