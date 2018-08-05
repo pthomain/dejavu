@@ -48,9 +48,9 @@ class CacheInterceptorBuilder<E> internal constructor()
 
     @SuppressLint("RestrictedApi")
     @JvmOverloads
-    fun build(context: Context,
-              compressData: Boolean = false,
-              encryptData: Boolean = false) = build(
+    internal fun build(context: Context,
+                       compressData: Boolean = false,
+                       encryptData: Boolean = false) = build(
             context,
             compressData,
             encryptData,

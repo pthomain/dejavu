@@ -1,19 +1,14 @@
 package uk.co.glass_software.android.cache_interceptor.retrofit
 
 import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
 import io.reactivex.Single
-import io.reactivex.SingleTransformer
 import retrofit2.Call
 import retrofit2.CallAdapter
-import uk.co.glass_software.android.cache_interceptor.R
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.interceptors.ResponseDecorator
-import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
-import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptorFactory
 import java.lang.reflect.Type
 
-internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterceptor.Factory<E>,
+internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterceptorFactory<E>,
                                        private val instruction: CacheInstruction,
                                        private val responseClass: Class<*>,
                                        private val rxCallAdapter: CallAdapter<*, *>)

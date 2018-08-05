@@ -6,11 +6,14 @@ import retrofit2.HttpException
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError.Companion.NON_HTTP_STATUS
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode.*
 import java.io.IOException
+import java.util.concurrent.TimeoutException
 
 class ApiErrorFactory : (Throwable) -> ApiError {
 
     override fun invoke(throwable: Throwable) =
-            if (throwable is IOException || throwable is JsonParseException)
+            if (throwable is IOException
+                    || throwable is JsonParseException
+                    || throwable is TimeoutException)
                 getIoError(throwable)
             else if (throwable is HttpException)
                 getHttpError(throwable)

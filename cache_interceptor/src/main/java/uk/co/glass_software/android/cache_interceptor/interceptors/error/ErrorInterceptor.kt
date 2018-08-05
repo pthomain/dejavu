@@ -16,9 +16,9 @@ import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwable) -> E,
-                                              private val logger: Logger,
-                                              private val instructionToken: CacheToken)
+internal class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwable) -> E,
+                                                       private val logger: Logger,
+                                                       private val instructionToken: CacheToken)
     : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
               E : (E) -> Boolean {
@@ -27,11 +27,13 @@ class ErrorInterceptor<E> private constructor(private val errorFactory: (Throwab
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242
             .switchIfEmpty(Observable.error(NoSuchElementException("Response was empty")))
             .timeout(30, TimeUnit.SECONDS) //fixing timeout not working in OkHttp
-            .map { ResponseWrapper<E>(
-                    instructionToken.instruction.responseClass,
-                    it,
-                    CacheMetadata(null, null)
-            ) }
+            .map {
+                ResponseWrapper<E>(
+                        instructionToken.instruction.responseClass,
+                        it,
+                        CacheMetadata(null, null)
+                )
+            }
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })!!
 
     private fun getErrorResponse(throwable: Throwable): ResponseWrapper<E> {

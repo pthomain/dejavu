@@ -63,8 +63,7 @@ internal class AnnotationHelper {
                             annotation.freshOnly,
                             annotation.encrypt,
                             annotation.compress
-                    ),
-                    annotation.mergeOnNextOnError
+                    )
             )
 
             is Refresh -> CacheInstruction(
@@ -72,8 +71,7 @@ internal class AnnotationHelper {
                     Operation.Expiring.Refresh(
                             annotation.durationInMillis,
                             annotation.freshOnly
-                    ),
-                    annotation.mergeOnNextOnError
+                    )
             )
 
             is Clear -> {
@@ -83,8 +81,7 @@ internal class AnnotationHelper {
                                 annotation.typeToClear.java,
                                 annotation.clearOldEntriesOnly,
                                 annotation.clearEntireCache
-                        ),
-                        annotation.mergeOnNextOnError
+                        )
                 )
             }
 

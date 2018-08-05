@@ -3,6 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
+import okhttp3.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.R
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
@@ -14,7 +15,7 @@ import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.util.*
 
-class CacheInterceptor<E> internal constructor(private val cacheManager: CacheManager<E>,
+internal class CacheInterceptor<E> constructor(private val cacheManager: CacheManager<E>,
                                                private val isCacheEnabled: Boolean,
                                                private val logger: Logger,
                                                private val instructionToken: CacheToken)

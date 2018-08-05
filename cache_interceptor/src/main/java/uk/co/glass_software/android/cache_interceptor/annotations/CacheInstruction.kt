@@ -4,7 +4,6 @@ import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstructi
 
 data class CacheInstruction(val responseClass: Class<*>,
                             val operation: Operation,
-                            val mergeOnNextOnError: Boolean = false,
                             val strictMode: Boolean = false) {
 
     sealed class Operation(val type: Type) {

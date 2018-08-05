@@ -1,7 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.demo.retrofit
 
 import android.content.Context
-import com.facebook.soloader.SoLoader.init
 
 import io.reactivex.Observable
 import okhttp3.OkHttpClient
@@ -13,6 +12,7 @@ import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 import uk.co.glass_software.android.shared_preferences.utils.Logger
+import uk.co.glass_software.android.shared_preferences.utils.SimpleLogger
 
 class RetrofitDemoPresenter(context: Context,
                             onLogOutput: (String) -> Unit)
@@ -23,7 +23,7 @@ class RetrofitDemoPresenter(context: Context,
 
     init {
         adapterFactory = RetrofitCacheAdapterFactory.builder(context, ApiErrorFactory())
-                .logger(simpleLogger)
+                .logger(SimpleLogger())
                 .build()
 
         val retrofit = Retrofit.Builder()

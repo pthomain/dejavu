@@ -12,6 +12,7 @@ import retrofit2.Call;
 import retrofit2.CallAdapter;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptorFactory;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
@@ -22,14 +23,14 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 public class RetrofitCacheAdapterUnitTest {
     
-    private RxCacheInterceptor.Factory mockInterceptorFactory;
+    private RxCacheInterceptorFactory mockInterceptorFactory;
     private CallAdapter mockCallAdapter;
     
     private RetrofitCacheAdapter target;
     
     @Before
     public void setUp() throws Exception {
-        mockInterceptorFactory = mock(RxCacheInterceptor.Factory.class);
+        mockInterceptorFactory = mock(RxCacheInterceptorFactory.class);
         mockCallAdapter = mock(CallAdapter.class);
         
         target = new RetrofitCacheAdapter(

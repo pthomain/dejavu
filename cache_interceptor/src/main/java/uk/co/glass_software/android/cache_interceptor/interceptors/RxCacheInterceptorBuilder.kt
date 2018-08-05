@@ -66,7 +66,7 @@ class RxCacheInterceptorBuilder<E> internal constructor()
     fun build(context: Context) = build(context, null)
 
     internal fun build(context: Context,
-                       holder: DependencyHolder?): RxCacheInterceptor.Factory<E> {
+                       holder: DependencyHolder?): RxCacheInterceptorFactory<E> {
         val logger = logger ?: SimpleLogger()
 
         val errorInterceptorFactory = errorFactory?.let {
@@ -89,7 +89,7 @@ class RxCacheInterceptorBuilder<E> internal constructor()
             holder.cacheInterceptorFactory = cacheInterceptorFactory
         }
 
-        return RxCacheInterceptor.Factory(
+        return RxCacheInterceptorFactory(
                 errorInterceptorFactory,
                 cacheInterceptorFactory,
                 logger,
