@@ -2,6 +2,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors
 
 import android.content.Context
 import com.google.gson.Gson
+import javolution.util.stripped.FastMap.logger
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptorBuilder.Companion.DATABASE_NAME
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor
@@ -20,48 +21,25 @@ class RxCacheInterceptorBuilder<E> internal constructor()
     private var encryptData = false
     private var isCacheEnabled = true
 
-    fun errorFactory(errorFactory: (Throwable) -> E): RxCacheInterceptorBuilder<E> {
-        this.errorFactory = errorFactory
-        return this
-    }
+    fun noLog() = logger(object : Logger {
+        override fun e(caller: Any, t: Throwable, message: String) {}
+        override fun e(caller: Any, message: String) {}
+        override fun d(caller: Any, message: String) {}
+    })
 
-    fun noLog(): RxCacheInterceptorBuilder<E> {
-        return logger(object : Logger {
-            override fun e(caller: Any, t: Throwable, message: String) {}
-            override fun e(caller: Any, message: String) {}
-            override fun d(caller: Any, message: String) {}
-        })
-    }
+    fun logger(logger: Logger) = apply { this.logger = logger }
 
-    fun logger(logger: Logger): RxCacheInterceptorBuilder<E> {
-        this.logger = logger
-        return this
-    }
+    fun errorFactory(errorFactory: (Throwable) -> E) = apply { this.errorFactory = errorFactory }
 
-    fun gson(gson: Gson): RxCacheInterceptorBuilder<E> {
-        this.gson = gson
-        return this
-    }
+    fun gson(gson: Gson) = apply { this.gson = gson }
 
-    fun databaseName(databaseName: String): RxCacheInterceptorBuilder<E> {
-        this.databaseName = databaseName
-        return this
-    }
+    fun databaseName(databaseName: String) = apply { this.databaseName = databaseName }
 
-    fun cache(isCacheEnabled: Boolean): RxCacheInterceptorBuilder<E> {
-        this.isCacheEnabled = isCacheEnabled
-        return this
-    }
+    fun cache(isCacheEnabled: Boolean) = apply { this.isCacheEnabled = isCacheEnabled }
 
-    fun compress(compressData: Boolean): RxCacheInterceptorBuilder<E> {
-        this.compressData = compressData
-        return this
-    }
+    fun compress(compressData: Boolean) = apply { this.compressData = compressData }
 
-    fun encrypt(encryptData: Boolean): RxCacheInterceptorBuilder<E> {
-        this.encryptData = encryptData
-        return this
-    }
+    fun encrypt(encryptData: Boolean) = apply { this.encryptData = encryptData }
 
     fun build(context: Context) = build(context, null)
 
@@ -90,6 +68,7 @@ class RxCacheInterceptorBuilder<E> internal constructor()
         }
 
         return RxCacheInterceptorFactory(
+                context,
                 errorInterceptorFactory,
                 cacheInterceptorFactory,
                 logger,

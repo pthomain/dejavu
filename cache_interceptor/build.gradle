@@ -48,6 +48,8 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/eclipse.inf'
+        exclude 'META-INF/index.list'
+        exclude 'META-INF/INDEX.LIST'
         exclude 'about_files/LICENSE-2.0.txt'
         exclude 'plugin.xml'
         exclude 'plugin.properties'
@@ -94,7 +96,7 @@ dependencies {
     implementation "com.android.support:support-compat:$supportLibVersion"
 
     implementation 'org.iq80.snappy:snappy:0.3'
-    implementation 'net.bytebuddy:byte-buddy:1.8.13'
+    implementation 'net.bytebuddy:byte-buddy-android:1.8.16'
 
     api "com.squareup.retrofit2:retrofit:$retrofitVersion"
     api "com.squareup.retrofit2:converter-gson:$retrofitVersion"

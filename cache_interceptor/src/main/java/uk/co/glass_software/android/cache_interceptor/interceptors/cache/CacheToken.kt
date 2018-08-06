@@ -7,13 +7,13 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
 
-data class CacheToken constructor(val instruction: CacheInstruction,
-                                  val status: CacheStatus,
-                                  val apiUrl: String = "",
-                                  val body: String? = null,
-                                  val fetchDate: Date? = null,
-                                  val cacheDate: Date? = null,
-                                  val expiryDate: Date? = null) {
+data class CacheToken internal constructor(val instruction: CacheInstruction,
+                                           val status: CacheStatus,
+                                           val apiUrl: String = "",
+                                           val body: String? = null,
+                                           val fetchDate: Date? = null,
+                                           val cacheDate: Date? = null,
+                                           val expiryDate: Date? = null) {
 
     internal fun getKey(hasher: Hasher) = getKey(hasher, apiUrl, body)
 

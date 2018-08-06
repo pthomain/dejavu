@@ -2,9 +2,9 @@ package uk.co.glass_software.android.cache_interceptor.annotations
 
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 
-data class CacheInstruction(val responseClass: Class<*>,
-                            val operation: Operation,
-                            val strictMode: Boolean = false) {
+internal data class CacheInstruction(val responseClass: Class<*>,
+                                     val operation: Operation,
+                                     val strictMode: Boolean = false) {
 
     sealed class Operation(val type: Type) {
 
@@ -12,17 +12,30 @@ data class CacheInstruction(val responseClass: Class<*>,
 
         sealed class Expiring(val durationInMillis: Float = DEFAULT_DURATION,
                               val freshOnly: Boolean = false,
+                              val disableSubtyping: Boolean = false,
                               type: Type) : Operation(type) {
 
             class Cache(durationInMillis: Float = DEFAULT_DURATION,
                         freshOnly: Boolean = false,
+                        disableSubtyping: Boolean = false,
                         val encrypt: Boolean = false,
                         val compress: Boolean = false)
-                : Expiring(durationInMillis, freshOnly, CACHE)
+                : Expiring(
+                    durationInMillis,
+                    freshOnly,
+                    disableSubtyping,
+                    CACHE
+            )
 
             class Refresh(durationInMillis: Float = DEFAULT_DURATION,
-                          freshOnly: Boolean = false)
-                : Expiring(durationInMillis, freshOnly, REFRESH)
+                          freshOnly: Boolean = false,
+                          disableSubtyping: Boolean = false)
+                : Expiring(
+                    durationInMillis,
+                    freshOnly,
+                    disableSubtyping,
+                    REFRESH
+            )
         }
 
         data class Clear(val typeToClear: Class<*>? = null,

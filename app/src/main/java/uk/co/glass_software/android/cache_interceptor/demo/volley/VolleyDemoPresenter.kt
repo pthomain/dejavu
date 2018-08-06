@@ -6,7 +6,6 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 
 import io.reactivex.Observable
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
 
@@ -18,13 +17,13 @@ class VolleyDemoPresenter(context: Context,
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
 
     override fun getResponseObservable(isRefresh: Boolean): Observable<JokeResponse> {
-        val cacheOperation = CacheInstruction.Operation.Expiring.Cache()
+//        val cacheOperation = CacheInstruction.Operation.Expiring.Cache()
 
-        val instruction = CacheInstruction(
-                JokeResponse::class.java,
-                cacheOperation,
-                false
-        )
+//        val instruction = CacheInstruction(
+//                JokeResponse::class.java,
+//                cacheOperation,
+//                false
+//        )
 
         return Observable.error(NoSuchElementException())
 //        return VolleyObservable.create(
