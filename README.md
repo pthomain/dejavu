@@ -25,6 +25,7 @@ The documentation below will refer exclusively to the Retrofit implementation.
 
 *Note: This library needs to be used in conjunction with RxJava and Gson.*
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/RxCacheInterceptor?utm_source=github.com&utm_medium=referral&utm_content=pthomain/RxCacheInterceptor&utm_campaign=Badge_Grade_Settings)
 Adding the dependency [![](https://jitpack.io/v/pthomain/RxCacheInterceptor.svg)](https://jitpack.io/#pthomain/RxCacheInterceptor)
 ---------------------
 
