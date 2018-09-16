@@ -3,13 +3,13 @@ package uk.co.glass_software.android.cache_interceptor.demo
 
 import android.content.Context
 import android.graphics.Typeface
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import io.reactivex.Observable
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,37 +36,45 @@ internal class ExpandableListAdapter(context: Context,
 
     private fun onJokeReady(start: Long,
                             jokeResponse: JokeResponse) {
-//        val cacheToken = jokeResponse.metadata.getCacheToken()
-//        val ellapsed = cacheToken.status + ", " + (System.currentTimeMillis() - start) + "ms"
+        val metadata = jokeResponse.metadata!!
+        val cacheToken = metadata.cacheToken!!
+        val exception = metadata.exception
+        val operation = cacheToken.instruction.operation.type
+
+        val elapsed = operation.name + ", " + (System.currentTimeMillis() - start) + "ms"
         val info = ArrayList<String>()
         val header: String
 
-//        if (jokeResponse.getMetadata().hasError()) {
-//            header = "An error occurred: $ellapsed"
-//
-//            val error = jokeResponse.getMetadata().getError()
-//            info.add("Description: " + error.description!!)
-//            info.add("Message: " + error.message)
-//            info.add("Cause: " + error.cause)
-//        } else {
-            val joke = Html.fromHtml(jokeResponse.value!!.joke).toString()
-            jokeCallback(joke)
-//            header = ellapsed
+        if (exception != null) {
+            header = "An error occurred: $elapsed"
 
-//            info.add("Cache token status: " + cacheToken.status)
-//            info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
-//            info.add("Cache token expiry date: "
-//                    + simpleDateFormat.format(cacheToken.expiryDate)
-//                    + " (TTL: "
-//                    + (jokeResponse.getTtlInMinutes() * 60f) as Int
-//                    + "s)"
-//            )
+            info.add("Description: " + exception.description)
+            info.add("Message: " + exception.message)
+            info.add("Cause: " + exception.cause)
+        } else {
+            val joke = jokeResponse.value!!.joke!!
+            jokeCallback(joke)
+            header = elapsed
+
+
+            info.add("Cache token instruction: $operation")
+            info.add("Cache token status: " + cacheToken.status)
+            info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
+
+            if (operation is Expiring) {
+                info.add("Cache token expiry date: "
+                        + simpleDateFormat.format(cacheToken.expiryDate)
+                        + " (TTL: "
+                        + (operation.durationInMillis * 1000).toInt()
+                        + "s)"
+                )
+            }
 
             info.add("Joke: $joke")
-//        }
+        }
 
-//        headers.add(header)
-//        children[header] = info
+        headers.add(header)
+        children[header] = info
 
         notifyDataSetChanged()
     }
@@ -93,11 +101,10 @@ internal class ExpandableListAdapter(context: Context,
     override fun getGroupView(groupPosition: Int,
                               isExpanded: Boolean,
                               convertView: View?,
-                              parent: ViewGroup): View =
-            convertView
-                    ?.let { inflater.inflate(R.layout.list_group, null) }!!
+                              parent: ViewGroup) =
+            (convertView ?: inflater.inflate(R.layout.list_group, parent, false))
                     .apply {
-                        val headerTitle = getGroup(groupPosition) as String
+                        val headerTitle = getGroup(groupPosition)
                         val lblListHeader = findViewById<TextView>(R.id.lblListHeader)
                         lblListHeader.setTypeface(null, Typeface.BOLD)
                         lblListHeader.text = headerTitle
@@ -108,10 +115,9 @@ internal class ExpandableListAdapter(context: Context,
                               isLastChild: Boolean,
                               convertView: View?,
                               parent: ViewGroup): View =
-            convertView
-                    ?.let { inflater.inflate(R.layout.list_item, null) }!!
+            (convertView ?: inflater.inflate(R.layout.list_item, parent, false))
                     .apply {
-                        val childText = getChild(groupPosition, childPosition) as String
+                        val childText = getChild(groupPosition, childPosition)
                         val txtListChild = findViewById<TextView>(R.id.lblListItem)
                         txtListChild.text = childText
                     }

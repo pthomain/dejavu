@@ -1,10 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'me.tatarka.retrolambda'
-
-retrolambda {
-    jvmArgs '-noverify'
-}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -43,8 +38,8 @@ android {
     }
 
     compileOptions {
-        targetCompatibility 1.8
-        sourceCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     packagingOptions {
@@ -69,14 +64,14 @@ android {
 dependencies {
     implementation project(path: ':cache_interceptor')
 
-    implementation "com.squareup.okhttp3:okhttp:3.10.0"
-    implementation "com.squareup.okhttp3:logging-interceptor:3.9.0"
-    implementation 'com.android.support:multidex:1.0.3'
-    implementation 'com.android.volley:volley:1.1.0'
+    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
+    implementation "com.android.support:multidex:$multidexVersion"
+    implementation "com.android.volley:volley:$volleyVersion"
 
     implementation "com.android.support:appcompat-v7:$supportLibVersion"
     implementation "com.android.support:customtabs:$supportLibVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 }
 
 repositories {

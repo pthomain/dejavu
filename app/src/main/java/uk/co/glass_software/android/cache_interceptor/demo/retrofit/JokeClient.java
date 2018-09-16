@@ -11,7 +11,7 @@ import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.
 
 interface JokeClient {
 
-    @Cache(encrypt = true)
+    @Cache(encrypt = true, mergeOnNextOnError = true)
     @GET(ENDPOINT)
     Observable<JokeResponse> get();
 

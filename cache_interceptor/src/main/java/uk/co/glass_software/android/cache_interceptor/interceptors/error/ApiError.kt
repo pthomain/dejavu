@@ -6,7 +6,8 @@ data class ApiError constructor(private val throwable: Throwable,
                                 val httpStatus: Int = NON_HTTP_STATUS,
                                 val errorCode: ErrorCode = UNKNOWN,
                                 val description: String? = null)
-    : Exception(), (ApiError) -> Boolean {
+    : Exception(throwable),
+        (ApiError) -> Boolean {
 
     val isNetworkError: Boolean
         get() = errorCode === ErrorCode.NETWORK

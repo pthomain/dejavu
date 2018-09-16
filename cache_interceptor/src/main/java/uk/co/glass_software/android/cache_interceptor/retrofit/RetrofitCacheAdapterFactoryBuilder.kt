@@ -3,10 +3,11 @@ package uk.co.glass_software.android.cache_interceptor.retrofit
 import android.content.Context
 import com.google.gson.Gson
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import uk.co.glass_software.android.boilerplate.Boilerplate
+import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.cache_interceptor.BuildConfig
 import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
-import uk.co.glass_software.android.shared_preferences.utils.Logger
-import uk.co.glass_software.android.shared_preferences.utils.SimpleLogger
 
 class RetrofitCacheAdapterFactoryBuilder<E> internal constructor(private val context: Context,
                                                                  private val errorFactory: (Throwable) -> E)
@@ -16,28 +17,26 @@ class RetrofitCacheAdapterFactoryBuilder<E> internal constructor(private val con
     private var gson: Gson? = null
     private var logger: Logger? = null
     private var isCacheEnabled = true
-    private var useStrictMode = false
+    private var timeOutInSeconds: Int? = null
 
-    fun gson(gson: Gson): RetrofitCacheAdapterFactoryBuilder<E> {
-        this.gson = gson
-        return this
-    }
+    fun gson(gson: Gson) = apply { this.gson = gson }
 
-    fun logger(logger: Logger): RetrofitCacheAdapterFactoryBuilder<E> {
-        this.logger = logger
-        return this
-    }
+    fun logger(logger: Logger) = apply { this.logger = logger }
 
-    fun cache(isCacheEnabled: Boolean): RetrofitCacheAdapterFactoryBuilder<E> {
-        this.isCacheEnabled = isCacheEnabled
-        return this
-    }
+    fun cache(isCacheEnabled: Boolean) = apply { this.isCacheEnabled = isCacheEnabled }
+
+    fun timeOutInSeconds(timeOutInSeconds: Int) = apply { this.timeOutInSeconds = timeOutInSeconds }
 
     fun build() = RxCacheInterceptor.builder<E>()
             .gson(gson ?: Gson())
-            .logger(logger ?: SimpleLogger())
+            .logger(logger
+                    ?: Boilerplate.init(context, BuildConfig.DEBUG).let { Boilerplate.logger }
+            )
             .errorFactory(errorFactory)
-            .cache(isCacheEnabled)
+            .setCacheEnabled(isCacheEnabled)
+            .apply {
+                timeOutInSeconds?.also { timeOutInSeconds(it) }
+            }
             .build(context)
             .let {
                 RetrofitCacheAdapterFactory(

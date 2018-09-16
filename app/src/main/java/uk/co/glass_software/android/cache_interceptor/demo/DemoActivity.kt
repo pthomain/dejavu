@@ -9,9 +9,10 @@ import android.widget.Button
 import android.widget.ExpandableListView
 import android.widget.RadioButton
 import android.widget.TextView
+import uk.co.glass_software.android.boilerplate.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.RETROFIT
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.VOLLEY
-
+import uk.co.glass_software.android.cache_interceptor.demo.R.id.result
 import uk.co.glass_software.android.cache_interceptor.demo.retrofit.RetrofitDemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.volley.VolleyDemoPresenter
 
@@ -19,14 +20,15 @@ class DemoActivity : AppCompatActivity() {
 
     private var method = RETROFIT
 
-    private var loadButton: Button? = null
-    private var refreshButton: Button? = null
+    private lateinit var loadButton: Button
+    private lateinit var refreshButton: Button
+    private lateinit var clearButton: Button
 
-    private var retrofitDemoPresenter: DemoPresenter? = null
-    private var volleyDemoPresenter: DemoPresenter? = null
-    private var listAdapter: ExpandableListAdapter? = null
+    private lateinit var retrofitDemoPresenter: DemoPresenter
+    private lateinit var volleyDemoPresenter: DemoPresenter
+    private lateinit var listAdapter: ExpandableListAdapter
 
-    private val demoPresenter: DemoPresenter?
+    private val demoPresenter: DemoPresenter
         get() {
             return when (method) {
                 RETROFIT -> retrofitDemoPresenter
@@ -40,11 +42,14 @@ class DemoActivity : AppCompatActivity() {
 
         loadButton = findViewById(R.id.load_button)
         refreshButton = findViewById(R.id.refresh_button)
-        loadButton!!.setOnClickListener { ignore -> onButtonClick(false) }
-        refreshButton!!.setOnClickListener { ignore -> onButtonClick(true) }
+        clearButton = findViewById(R.id.clear_button)
 
-        val clearButton = findViewById<Button>(R.id.clear_button)
-        clearButton.setOnClickListener { _ -> demoPresenter!!.clearEntries() }
+        loadButton.setOnClickListener { _ -> onButtonClick(false) }
+        refreshButton.setOnClickListener { _ -> onButtonClick(true) }
+        clearButton.setOnClickListener { _ ->
+            setButtonsEnabled(false)
+            demoPresenter.clearEntries()
+        }
 
         findViewById<View>(R.id.github).setOnClickListener { _ -> openGithub() }
 
@@ -61,22 +66,23 @@ class DemoActivity : AppCompatActivity() {
                 { setButtonsEnabled(true) }
         )
 
-        retrofitDemoPresenter = RetrofitDemoPresenter(this) { listAdapter!!.log(it) }
-        volleyDemoPresenter = VolleyDemoPresenter(this, { listAdapter!!.log(it) })
+        retrofitDemoPresenter = RetrofitDemoPresenter(this) { listAdapter.log(it) }
+        volleyDemoPresenter = VolleyDemoPresenter(this) { listAdapter.log(it) }
 
         val result = findViewById<ExpandableListView>(R.id.result)
         result.setAdapter(listAdapter)
-        listAdapter!!.notifyDataSetChanged()
+        listAdapter.notifyDataSetChanged()
     }
 
     private fun onButtonClick(isRefresh: Boolean) {
         setButtonsEnabled(false)
-        listAdapter!!.loadJoke(demoPresenter!!.loadResponse(isRefresh))
+        listAdapter.loadJoke(demoPresenter.loadResponse(isRefresh))
     }
 
     private fun setButtonsEnabled(isEnabled: Boolean) {
-        loadButton!!.isEnabled = isEnabled
-        refreshButton!!.isEnabled = isEnabled
+        loadButton.isEnabled = isEnabled
+        refreshButton.isEnabled = isEnabled
+        clearButton.isEnabled = isEnabled
     }
 
     private fun openGithub() {

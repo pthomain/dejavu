@@ -3,16 +3,12 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
-import okhttp3.internal.cache.CacheInterceptor
-import uk.co.glass_software.android.cache_interceptor.R
+import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.CACHE
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
-import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.util.*
 
 internal class CacheInterceptor<E> constructor(private val cacheManager: CacheManager<E>,
@@ -35,7 +31,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         instruction.operation,
                         isNetworkError
                 )
-                is CacheInstruction.Operation.Clear -> doNotCache(instructionToken, upstream) //TODO
+                is CacheInstruction.Operation.Clear -> doNotCache(instructionToken, upstream) //TODO clear cache
                 is CacheInstruction.Operation.DoNotCache -> doNotCache(instructionToken, upstream)
             }
         } else doNotCache(instructionToken, upstream)
@@ -49,7 +45,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         )
                 )
             }
-            logger.d(this, "Returning: $instructionToken")
+            logger.d("Returning: $instructionToken")
         }
     }
 

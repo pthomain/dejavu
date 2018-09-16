@@ -35,14 +35,12 @@ class ApiErrorFactory : (Throwable) -> ApiError {
     )
 
     private fun getIoError(throwable: Throwable) =
-            (throwable is MalformedJsonException || throwable is JsonParseException).let {
-                getError(
-                        NON_HTTP_STATUS,
-                        if (it) UNEXPECTED_RESPONSE else NETWORK,
-                        throwable.message,
-                        throwable
-                )
-            }
+            getError(
+                    NON_HTTP_STATUS,
+                    if (throwable is MalformedJsonException || throwable is JsonParseException) UNEXPECTED_RESPONSE else NETWORK,
+                    throwable.message,
+                    throwable
+            )
 
     private fun getError(httpStatus: Int,
                          errorCode: ErrorCode,

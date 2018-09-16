@@ -61,6 +61,7 @@ internal class AnnotationHelper {
                     Operation.Expiring.Cache(
                             annotation.durationInMillis,
                             annotation.freshOnly,
+                            annotation.mergeOnNextOnError,
                             annotation.encrypt,
                             annotation.compress
                     )
@@ -70,6 +71,7 @@ internal class AnnotationHelper {
                     responseClass,
                     Operation.Expiring.Refresh(
                             annotation.durationInMillis,
+                            annotation.mergeOnNextOnError,
                             annotation.freshOnly
                     )
             )

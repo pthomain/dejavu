@@ -61,7 +61,7 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
             returnType,
             annotations,
             retrofit
-    )
+    )!!
 
     companion object {
 

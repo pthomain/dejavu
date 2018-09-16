@@ -10,7 +10,7 @@ internal class GsonSerialiser(private val gson: Gson) : Serialiser {
     override fun canHandleSerialisedFormat(serialised: String) = true
 
     @Throws(Serialiser.SerialisationException::class)
-    override fun <O> serialise(deserialised: O) = gson.toJson(deserialised)!!
+    override fun <O : Any> serialise(deserialised: O) = gson.toJson(deserialised)!!
 
     @Throws(Serialiser.SerialisationException::class)
     override fun <O> deserialise(serialised: String,

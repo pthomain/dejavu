@@ -5,5 +5,6 @@ package uk.co.glass_software.android.cache_interceptor.annotations
         AnnotationTarget.PROPERTY_GETTER)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Refresh(val durationInMillis: Float = DEFAULT_DURATION,
+                         val mergeOnNextOnError: Boolean = false,
                          val freshOnly: Boolean = false)
 

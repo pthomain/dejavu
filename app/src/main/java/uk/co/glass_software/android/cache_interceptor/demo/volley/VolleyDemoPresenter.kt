@@ -6,14 +6,15 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 
 import io.reactivex.Observable
+import uk.co.glass_software.android.boilerplate.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
 
 class VolleyDemoPresenter(context: Context,
                           onLogOutput: (String) -> Unit)
-    : DemoPresenter(onLogOutput) {
+    : DemoPresenter(context, onLogOutput) {
 
-//    private val rxCacheInterceptorFactory: RxCacheInterceptorFactory<ApiError> = RxCacheInterceptorFactory.buildDefault(context)
+    //    private val rxCacheInterceptorFactory: RxCacheInterceptorFactory<ApiError> = RxCacheInterceptorFactory.buildDefault(context)
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
 
     override fun getResponseObservable(isRefresh: Boolean): Observable<JokeResponse> {

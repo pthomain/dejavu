@@ -1,11 +1,15 @@
 package uk.co.glass_software.android.cache_interceptor.demo.model
 
-class JokeResponse {
+import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError
+import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 
-    var type: String? = null
+class JokeResponse : CacheMetadata.Holder<ApiError> {
+
     var value: Value? = null
 
-    inner class Value {
+    override var metadata: CacheMetadata<ApiError>? = null
+
+    class Value {
         var joke: String? = null
     }
 }

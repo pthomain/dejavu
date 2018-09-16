@@ -1,8 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
+import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
-import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
@@ -70,18 +70,18 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
 
             try {
                 messageDigest = MessageDigest.getInstance("SHA-1")
-                logger.d(this, "Using SHA-1 hasher")
+                logger.d("Using SHA-1 hasher")
             } catch (e: NoSuchAlgorithmException) {
-                logger.e(this, "Could not create a SHA-1 message digest")
+                logger.e("Could not create a SHA-1 message digest")
                 messageDigest = null
             }
 
             if (messageDigest == null) {
                 try {
                     messageDigest = MessageDigest.getInstance("MD5")
-                    logger.d(this, "Using MD5 hasher")
+                    logger.d("Using MD5 hasher")
                 } catch (e: NoSuchAlgorithmException) {
-                    logger.e(this, "Could not create a MD5 message digest")
+                    logger.e("Could not create a MD5 message digest")
                     messageDigest = null
                 }
             }

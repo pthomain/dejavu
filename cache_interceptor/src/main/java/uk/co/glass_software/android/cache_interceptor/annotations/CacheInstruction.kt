@@ -2,9 +2,9 @@ package uk.co.glass_software.android.cache_interceptor.annotations
 
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 
-internal data class CacheInstruction(val responseClass: Class<*>,
-                                     val operation: Operation,
-                                     val strictMode: Boolean = false) {
+data class CacheInstruction(val responseClass: Class<*>,
+                            val operation: Operation,
+                            val strictMode: Boolean = false) {
 
     sealed class Operation(val type: Type) {
 
@@ -12,28 +12,36 @@ internal data class CacheInstruction(val responseClass: Class<*>,
 
         sealed class Expiring(val durationInMillis: Float = DEFAULT_DURATION,
                               val freshOnly: Boolean = false,
-                              val disableSubtyping: Boolean = false,
+                              val mergeOnNextOnError: Boolean = false,
+                              val encrypt: Boolean = false,
+                              val compress: Boolean = false,
                               type: Type) : Operation(type) {
 
             class Cache(durationInMillis: Float = DEFAULT_DURATION,
                         freshOnly: Boolean = false,
-                        disableSubtyping: Boolean = false,
-                        val encrypt: Boolean = false,
-                        val compress: Boolean = false)
+                        mergeOnNextOnError: Boolean = false,
+                        encrypt: Boolean = false,
+                        compress: Boolean = false)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
-                    disableSubtyping,
+                    mergeOnNextOnError,
+                    encrypt,
+                    compress,
                     CACHE
             )
 
             class Refresh(durationInMillis: Float = DEFAULT_DURATION,
                           freshOnly: Boolean = false,
-                          disableSubtyping: Boolean = false)
+                          mergeOnNextOnError: Boolean = false,
+                          encrypt: Boolean = false,
+                          compress: Boolean = false)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
-                    disableSubtyping,
+                    mergeOnNextOnError,
+                    encrypt,
+                    compress,
                     REFRESH
             )
         }
