@@ -26,13 +26,14 @@ android {
 
     buildTypes {
         debug {
-            multiDexEnabled false
+            multiDexEnabled true
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
         release {
             multiDexEnabled false
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -66,11 +67,11 @@ dependencies {
 
     implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
-    implementation "com.android.support:multidex:$multidexVersion"
+    implementation "androidx.multidex:multidex:$multidexVersion"
     implementation "com.android.volley:volley:$volleyVersion"
 
-    implementation "com.android.support:appcompat-v7:$supportLibVersion"
-    implementation "com.android.support:customtabs:$supportLibVersion"
+    implementation "androidx.appcompat:appcompat:$supportLibVersion"
+    implementation "androidx.browser:browser:$supportLibVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 }
 

@@ -1,7 +1,7 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import org.junit.Before;
 import org.junit.Test;

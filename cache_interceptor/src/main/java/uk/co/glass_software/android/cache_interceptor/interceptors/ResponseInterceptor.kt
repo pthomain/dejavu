@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
-import com.google.gson.reflect.TypeToken
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.Single
@@ -23,7 +22,6 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
     override fun apply(upstream: Single<ResponseWrapper<E>>) = upstream.flatMapObservable(this::intercept).firstOrError()!!
 
     private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
-        val metadataHolderClass = object : TypeToken<CacheMetadata.Holder<E>>() {}.rawType
         val response = wrapper.response
         val responseClass = wrapper.responseClass
         val metadata = wrapper.metadata!!
@@ -32,7 +30,6 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
         return (response ?: createEmptyResponse(responseClass)).let {
             if (it != null) {
                 addMetadata(
-                        metadataHolderClass,
                         it,
                         responseClass,
                         metadata,
@@ -53,13 +50,12 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
         null
     }
 
-    private fun addMetadata(holderClass: Class<in CacheMetadata.Holder<E>>,
-                            response: Any,
+    private fun addMetadata(response: Any,
                             responseClass: Class<*>,
                             metadata: CacheMetadata<E>,
                             operation: CacheInstruction.Operation?) {
-        if (holderClass.isAssignableFrom(responseClass)) {
-            val holder = response as CacheMetadata.Holder<E>
+        val holder = response as? CacheMetadata.Holder<E>?
+        if (holder != null) {
             holder.metadata = metadata
         } else {
             logError(responseClass, operation)

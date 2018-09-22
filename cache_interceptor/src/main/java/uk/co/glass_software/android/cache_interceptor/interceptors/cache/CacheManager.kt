@@ -1,6 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable

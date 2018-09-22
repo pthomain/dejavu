@@ -1,12 +1,11 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.support.annotation.RestrictTo
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.google.gson.Gson
+import io.requery.android.database.sqlite.SQLiteDatabase
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import java.util.*
@@ -43,7 +42,6 @@ class CacheInterceptorBuilder<E> internal constructor()
         return values
     }
 
-    @RestrictTo(RestrictTo.Scope.TESTS)
     internal fun build(context: Context,
                        holder: Holder<E>? = null): CacheInterceptor.Factory<E> {
         val gson = gson ?: Gson()

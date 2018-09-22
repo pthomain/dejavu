@@ -148,13 +148,13 @@
             android:text="View this library on"
             android:textColor="@android:color/white"/>
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:tint="@android:color/white"
             app:srcCompat="@drawable/ic_github_mark"/>
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="82dp"
             android:layout_height="24dp"
             android:layout_marginLeft="-8dp"

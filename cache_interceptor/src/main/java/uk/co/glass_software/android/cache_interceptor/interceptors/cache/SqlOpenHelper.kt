@@ -1,9 +1,9 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
 import android.content.Context
-import android.database.sqlite.SQLiteCursor
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
+import io.requery.android.database.sqlite.SQLiteCursor
+import io.requery.android.database.sqlite.SQLiteDatabase
+import io.requery.android.database.sqlite.SQLiteOpenHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMNS.*
 
 internal class SqlOpenHelper(context: Context,
@@ -34,12 +34,19 @@ internal class SqlOpenHelper(context: Context,
         ))
     }
 
+    override fun onDowngrade(db: SQLiteDatabase,
+                             oldVersion: Int,
+                             newVersion: Int) = onUpgrade(db, oldVersion, newVersion)
+
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase,
                            oldVersion: Int,
-                           newVersion: Int) = Unit
+                           newVersion: Int) {
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_CACHE")
+        onCreate(sqLiteDatabase)
+    }
 
     companion object {
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         const val TABLE_CACHE = "http_cache"
 

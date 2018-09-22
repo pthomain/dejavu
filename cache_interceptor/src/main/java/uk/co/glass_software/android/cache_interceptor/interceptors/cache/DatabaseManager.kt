@@ -1,8 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
 import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import io.requery.android.database.sqlite.SQLiteDatabase
+import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH

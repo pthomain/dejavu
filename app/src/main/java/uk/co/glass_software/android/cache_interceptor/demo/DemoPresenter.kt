@@ -44,7 +44,7 @@ abstract class DemoPresenter protected constructor(context: Context,
     abstract fun clearEntries()
 
     companion object {
-        internal const val BASE_URL = "http://api.icndb.com/"
+        internal const val BASE_URL = "https://api.icndb.com/"
         internal const val ENDPOINT = "jokes/random"
     }
 

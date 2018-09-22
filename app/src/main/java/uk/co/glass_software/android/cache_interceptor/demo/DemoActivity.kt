@@ -1,20 +1,21 @@
 package uk.co.glass_software.android.cache_interceptor.demo
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.support.customtabs.CustomTabsIntent
-import android.support.v7.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.widget.Button
 import android.widget.ExpandableListView
 import android.widget.RadioButton
 import android.widget.TextView
-import uk.co.glass_software.android.boilerplate.lambda.Callback1
+import androidx.multidex.MultiDex
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.RETROFIT
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.VOLLEY
-import uk.co.glass_software.android.cache_interceptor.demo.R.id.result
 import uk.co.glass_software.android.cache_interceptor.demo.retrofit.RetrofitDemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.volley.VolleyDemoPresenter
+
 
 class DemoActivity : AppCompatActivity() {
 
@@ -35,6 +36,11 @@ class DemoActivity : AppCompatActivity() {
                 VOLLEY -> volleyDemoPresenter
             }
         }
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -17,6 +17,5 @@ data class ApiError constructor(private val throwable: Throwable,
     companion object {
         const val NON_HTTP_STATUS = -1
         fun from(throwable: Throwable) = throwable as? ApiError
-        fun isNetworkError(throwable: Throwable) = from(throwable)?.isNetworkError ?: false
     }
 }

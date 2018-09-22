@@ -24,8 +24,13 @@ android {
     }
 
     buildTypes {
-        release {
+        debug{
             minifyEnabled false
+            multiDexEnabled true
+        }
+
+        release {
+            minifyEnabled true
             multiDexEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
@@ -94,9 +99,10 @@ artifacts {
 
 dependencies {
     implementation 'com.github.jitpack:gradle-simple:1.0'
+    implementation "com.android.support:multidex:$multidexVersion"
 
     compileOnly "javax.annotation:jsr250-api:$jsr250Version"
-    implementation "com.android.support:support-annotations:$supportLibVersion"
+    implementation "androidx.annotation:annotation:$supportLibVersion"
 
     api "com.github.pthomain:SharedPreferenceStore:$sharedPrefStoreVersion"
     api "com.github.pthomain:boilerplate:$boilerplateVersion"
@@ -111,9 +117,10 @@ dependencies {
     api "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
     implementation "org.apache.commons:commons-lang3:$apacheCommonsVersion"
-    implementation "com.android.support:support-compat:$supportLibVersion"
-    implementation 'com.android.support:multidex:1.0.3'
+    implementation "androidx.core:core:$supportLibVersion"
+    implementation "androidx.multidex:multidex:$multidexVersion"
     implementation "org.iq80.snappy:snappy:$snappyVersion"
+    implementation "io.requery:sqlite-android:$requeryVersion"
 
     api "com.squareup.retrofit2:retrofit:$retrofitVersion"
     api "com.squareup.retrofit2:converter-gson:$retrofitVersion"
