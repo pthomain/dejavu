@@ -4,6 +4,7 @@ import android.content.Context
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
+import io.reactivex.Completable
 
 import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
@@ -39,9 +40,10 @@ class VolleyDemoPresenter(context: Context,
 //        )
     }
 
-    override fun clearEntries() {
+    override fun clearEntries() = Completable.complete()
+//    {
 //        rxCacheInterceptorFactory.clearOlderEntries()
-    }
+//    }
 
     companion object {
         private const val URL = DemoPresenter.BASE_URL + DemoPresenter.ENDPOINT

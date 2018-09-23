@@ -1,12 +1,14 @@
 package uk.co.glass_software.android.cache_interceptor.retrofit
 
 import android.content.Context
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper
+import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper.RxType.*
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptorFactory
@@ -23,23 +25,38 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
     override fun get(returnType: Type,
                      annotations: Array<Annotation>,
                      retrofit: Retrofit): CallAdapter<*, *> {
-        val rawType = CallAdapter.Factory.getRawType(returnType)
+        val rawType = getRawType(returnType)
         val callAdapter = getCallAdapter(returnType, annotations, retrofit)
-        val isSingle = rawType == Single::class.java
 
-        if ((rawType == Observable::class.java || isSingle) && returnType is ParameterizedType) {
-            val observableType = CallAdapter.Factory.getParameterUpperBound(0, returnType)
-            val responseClass = CallAdapter.Factory.getRawType(observableType)
+        val rxType = when {
+            rawType == Single::class.java -> SINGLE
+            rawType == Observable::class.java -> OBSERVABLE
+            rawType == Completable::class.java -> COMPLETABLE
+            else -> null
+        }
 
-            return annotationHelper.process(annotations, isSingle, responseClass)
-                    ?.let {
-                        create(
-                                rxCacheFactory,
-                                it,
-                                responseClass,
-                                callAdapter
-                        )
-                    } ?: callAdapter
+        if (rxType != null) {
+            val responseClass = when (rxType) {
+                OBSERVABLE,
+                SINGLE -> {
+                    if (returnType is ParameterizedType)
+                        getRawType(getParameterUpperBound(0, returnType))
+                    else null
+                }
+                else -> null
+            } ?: Any::class.java
+
+            return annotationHelper.process(
+                    annotations,
+                    rxType,
+                    responseClass
+            )?.let {
+                create(
+                        rxCacheFactory,
+                        it,
+                        callAdapter
+                )
+            } ?: callAdapter
         }
 
         return callAdapter
@@ -47,21 +64,21 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
 
     private fun create(rxCacheFactory: RxCacheInterceptorFactory<E>,
                        instruction: CacheInstruction,
-                       responseClass: Class<*>,
-                       callAdapter: CallAdapter<*, *>) = RetrofitCacheAdapter(
-            rxCacheFactory,
-            instruction,
-            responseClass,
-            callAdapter
-    )
+                       callAdapter: CallAdapter<*, *>) =
+            RetrofitCacheAdapter(
+                    rxCacheFactory,
+                    instruction,
+                    callAdapter
+            )
 
     private fun getCallAdapter(returnType: Type,
                                annotations: Array<Annotation>,
-                               retrofit: Retrofit): CallAdapter<*, *> = rxJava2CallAdapterFactory.get(
-            returnType,
-            annotations,
-            retrofit
-    )!!
+                               retrofit: Retrofit): CallAdapter<*, *> =
+            rxJava2CallAdapterFactory.get(
+                    returnType,
+                    annotations,
+                    retrofit
+            )!!
 
     companion object {
 
@@ -69,16 +86,18 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                         errorFactory: (Throwable) -> E)
                 : RetrofitCacheAdapterFactoryBuilder<E>
                 where E : Exception,
-                      E : (E) -> Boolean = RetrofitCacheAdapterFactoryBuilder(
-                context,
-                errorFactory
-        )
+                      E : (E) -> Boolean =
+                RetrofitCacheAdapterFactoryBuilder(
+                        context,
+                        errorFactory
+                )
 
-        fun buildDefault(context: Context) = RetrofitCacheAdapterFactory(
-                RxJava2CallAdapterFactory.create(),
-                RxCacheInterceptor.buildDefault(context),
-                AnnotationHelper()
-        )
+        fun buildDefault(context: Context) =
+                RetrofitCacheAdapterFactory(
+                        RxJava2CallAdapterFactory.create(),
+                        RxCacheInterceptor.buildDefault(context),
+                        AnnotationHelper()
+                )
     }
 
 }

@@ -2,6 +2,7 @@ package uk.co.glass_software.android.cache_interceptor.demo
 
 import android.content.Context
 import com.google.gson.Gson
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -32,14 +33,13 @@ abstract class DemoPresenter protected constructor(context: Context,
 
     private fun clean(message: String) = message.replace("(\\([^)]+\\))".toRegex(), "").trim()
 
-    internal fun loadResponse(isRefresh: Boolean) =
-            getResponseObservable(isRefresh)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+    internal fun loadResponse(isRefresh: Boolean) = getResponseObservable(isRefresh)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
 
     protected abstract fun getResponseObservable(isRefresh: Boolean): Observable<out CatFactResponse>
 
-    abstract fun clearEntries()
+    abstract fun clearEntries(): Completable
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

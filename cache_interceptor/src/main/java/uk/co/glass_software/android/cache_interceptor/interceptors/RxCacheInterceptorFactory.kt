@@ -14,12 +14,10 @@ class RxCacheInterceptorFactory<E> internal constructor(private val errorInterce
 
     private val responseInterceptor: ResponseInterceptor<E> = ResponseInterceptor(logger)
 
-    internal fun create(responseClass: Class<*>,
-                        instruction: CacheInstruction,
+    internal fun create(instruction: CacheInstruction,
                         url: String,
                         body: String?) = RxCacheInterceptor(
             isCacheEnabled,
-            responseClass,
             instruction,
             url,
             body,

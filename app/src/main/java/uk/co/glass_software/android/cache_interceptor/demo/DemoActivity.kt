@@ -54,7 +54,7 @@ class DemoActivity : AppCompatActivity() {
         refreshButton.setOnClickListener { _ -> onButtonClick(true) }
         clearButton.setOnClickListener { _ ->
             setButtonsEnabled(false)
-            demoPresenter.clearEntries()
+            demoPresenter.clearEntries().subscribe { setButtonsEnabled(true) }
         }
 
         findViewById<View>(R.id.github).setOnClickListener { _ -> openGithub() }

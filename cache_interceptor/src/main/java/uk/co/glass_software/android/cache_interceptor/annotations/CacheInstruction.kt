@@ -3,8 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.annotations
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 
 data class CacheInstruction(val responseClass: Class<*>,
-                            val operation: Operation,
-                            val strictMode: Boolean = false) {
+                            val operation: Operation) {
 
     sealed class Operation(val type: Type) {
 
@@ -47,14 +46,14 @@ data class CacheInstruction(val responseClass: Class<*>,
         }
 
         data class Clear(val typeToClear: Class<*>? = null,
-                         val clearOldEntriesOnly: Boolean = false,
-                         val clearEntireCache: Boolean = false) : Operation(CLEAR)
+                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR)
 
         enum class Type {
             DO_NOT_CACHE,
             CACHE,
             REFRESH,
-            CLEAR
+            CLEAR,
+            CLEAR_ALL
         }
     }
 

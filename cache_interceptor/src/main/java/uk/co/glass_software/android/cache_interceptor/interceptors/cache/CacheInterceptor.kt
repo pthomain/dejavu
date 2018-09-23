@@ -1,10 +1,10 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
+import io.reactivex.*
 import io.reactivex.Observable
-import io.reactivex.ObservableSource
-import io.reactivex.ObservableTransformer
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
@@ -31,8 +31,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         instruction.operation,
                         isNetworkError
                 )
-                is CacheInstruction.Operation.Clear -> doNotCache(instructionToken, upstream) //TODO clear cache
-                is CacheInstruction.Operation.DoNotCache -> doNotCache(instructionToken, upstream)
+                else -> doNotCache(instructionToken, upstream)
             }
         } else doNotCache(instructionToken, upstream)
 
@@ -49,6 +48,20 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
             logger.d("Returning: $instructionToken")
         }
     }
+
+    fun complete() = (
+            if (isCacheEnabled && instructionToken.instruction.operation is Operation.Clear)
+                clear(instructionToken.instruction.operation)
+            else
+                Completable.complete()
+            )!!
+
+    private fun clear(operation: Operation.Clear) =
+        cacheManager.clearCache(
+                operation.typeToClear,
+                operation.clearOldEntriesOnly
+        )
+
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =

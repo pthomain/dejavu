@@ -1,6 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.demo.retrofit;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import uk.co.glass_software.android.cache_interceptor.annotations.Cache;
 import uk.co.glass_software.android.cache_interceptor.annotations.Clear;
@@ -11,15 +13,16 @@ import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.
 
 interface CatFactClient {
 
-    @Cache(encrypt = true, mergeOnNextOnError = true)
     @GET(ENDPOINT)
+    @Cache(encrypt = true, mergeOnNextOnError = true)
     Observable<CatFactResponse> get();
 
-    @Refresh(freshOnly = true)
     @GET(ENDPOINT)
+    @Refresh(freshOnly = true)
     Observable<CatFactResponse> refresh();
 
-    @Clear
-    void clearCache();
+    @DELETE(ENDPOINT)
+    @Clear(typeToClear = CatFactResponse.class)
+    Completable clearCache();
 
 }

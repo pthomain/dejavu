@@ -1,6 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.demo.retrofit
 
 import android.content.Context
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -40,11 +42,13 @@ class RetrofitDemoPresenter(context: Context,
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-    override fun getResponseObservable(isRefresh: Boolean) =
-            (if (isRefresh) catFactClient.refresh() else catFactClient.get())!!
+    override fun getResponseObservable(isRefresh: Boolean) = (
+            if (isRefresh) catFactClient.refresh()
+            else catFactClient.get()
+            )!!
 
-    override fun clearEntries() {
-        catFactClient.clearCache()
-    }
+    override fun clearEntries() = catFactClient.clearCache()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())!!
 
 }

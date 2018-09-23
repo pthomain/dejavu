@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
+import uk.co.glass_software.android.boilerplate.io
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
@@ -20,19 +21,16 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         where E : Exception,
               E : (E) -> kotlin.Boolean {
 
-    fun clearOlderEntries() {
-        runAsync(databaseManager::clearOlderEntries)
-    }
-
-    fun clearCache() {
-        runAsync(databaseManager::clearCache)
-    }
-
-    private fun runAsync(action: () -> Unit) {
-        Completable.fromAction { action() }
-                .subscribeOn(Schedulers.io())
-                .subscribe()
-    }
+    fun clearCache(typeToClear: Class<*>?, //TODO
+                   clearOlderEntriesOnly: Boolean) =
+            Completable.create {
+                if (clearOlderEntriesOnly) {
+                    databaseManager.clearOlderEntries()
+                } else {
+                    databaseManager.clearCache()
+                }
+                it.onComplete()
+            }.io()
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
