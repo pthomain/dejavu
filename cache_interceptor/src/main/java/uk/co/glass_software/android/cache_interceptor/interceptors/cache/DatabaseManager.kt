@@ -1,10 +1,12 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
 import android.content.ContentValues
+import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMNS.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.TABLE_CACHE
@@ -95,11 +97,11 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             if (it.count != 0 && it.moveToNext()) {
                 logger.d("Found a cached $simpleName")
 
-                val cacheDate = dateFactory(cursor.getLong(DATE.ordinal))
-                val expiryDate = dateFactory(cursor.getLong(EXPIRY_DATE.ordinal))
-                val localData = cursor.getBlob(DATA.ordinal)
-                val isCompressed = cursor.getInt(IS_COMPRESSED.ordinal) != 0
-                val isEncrypted = cursor.getInt(IS_ENCRYPTED.ordinal) != 0
+                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
+                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
+                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
+                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
 
                 return getCachedResponse(
                         instructionToken,
@@ -143,7 +145,7 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                                   isEncrypted: Boolean,
                                   localData: ByteArray) =
             serialisationManager.deserialise(
-                    instructionToken.instruction.responseClass,
+                    instructionToken,
                     localData,
                     isEncrypted,
                     isCompressed,
@@ -162,9 +164,10 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             }
 
     fun cache(instructionToken: CacheToken,
-              cacheOperation: CacheInstruction.Operation.Expiring,
-              response: ResponseWrapper<E>) {
+              cacheOperation: Expiring,
+              response: ResponseWrapper<E>) = create {
         val instruction = instructionToken.instruction
+        val operation = instruction.operation as Expiring
         val simpleName = instruction.responseClass.simpleName
 
         logger.d("Caching $simpleName")
@@ -176,10 +179,11 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         )?.also {
             val hash = instructionToken.getKey(hasher)
             val values = HashMap<String, Any>()
+            val now = System.currentTimeMillis()
 
             values[TOKEN.columnName] = hash
-            values[DATE.columnName] = instructionToken.cacheDate!!.time
-            values[EXPIRY_DATE.columnName] = instructionToken.expiryDate!!.time
+            values[DATE.columnName] = now
+            values[EXPIRY_DATE.columnName] = now + operation.durationInMillis
             values[DATA.columnName] = it
             values[IS_COMPRESSED.columnName] = if (cacheOperation.compress) 1 else 0
             values[IS_ENCRYPTED.columnName] = if (cacheOperation.encrypt) 1 else 0
@@ -191,6 +195,8 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                     CONFLICT_REPLACE
             )
         } ?: logger.e("Could not serialise and store data for $simpleName")
+
+        it.onComplete()
     }
 
     companion object {

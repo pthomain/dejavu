@@ -1,8 +1,10 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import com.google.gson.Gson
+import com.google.gson.*
+import com.google.gson.reflect.TypeToken
 import org.iq80.snappy.Snappy
 import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 
@@ -12,11 +14,12 @@ internal class SerialisationManager<E>(private val logger: Logger,
         where E : Exception,
               E : (E) -> kotlin.Boolean {
 
-    fun deserialise(responseClass: Class<*>,
+    fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
                     isEncrypted: Boolean,
                     isCompressed: Boolean,
                     onError: () -> Unit): ResponseWrapper<E>? {
+        val responseClass = instructionToken.instruction.responseClass
         val simpleName = responseClass.simpleName
 
         try {
@@ -32,7 +35,12 @@ internal class SerialisationManager<E>(private val logger: Logger,
             }
 
             val response = gson.fromJson(String(uncompressed), responseClass)
-            return ResponseWrapper(responseClass, response, null)
+
+            return ResponseWrapper(
+                    responseClass,
+                    response,
+                    CacheMetadata<E>(instructionToken, null)
+            )
         } catch (e: Exception) {
             logger.e(e, "Could not deserialise $simpleName: clearing the cache")
             onError()
@@ -40,11 +48,12 @@ internal class SerialisationManager<E>(private val logger: Logger,
         }
     }
 
-    fun serialise(response: Any,
+    fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,
                   compressData: Boolean): ByteArray? {
-        val simpleName = response::class.java.simpleName
+        val simpleName = responseWrapper.responseClass.simpleName
         val encryptionManager = storeEntryFactory.encryptionManager
+        val response = responseWrapper.response!!
 
         return gson.toJson(response)
                 .toByteArray()

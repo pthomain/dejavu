@@ -10,12 +10,14 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
+import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 internal class ExpandableListAdapter(context: Context,
-                                     private val jokeCallback: (String) -> Unit,
+                                     private val factCallback: (String) -> Unit,
                                      private val onComplete: () -> Unit)
     : BaseExpandableListAdapter() {
 
@@ -23,25 +25,25 @@ internal class ExpandableListAdapter(context: Context,
     private val logs: LinkedList<String> = LinkedList()
     private val children: LinkedHashMap<String, List<String>> = LinkedHashMap()
     private val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-    private val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("hh:mm:ss")
+    private val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss")
 
-    fun loadJoke(observable: Observable<out JokeResponse>) {
+    fun loadCatFact(observable: Observable<out CatFactResponse>) {
         headers.clear()
         children.clear()
         logs.clear()
         val start = System.currentTimeMillis()
         observable.doOnComplete { onComplete(start) }
-                .subscribe { joke -> onJokeReady(start, joke) }
+                .subscribe { onCatFactReady(start, it) }
     }
 
-    private fun onJokeReady(start: Long,
-                            jokeResponse: JokeResponse) {
-        val metadata = jokeResponse.metadata!!
-        val cacheToken = metadata.cacheToken!!
+    private fun onCatFactReady(start: Long,
+                               catFactResponse: CatFactResponse) {
+        val metadata = catFactResponse.metadata!!
+        val cacheToken = metadata.cacheToken
         val exception = metadata.exception
         val operation = cacheToken.instruction.operation.type
 
-        val elapsed = operation.name + ", " + (System.currentTimeMillis() - start) + "ms"
+        val elapsed = "${operation.name} -> ${cacheToken.status} (${System.currentTimeMillis() - start}ms)"
         val info = ArrayList<String>()
         val header: String
 
@@ -52,13 +54,11 @@ internal class ExpandableListAdapter(context: Context,
             info.add("Message: " + exception.message)
             info.add("Cause: " + exception.cause)
         } else {
-            val joke = jokeResponse.value!!.joke!!
-            jokeCallback(joke)
+            factCallback(catFactResponse.fact!!)
             header = elapsed
 
-
             info.add("Cache token instruction: $operation")
-            info.add("Cache token status: " + cacheToken.status)
+            info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
             info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
 
             if (operation is Expiring) {
@@ -70,7 +70,7 @@ internal class ExpandableListAdapter(context: Context,
                 )
             }
 
-            info.add("Joke: $joke")
+            info.add("Cat fact: ${catFactResponse.fact!!}")
         }
 
         headers.add(header)
@@ -78,6 +78,17 @@ internal class ExpandableListAdapter(context: Context,
 
         notifyDataSetChanged()
     }
+
+    private fun getOrigin(status: CacheStatus) =
+            when (status) {
+                INSTRUCTION -> "instruction"
+                NOT_CACHED,
+                FRESH,
+                REFRESHED -> "network"
+                CACHED,
+                STALE,
+                COULD_NOT_REFRESH -> "disk"
+            }
 
     fun log(output: String) {
         logs.addLast(output)
@@ -104,11 +115,11 @@ internal class ExpandableListAdapter(context: Context,
                               parent: ViewGroup) =
             (convertView ?: inflater.inflate(R.layout.list_group, parent, false))
                     .apply {
-                        val headerTitle = getGroup(groupPosition)
-                        val lblListHeader = findViewById<TextView>(R.id.lblListHeader)
-                        lblListHeader.setTypeface(null, Typeface.BOLD)
-                        lblListHeader.text = headerTitle
-                    }
+                        findViewById<TextView>(R.id.listHeader).apply {
+                            setTypeface(null, Typeface.BOLD)
+                            text = getGroup(groupPosition)
+                        }
+                    }!!
 
     override fun getChildView(groupPosition: Int,
                               childPosition: Int,
@@ -117,9 +128,7 @@ internal class ExpandableListAdapter(context: Context,
                               parent: ViewGroup): View =
             (convertView ?: inflater.inflate(R.layout.list_item, parent, false))
                     .apply {
-                        val childText = getChild(groupPosition, childPosition)
-                        val txtListChild = findViewById<TextView>(R.id.lblListItem)
-                        txtListChild.text = childText
+                        findViewById<TextView>(R.id.listItem).text = getChild(groupPosition, childPosition)
                     }
 
     override fun getChildrenCount(groupPosition: Int) = children[headers[groupPosition]]!!.size

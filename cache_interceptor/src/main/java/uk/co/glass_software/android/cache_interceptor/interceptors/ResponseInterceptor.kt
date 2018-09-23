@@ -25,7 +25,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
         val response = wrapper.response
         val responseClass = wrapper.responseClass
         val metadata = wrapper.metadata!!
-        val operation = metadata.cacheToken?.instruction?.operation
+        val operation = metadata.cacheToken.instruction.operation
 
         return (response ?: createEmptyResponse(responseClass)).let {
             if (it != null) {

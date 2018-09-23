@@ -10,6 +10,7 @@ import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import java.util.*
 
+
 class CacheInterceptorBuilder<E> internal constructor()
         where E : Exception,
               E : (E) -> Boolean {

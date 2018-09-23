@@ -6,7 +6,7 @@
     android:padding="8dp">
 
     <TextView
-        android:id="@+id/lblListHeader"
+        android:id="@+id/listHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@android:color/white"

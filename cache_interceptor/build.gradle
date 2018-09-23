@@ -14,7 +14,6 @@ android {
         versionCode 1
         versionName "1.0"
         consumerProguardFiles 'proguard-rules-lib.pro'
-        multiDexEnabled true
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -27,6 +26,7 @@ android {
         debug{
             minifyEnabled false
             multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
 
         release {

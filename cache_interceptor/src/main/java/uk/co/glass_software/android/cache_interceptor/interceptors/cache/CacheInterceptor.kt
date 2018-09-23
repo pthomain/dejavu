@@ -37,8 +37,9 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
         } else doNotCache(instructionToken, upstream)
 
         return observable.doOnNext { wrapper ->
-            if (wrapper.metadata!!.cacheToken!!.instruction.operation === DoNotCache) {
-                wrapper.metadata = wrapper.metadata!!.copy(
+            val metadata = wrapper.metadata!!
+            if (metadata.cacheToken.instruction.operation === DoNotCache) {
+                wrapper.metadata = metadata.copy(
                         cacheToken = CacheToken.notCached(
                                 instructionToken,
                                 Date()

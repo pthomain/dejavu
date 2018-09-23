@@ -10,14 +10,14 @@ data class CacheInstruction(val responseClass: Class<*>,
 
         object DoNotCache : Operation(DO_NOT_CACHE)
 
-        sealed class Expiring(val durationInMillis: Float = DEFAULT_DURATION,
+        sealed class Expiring(val durationInMillis: Long = DEFAULT_DURATION,
                               val freshOnly: Boolean = false,
                               val mergeOnNextOnError: Boolean = false,
                               val encrypt: Boolean = false,
                               val compress: Boolean = false,
                               type: Type) : Operation(type) {
 
-            class Cache(durationInMillis: Float = DEFAULT_DURATION,
+            class Cache(durationInMillis: Long = DEFAULT_DURATION,
                         freshOnly: Boolean = false,
                         mergeOnNextOnError: Boolean = false,
                         encrypt: Boolean = false,
@@ -31,7 +31,7 @@ data class CacheInstruction(val responseClass: Class<*>,
                     CACHE
             )
 
-            class Refresh(durationInMillis: Float = DEFAULT_DURATION,
+            class Refresh(durationInMillis: Long = DEFAULT_DURATION,
                           freshOnly: Boolean = false,
                           mergeOnNextOnError: Boolean = false,
                           encrypt: Boolean = false,

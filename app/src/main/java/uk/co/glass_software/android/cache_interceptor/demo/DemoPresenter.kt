@@ -6,12 +6,10 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import uk.co.glass_software.android.boilerplate.Boilerplate
-import uk.co.glass_software.android.boilerplate.lambda.Callback1
 import uk.co.glass_software.android.boilerplate.log.CompositeLogger
-import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.boilerplate.log.Printer
 import uk.co.glass_software.android.boilerplate.log.SimpleLogger
-import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
+import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 
 abstract class DemoPresenter protected constructor(context: Context,
                                                    onLogOutput: (String) -> Unit) {
@@ -39,13 +37,13 @@ abstract class DemoPresenter protected constructor(context: Context,
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
 
-    protected abstract fun getResponseObservable(isRefresh: Boolean): Observable<out JokeResponse>
+    protected abstract fun getResponseObservable(isRefresh: Boolean): Observable<out CatFactResponse>
 
     abstract fun clearEntries()
 
     companion object {
-        internal const val BASE_URL = "https://api.icndb.com/"
-        internal const val ENDPOINT = "jokes/random"
+        internal const val BASE_URL = "https://catfact.ninja/"
+        internal const val ENDPOINT = "fact"
     }
 
 }

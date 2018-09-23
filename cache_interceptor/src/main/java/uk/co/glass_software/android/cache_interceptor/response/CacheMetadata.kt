@@ -2,8 +2,8 @@ package uk.co.glass_software.android.cache_interceptor.response
 
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken
 
-data class CacheMetadata<E>(val cacheToken: CacheToken? = null,
-                            val exception: E? = null)
+data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
+                            @Transient val exception: E? = null)
         where E : Exception,
               E : (E) -> Boolean {
 

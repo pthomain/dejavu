@@ -65,10 +65,10 @@ class DemoActivity : AppCompatActivity() {
         retrofitRadioButton.setOnClickListener { _ -> method = RETROFIT }
         volleyRadioButton.setOnClickListener { _ -> method = VOLLEY }
 
-        val jokeView = findViewById<TextView>(R.id.joke)
+        val catFactView = findViewById<TextView>(R.id.fact)
         listAdapter = ExpandableListAdapter(
                 this,
-                { text: CharSequence -> jokeView.text = text },
+                { text: CharSequence -> catFactView.text = text },
                 { setButtonsEnabled(true) }
         )
 
@@ -82,7 +82,7 @@ class DemoActivity : AppCompatActivity() {
 
     private fun onButtonClick(isRefresh: Boolean) {
         setButtonsEnabled(false)
-        listAdapter.loadJoke(demoPresenter.loadResponse(isRefresh))
+        listAdapter.loadCatFact(demoPresenter.loadResponse(isRefresh))
     }
 
     private fun setButtonsEnabled(isEnabled: Boolean) {

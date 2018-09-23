@@ -55,9 +55,9 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
             )
         } else {
             val metadata = cachedResponse.metadata!!
-            val cachedResponseToken = metadata.cacheToken!!
+            val cachedResponseToken = metadata.cacheToken
             val status = getCachedStatus(cachedResponseToken)
-            cachedResponse.metadata = cachedResponse.metadata!!.copy(
+            cachedResponse.metadata = metadata.copy(
                     cacheToken = cachedResponseToken.copy(status = status)
             )
             logger.d("Found cached $simpleName, status: $status")
@@ -98,7 +98,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                         val timeToLiveInMs = cacheOperation.durationInMillis
                         val expiryDate = dateFactory(fetchDate.time + timeToLiveInMs.toLong())
 
-                        responseWrapper.metadata = responseWrapper.metadata!!.copy(
+                        responseWrapper.metadata = metadata.copy(
                                 cacheToken = CacheToken.caching(
                                         instructionToken,
                                         fetchDate,
@@ -115,7 +115,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                                 instructionToken,
                                 cacheOperation,
                                 response
-                        )
+                        ).subscribe({}, { logger.e(it, "Could not cache $simpleName") })
                     }
                 }
     }
@@ -127,7 +127,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
             : Observable<ResponseWrapper<E>> {
 
         val metadata = cachedResponse.metadata!!
-        val cacheToken = metadata.cacheToken!!
+        val cacheToken = metadata.cacheToken
         val simpleName = cacheToken.instruction.responseClass.simpleName
 
         logger.d("$simpleName is ${cacheToken.status}, attempting to refresh")
@@ -141,7 +141,10 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
             val isCouldNotRefresh = error != null && isNetworkError(error)
 
             if (isCouldNotRefresh) {
-                deepCopy(cachedResponse, COULD_NOT_REFRESH)
+                cachedResponse.copy(
+                        response = cachedResponse.response,
+                        metadata = updateStatus(cachedResponse, COULD_NOT_REFRESH)
+                )
             } else {
                 updateRefreshed(responseWrapper, REFRESHED)
             }
@@ -152,22 +155,9 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                 as Observable<ResponseWrapper<E>>
     }
 
-    private fun deepCopy(cachedResponse: ResponseWrapper<E>,
-                         newStatus: CacheStatus): ResponseWrapper<E> {
-        val copiedResponse = gson.fromJson(
-                gson.toJson(cachedResponse.response),
-                cachedResponse.responseClass
-        )
-
-        return cachedResponse.copy(
-                response = copiedResponse,
-                metadata = updateStatus(cachedResponse, newStatus)
-        )
-    }
-
     private fun updateRefreshed(response: ResponseWrapper<E>,
                                 newStatus: CacheStatus): ResponseWrapper<E> {
-        val simpleName = response.metadata!!.cacheToken!!.instruction.responseClass.simpleName
+        val simpleName = response.metadata!!.cacheToken.instruction.responseClass.simpleName
         response.metadata = updateStatus(response, newStatus)
 
         logger.d("Delivering ${if (newStatus === REFRESHED) "refreshed" else "stale"} $simpleName, status: $newStatus")
@@ -177,8 +167,8 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
     private fun updateStatus(response: ResponseWrapper<E>,
                              newStatus: CacheStatus): CacheMetadata<E> {
-        val metadata = response.metadata!!
-        val oldToken = metadata.cacheToken!!
+        val metadata = response.metadata
+        val oldToken = metadata!!.cacheToken
         val newToken = oldToken.copy(status = newStatus)
 
         return metadata.copy(cacheToken = newToken)

@@ -6,9 +6,8 @@ import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 
 import io.reactivex.Observable
-import uk.co.glass_software.android.boilerplate.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
-import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse
+import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 
 class VolleyDemoPresenter(context: Context,
                           onLogOutput: (String) -> Unit)
@@ -17,11 +16,11 @@ class VolleyDemoPresenter(context: Context,
     //    private val rxCacheInterceptorFactory: RxCacheInterceptorFactory<ApiError> = RxCacheInterceptorFactory.buildDefault(context)
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
 
-    override fun getResponseObservable(isRefresh: Boolean): Observable<JokeResponse> {
+    override fun getResponseObservable(isRefresh: Boolean): Observable<CatFactResponse> {
 //        val cacheOperation = CacheInstruction.Operation.Expiring.Cache()
 
 //        val instruction = CacheInstruction(
-//                JokeResponse::class.java,
+//                CatFactResponse::class.java,
 //                cacheOperation,
 //                false
 //        )
@@ -31,7 +30,7 @@ class VolleyDemoPresenter(context: Context,
 //                requestQueue,
 //                gson,
 //                rxCacheInterceptorFactory.create(
-//                        JokeResponse::class.java,
+//                        CatFactResponse::class.java,
 //                        instruction,
 //                        URL,
 //                        null

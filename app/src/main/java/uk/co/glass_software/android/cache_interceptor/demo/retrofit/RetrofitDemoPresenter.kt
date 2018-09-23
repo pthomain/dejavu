@@ -5,8 +5,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import uk.co.glass_software.android.boilerplate.Boilerplate.context
-import uk.co.glass_software.android.boilerplate.lambda.Callback1
 import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
@@ -18,7 +16,7 @@ class RetrofitDemoPresenter(context: Context,
 
     private val adapterFactory = RetrofitCacheAdapterFactory
             .builder(context, ApiErrorFactory())
-            .timeOutInSeconds(5)
+            .timeOutInSeconds(15)
             .logger(uiLogger)
             .build()
 
@@ -29,7 +27,7 @@ class RetrofitDemoPresenter(context: Context,
             .addCallAdapterFactory(adapterFactory)
             .build()
 
-    private val jokeClient = retrofit.create(JokeClient::class.java)
+    private val catFactClient = retrofit.create(CatFactClient::class.java)
 
     private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {
         it.addInterceptor(getHttpLoggingInterceptor(logger))
@@ -43,10 +41,10 @@ class RetrofitDemoPresenter(context: Context,
             }
 
     override fun getResponseObservable(isRefresh: Boolean) =
-            (if (isRefresh) jokeClient.refresh() else jokeClient.get())!!
+            (if (isRefresh) catFactClient.refresh() else catFactClient.get())!!
 
     override fun clearEntries() {
-        jokeClient.clearCache()
+        catFactClient.clearCache()
     }
 
 }

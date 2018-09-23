@@ -26,7 +26,7 @@ internal class ErrorInterceptor<E> private constructor(private val errorFactory:
                 ResponseWrapper<E>(
                         instructionToken.instruction.responseClass,
                         it,
-                        CacheMetadata(null, null)
+                        CacheMetadata(instructionToken, null)
                 )
             }
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })!!

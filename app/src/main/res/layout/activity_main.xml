@@ -20,7 +20,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Load a joke"
+            android:text="Load a cat fact"
             android:textSize="11sp"/>
 
         <Button
@@ -40,16 +40,6 @@
             android:textSize="12sp"/>
 
     </LinearLayout>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textColor="#e57373"
-        android:layout_marginBottom="10dp"
-        android:alpha=".8"
-        android:text="Disclaimer: These jokes are coming randomly from an open third-party API,\nfor illustration purpose only."
-        android:textSize="10sp"/>
 
     <RadioGroup
         android:layout_width="match_parent"
@@ -118,7 +108,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/joke"
+        android:id="@+id/fact"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
