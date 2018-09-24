@@ -1,27 +1,28 @@
 package uk.co.glass_software.android.cache_interceptor.demo.retrofit;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import uk.co.glass_software.android.cache_interceptor.annotations.Cache;
 import uk.co.glass_software.android.cache_interceptor.annotations.Clear;
-import uk.co.glass_software.android.cache_interceptor.annotations.Metadata;
 import uk.co.glass_software.android.cache_interceptor.annotations.Refresh;
-import uk.co.glass_software.android.cache_interceptor.demo.model.JokeResponse;
-import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata;
+import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse;
 
 import static uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter.ENDPOINT;
 
-interface JokeClient {
+interface CatFactClient {
 
-    @Cache(encrypt = true)
     @GET(ENDPOINT)
-    Observable<JokeResponse> get();
+    @Cache(encrypt = true, mergeOnNextOnError = true)
+    Observable<CatFactResponse> get();
 
+    @GET(ENDPOINT)
     @Refresh(freshOnly = true)
-    @GET(ENDPOINT)
-    Observable<JokeResponse> refresh();
+    Observable<CatFactResponse> refresh();
 
-    @Clear
-    void clearCache();
+    @DELETE(ENDPOINT)
+    @Clear(typeToClear = CatFactResponse.class)
+    Completable clearCache();
 
 }

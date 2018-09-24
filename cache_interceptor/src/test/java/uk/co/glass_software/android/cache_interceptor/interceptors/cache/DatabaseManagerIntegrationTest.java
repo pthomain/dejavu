@@ -1,7 +1,7 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +26,9 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
     private TestResponse stubbedResponse;
     private CacheToken<TestResponse> cacheToken;
     private Observable<TestResponse> mockUpstream;
-    
+
     private DatabaseManager target;
-    
+
     @Before
     public void setUp() throws Exception {
         CacheToken requestToken = CacheToken.Companion.newRequest(
@@ -37,42 +37,42 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
                 "",
                 5
         );
-        
+
         stubbedResponse = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse.class).blockingFirst();
         stubbedResponse.setMetadata(ResponseMetadata.create(requestToken, null));
-        
+
         mockUpstream = mock(Observable.class);
-        
+
         Date fetchDate = new Date();
         Date expiryDate = new Date(fetchDate.getTime() + 12345);
-        
+
         cacheToken = CacheToken.Companion.caching(requestToken,
                                         mockUpstream,
                                         fetchDate,
                                         fetchDate,
                                         expiryDate
         );
-        
+
         stubbedResponse.getMetadata().setCacheToken(cacheToken);
-        
+
         target = dependencyHelper.databaseManager;
     }
-    
+
     @Test
     public void testCacheAndFlush() throws Exception {
         assertNull("Cache should not contain anything", target.getCachedResponse(mockUpstream, cacheToken));
-        
+
         target.cache(stubbedResponse);
-        
+
         TestResponse cachedResponse = target.getCachedResponse(mockUpstream, cacheToken);
         cachedResponse.setMetadata(stubbedResponse.getMetadata()); //ignore metadata, covered by unit test
         assertEquals("Cached response didn't match the original", stubbedResponse, cachedResponse);
-        
-        target.flushCache();
-        
+
+        target.clearCache();
+
         assertNull("Cache should not contain anything", target.getCachedResponse(mockUpstream, cacheToken));
     }
-    
+
     //used by other tests to preserve encapsulation
     @VisibleForTesting
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> void cache(DatabaseManager databaseManager,
@@ -81,7 +81,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
         response.setMetadata(ResponseMetadata.create(cacheToken, null));
         databaseManager.cache(response);
     }
-    
+
     //used by other tests to preserve encapsulation
     @VisibleForTesting
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> R getCachedResponse(DatabaseManager databaseManager,
@@ -89,7 +89,7 @@ public class DatabaseManagerIntegrationTest extends BaseIntegrationTest {
                                                                                                                             CacheToken cacheToken) {
         return databaseManager.getCachedResponse(upstream, cacheToken);
     }
-    
+
     //used by other tests to preserve encapsulation
     @VisibleForTesting
     public static <E extends Exception & Function<E, Boolean>, R extends ResponseMetadata.Holder<R, E>> CacheToken<R> getCachedCacheToken(CacheToken<R> cacheToken,

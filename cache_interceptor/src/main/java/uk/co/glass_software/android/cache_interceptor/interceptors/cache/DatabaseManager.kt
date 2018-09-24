@@ -1,19 +1,17 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
 import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import org.bouncycastle.asn1.cms.CMSObjectIdentifiers.compressedData
+import io.reactivex.Completable.create
+import io.requery.android.database.sqlite.SQLiteDatabase
+import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_DATA
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_DATE
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_EXPIRY_DATE
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMN_CACHE_TOKEN
+import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.COLUMNS.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.SqlOpenHelper.Companion.TABLE_CACHE
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
-import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -53,33 +51,35 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         val date = (System.currentTimeMillis() + cleanUpThresholdInMillis).toString()
         val deleted = db.delete(
                 TABLE_CACHE,
-                "$COLUMN_CACHE_EXPIRY_DATE < ?",
+                "${EXPIRY_DATE.columnName} < ?",
                 arrayOf(date)
         )
 
-        logger.d(this, "Cleared $deleted old ${if (deleted > 1) "entries" else "entry"} from HTTP cache")
+        logger.d("Cleared $deleted old ${if (deleted > 1) "entries" else "entry"} from HTTP cache")
     }
 
-    fun flushCache() {
+    fun clearCache() {
         db.execSQL("DELETE FROM $TABLE_CACHE")
-        logger.d(this, "Cleared entire HTTP cache")
+        logger.d("Cleared entire HTTP cache")
     }
 
     fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
-        logger.d(this, "Checking for cached $simpleName")
+        logger.d("Checking for cached $simpleName")
 
         val key = instructionToken.getKey(hasher)
         checkInvalidation(instruction, key)
 
         val projection = arrayOf(
-                COLUMN_CACHE_DATE,
-                COLUMN_CACHE_EXPIRY_DATE,
-                COLUMN_CACHE_DATA
+                DATE.columnName,
+                EXPIRY_DATE.columnName,
+                DATA.columnName,
+                IS_COMPRESSED.columnName,
+                IS_ENCRYPTED.columnName
         )
 
-        val selection = "$COLUMN_CACHE_TOKEN = ?"
+        val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(key)
 
         val cursor = db.query(
@@ -95,20 +95,24 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
 
         cursor.use {
             if (it.count != 0 && it.moveToNext()) {
-                logger.d(this, "Found a cached $simpleName")
+                logger.d("Found a cached $simpleName")
 
-                val cacheDate = dateFactory(cursor.getLong(0))
-                val expiryDate = dateFactory(cursor.getLong(1))
-                val compressedData = cursor.getBlob(2)
+                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
+                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
+                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
+                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
 
                 return getCachedResponse(
                         instructionToken,
                         cacheDate,
                         expiryDate,
-                        compressedData
+                        isCompressed,
+                        isEncrypted,
+                        localData
                 )
             } else {
-                logger.d(this, "Found no cached $simpleName")
+                logger.d("Found no cached $simpleName")
                 return null
             }
         }
@@ -118,9 +122,9 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                                   key: String) {
         if (instruction.operation.type == REFRESH) {
             val map = HashMap<String, Any>()
-            map[COLUMN_CACHE_EXPIRY_DATE] = 0
+            map[EXPIRY_DATE.columnName] = 0
 
-            val selection = "$COLUMN_CACHE_TOKEN = ?"
+            val selection = "${TOKEN.columnName} = ?"
             val selectionArgs = arrayOf(key)
 
             val update = db.update(
@@ -130,54 +134,59 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                     selectionArgs
             )
 
-            logger.d(
-                    this,
-                    "Invalidating cache for $key: ${if (update > 0) "DONE" else "NOT FOUND"}"
-            )
+            logger.d("Invalidating cache for $key: ${if (update > 0) "DONE" else "NOT FOUND"}")
         }
     }
 
     private fun getCachedResponse(instructionToken: CacheToken,
                                   cacheDate: Date,
                                   expiryDate: Date,
-                                  compressedData: ByteArray): ResponseWrapper<E>? {
-        val responseWrapper = serialisationManager.deserialise(
-                instructionToken.instruction.responseClass,
-                compressedData,
-                this::flushCache
-        )?.also {
-            it.metadata = CacheMetadata(
-                    CacheToken.cached(
-                            instructionToken,
-                            cacheDate,
-                            expiryDate
-                    ),
-                    null
-            )
-        }
+                                  isCompressed: Boolean,
+                                  isEncrypted: Boolean,
+                                  localData: ByteArray) =
+            serialisationManager.deserialise(
+                    instructionToken,
+                    localData,
+                    isEncrypted,
+                    isCompressed,
+                    this::clearCache
+            )?.also {
+                it.metadata = CacheMetadata(
+                        CacheToken.cached(
+                                instructionToken,
+                                cacheDate,
+                                expiryDate
+                        ),
+                        null
+                )
 
-        logger.d(
-                this,
-                "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
-        )
-
-        return responseWrapper
-    }
+                logger.d("Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
+            }
 
     fun cache(instructionToken: CacheToken,
-              response: ResponseWrapper<E>) {
+              cacheOperation: Expiring,
+              response: ResponseWrapper<E>) = create {
         val instruction = instructionToken.instruction
+        val operation = instruction.operation as Expiring
         val simpleName = instruction.responseClass.simpleName
-        logger.d(this, "Caching $simpleName")
 
-        serialisationManager.serialise(response)?.also {
+        logger.d("Caching $simpleName")
+
+        serialisationManager.serialise(
+                response,
+                cacheOperation.encrypt,
+                cacheOperation.compress
+        )?.also {
             val hash = instructionToken.getKey(hasher)
             val values = HashMap<String, Any>()
+            val now = System.currentTimeMillis()
 
-            values[COLUMN_CACHE_TOKEN] = hash
-            values[COLUMN_CACHE_DATE] = instructionToken.cacheDate!!.time
-            values[COLUMN_CACHE_EXPIRY_DATE] = instructionToken.expiryDate!!.time
-            values[COLUMN_CACHE_DATA] = it
+            values[TOKEN.columnName] = hash
+            values[DATE.columnName] = now
+            values[EXPIRY_DATE.columnName] = now + operation.durationInMillis
+            values[DATA.columnName] = it
+            values[IS_COMPRESSED.columnName] = if (cacheOperation.compress) 1 else 0
+            values[IS_ENCRYPTED.columnName] = if (cacheOperation.encrypt) 1 else 0
 
             db.insertWithOnConflict(
                     TABLE_CACHE,
@@ -185,7 +194,9 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                     contentValuesFactory(values),
                     CONFLICT_REPLACE
             )
-        } ?: logger.e(this, "Could not serialise and store data for $simpleName")
+        } ?: logger.e("Could not serialise and store data for $simpleName")
+
+        it.onComplete()
     }
 
     companion object {

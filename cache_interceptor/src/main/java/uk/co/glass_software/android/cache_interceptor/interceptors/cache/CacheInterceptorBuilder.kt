@@ -1,18 +1,15 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.support.annotation.RestrictTo
-import android.support.annotation.VisibleForTesting
-
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.google.gson.Gson
-
-import java.util.Date
-
+import io.requery.android.database.sqlite.SQLiteDatabase
+import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
-import uk.co.glass_software.android.shared_preferences.utils.Logger
+import java.util.*
+
 
 class CacheInterceptorBuilder<E> internal constructor()
         where E : Exception,
@@ -22,20 +19,9 @@ class CacheInterceptorBuilder<E> internal constructor()
     private var logger: Logger? = null
     private var gson: Gson? = null
 
-    fun gson(gson: Gson): CacheInterceptorBuilder<E> {
-        this.gson = gson
-        return this
-    }
-
-    fun databaseName(databaseName: String): CacheInterceptorBuilder<E> {
-        this.databaseName = databaseName
-        return this
-    }
-
-    fun logger(logger: Logger): CacheInterceptorBuilder<E> {
-        this.logger = logger
-        return this
-    }
+    fun gson(gson: Gson) = apply { this.gson = gson }
+    fun databaseName(databaseName: String) = apply { this.databaseName = databaseName }
+    fun logger(logger: Logger) = apply { this.logger = logger }
 
     //Used for unit testing
     @VisibleForTesting
@@ -57,28 +43,17 @@ class CacheInterceptorBuilder<E> internal constructor()
         return values
     }
 
-    @SuppressLint("RestrictedApi")
-    @JvmOverloads
-    fun build(context: Context,
-              compressData: Boolean = false,
-              encryptData: Boolean = false) = build(
-            context,
-            compressData,
-            encryptData,
-            null
-    )
-
-    @RestrictTo(RestrictTo.Scope.TESTS)
     internal fun build(context: Context,
-                       compressData: Boolean,
-                       encryptData: Boolean,
-                       holder: Holder<E>?): CacheInterceptor.Factory<E> {
+                       holder: Holder<E>? = null): CacheInterceptor.Factory<E> {
         val gson = gson ?: Gson()
 
         val logger = this.logger ?: object : Logger {
-            override fun e(caller: Any, t: Throwable, message: String) {}
-            override fun e(caller: Any, message: String) {}
-            override fun d(caller: Any, message: String) {}
+            override fun d(message: String) = Unit
+            override fun d(tag: String, message: String) = Unit
+            override fun e(message: String) = Unit
+            override fun e(tag: String, message: String) = Unit
+            override fun e(tag: String, t: Throwable, message: String?) = Unit
+            override fun e(t: Throwable, message: String?) = Unit
         }
 
         val storeEntryFactory = StoreEntryFactory.builder(context)
@@ -89,8 +64,6 @@ class CacheInterceptorBuilder<E> internal constructor()
         val serialisationManager = SerialisationManager<E>(
                 logger,
                 storeEntryFactory,
-                encryptData,
-                compressData,
                 gson
         )
 
@@ -99,7 +72,7 @@ class CacheInterceptorBuilder<E> internal constructor()
                 databaseName ?: DATABASE_NAME
         ).writableDatabase
 
-        val dateFactory: (Long?) -> Date = { it?.let { Date(it) } ?: Date() }
+        val dateFactory = { timeStamp: Long? -> timeStamp?.let { Date(it) } ?: Date() }
 
         val databaseManager = DatabaseManager(
                 database,
@@ -109,7 +82,7 @@ class CacheInterceptorBuilder<E> internal constructor()
                 this::mapToContentValues
         )
 
-        val cacheManager = CacheManager<E>(
+        val cacheManager = CacheManager(
                 databaseManager,
                 dateFactory,
                 gson,

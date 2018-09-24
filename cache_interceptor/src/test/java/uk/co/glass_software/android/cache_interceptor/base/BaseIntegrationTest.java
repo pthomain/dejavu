@@ -13,6 +13,7 @@ import java.io.IOException;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import uk.co.glass_software.android.boilerplate.log.Logger;
 import uk.co.glass_software.android.cache_interceptor.BuildConfig;
 import uk.co.glass_software.android.cache_interceptor.base.network.MockClient;
 import uk.co.glass_software.android.cache_interceptor.base.network.retrofit.TestClient;

@@ -1,39 +1,44 @@
 package uk.co.glass_software.android.cache_interceptor.annotations
 
+import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper.RxType.*
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 
 internal class AnnotationHelper {
 
+    enum class RxType {
+        OBSERVABLE,
+        SINGLE,
+        COMPLETABLE
+    }
+
     fun process(annotations: Array<Annotation>,
-                isSingle: Boolean,
+                rxType: RxType,
                 responseClass: Class<*>): CacheInstruction? {
         var instruction: CacheInstruction? = null
 
-        annotations.forEach {
-            when (it) {
-                is Cache -> instruction = getInstruction(
+        annotations.forEach { annotation ->
+            when (annotation) {
+                is Cache -> CACHE
+                is Refresh -> REFRESH
+                is Clear -> CLEAR
+                is ClearAll -> CLEAR_ALL
+                else -> null
+            }?.let { operation ->
+                instruction = getInstruction(
                         instruction,
-                        isSingle,
+                        rxType,
                         responseClass,
-                        Operation.Type.CACHE,
-                        it
+                        operation,
+                        annotation
                 )
+            }
+        }
 
-                is Refresh -> instruction = getInstruction(
-                        instruction,
-                        isSingle,
-                        responseClass,
-                        Operation.Type.REFRESH,
-                        it
-                )
-
-                is Clear -> instruction = getInstruction(
-                        instruction,
-                        isSingle,
-                        responseClass,
-                        Operation.Type.CLEAR,
-                        it
-                )
+        instruction?.let {
+            val operation = it.operation.type
+            if (rxType == COMPLETABLE && operation != CLEAR && operation != CLEAR_ALL) {
+                throw CacheInstructionException("Only @Clear or @ClearAll annotations can be used with Completable")
             }
         }
 
@@ -42,13 +47,17 @@ internal class AnnotationHelper {
 
     @Throws(CacheInstructionException::class)
     private fun getInstruction(currentInstruction: CacheInstruction?,
-                               isSingle: Boolean,
+                               rxType: RxType,
                                responseClass: Class<*>,
                                foundOperation: Operation.Type,
                                annotation: Annotation): CacheInstruction? {
         if (currentInstruction != null) {
             val responseClassName = responseClass.simpleName
-            val signature = if (isSingle) "Single<$responseClassName>" else "Observable<$responseClassName>"
+            val signature = when (rxType) {
+                OBSERVABLE -> "Observable<$responseClassName>"
+                SINGLE -> "Single<$responseClassName>"
+                COMPLETABLE -> "Completable"
+            }
 
             throw CacheInstructionException("More than one cache annotation defined for method returning $signature, " +
                     "found ${getAnnotationName(foundOperation)} after existing annotation ${getAnnotationName(currentInstruction.operation.type)}. " +
@@ -58,32 +67,41 @@ internal class AnnotationHelper {
         return when (annotation) {
             is Cache -> CacheInstruction(
                     responseClass,
-                    Operation.Cache(
+                    Operation.Expiring.Cache(
+                            annotation.durationInMillis,
                             annotation.freshOnly,
-                            annotation.duration,
+                            annotation.mergeOnNextOnError,
                             annotation.encrypt,
                             annotation.compress
-                    ),
-                    annotation.mergeOnNextOnError
+                    )
             )
 
             is Refresh -> CacheInstruction(
                     responseClass,
-                    Operation.Refresh(
+                    Operation.Expiring.Refresh(
+                            annotation.durationInMillis,
+                            annotation.mergeOnNextOnError,
                             annotation.freshOnly
-                    ),
-                    annotation.mergeOnNextOnError
+                    )
             )
 
             is Clear -> {
                 CacheInstruction(
-                        responseClass,
+                        annotation.typeToClear.java,
                         Operation.Clear(
                                 annotation.typeToClear.java,
-                                annotation.clearOldEntriesOnly,
-                                annotation.clearEntireCache
-                        ),
-                        annotation.mergeOnNextOnError
+                                annotation.clearOldEntriesOnly
+                        )
+                )
+            }
+
+            is ClearAll -> {
+                CacheInstruction(
+                        responseClass,
+                        Operation.Clear(
+                                null,
+                                annotation.clearOldEntriesOnly
+                        )
                 )
             }
 
@@ -92,9 +110,10 @@ internal class AnnotationHelper {
     }
 
     private fun getAnnotationName(foundOperation: Operation.Type): String = when (foundOperation) {
-        Operation.Type.CACHE -> "@Cache"
-        Operation.Type.REFRESH -> "@Refresh"
-        Operation.Type.CLEAR -> "@Clear"
+        CACHE -> "@Cache"
+        REFRESH -> "@Refresh"
+        CLEAR -> "@Clear"
+        CLEAR_ALL -> "@ClearAll"
         else -> ""
     }
 

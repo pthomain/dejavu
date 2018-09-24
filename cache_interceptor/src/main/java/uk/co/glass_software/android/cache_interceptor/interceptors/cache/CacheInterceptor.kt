@@ -1,25 +1,20 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
+import io.reactivex.*
 import io.reactivex.Observable
-import io.reactivex.ObservableSource
-import io.reactivex.ObservableTransformer
-import uk.co.glass_software.android.cache_interceptor.R
+import uk.co.glass_software.android.boilerplate.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.CACHE
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
-import uk.co.glass_software.android.shared_preferences.utils.Logger
 import java.util.*
 
-class CacheInterceptor<E> internal constructor(private val cacheManager: CacheManager<E>,
+internal class CacheInterceptor<E> constructor(private val cacheManager: CacheManager<E>,
                                                private val isCacheEnabled: Boolean,
                                                private val logger: Logger,
-                                               private val instructionToken: CacheToken,
-                                               private val apiUrl: String,
-                                               private val body: String?)
+                                               private val instructionToken: CacheToken)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : (E) -> Boolean {
@@ -32,46 +27,52 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
             when (instruction.operation) {
                 is Expiring -> cacheManager.getCachedResponse(
                         upstream,
-                        instruction,
+                        instructionToken,
                         instruction.operation,
-                        apiUrl,
-                        body,
                         isNetworkError
                 )
-                is CacheInstruction.Operation.Clear -> doNotCache(upstream) //TODO
-                is CacheInstruction.Operation.DoNotCache -> doNotCache(upstream)
+                else -> doNotCache(instructionToken, upstream)
             }
-        } else doNotCache(upstream)
+        } else doNotCache(instructionToken, upstream)
 
         return observable.doOnNext { wrapper ->
-            val instructionToken = CacheToken.fromInstruction(
-                    instruction,
-                    apiUrl,
-                    body
-            )
-            if (wrapper.metadata!!.cacheToken!!.instruction.operation === DoNotCache) {
-                wrapper.metadata = wrapper.metadata!!.copy(
+            val metadata = wrapper.metadata!!
+            if (metadata.cacheToken.instruction.operation === DoNotCache) {
+                wrapper.metadata = metadata.copy(
                         cacheToken = CacheToken.notCached(
                                 instructionToken,
                                 Date()
                         )
                 )
             }
-            logger.d(this, "Returning: $instructionToken")
+            logger.d("Returning: $instructionToken")
         }
     }
 
+    fun complete() = (
+            if (isCacheEnabled && instructionToken.instruction.operation is Operation.Clear)
+                clear(instructionToken.instruction.operation)
+            else
+                Completable.complete()
+            )!!
+
+    private fun clear(operation: Operation.Clear) =
+        cacheManager.clearCache(
+                operation.typeToClear,
+                operation.clearOldEntriesOnly
+        )
+
+
     private fun doNotCache(instructionToken: CacheToken,
-                           upstream: Observable<ResponseWrapper<E>>): Observable<ResponseWrapper<E>> {
-        return upstream.doOnNext { responseWrapper ->
-            responseWrapper.metadata = CacheMetadata(
-                    CacheToken.notCached(
-                            instructionToken,
-                            Date()
-                    )
-            )
-        }
-    }
+                           upstream: Observable<ResponseWrapper<E>>) =
+            upstream.doOnNext { responseWrapper ->
+                responseWrapper.metadata = CacheMetadata(
+                        CacheToken.notCached(
+                                instructionToken,
+                                Date()
+                        )
+                )
+            }
 
     class Factory<E> internal constructor(private val cacheManager: CacheManager<E>,
                                           private val isCacheEnabled: Boolean,
@@ -79,7 +80,7 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
             where E : Exception,
                   E : (E) -> Boolean {
 
-        fun create(instructionToken: CacheToken) = CacheInterceptor<E>(
+        fun create(instructionToken: CacheToken) = CacheInterceptor(
                 cacheManager,
                 isCacheEnabled,
                 logger,
@@ -90,8 +91,6 @@ class CacheInterceptor<E> internal constructor(private val cacheManager: CacheMa
     companion object {
         fun <E> builder(): CacheInterceptorBuilder<E>
                 where E : Exception,
-                      E : (E) -> Boolean {
-            return CacheInterceptorBuilder()
-        }
+                      E : (E) -> Boolean = CacheInterceptorBuilder()
     }
 }

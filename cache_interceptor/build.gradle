@@ -1,16 +1,12 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'com.github.dcendents.android-maven'
 group = 'com.github.pthomain'
-
-retrolambda {
-    jvmArgs '-noverify'
-    defaultMethods true
-    incremental false
-}
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
@@ -27,13 +23,18 @@ android {
     }
 
     buildTypes {
-        release {
+        debug{
             minifyEnabled false
+            multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
+        }
+
+        release {
+            minifyEnabled true
             multiDexEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
     }
-
 
     packagingOptions {
         exclude 'META-INF/services/javax.annotation.processing.Processor'
@@ -48,6 +49,8 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/eclipse.inf'
+        exclude 'META-INF/index.list'
+        exclude 'META-INF/INDEX.LIST'
         exclude 'about_files/LICENSE-2.0.txt'
         exclude 'plugin.xml'
         exclude 'plugin.properties'
@@ -67,7 +70,11 @@ android {
         unitTests.returnDefaultValues = true
     }
 
-    publishNonDefault true
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
 }
 
 sourceSets {
@@ -81,38 +88,57 @@ sourceSets {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 dependencies {
+    implementation 'com.github.jitpack:gradle-simple:1.0'
+    implementation "com.android.support:multidex:$multidexVersion"
 
-    provided "javax.annotation:jsr250-api:$jsr250Version"
-    implementation "com.android.support:support-annotations:$supportLibVersion"
-    api 'com.github.pthomain:SharedPreferenceStore:1.0.9'
+    compileOnly "javax.annotation:jsr250-api:$jsr250Version"
+    implementation "androidx.annotation:annotation:$supportLibVersion"
 
-    api "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
+    api "com.github.pthomain:SharedPreferenceStore:$sharedPrefStoreVersion"
+    api "com.github.pthomain:boilerplate:$boilerplateVersion"
+
+    implementation "com.google.dagger:dagger:$daggerVersion"
+    kapt "com.google.dagger:dagger-compiler:$daggerVersion"
+
     api "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+    api "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion"
+    api "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
 
-    implementation "org.apache.commons:commons-lang3:3.3.2"
-    implementation "com.android.support:support-compat:$supportLibVersion"
+    api "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
-    implementation 'org.iq80.snappy:snappy:0.3'
-    implementation 'net.bytebuddy:byte-buddy:1.8.13'
+    implementation "org.apache.commons:commons-lang3:$apacheCommonsVersion"
+    implementation "androidx.core:core:$supportLibVersion"
+    implementation "androidx.multidex:multidex:$multidexVersion"
+    implementation "org.iq80.snappy:snappy:$snappyVersion"
+    implementation "io.requery:sqlite-android:$requeryVersion"
 
     api "com.squareup.retrofit2:retrofit:$retrofitVersion"
     api "com.squareup.retrofit2:converter-gson:$retrofitVersion"
     api "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
 
-    api "com.google.code.gson:gson:2.8.2"
+    api "com.google.code.gson:gson:$gsonVersion"
 
-    provided "junit:junit:$jUnitVersion"
-    provided "org.mockito:mockito-core:$mockitoVersion"
-    provided "org.robolectric:robolectric:3.4.2"
-    provided "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+    compileOnly "junit:junit:$jUnitVersion"
+    compileOnly "org.mockito:mockito-core:$mockitoVersion"
+    compileOnly "org.robolectric:robolectric:$robolectricVersion"
+    compileOnly "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
 
     testImplementation "junit:junit:$jUnitVersion"
     testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "org.robolectric:robolectric:3.4.2"
+    testImplementation "org.robolectric:robolectric:$robolectricVersion"
     testImplementation "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 }
 
 repositories {

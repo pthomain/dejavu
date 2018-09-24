@@ -4,8 +4,6 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Clear(val typeToClear: KClass<*> = Any::class,
-                       val clearOldEntriesOnly: Boolean = false,
-                       val clearEntireCache: Boolean = false,
-                       val mergeOnNextOnError: Boolean = false)
+annotation class Clear(val typeToClear: KClass<*>,
+                       val clearOldEntriesOnly: Boolean = false)
 

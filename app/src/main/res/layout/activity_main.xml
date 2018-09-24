@@ -20,7 +20,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Load a joke"
+            android:text="Load a cat fact"
             android:textSize="11sp"/>
 
         <Button
@@ -108,19 +108,10 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/joke"
+        android:id="@+id/fact"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textStyle="italic"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_marginTop="5dp"
-        android:text="DISCLAIMER: These jokes are coming randomly from a third-party API"
-        android:textSize="9sp"
         android:textStyle="italic"/>
 
     <ExpandableListView
@@ -147,13 +138,13 @@
             android:text="View this library on"
             android:textColor="@android:color/white"/>
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:tint="@android:color/white"
             app:srcCompat="@drawable/ic_github_mark"/>
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="82dp"
             android:layout_height="24dp"
             android:layout_marginLeft="-8dp"
