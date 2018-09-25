@@ -1,9 +1,8 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import com.google.gson.*
-import com.google.gson.reflect.TypeToken
+import com.google.gson.Gson
 import org.iq80.snappy.Snappy
-import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory

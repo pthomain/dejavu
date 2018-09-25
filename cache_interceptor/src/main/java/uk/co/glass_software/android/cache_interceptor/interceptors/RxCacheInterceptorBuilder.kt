@@ -3,8 +3,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors
 import android.content.Context
 import com.google.gson.Gson
 import uk.co.glass_software.android.boilerplate.Boilerplate
-import uk.co.glass_software.android.boilerplate.log.Logger
-import uk.co.glass_software.android.boilerplate.log.SimpleLogger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.BuildConfig
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptorBuilder.Companion.DATABASE_NAME
