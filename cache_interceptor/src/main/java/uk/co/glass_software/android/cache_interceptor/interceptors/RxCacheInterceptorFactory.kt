@@ -1,6 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
-import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor

@@ -4,7 +4,7 @@ import android.content.Context
 import com.google.gson.Gson
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.Boilerplate
-import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.BuildConfig
 import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor

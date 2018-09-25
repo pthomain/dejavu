@@ -1,13 +1,12 @@
 package uk.co.glass_software.android.cache_interceptor.demo.retrofit
 
 import android.content.Context
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.io
 import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
@@ -47,8 +46,6 @@ class RetrofitDemoPresenter(context: Context,
             else catFactClient.get()
             )!!
 
-    override fun clearEntries() = catFactClient.clearCache()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())!!
+    override fun clearEntries() = catFactClient.clearCache().io()
 
 }

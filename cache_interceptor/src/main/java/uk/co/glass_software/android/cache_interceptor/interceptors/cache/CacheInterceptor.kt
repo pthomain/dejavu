@@ -1,9 +1,10 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.cache
 
-import io.reactivex.*
+import io.reactivex.Completable
 import io.reactivex.Observable
-import uk.co.glass_software.android.boilerplate.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import io.reactivex.ObservableSource
+import io.reactivex.ObservableTransformer
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring

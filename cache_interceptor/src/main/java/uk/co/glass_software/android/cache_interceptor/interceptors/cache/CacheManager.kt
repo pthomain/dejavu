@@ -4,9 +4,9 @@ import androidx.annotation.VisibleForTesting
 import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
-import uk.co.glass_software.android.boilerplate.io
-import uk.co.glass_software.android.boilerplate.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.On
+import uk.co.glass_software.android.boilerplate.utils.rx.schedule
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
@@ -30,7 +30,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                     databaseManager.clearCache()
                 }
                 it.onComplete()
-            }.io()
+            }!!
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
@@ -149,7 +149,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         }
 
         return Observable.just(Observable.just(cachedResponse), fetchAndCache)
-                .concatMap { observable -> observable.subscribeOn(Schedulers.io()) }
+                .concatMap { observable -> observable.schedule(On.Io, On.Trampoline) }
                 as Observable<ResponseWrapper<E>>
     }
 
