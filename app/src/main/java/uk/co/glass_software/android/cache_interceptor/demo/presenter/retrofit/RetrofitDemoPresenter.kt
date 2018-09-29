@@ -1,28 +1,29 @@
-package uk.co.glass_software.android.cache_interceptor.demo.retrofit
+package uk.co.glass_software.android.cache_interceptor.demo.presenter.retrofit
 
-import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.io
-import uk.co.glass_software.android.cache_interceptor.demo.DemoPresenter
+import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 
-class RetrofitDemoPresenter(context: Context,
-                            onLogOutput: (String) -> Unit)
-    : DemoPresenter(context, onLogOutput) {
+internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
+                                     uiLogger: Logger)
+    : BaseDemoPresenter(demoActivity) {
 
     private val adapterFactory = RetrofitCacheAdapterFactory
             .builder(context, ApiErrorFactory())
-            .timeOutInSeconds(15)
+            .timeOutInSeconds(10)
             .logger(uiLogger)
             .build()
 
     private val retrofit = Retrofit.Builder()
-            .baseUrl(DemoPresenter.BASE_URL)
+            .baseUrl(BaseDemoPresenter.BASE_URL)
             .client(getOkHttpClient(uiLogger))
             .addConverterFactory(GsonConverterFactory.create(gson))
             .addCallAdapterFactory(adapterFactory)

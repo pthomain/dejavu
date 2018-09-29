@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import io.reactivex.Observable
+import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus
@@ -17,33 +17,35 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 internal class ExpandableListAdapter(context: Context,
-                                     private val factCallback: (String) -> Unit,
-                                     private val onComplete: () -> Unit)
+                                     private val factCallback: (String) -> Unit)
     : BaseExpandableListAdapter() {
+
+    private val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+    private val simpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss")
 
     private val headers: LinkedList<String> = LinkedList()
     private val logs: LinkedList<String> = LinkedList()
     private val children: LinkedHashMap<String, List<String>> = LinkedHashMap()
-    private val inflater: LayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-    private val simpleDateFormat: SimpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss")
 
-    fun loadCatFact(observable: Observable<out CatFactResponse>) {
+    private var callStart = 0L
+
+    fun onStart() {
         headers.clear()
         children.clear()
         logs.clear()
-        val start = System.currentTimeMillis()
-        observable.doOnComplete { onComplete(start) }
-                .subscribe { onCatFactReady(start, it) }
+
+        callStart = System.currentTimeMillis()
+
+        notifyDataSetChanged()
     }
 
-    private fun onCatFactReady(start: Long,
-                               catFactResponse: CatFactResponse) {
+    fun showCatFact(catFactResponse: CatFactResponse) {
         val metadata = catFactResponse.metadata!!
         val cacheToken = metadata.cacheToken
         val exception = metadata.exception
         val operation = cacheToken.instruction.operation.type
 
-        val elapsed = "${operation.name} -> ${cacheToken.status} (${System.currentTimeMillis() - start}ms)"
+        val elapsed = "${operation.name} -> ${cacheToken.status} (${metadata.callDuration}ms)"
         val info = ArrayList<String>()
         val header: String
 
@@ -79,6 +81,13 @@ internal class ExpandableListAdapter(context: Context,
         notifyDataSetChanged()
     }
 
+    fun onComplete() {
+        val header = "Log output (total: " + (System.currentTimeMillis() - callStart) + "ms)"
+        headers.add(header)
+        children[header] = logs
+        notifyDataSetChanged()
+    }
+
     private fun getOrigin(status: CacheStatus) =
             when (status) {
                 INSTRUCTION -> "instruction"
@@ -92,14 +101,6 @@ internal class ExpandableListAdapter(context: Context,
 
     fun log(output: String) {
         logs.addLast(output)
-    }
-
-    private fun onComplete(start: Long) {
-        val header = "Log output (total: " + (System.currentTimeMillis() - start) + "ms)"
-        headers.add(header)
-        children[header] = logs
-        notifyDataSetChanged()
-        onComplete()
     }
 
     override fun getChild(groupPosition: Int,

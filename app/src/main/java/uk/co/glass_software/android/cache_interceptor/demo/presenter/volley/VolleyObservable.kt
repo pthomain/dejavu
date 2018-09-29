@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.cache_interceptor.demo.volley
+package uk.co.glass_software.android.cache_interceptor.demo.presenter.volley
 
 import com.android.volley.Request
 import com.android.volley.RequestQueue
@@ -7,7 +7,6 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
 import io.reactivex.Observer
 import io.reactivex.subjects.PublishSubject
 

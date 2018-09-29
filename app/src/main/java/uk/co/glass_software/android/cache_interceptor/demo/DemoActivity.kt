@@ -1,88 +1,104 @@
 package uk.co.glass_software.android.cache_interceptor.demo
 
 import android.content.Context
+import android.database.DataSetObserver
 import android.net.Uri
 import android.os.Bundle
-import androidx.browser.customtabs.CustomTabsIntent
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.widget.Button
 import android.widget.ExpandableListView
-import android.widget.RadioButton
 import android.widget.TextView
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
-import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.RETROFIT
-import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity.Method.VOLLEY
-import uk.co.glass_software.android.cache_interceptor.demo.retrofit.RetrofitDemoPresenter
-import uk.co.glass_software.android.cache_interceptor.demo.volley.VolleyDemoPresenter
+import uk.co.glass_software.android.boilerplate.ui.mvp.MvpActivity
+import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
+import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoMvpView
+import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoPresenter
+import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewModule
+import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.RETROFIT
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.VOLLEY
+import javax.inject.Inject
 
 
-class DemoActivity : AppCompatActivity() {
+internal class DemoActivity
+    : MvpActivity<DemoMvpView, DemoPresenter, DemoMvpContract.DemoViewComponent>(),
+        DemoMvpView,
+        (String) -> Unit {
 
-    private var method = RETROFIT
-
-    private lateinit var loadButton: Button
-    private lateinit var refreshButton: Button
-    private lateinit var clearButton: Button
-
-    private lateinit var retrofitDemoPresenter: DemoPresenter
-    private lateinit var volleyDemoPresenter: DemoPresenter
     private lateinit var listAdapter: ExpandableListAdapter
 
-    private val demoPresenter: DemoPresenter
-        get() {
-            return when (method) {
-                RETROFIT -> retrofitDemoPresenter
-                VOLLEY -> volleyDemoPresenter
-            }
-        }
+    private val loadButton by lazy { findViewById<View>(R.id.load_button)!! }
+    private val refreshButton by lazy { findViewById<View>(R.id.refresh_button)!! }
+    private val clearButton by lazy { findViewById<View>(R.id.clear_button)!! }
+    private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
+
+    private val retrofitRadio by lazy { findViewById<View>(R.id.radio_button_retrofit)!! }
+    private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
+
+    private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
+    private val list by lazy { findViewById<ExpandableListView>(R.id.result)!! }
+
+    @Inject
+    lateinit var presenterSwitcher: Callback1<Method>
+
+    override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
+            .builder()
+            .demoViewModule(DemoViewModule(this, this))
+            .build()!!
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         MultiDex.install(this)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        loadButton = findViewById(R.id.load_button)
-        refreshButton = findViewById(R.id.refresh_button)
-        clearButton = findViewById(R.id.clear_button)
-
-        loadButton.setOnClickListener { _ -> onButtonClick(false) }
-        refreshButton.setOnClickListener { _ -> onButtonClick(true) }
-        clearButton.setOnClickListener { _ ->
-            setButtonsEnabled(false)
-            demoPresenter.clearEntries().subscribe { setButtonsEnabled(true) }
-        }
-
-        findViewById<View>(R.id.github).setOnClickListener { _ -> openGithub() }
-
-        val retrofitRadioButton = findViewById<RadioButton>(R.id.radio_button_retrofit)
-        val volleyRadioButton = findViewById<RadioButton>(R.id.radio_button_volley)
-
-        retrofitRadioButton.setOnClickListener { _ -> method = RETROFIT }
-        volleyRadioButton.setOnClickListener { _ -> method = VOLLEY }
-
-        val catFactView = findViewById<TextView>(R.id.fact)
-        listAdapter = ExpandableListAdapter(
-                this,
-                { text: CharSequence -> catFactView.text = text },
-                { setButtonsEnabled(true) }
-        )
-
-        retrofitDemoPresenter = RetrofitDemoPresenter(this) { listAdapter.log(it) }
-        volleyDemoPresenter = VolleyDemoPresenter(this) { listAdapter.log(it) }
-
-        val result = findViewById<ExpandableListView>(R.id.result)
-        result.setAdapter(listAdapter)
-        listAdapter.notifyDataSetChanged()
+    override fun invoke(p1: String) {
+        listAdapter.log(p1)
     }
 
-    private fun onButtonClick(isRefresh: Boolean) {
-        setButtonsEnabled(false)
-        listAdapter.loadCatFact(demoPresenter.loadResponse(isRefresh))
+    override fun onCreateMvpView(savedInstanceState: Bundle?) {
+        setContentView(R.layout.activity_main)
+
+        loadButton.setOnClickListener { getPresenter().loadCatFact(false) }
+        refreshButton.setOnClickListener { getPresenter().loadCatFact(true) }
+        clearButton.setOnClickListener { getPresenter().clearEntries() }
+
+        gitHubButton.setOnClickListener { openGithub() }
+        retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
+        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
+
+        listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
+        list.setAdapter(listAdapter)
+
+        listAdapter.registerDataSetObserver(object : DataSetObserver() {
+            override fun onInvalidated() {
+                onChanged()
+            }
+
+            override fun onChanged() {
+                for (x in 0 until listAdapter.groupCount - 1) {
+                    list.expandGroup(x)
+                }
+            }
+        })
+    }
+
+    override fun showCatFact(response: CatFactResponse) {
+        listAdapter.showCatFact(response)
+    }
+
+    override fun onCallStarted() {
+        list.post {
+            setButtonsEnabled(false)
+            listAdapter.onStart()
+        }
+    }
+
+    override fun onCallComplete() {
+        list.post {
+            setButtonsEnabled(true)
+            listAdapter.onComplete()
+        }
     }
 
     private fun setButtonsEnabled(isEnabled: Boolean) {
@@ -97,8 +113,4 @@ class DemoActivity : AppCompatActivity() {
         customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/RxCacheInterceptor"))
     }
 
-    private enum class Method {
-        RETROFIT,
-        VOLLEY
-    }
 }

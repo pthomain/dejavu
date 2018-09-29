@@ -4,6 +4,8 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 import io.reactivex.SingleTransformer
+import org.robolectric.internal.bytecode.RobolectricInternals.intercept
+import org.robolectric.shadows.ShadowMediaMetadataRetriever.addMetadata
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
@@ -17,11 +19,24 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
         where E : Exception,
               E : (E) -> Boolean {
 
-    override fun apply(upstream: Observable<ResponseWrapper<E>>) = upstream.flatMap(this::intercept)!!
+    override fun apply(upstream: Observable<ResponseWrapper<E>>): Observable<Any> {
+        var start = 0L
+        return upstream
+                .compose {
+                    it.doOnSubscribe { start = System.currentTimeMillis() }
+                            .doAfterNext { start = System.currentTimeMillis() }
+                }
+                .flatMap { this.intercept(it, start) }!!
+    }
 
-    override fun apply(upstream: Single<ResponseWrapper<E>>) = upstream.flatMapObservable(this::intercept).firstOrError()!!
+    override fun apply(upstream: Single<ResponseWrapper<E>>) =
+            upstream
+                    .toObservable()
+                    .compose(this)
+                    .firstOrError()!!
 
-    private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
+    private fun intercept(wrapper: ResponseWrapper<E>,
+                          start: Long): Observable<Any> {
         val response = wrapper.response
         val responseClass = wrapper.responseClass
         val metadata = wrapper.metadata!!
@@ -33,7 +48,8 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
                         it,
                         responseClass,
                         metadata,
-                        operation
+                        operation,
+                        start
                 )
                 Observable.just(it)
             } else {
@@ -53,10 +69,11 @@ internal class ResponseInterceptor<E>(private val logger: Logger)
     private fun addMetadata(response: Any,
                             responseClass: Class<*>,
                             metadata: CacheMetadata<E>,
-                            operation: CacheInstruction.Operation?) {
+                            operation: CacheInstruction.Operation?,
+                            start: Long) {
         val holder = response as? CacheMetadata.Holder<E>?
         if (holder != null) {
-            holder.metadata = metadata
+            holder.metadata = metadata.copy(callDuration = System.currentTimeMillis() - start)
         } else {
             logError(responseClass, operation)
         }

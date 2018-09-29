@@ -47,20 +47,25 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         hasher = CacheToken.getHasher(logger)
     }
 
-    fun clearOlderEntries() {
-        val date = (System.currentTimeMillis() + cleanUpThresholdInMillis).toString()
+    fun clearCache(typeToClear: Class<*>?,
+                   clearOlderEntriesOnly: Boolean) {
+        val date = System.currentTimeMillis().plus(cleanUpThresholdInMillis).toString()
+
+        val olderEntriesClause = if (clearOlderEntriesOnly) "${EXPIRY_DATE.columnName} < ?" else ""
+        val typeClause = typeToClear?.let { " AND ${CLASS.columnName} = ?" } ?: ""
+
+        val args = arrayListOf<String>().apply {
+            if (clearOlderEntriesOnly) add(date)
+            if (typeToClear != null) add(typeToClear.name)
+        }
+
         val deleted = db.delete(
                 TABLE_CACHE,
-                "${EXPIRY_DATE.columnName} < ?",
-                arrayOf(date)
+                olderEntriesClause + typeClause,
+                args.toArray()
         )
 
         logger.d("Cleared $deleted old ${if (deleted > 1) "entries" else "entry"} from HTTP cache")
-    }
-
-    fun clearCache() {
-        db.execSQL("DELETE FROM $TABLE_CACHE")
-        logger.d("Cleared entire HTTP cache")
     }
 
     fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
@@ -148,20 +153,20 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
                     instructionToken,
                     localData,
                     isEncrypted,
-                    isCompressed,
-                    this::clearCache
-            )?.also {
-                it.metadata = CacheMetadata(
-                        CacheToken.cached(
-                                instructionToken,
-                                cacheDate,
-                                expiryDate
-                        ),
-                        null
-                )
+                    isCompressed
+            ) { clearCache(null, false) }
+                    ?.also {
+                        it.metadata = CacheMetadata(
+                                CacheToken.cached(
+                                        instructionToken,
+                                        cacheDate,
+                                        expiryDate
+                                ),
+                                null
+                        )
 
-                logger.d("Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
-            }
+                        logger.d("Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
+                    }
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,
@@ -185,6 +190,7 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             values[DATE.columnName] = now
             values[EXPIRY_DATE.columnName] = now + operation.durationInMillis
             values[DATA.columnName] = it
+            values[CLASS.columnName] = instruction.responseClass.name
             values[IS_COMPRESSED.columnName] = if (cacheOperation.compress) 1 else 0
             values[IS_ENCRYPTED.columnName] = if (cacheOperation.encrypt) 1 else 0
 
@@ -197,7 +203,7 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         } ?: logger.e("Could not serialise and store data for $simpleName")
 
         it.onComplete()
-    }
+    }!!
 
     companion object {
         private const val DEFAULT_CLEANUP_THRESHOLD_IN_MINUTES = (7 * 24 * 60).toLong() // 1 week

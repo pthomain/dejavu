@@ -46,7 +46,7 @@ internal class SqlOpenHelper(context: Context,
     }
 
     companion object {
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 1
 
         const val TABLE_CACHE = "http_cache"
 
@@ -56,6 +56,7 @@ internal class SqlOpenHelper(context: Context,
             DATE("cache_date", "INTEGER"),
             EXPIRY_DATE("expiry_date", "INTEGER"),
             DATA("data", "NONE"),
+            CLASS("class", "TEXT"),
             IS_ENCRYPTED("is_encrypted", "INTEGER"),
             IS_COMPRESSED("is_compressed", "INTEGER");
         }

@@ -21,14 +21,10 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         where E : Exception,
               E : (E) -> kotlin.Boolean {
 
-    fun clearCache(typeToClear: Class<*>?, //TODO
+    fun clearCache(typeToClear: Class<*>?,
                    clearOlderEntriesOnly: Boolean) =
             Completable.create {
-                if (clearOlderEntriesOnly) {
-                    databaseManager.clearOlderEntries()
-                } else {
-                    databaseManager.clearCache()
-                }
+                databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
                 it.onComplete()
             }!!
 
