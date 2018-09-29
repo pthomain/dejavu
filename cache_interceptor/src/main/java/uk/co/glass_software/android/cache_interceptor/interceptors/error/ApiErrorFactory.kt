@@ -11,51 +11,45 @@ import java.util.concurrent.TimeoutException
 class ApiErrorFactory : (Throwable) -> ApiError {
 
     override fun invoke(throwable: Throwable) =
-            if (throwable is IOException
-                    || throwable is JsonParseException
-                    || throwable is TimeoutException)
-                getIoError(throwable)
-            else if (throwable is HttpException)
-                getHttpError(throwable)
-            else
-                ApiError.from(throwable) ?: getError(
-                        NON_HTTP_STATUS,
-                        UNKNOWN,
-                        throwable.javaClass.name
-                                + ": "
-                                + throwable.message,
-                        throwable
-                )
+            when (throwable) {
+                is IOException,
+                is JsonParseException,
+                is TimeoutException -> getIoError(throwable)
 
-    private fun getHttpError(throwable: HttpException) = getError(
-            throwable.code(),
-            parseErrorCode(throwable),
-            throwable.message(),
-            throwable
-    )
+                is HttpException -> getHttpError(throwable)
 
-    private fun getIoError(throwable: Throwable) =
-            getError(
-                    NON_HTTP_STATUS,
-                    if (throwable is MalformedJsonException || throwable is JsonParseException) UNEXPECTED_RESPONSE else NETWORK,
-                    throwable.message,
-                    throwable
+                else -> getDefaultError(throwable)
+            }
+
+    private fun getHttpError(throwable: HttpException) =
+            ApiError(
+                    throwable,
+                    throwable.code(),
+                    parseErrorCode(throwable),
+                    throwable.message()
             )
 
-    private fun getError(httpStatus: Int,
-                         errorCode: ErrorCode,
-                         rawDescription: String?,
-                         cause: Throwable) = ApiError(
-            cause,
-            httpStatus,
-            errorCode,
-            rawDescription
-    )
+    private fun getIoError(throwable: Throwable) =
+            ApiError(
+                    throwable,
+                    NON_HTTP_STATUS,
+                    if (throwable is MalformedJsonException || throwable is JsonParseException) UNEXPECTED_RESPONSE else NETWORK,
+                    throwable.message
+            )
+
+    private fun getDefaultError(throwable: Throwable) =
+            ApiError.from(throwable) ?: ApiError(
+                    throwable,
+                    NON_HTTP_STATUS,
+                    UNKNOWN,
+                    "${throwable.javaClass.name}: ${throwable.message}"
+            )
 
     private fun parseErrorCode(httpException: HttpException) =
             when (httpException.code()) {
                 401 -> UNAUTHORISED
                 404 -> NOT_FOUND
+                500 -> SERVER_ERROR
                 else -> UNKNOWN
             }
 }
