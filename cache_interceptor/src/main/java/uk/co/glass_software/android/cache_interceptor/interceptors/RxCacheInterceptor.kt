@@ -6,11 +6,13 @@ import io.reactivex.ObservableSource
 import io.reactivex.Single
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.ResponseInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
 
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
@@ -24,8 +26,10 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
         where E : Exception,
               E : NetworkErrorProvider {
 
-    private val instructionToken = CacheToken.fromInstruction(
+    private val instructionToken = fromInstruction(
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+            (instruction.operation as? Expiring)?.compress ?: false,
+            (instruction.operation as? Expiring)?.encrypt ?: false,
             url,
             uniqueParameters
     )

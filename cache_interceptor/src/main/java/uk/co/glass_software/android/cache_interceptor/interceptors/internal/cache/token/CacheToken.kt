@@ -10,6 +10,8 @@ import java.util.*
 
 data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
+                                           val isCompressed: Boolean,
+                                           val isEncrypted: Boolean,
                                            val apiUrl: String = "",
                                            val uniqueParameters: String? = null,
                                            val fetchDate: Date? = null,
@@ -21,10 +23,14 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
     companion object {
 
         internal fun fromInstruction(instruction: CacheInstruction,
+                                     isCompressed: Boolean,
+                                     isEncrypted: Boolean,
                                      apiUrl: String,
                                      uniqueParameters: String?) = CacheToken(
                 instruction,
                 INSTRUCTION,
+                isCompressed,
+                isEncrypted,
                 apiUrl,
                 uniqueParameters
         )
@@ -36,6 +42,8 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         )
 
         internal fun caching(instructionToken: CacheToken,
+                             isCompressed: Boolean,
+                             isEncrypted: Boolean,
                              fetchDate: Date,
                              cacheDate: Date,
                              expiryDate: Date) = instructionToken.copy(
@@ -46,9 +54,13 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         )
 
         internal fun cached(instructionToken: CacheToken,
+                            isCompressed: Boolean,
+                            isEncrypted: Boolean,
                             cacheDate: Date,
                             expiryDate: Date) = instructionToken.copy(
                 status = CACHED,
+                isCompressed = isCompressed,
+                isEncrypted = isEncrypted,
                 cacheDate = cacheDate,
                 fetchDate = cacheDate,
                 expiryDate = expiryDate
@@ -59,7 +71,8 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                             uniqueParameters: String?) =
                 apiUrl.hashCode().let {
                     try {
-                        uniqueParameters?.let { hasher.hash("$apiUrl$$uniqueParameters") } ?: hasher.hash(apiUrl)
+                        uniqueParameters?.let { hasher.hash("$apiUrl$$uniqueParameters") }
+                                ?: hasher.hash(apiUrl)
                     } catch (e: Exception) {
                         if (uniqueParameters == null) it.toString()
                         else (it * 7 + uniqueParameters.hashCode()).toString()

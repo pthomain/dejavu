@@ -159,6 +159,8 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                         it.metadata = CacheMetadata(
                                 CacheToken.cached(
                                         instructionToken,
+                                        isCompressed,
+                                        isEncrypted,
                                         cacheDate,
                                         expiryDate
                                 ),
@@ -170,7 +172,8 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,
-              response: ResponseWrapper<E>) = create {
+              response: ResponseWrapper<E>,
+              previousCachedResponse: ResponseWrapper<E>?) = create {
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Expiring
         val simpleName = instruction.responseClass.simpleName
@@ -178,8 +181,10 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
 
         logger.d("Caching $simpleName")
 
-        val encryptData = cacheOperation.encrypt ?: this.encryptData
-        val compressData = cacheOperation.compress ?: this.compressData
+        val (encryptData, compressData) = wasPreviouslyEncrypted(
+                previousCachedResponse,
+                cacheOperation
+        )
 
         serialisationManager.serialise(
                 response,
@@ -210,5 +215,22 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
 
         it.onComplete()
     }!!
+
+    internal fun wasPreviouslyEncrypted(previousCachedResponse: ResponseWrapper<E>?,
+                                        cacheOperation: Expiring): Pair<Boolean, Boolean> {
+        val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
+
+        return if (previousCacheToken != null) {
+            Pair(
+                    previousCacheToken.isEncrypted,
+                    previousCacheToken.isCompressed
+            )
+        } else {
+            Pair(
+                    cacheOperation.encrypt ?: this.encryptData,
+                    cacheOperation.compress ?: this.compressData
+            )
+        }
+    }
 
 }
