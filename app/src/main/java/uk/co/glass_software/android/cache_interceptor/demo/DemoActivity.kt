@@ -5,6 +5,7 @@ import android.database.DataSetObserver
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.CheckBox
 import android.widget.ExpandableListView
 import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
@@ -35,9 +36,9 @@ internal class DemoActivity
     private val retrofitRadio by lazy { findViewById<View>(R.id.radio_button_retrofit)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val freshOnlyCheckBox by lazy { findViewById<View>(R.id.checkbox_fresh_only)!! }
-    private val compressCheckBox by lazy { findViewById<View>(R.id.checkbox_compress)!! }
-    private val encryptCheckBox by lazy { findViewById<View>(R.id.checkbox_encrypt)!! }
+    private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
+    private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
+    private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
 
     private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
     private val list by lazy { findViewById<ExpandableListView>(R.id.result)!! }
@@ -74,9 +75,9 @@ internal class DemoActivity
         retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
 
-        freshOnlyCheckBox.setOnClickListener { encrypt = it.isSelected }
-        compressCheckBox.setOnClickListener { compress = it.isSelected }
-        encryptCheckBox.setOnClickListener { freshOnly = it.isSelected }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> freshOnly = isChecked }
+        compressCheckBox.setOnCheckedChangeListener { _, isChecked -> compress = isChecked }
+        encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> encrypt = isChecked }
 
         listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
         list.setAdapter(listAdapter)
@@ -109,6 +110,7 @@ internal class DemoActivity
 
     override fun onCallStarted() {
         list.post {
+            catFactView.text = ""
             setButtonsEnabled(false)
             listAdapter.onStart()
         }

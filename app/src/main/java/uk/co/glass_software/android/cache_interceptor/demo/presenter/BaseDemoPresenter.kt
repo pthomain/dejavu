@@ -28,7 +28,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                         .builder()
                         .gson(gson)
                         .mergeOnNextOnError(true)
-                        .networkTimeOutInSeconds(1)
+                        .networkTimeOutInSeconds(5)
                         .logger(uiLogger)
                         .build(demoActivity)
         )
