@@ -96,6 +96,7 @@ internal class ExpandableListAdapter(context: Context,
                 CACHED,
                 STALE,
                 COULD_NOT_REFRESH -> "disk"
+                EMPTY -> "network or disk"
             }
 
     fun log(output: String) {

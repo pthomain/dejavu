@@ -20,17 +20,19 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
-    protected val gson = Gson()
+    protected val gson by lazy { Gson() }
 
-    protected val rxCache = RxCache.build(
-            CacheConfiguration
-                    .builder()
-                    .gson(gson)
-                    .mergeOnNextOnError(true)
-                    .networkTimeOutInSeconds(10)
-                    .logger(uiLogger)
-                    .build(demoActivity)
-    )
+    protected val rxCache by lazy {
+        RxCache.build(
+                CacheConfiguration
+                        .builder()
+                        .gson(gson)
+                        .mergeOnNextOnError(true)
+                        .networkTimeOutInSeconds(1)
+                        .logger(uiLogger)
+                        .build(demoActivity)
+        )
+    }
 
     final override fun loadCatFact(isRefresh: Boolean,
                                    encrypt: Boolean,

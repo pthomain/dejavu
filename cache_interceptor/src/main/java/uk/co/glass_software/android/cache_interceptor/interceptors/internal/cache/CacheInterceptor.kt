@@ -6,7 +6,6 @@ import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -23,7 +22,6 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
               E : NetworkErrorProvider {
 
     override fun apply(upstream: Observable<ResponseWrapper<E>>): ObservableSource<ResponseWrapper<E>> {
-        val isNetworkError = { error: E -> error(error) }
         val instruction = instructionToken.instruction
 
         val observable = if (isCacheEnabled) {
@@ -31,25 +29,13 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                 is Expiring -> cacheManager.getCachedResponse(
                         upstream,
                         instructionToken,
-                        instruction.operation,
-                        isNetworkError
+                        instruction.operation
                 )
                 else -> doNotCache(instructionToken, upstream)
             }
         } else doNotCache(instructionToken, upstream)
 
-        return observable.doOnNext { wrapper ->
-            val metadata = wrapper.metadata!!
-            if (metadata.cacheToken.instruction.operation === DoNotCache
-                    || metadata.exception != null) {
-                wrapper.metadata = metadata.copy(
-                        cacheToken = CacheToken.notCached(
-                                instructionToken,
-                                Date()
-                        )
-                )
-            }
-        }.filter {
+        return observable.filter {
             val filterFinal = (instruction.operation as? Expiring)?.filterFinal ?: false
             !filterFinal || it.metadata!!.cacheToken.status.isFinal
         }
