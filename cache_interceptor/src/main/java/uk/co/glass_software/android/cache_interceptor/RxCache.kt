@@ -25,7 +25,7 @@ sealed class RxCache<E>(private val cacheConfiguration: CacheConfiguration<E>,
     )
 
     val retrofitCacheAdapterFactory: RetrofitCacheAdapterFactory<E> = component.retrofitCacheAdapterFactory()
-    val rxCacheAdapterFactory: RxCacheInterceptor.Factory<E> = component.rxCacheInterceptorFactory()
+    val rxCacheInterceptor: RxCacheInterceptor.Factory<E> = component.rxCacheInterceptorFactory()
 
     companion object {
 

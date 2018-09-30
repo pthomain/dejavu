@@ -7,19 +7,41 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.Boilerplate.logger
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.io
+import uk.co.glass_software.android.cache_interceptor.RxCache
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 
-internal abstract class BaseDemoPresenter protected constructor(demoActivity: DemoActivity)
-    : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
+internal abstract class BaseDemoPresenter protected constructor(demoActivity: DemoActivity,
+                                                                uiLogger: Logger
+) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
     protected val gson = Gson()
 
-    final override fun loadCatFact(isRefresh: Boolean) {
-        getResponseObservable(isRefresh)
+    protected val rxCache = RxCache.build(
+            CacheConfiguration
+                    .builder()
+                    .gson(gson)
+                    .mergeOnNextOnError(true)
+                    .networkTimeOutInSeconds(10)
+                    .logger(uiLogger)
+                    .build(demoActivity)
+    )
+
+    final override fun loadCatFact(isRefresh: Boolean,
+                                   encrypt: Boolean,
+                                   compress: Boolean,
+                                   freshOnly: Boolean) {
+        getResponseObservable(
+                isRefresh,
+                encrypt,
+                compress,
+                freshOnly
+        )
                 .io()
                 .doOnSubscribe { mvpView.onCallStarted() }
                 .doOnComplete(mvpView::onCallComplete)
@@ -40,7 +62,11 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
         subscriptions.clear()
     }
 
-    protected abstract fun getResponseObservable(isRefresh: Boolean): Observable<out CatFactResponse>
+    protected abstract fun getResponseObservable(isRefresh: Boolean,
+                                                 encrypt: Boolean,
+                                                 compress: Boolean,
+                                                 freshOnly: Boolean)
+            : Observable<out CatFactResponse>
 
     protected abstract fun getClearEntriesCompletable(): Completable
 

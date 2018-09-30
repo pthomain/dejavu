@@ -2,8 +2,10 @@ package uk.co.glass_software.android.cache_interceptor.demo
 
 import dagger.Component
 import uk.co.glass_software.android.boilerplate.ui.mvp.base.MvpContract.*
+import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewModule
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
 
 internal class DemoMvpContract {
 
@@ -17,12 +19,20 @@ internal class DemoMvpContract {
 
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
-        fun loadCatFact(isRefresh: Boolean)
+        fun loadCatFact(isRefresh: Boolean,
+                        encrypt: Boolean,
+                        compress: Boolean,
+                        freshOnly: Boolean)
+
         fun clearEntries()
 
     }
 
     @Component(modules = [DemoViewModule::class])
-    interface DemoViewComponent : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent>
+    interface DemoViewComponent : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent> {
+
+        fun presenterSwitcher(): Callback1<Method>
+
+    }
 
 }

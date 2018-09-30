@@ -77,7 +77,7 @@ public final class MockClient implements Interceptor {
     /**
      * Delegates call to MockClient for convenience
      *
-     * @param response the mocked HTTP response body
+     * @param response the mocked HTTP response uniqueParameters
      * @param httpCode the mocked HTTP response status code
      * @see MockClient#enqueueResponse(MockClient.ResponseWrapper)
      */

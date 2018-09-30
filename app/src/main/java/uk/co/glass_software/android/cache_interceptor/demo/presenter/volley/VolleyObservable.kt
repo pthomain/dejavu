@@ -9,6 +9,9 @@ import com.google.gson.Gson
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.subjects.PublishSubject
+import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheTransformer
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
 
 class VolleyObservable<E, R> private constructor(private val requestQueue: RequestQueue,
                                                  private val gson: Gson,
@@ -16,7 +19,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                                                  private val url: String)
     : Observable<R>()
         where E : Exception,
-              E : (E) -> Boolean {
+              E : NetworkErrorProvider {
 
     private val publishSubject: PublishSubject<R> = PublishSubject.create()
 
@@ -39,20 +42,34 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
         publishSubject.onError(volleyError)
     }
 
-//    companion object {
-//        fun <E, R> create(requestQueue: RequestQueue,
-//                          gson: Gson,
-//                          cacheInterceptor: RxCacheInterceptor<E>,
-//                          url: String)
-//                : Observable<R>
-//                where E : Exception,
-//                      E : (E) -> Boolean =
-//                VolleyObservable<E, R>(
-//                        requestQueue,
-//                        gson,
-//                        cacheInterceptor.responseClass as Class<R>,
-//                        url
-//                )
-//                        .compose(cacheInterceptor as ObservableTransformer<in R, out R>)
-//    }
+    companion object {
+
+        fun <E, R> create(requestQueue: RequestQueue,
+                          gson: Gson,
+                          responseClass: Class<R>,
+                          cacheInterceptor: RxCacheTransformer,
+                          url: String) where E : Exception,
+                                             E : NetworkErrorProvider =
+                VolleyObservable<E, R>(
+                        requestQueue,
+                        gson,
+                        responseClass,
+                        url
+                ).cast(Any::class.java)
+                        .compose(cacheInterceptor)
+                        .cast(responseClass)!!
+
+        fun <R> createDefault(requestQueue: RequestQueue,
+                              gson: Gson,
+                              responseClass: Class<R>,
+                              cacheInterceptor: RxCacheTransformer,
+                              url: String) =
+                create<ApiError, R>(
+                        requestQueue,
+                        gson,
+                        responseClass,
+                        cacheInterceptor,
+                        url
+                )
+    }
 }

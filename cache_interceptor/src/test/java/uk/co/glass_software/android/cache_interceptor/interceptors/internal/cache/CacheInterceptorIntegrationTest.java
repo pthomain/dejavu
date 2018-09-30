@@ -263,7 +263,7 @@ public class CacheInterceptorIntegrationTest extends BaseIntegrationTest {
         if (cacheToken.getStatus() != NOT_CACHED
             && cacheToken.getStatus() != DO_NOT_CACHE) {
             assertEquals("Cache token url didn't match", apiUrl, cacheToken.getApiUrl());
-            assertEquals("Body didn't match", body, cacheToken.getBody());
+            assertEquals("Body didn't match", body, cacheToken.getUniqueParameters());
             assertNotNull("Fetch date should not be null", cacheToken.getFetchDate());
             assertNotNull("Cache date should not be null", cacheToken.getCacheDate());
             assertNotNull("Expiry date should not be null", cacheToken.getExpiryDate());

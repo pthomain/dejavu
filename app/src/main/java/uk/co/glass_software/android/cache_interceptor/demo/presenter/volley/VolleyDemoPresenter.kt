@@ -2,53 +2,62 @@ package uk.co.glass_software.android.cache_interceptor.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import io.reactivex.Completable
-import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Clear
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Cache
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
-    : BaseDemoPresenter(demoActivity) {
+    : BaseDemoPresenter(demoActivity, uiLogger) {
 
-    //    private val rxCacheInterceptorFactory: RxCacheInterceptorFactory<ApiError> = RxCacheInterceptorFactory.buildDefault(context)
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
-
-    override fun getResponseObservable(isRefresh: Boolean): Observable<CatFactResponse> {
-//        val cacheOperation = CacheInstruction.Operation.Expiring.Cache()
-
-//        val instruction = CacheInstruction(
-//                CatFactResponse::class.java,
-//                cacheOperation,
-//                false
-//        )
-
-        return Observable.error(NoSuchElementException())
-//        return VolleyObservable.create(
-//                requestQueue,
-//                gson,
-//                rxCacheInterceptorFactory.create(
-//                        CatFactResponse::class.java,
-//                        instruction,
-//                        URL,
-//                        null
-//                ),
-//                URL
-//        )
-    }
-
-    override fun getClearEntriesCompletable(): Completable {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-    //    {
-//        rxCacheInterceptorFactory.clearOlderEntries()
-//    }
 
     companion object {
         private const val URL = BaseDemoPresenter.BASE_URL + BaseDemoPresenter.ENDPOINT
     }
+
+    override fun getResponseObservable(isRefresh: Boolean,
+                                       encrypt: Boolean,
+                                       compress: Boolean,
+                                       freshOnly: Boolean) =
+            when {
+                isRefresh -> Refresh(freshOnly = freshOnly)
+                else -> Cache(
+                        encrypt = encrypt,
+                        compress = compress,
+                        freshOnly = freshOnly
+                )
+            }.let { getObservableForOperation(it) }
+
+    override fun getClearEntriesCompletable() =
+            getObservableForOperation(Clear()).ignoreElements()!!
+
+
+    private fun getObservableForOperation(cacheOperation: Operation) =
+            CacheInstruction(
+                    CatFactResponse::class.java,
+                    cacheOperation
+            ).let { instruction ->
+                rxCache.rxCacheInterceptor.create(
+                        instruction,
+                        URL,
+                        null
+                )
+            }.let { interceptor ->
+                VolleyObservable.createDefault(
+                        requestQueue,
+                        gson,
+                        CatFactResponse::class.java,
+                        interceptor,
+                        URL
+                )
+            }
 
 }

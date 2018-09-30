@@ -14,37 +14,42 @@ data class CacheInstruction(val responseClass: Class<*>,
                               val mergeOnNextOnError: Boolean?,
                               val encrypt: Boolean?,
                               val compress: Boolean?,
+                              val filterFinal: Boolean,
                               type: Type) : Operation(type) {
 
-            class Cache(durationInMillis: Long?,
-                        freshOnly: Boolean,
-                        mergeOnNextOnError: Boolean?,
-                        encrypt: Boolean?,
-                        compress: Boolean?)
+            class Cache(durationInMillis: Long? = null,
+                        freshOnly: Boolean = false,
+                        mergeOnNextOnError: Boolean? = null,
+                        encrypt: Boolean? = null,
+                        compress: Boolean? = null,
+                        filterFinal: Boolean = false)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
                     mergeOnNextOnError,
                     encrypt,
                     compress,
+                    filterFinal,
                     CACHE
             )
 
-            class Refresh(durationInMillis: Long?,
-                          freshOnly: Boolean,
-                          mergeOnNextOnError: Boolean?)
+            class Refresh(durationInMillis: Long? = null,
+                          freshOnly: Boolean = false,
+                          mergeOnNextOnError: Boolean? = null,
+                          filterFinal: Boolean = false)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
                     mergeOnNextOnError,
                     null, //TODO keep settings from original cache call
                     null,
+                    filterFinal,
                     REFRESH
             )
         }
 
-        data class Clear(val typeToClear: Class<*>?,
-                         val clearOldEntriesOnly: Boolean) : Operation(CLEAR)
+        data class Clear(val typeToClear: Class<*>? = null,
+                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR)
 
         enum class Type {
             DO_NOT_CACHE,

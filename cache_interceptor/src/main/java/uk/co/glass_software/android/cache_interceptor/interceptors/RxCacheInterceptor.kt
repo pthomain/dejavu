@@ -15,7 +15,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.erro
 
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                                 url: String,
-                                                body: String?,
+                                                uniqueParameters: String?,
                                                 configuration: CacheConfiguration<E>,
                                                 private val responseInterceptor: ResponseInterceptor<E>,
                                                 private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
@@ -27,7 +27,7 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
     private val instructionToken = CacheToken.fromInstruction(
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             url,
-            body
+            uniqueParameters
     )
 
     override fun apply(observable: Observable<Any>): ObservableSource<Any> {
@@ -45,7 +45,6 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
     override fun apply(upstream: Completable) =
             cacheInterceptorFactory(instructionToken).complete()
 
-
     class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken) -> CacheInterceptor<E>,
                                           private val responseInterceptor: ResponseInterceptor<E>,
@@ -55,11 +54,11 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
 
         fun create(instruction: CacheInstruction,
                    url: String,
-                   body: String?) =
+                   uniqueParameters: String?) =
                 RxCacheInterceptor(
                         instruction,
                         url,
-                        body,
+                        uniqueParameters,
                         configuration,
                         responseInterceptor,
                         errorInterceptorFactory,

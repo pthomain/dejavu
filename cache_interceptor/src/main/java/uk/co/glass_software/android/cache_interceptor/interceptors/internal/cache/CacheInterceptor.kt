@@ -49,6 +49,9 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         )
                 )
             }
+        }.filter {
+            val filterFinal = (instruction.operation as? Expiring)?.filterFinal ?: false
+            !filterFinal || it.metadata!!.cacheToken.status.isFinal
         }
     }
 

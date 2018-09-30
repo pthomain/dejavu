@@ -18,7 +18,6 @@ import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.RETROFIT
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.VOLLEY
-import javax.inject.Inject
 
 
 internal class DemoActivity
@@ -43,13 +42,17 @@ internal class DemoActivity
     private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
     private val list by lazy { findViewById<ExpandableListView>(R.id.result)!! }
 
-    @Inject
-    lateinit var presenterSwitcher: Callback1<Method>
+    private var encrypt: Boolean = false
+    private var compress: Boolean = false
+    private var freshOnly: Boolean = false
+
+    private lateinit var presenterSwitcher: Callback1<Method>
 
     override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
             .builder()
             .demoViewModule(DemoViewModule(this, this))
-            .build()!!
+            .build()
+            .apply { presenterSwitcher = presenterSwitcher() }!!
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
@@ -63,16 +66,17 @@ internal class DemoActivity
     override fun onCreateMvpView(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_main)
 
-        loadButton.setOnClickListener { getPresenter().loadCatFact(false) }
-        refreshButton.setOnClickListener { getPresenter().loadCatFact(true) }
+        loadButton.setOnClickListener { loadCatFact(false) }
+        refreshButton.setOnClickListener { loadCatFact(true) }
         clearButton.setOnClickListener { getPresenter().clearEntries() }
 
         gitHubButton.setOnClickListener { openGithub() }
         retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
 
-        //TODO compress/encrypt override
-
+        freshOnlyCheckBox.setOnClickListener { encrypt = it.isSelected }
+        compressCheckBox.setOnClickListener { compress = it.isSelected }
+        encryptCheckBox.setOnClickListener { freshOnly = it.isSelected }
 
         listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
         list.setAdapter(listAdapter)
@@ -88,6 +92,15 @@ internal class DemoActivity
                 }
             }
         })
+    }
+
+    private fun loadCatFact(isRefresh: Boolean) {
+        getPresenter().loadCatFact(
+                isRefresh,
+                encrypt,
+                compress,
+                freshOnly
+        )
     }
 
     override fun showCatFact(response: CatFactResponse) {

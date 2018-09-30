@@ -5,23 +5,12 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.RxCache
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 
 internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
                                      uiLogger: Logger)
-    : BaseDemoPresenter(demoActivity) {
-
-    private val rxCache = RxCache.build(
-            CacheConfiguration
-                    .builder()
-                    .mergeOnNextOnError(true)
-                    .networkTimeOutInSeconds(10)
-                    .logger(uiLogger)
-                    .build(demoActivity)
-    )
+    : BaseDemoPresenter(demoActivity, uiLogger) {
 
     private val retrofit = Retrofit.Builder()
             .baseUrl(BaseDemoPresenter.BASE_URL)
@@ -43,12 +32,26 @@ internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-    override fun getResponseObservable(isRefresh: Boolean) = (
-            if (isRefresh) catFactClient.refresh()
-            else catFactClient.get()
-            )!!
+    override fun getResponseObservable(isRefresh: Boolean,
+                                       encrypt: Boolean,
+                                       compress: Boolean,
+                                       freshOnly: Boolean) =
+            if (isRefresh) {
+                when {
+                    freshOnly -> catFactClient.refreshFreshOnly()
+                    else -> catFactClient.refresh()
+                }
+            } else {
+                when {
+                    freshOnly && compress && encrypt -> catFactClient.freshOnlyCompressedEncrypted()
+                    freshOnly && compress -> catFactClient.freshOnlyCompressed()
+                    freshOnly -> catFactClient.freshOnly()
+                    compress && encrypt -> catFactClient.compressedEncrypted()
+                    compress -> catFactClient.compressed()
+                    else -> catFactClient.get()
+                }
+            }
 
-    override fun getClearEntriesCompletable() =
-            catFactClient.clearCache()!!
+    override fun getClearEntriesCompletable() = catFactClient.clearCache()
 
 }

@@ -11,22 +11,22 @@ import java.util.*
 data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val apiUrl: String = "",
-                                           val body: String? = null,
+                                           val uniqueParameters: String? = null,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
                                            val expiryDate: Date? = null) {
 
-    internal fun getKey(hasher: Hasher) = getKey(hasher, apiUrl, body)
+    internal fun getKey(hasher: Hasher) = getKey(hasher, apiUrl, uniqueParameters)
 
     companion object {
 
         internal fun fromInstruction(instruction: CacheInstruction,
                                      apiUrl: String,
-                                     body: String?) = CacheToken(
+                                     uniqueParameters: String?) = CacheToken(
                 instruction,
                 INSTRUCTION,
                 apiUrl,
-                body
+                uniqueParameters
         )
 
         internal fun notCached(instructionToken: CacheToken,
@@ -56,13 +56,13 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
 
         internal fun getKey(hasher: Hasher,
                             apiUrl: String,
-                            body: String?) =
+                            uniqueParameters: String?) =
                 apiUrl.hashCode().let {
                     try {
-                        body?.let { hasher.hash("$apiUrl$$body") } ?: hasher.hash(apiUrl)
+                        uniqueParameters?.let { hasher.hash("$apiUrl$$uniqueParameters") } ?: hasher.hash(apiUrl)
                     } catch (e: Exception) {
-                        if (body == null) it.toString()
-                        else (it * 7 + body.hashCode()).toString()
+                        if (uniqueParameters == null) it.toString()
+                        else (it * 7 + uniqueParameters.hashCode()).toString()
                     }
                 }
 

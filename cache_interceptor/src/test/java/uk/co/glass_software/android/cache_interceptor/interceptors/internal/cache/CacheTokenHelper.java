@@ -23,7 +23,7 @@ public class CacheTokenHelper {
                                         CacheStatus expectedStatus,
                                         float expectedTtl) {
         assertEquals("CacheToken URL didn't match", expectedUrl, cacheToken.getApiUrl());
-        assertEquals("CacheToken body didn't match", expectedBody, cacheToken.getBody());
+        assertEquals("CacheToken uniqueParameters didn't match", expectedBody, cacheToken.getUniqueParameters());
         assertEquals("CacheToken key didn't match", expectedKey, cacheToken.getKey(new Hasher(null)));
         assertEquals("CacheToken cached date didn't match", cacheDate, cacheToken.getCacheDate());
         assertEquals("CacheToken expiry date didn't match", expiryDate, cacheToken.getExpiryDate());

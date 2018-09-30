@@ -4,6 +4,7 @@ import android.content.ContentValues
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
@@ -20,7 +21,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DatabaseManager<E>(private val db: SQLiteDatabase,
+internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
                                   private val compressData: Boolean,
@@ -49,17 +50,19 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             if (typeToClear != null) add(typeToClear.name)
         }
 
-        val deleted = db.delete(
-                TABLE_CACHE,
-                arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
-                args.toArray()
-        )
-
-        val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
-        if (clearOlderEntriesOnly) {
-            logger.d("Deleted old$entryType entries from cache: $deleted found")
-        } else {
-            logger.d("Deleted all existing$entryType entries from cache: $deleted found")
+        databaseProvider().useAndLogError {
+            it.delete(
+                    TABLE_CACHE,
+                    arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
+                    args.toArray()
+            )
+        }.let { deleted ->
+            val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
+            if (clearOlderEntriesOnly) {
+                logger.d("Deleted old$entryType entries from cache: $deleted found")
+            } else {
+                logger.d("Deleted all existing$entryType entries from cache: $deleted found")
+            }
         }
     }
 
@@ -82,38 +85,38 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
         val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(key)
 
-        val cursor = db.query(
-                TABLE_CACHE,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null,
-                "1"
-        )
+        databaseProvider().useAndLogError {
+            it.query(
+                    TABLE_CACHE,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null,
+                    "1"
+            ).useAndLogError { cursor ->
+                if (cursor.count != 0 && cursor.moveToNext()) {
+                    logger.d("Found a cached $simpleName")
 
-        cursor.use {
-            if (it.count != 0 && it.moveToNext()) {
-                logger.d("Found a cached $simpleName")
+                    val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
+                    val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
+                    val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
+                    val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                    val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
 
-                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
-                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
-                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
-                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
-                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-
-                return getCachedResponse(
-                        instructionToken,
-                        cacheDate,
-                        expiryDate,
-                        isCompressed,
-                        isEncrypted,
-                        localData
-                )
-            } else {
-                logger.d("Found no cached $simpleName")
-                return null
+                    return getCachedResponse(
+                            instructionToken,
+                            cacheDate,
+                            expiryDate,
+                            isCompressed,
+                            isEncrypted,
+                            localData
+                    )
+                } else {
+                    logger.d("Found no cached $simpleName")
+                    return null
+                }
             }
         }
     }
@@ -127,14 +130,16 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             val selection = "${TOKEN.columnName} = ?"
             val selectionArgs = arrayOf(key)
 
-            val update = db.update(
-                    TABLE_CACHE,
-                    contentValuesFactory(map),
-                    selection,
-                    selectionArgs
-            )
-
-            logger.d("Invalidating cache for $key: ${if (update > 0) "DONE" else "NOT FOUND"}")
+            databaseProvider().useAndLogError {
+                it.update(
+                        TABLE_CACHE,
+                        contentValuesFactory(map),
+                        selection,
+                        selectionArgs
+                ).let {
+                    logger.d("Invalidating cache for $key: ${if (it > 0) "DONE" else "NOT FOUND"}")
+                }
+            }
         }
     }
 
@@ -193,12 +198,14 @@ internal class DatabaseManager<E>(private val db: SQLiteDatabase,
             values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
             values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
 
-            db.insertWithOnConflict(
-                    TABLE_CACHE,
-                    null,
-                    contentValuesFactory(values),
-                    CONFLICT_REPLACE
-            )
+            databaseProvider().useAndLogError {
+                it.insertWithOnConflict(
+                        TABLE_CACHE,
+                        null,
+                        contentValuesFactory(values),
+                        CONFLICT_REPLACE
+                )
+            }
         } ?: logger.e("Could not serialise and store data for $simpleName")
 
         it.onComplete()

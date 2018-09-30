@@ -6,6 +6,7 @@ import dagger.Provides
 import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
+import uk.co.glass_software.android.boilerplate.utils.lambda.Provide1
 import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
@@ -53,18 +54,23 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             )
 
     @Provides
-    fun provideDatabase() = SqlOpenHelper(
+    fun provideSqlOpenHelper() = SqlOpenHelper(
             context.applicationContext,
             configuration.databaseName
-    ).writableDatabase!!
+    )
+
+    @Provides
+    fun provideDatabase(sqlOpenHelper: SqlOpenHelper) = object : Provide1<SQLiteDatabase> {
+        override fun invoke() = sqlOpenHelper.writableDatabase!!
+    }
 
     private val dateFactory = { timeStamp: Long? -> timeStamp?.let { Date(it) } ?: Date() }
 
     @Provides
-    fun provideDatabaseManager(database: SQLiteDatabase,
+    fun provideDatabaseManager(databaseProvider: Provide1<SQLiteDatabase>,
                                serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
-                    database,
+                    databaseProvider,
                     serialisationManager,
                     configuration.logger,
                     configuration.compress,
