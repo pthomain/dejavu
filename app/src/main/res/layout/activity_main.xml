@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:gravity="center_horizontal"
-              android:orientation="vertical"
-              android:padding="10dp">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="horizontal">
 
         <Button
@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Load a cat fact"
-            android:textSize="11sp"/>
+            android:textSize="11sp" />
 
         <Button
             android:id="@+id/refresh_button"
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Force a refresh"
-            android:textSize="12sp"/>
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/clear_button"
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Clear cache"
-            android:textSize="12sp"/>
+            android:textSize="12sp" />
 
     </LinearLayout>
 
@@ -50,60 +50,73 @@
             android:id="@+id/radio_button_retrofit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"/>
+            android:checked="true" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:labelFor="@id/radio_button_retrofit"
-            android:text="Use Retrofit"/>
+            android:text="Use Retrofit" />
 
         <RadioButton
             android:id="@+id/radio_button_volley"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:labelFor="@id/radio_button_volley"
-            android:text="Use Volley"/>
+            android:text="Use Volley" />
     </RadioGroup>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/checkbox_fresh_only"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:labelFor="@id/checkbox_fresh_only"
+            android:text="Fresh only" />
 
         <CheckBox
             android:id="@+id/checkbox_compress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"/>
+            android:checked="true" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:labelFor="@id/checkbox_compress"
-            android:text="Compress"/>
+            android:text="Compress" />
 
         <CheckBox
             android:id="@+id/checkbox_encrypt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"/>
+            android:checked="true" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:labelFor="@id/checkbox_encrypt"
-            android:text="Encrypt"/>
+            android:text="Encrypt" />
 
     </LinearLayout>
 
@@ -112,15 +125,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textStyle="italic"/>
+        android:textStyle="italic" />
 
     <ExpandableListView
         android:id="@+id/result"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp"
-        android:layout_weight="1"/>
+        android:layout_marginBottom="10dp"
+        android:layout_weight="1" />
 
     <LinearLayout
         android:id="@+id/github"
@@ -136,13 +149,13 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="6dp"
             android:text="View this library on"
-            android:textColor="@android:color/white"/>
+            android:textColor="@android:color/white" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:tint="@android:color/white"
-            app:srcCompat="@drawable/ic_github_mark"/>
+            app:srcCompat="@drawable/ic_github_mark" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="82dp"
@@ -150,7 +163,7 @@
             android:layout_marginLeft="-8dp"
             android:padding="4dp"
             android:tint="@android:color/white"
-            app:srcCompat="@drawable/ic_github_logo"/>
+            app:srcCompat="@drawable/ic_github_logo" />
 
     </LinearLayout>
 </LinearLayout>

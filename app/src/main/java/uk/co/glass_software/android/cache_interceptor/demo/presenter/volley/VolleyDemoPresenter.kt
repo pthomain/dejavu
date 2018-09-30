@@ -7,8 +7,8 @@ import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
-import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -40,8 +40,10 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
 //        )
     }
 
-    override fun clearEntries() = Completable.complete()
-//    {
+    override fun getClearEntriesCompletable(): Completable {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+    //    {
 //        rxCacheInterceptorFactory.clearOlderEntries()
 //    }
 

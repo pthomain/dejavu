@@ -68,20 +68,20 @@ internal class AnnotationHelper {
             is Cache -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Cache(
-                            annotation.durationInMillis,
+                            annotation.durationInMillis.let { if (it == -1L) null else it },
                             annotation.freshOnly,
-                            annotation.mergeOnNextOnError,
-                            annotation.encrypt,
-                            annotation.compress
+                            annotation.mergeOnNextOnError.value,
+                            annotation.encrypt.value,
+                            annotation.compress.value
                     )
             )
 
             is Refresh -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Refresh(
-                            annotation.durationInMillis,
-                            annotation.mergeOnNextOnError,
-                            annotation.freshOnly
+                            annotation.durationInMillis.let { if (it == -1L) null else it },
+                            annotation.freshOnly,
+                            annotation.mergeOnNextOnError.value
                     )
             )
 

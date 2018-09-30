@@ -1,7 +1,7 @@
 
 package uk.co.glass_software.android.cache_interceptor.base.network.model;
 
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.response.base.BaseCachedList;
 
 public class TestResponse extends BaseCachedList<ApiError, TestResponse, User> {

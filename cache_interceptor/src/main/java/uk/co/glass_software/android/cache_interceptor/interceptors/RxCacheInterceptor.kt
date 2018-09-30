@@ -1,40 +1,39 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
-import android.content.Context
-import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.Single
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.ResponseInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
 
-internal class RxCacheInterceptor<E> internal constructor(isCacheEnabled: Boolean,
-                                                          instruction: CacheInstruction,
-                                                          url: String,
-                                                          body: String?,
-                                                          private val responseInterceptor: ResponseInterceptor<E>,
-                                                          private val errorInterceptorFactory: ErrorInterceptor.Factory<E>,
-                                                          private val cacheInterceptorFactory: CacheInterceptor.Factory<E>)
+class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
+                                                url: String,
+                                                body: String?,
+                                                configuration: CacheConfiguration<E>,
+                                                private val responseInterceptor: ResponseInterceptor<E>,
+                                                private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
+                                                private val cacheInterceptorFactory: (CacheToken) -> CacheInterceptor<E>)
     : RxCacheTransformer
         where E : Exception,
-              E : (E) -> Boolean {
+              E : NetworkErrorProvider {
 
     private val instructionToken = CacheToken.fromInstruction(
-            if (isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+            if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             url,
             body
     )
 
     override fun apply(observable: Observable<Any>): ObservableSource<Any> {
         return observable
-                .compose(errorInterceptorFactory.create(instructionToken))
-                .compose(cacheInterceptorFactory.create(instructionToken))
+                .compose(errorInterceptorFactory(instructionToken))
+                .compose(cacheInterceptorFactory(instructionToken))
                 .compose(responseInterceptor)
     }
 
@@ -44,19 +43,28 @@ internal class RxCacheInterceptor<E> internal constructor(isCacheEnabled: Boolea
             .firstOrError()!!
 
     override fun apply(upstream: Completable) =
-            cacheInterceptorFactory.create(instructionToken).complete()
+            cacheInterceptorFactory(instructionToken).complete()
 
-    companion object {
 
-        fun <E> builder(): RxCacheInterceptorBuilder<E>
-                where E : Exception,
-                      E : (E) -> Boolean = RxCacheInterceptorBuilder()
+    class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
+                                          private val cacheInterceptorFactory: (CacheToken) -> CacheInterceptor<E>,
+                                          private val responseInterceptor: ResponseInterceptor<E>,
+                                          private val configuration: CacheConfiguration<E>)
+            where E : Exception,
+                  E : NetworkErrorProvider {
 
-        fun buildDefault(context: Context): RxCacheInterceptorFactory<ApiError> {
-            return RxCacheInterceptor.builder<ApiError>()
-                    .gson(Gson())
-                    .errorFactory(ApiErrorFactory())
-                    .build(context)
-        }
+        fun create(instruction: CacheInstruction,
+                   url: String,
+                   body: String?) =
+                RxCacheInterceptor(
+                        instruction,
+                        url,
+                        body,
+                        configuration,
+                        responseInterceptor,
+                        errorInterceptorFactory,
+                        cacheInterceptorFactory
+                ) as RxCacheTransformer
+
     }
 }

@@ -1,10 +1,11 @@
 package uk.co.glass_software.android.cache_interceptor.annotations
 
+import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.DEFAULT
 
 @Target(AnnotationTarget.FUNCTION,
         AnnotationTarget.PROPERTY_GETTER)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Refresh(val durationInMillis: Long = DEFAULT_DURATION,
-                         val mergeOnNextOnError: Boolean = false,
-                         val freshOnly: Boolean = false)
+annotation class Refresh(val freshOnly: Boolean = false,
+                         val durationInMillis: Long = -1L,
+                         val mergeOnNextOnError: OptionalBoolean = DEFAULT)
 

@@ -4,29 +4,30 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.io
+import uk.co.glass_software.android.cache_interceptor.RxCache
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiErrorFactory
-import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 
 internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
                                      uiLogger: Logger)
     : BaseDemoPresenter(demoActivity) {
 
-    private val adapterFactory = RetrofitCacheAdapterFactory
-            .builder(context, ApiErrorFactory())
-            .timeOutInSeconds(10)
-            .logger(uiLogger)
-            .build()
+    private val rxCache = RxCache.build(
+            CacheConfiguration
+                    .builder()
+                    .mergeOnNextOnError(true)
+                    .networkTimeOutInSeconds(10)
+                    .logger(uiLogger)
+                    .build(demoActivity)
+    )
 
     private val retrofit = Retrofit.Builder()
             .baseUrl(BaseDemoPresenter.BASE_URL)
             .client(getOkHttpClient(uiLogger))
             .addConverterFactory(GsonConverterFactory.create(gson))
-            .addCallAdapterFactory(adapterFactory)
+            .addCallAdapterFactory(rxCache.retrofitCacheAdapterFactory)
             .build()
 
     private val catFactClient = retrofit.create(CatFactClient::class.java)
@@ -47,6 +48,7 @@ internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
             else catFactClient.get()
             )!!
 
-    override fun clearEntries() = catFactClient.clearCache().io()
+    override fun getClearEntriesCompletable() =
+            catFactClient.clearCache()!!
 
 }

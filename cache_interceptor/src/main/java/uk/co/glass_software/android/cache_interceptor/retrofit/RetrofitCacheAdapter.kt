@@ -8,15 +8,17 @@ import retrofit2.CallAdapter
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.CLEAR
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.CLEAR_ALL
-import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptorFactory
+import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import java.lang.reflect.Type
 
-internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterceptorFactory<E>,
+internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterceptor.Factory<E>,
                                        private val instruction: CacheInstruction,
                                        private val rxCallAdapter: CallAdapter<*, *>)
     : CallAdapter<Any, Any>
         where E : Exception,
-              E : (E) -> Boolean {
+              E : NetworkErrorProvider {
+
     override fun responseType(): Type = rxCallAdapter.responseType()
 
     @Suppress("UNCHECKED_CAST")

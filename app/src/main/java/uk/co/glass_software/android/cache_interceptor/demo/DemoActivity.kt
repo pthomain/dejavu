@@ -36,6 +36,10 @@ internal class DemoActivity
     private val retrofitRadio by lazy { findViewById<View>(R.id.radio_button_retrofit)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
+    private val freshOnlyCheckBox by lazy { findViewById<View>(R.id.checkbox_fresh_only)!! }
+    private val compressCheckBox by lazy { findViewById<View>(R.id.checkbox_compress)!! }
+    private val encryptCheckBox by lazy { findViewById<View>(R.id.checkbox_encrypt)!! }
+
     private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
     private val list by lazy { findViewById<ExpandableListView>(R.id.result)!! }
 
@@ -66,6 +70,9 @@ internal class DemoActivity
         gitHubButton.setOnClickListener { openGithub() }
         retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
+
+        //TODO compress/encrypt override
+
 
         listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
         list.setAdapter(listAdapter)

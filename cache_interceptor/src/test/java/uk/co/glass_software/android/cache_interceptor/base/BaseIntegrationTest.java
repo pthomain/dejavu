@@ -17,8 +17,8 @@ import uk.co.glass_software.android.boilerplate.log.Logger;
 import uk.co.glass_software.android.cache_interceptor.BuildConfig;
 import uk.co.glass_software.android.cache_interceptor.base.network.MockClient;
 import uk.co.glass_software.android.cache_interceptor.base.network.retrofit.TestClient;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptorBuilderHelper;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptorBuilderHelper;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError;
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory;
 
 import static org.mockito.Mockito.mock;

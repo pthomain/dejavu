@@ -14,18 +14,20 @@ import static uk.co.glass_software.android.cache_interceptor.demo.presenter.Base
 interface CatFactClient {
 
     @GET(ENDPOINT)
-    @Cache(
-            encrypt = true,
-            mergeOnNextOnError = true
-    )
+    @Cache()
     Observable<CatFactResponse> get();
 
     @GET(ENDPOINT)
-    @Refresh(
-            freshOnly = true,
-            mergeOnNextOnError = true
-    )
+    @Refresh
     Observable<CatFactResponse> refresh();
+
+    @GET(ENDPOINT)
+    @Cache(freshOnly = true)
+    Observable<CatFactResponse> getFreshOnly();
+
+    @GET(ENDPOINT)
+    @Refresh(freshOnly = true)
+    Observable<CatFactResponse> refreshFreshOnly();
 
     @DELETE(ENDPOINT)
     @Clear(typeToClear = CatFactResponse.class)

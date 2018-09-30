@@ -8,11 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.*
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -67,7 +66,7 @@ internal class ExpandableListAdapter(context: Context,
                 info.add("Cache token expiry date: "
                         + simpleDateFormat.format(cacheToken.expiryDate)
                         + " (TTL: "
-                        + (operation.durationInMillis * 1000).toInt()
+                        + (operation.durationInMillis?.times(1000)?.toInt() ?: "N/A")
                         + "s)"
                 )
             }

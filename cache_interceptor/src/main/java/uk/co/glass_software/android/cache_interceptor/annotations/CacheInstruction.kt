@@ -9,18 +9,18 @@ data class CacheInstruction(val responseClass: Class<*>,
 
         object DoNotCache : Operation(DO_NOT_CACHE)
 
-        sealed class Expiring(val durationInMillis: Long = DEFAULT_DURATION,
-                              val freshOnly: Boolean = false,
-                              val mergeOnNextOnError: Boolean = false,
-                              val encrypt: Boolean = false,
-                              val compress: Boolean = false,
+        sealed class Expiring(val durationInMillis: Long?,
+                              val freshOnly: Boolean,
+                              val mergeOnNextOnError: Boolean?,
+                              val encrypt: Boolean?,
+                              val compress: Boolean?,
                               type: Type) : Operation(type) {
 
-            class Cache(durationInMillis: Long = DEFAULT_DURATION,
-                        freshOnly: Boolean = false,
-                        mergeOnNextOnError: Boolean = false,
-                        encrypt: Boolean = false,
-                        compress: Boolean = false)
+            class Cache(durationInMillis: Long?,
+                        freshOnly: Boolean,
+                        mergeOnNextOnError: Boolean?,
+                        encrypt: Boolean?,
+                        compress: Boolean?)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
@@ -30,23 +30,21 @@ data class CacheInstruction(val responseClass: Class<*>,
                     CACHE
             )
 
-            class Refresh(durationInMillis: Long = DEFAULT_DURATION,
-                          freshOnly: Boolean = false,
-                          mergeOnNextOnError: Boolean = false,
-                          encrypt: Boolean = false,
-                          compress: Boolean = false)
+            class Refresh(durationInMillis: Long?,
+                          freshOnly: Boolean,
+                          mergeOnNextOnError: Boolean?)
                 : Expiring(
                     durationInMillis,
                     freshOnly,
                     mergeOnNextOnError,
-                    encrypt,
-                    compress,
+                    null, //TODO keep settings from original cache call
+                    null,
                     REFRESH
             )
         }
 
-        data class Clear(val typeToClear: Class<*>? = null,
-                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR)
+        data class Clear(val typeToClear: Class<*>?,
+                         val clearOldEntriesOnly: Boolean) : Operation(CLEAR)
 
         enum class Type {
             DO_NOT_CACHE,
