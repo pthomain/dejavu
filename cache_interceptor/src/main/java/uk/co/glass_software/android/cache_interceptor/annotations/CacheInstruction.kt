@@ -41,7 +41,7 @@ data class CacheInstruction(val responseClass: Class<*>,
                     durationInMillis,
                     freshOnly,
                     mergeOnNextOnError,
-                    null, //TODO keep settings from original cache call
+                    null,
                     null,
                     filterFinal,
                     REFRESH

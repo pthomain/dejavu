@@ -15,7 +15,7 @@ import java.lang.reflect.Type
 
 class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
                                                           private val rxCacheFactory: RxCacheInterceptor.Factory<E>,
-                                                          private val annotationHelper: AnnotationHelper)
+                                                          private val annotationHelper: AnnotationHelper<E>)
     : CallAdapter.Factory()
         where E : Exception,
               E : NetworkErrorProvider {

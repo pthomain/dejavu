@@ -6,9 +6,7 @@ import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.COLUMNS.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.TABLE_CACHE
@@ -72,7 +70,6 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
         logger.d("Checking for cached $simpleName")
 
         val key = instructionToken.getKey(hasher)
-        checkInvalidation(instruction, key)
 
         val projection = arrayOf(
                 DATE.columnName,
@@ -100,10 +97,14 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                     logger.d("Found a cached $simpleName")
 
                     val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
-                    val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
                     val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
                     val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
                     val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+
+                    val expiryDate = dateFactory(
+                            if (instruction.operation is Expiring.Refresh) 0L
+                            else cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName))
+                    )
 
                     return getCachedResponse(
                             instructionToken,
@@ -116,28 +117,6 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                 } else {
                     logger.d("Found no cached $simpleName")
                     return null
-                }
-            }
-        }
-    }
-
-    private fun checkInvalidation(instruction: CacheInstruction,
-                                  key: String) {
-        if (instruction.operation.type == REFRESH) {
-            val map = HashMap<String, Any>()
-            map[EXPIRY_DATE.columnName] = 0
-
-            val selection = "${TOKEN.columnName} = ?"
-            val selectionArgs = arrayOf(key)
-
-            databaseProvider().useAndLogError {
-                it.update(
-                        TABLE_CACHE,
-                        contentValuesFactory(map),
-                        selection,
-                        selectionArgs
-                ).let {
-                    logger.d("Invalidating cache for $key: ${if (it > 0) "DONE" else "NOT FOUND"}")
                 }
             }
         }

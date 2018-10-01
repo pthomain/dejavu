@@ -161,7 +161,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
             val error = responseWrapper.metadata!!.exception
 
             if (error != null) {
-                val isCouldNotRefresh = error.isNetworkError()
+                val isCouldNotRefresh = error.isNetworkError() && !refreshOperation.freshOnly
                 previousCachedResponse.copy(
                         response = if (isCouldNotRefresh) previousCachedResponse.response else null,
                         metadata = updateStatus(

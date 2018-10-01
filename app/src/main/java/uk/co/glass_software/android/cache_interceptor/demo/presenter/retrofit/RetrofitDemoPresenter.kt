@@ -45,9 +45,11 @@ internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
                 when {
                     freshOnly && compress && encrypt -> catFactClient.freshOnlyCompressedEncrypted()
                     freshOnly && compress -> catFactClient.freshOnlyCompressed()
+                    freshOnly && encrypt -> catFactClient.freshOnlyEncrypted()
                     freshOnly -> catFactClient.freshOnly()
                     compress && encrypt -> catFactClient.compressedEncrypted()
                     compress -> catFactClient.compressed()
+                    encrypt -> catFactClient.encrypted()
                     else -> catFactClient.get()
                 }
             }

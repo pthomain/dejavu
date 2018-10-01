@@ -3,8 +3,12 @@ package uk.co.glass_software.android.cache_interceptor.annotations
 import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper.RxType.*
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 
-internal class AnnotationHelper {
+internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfiguration<E>)
+        where  E : Exception,
+               E : NetworkErrorProvider {
 
     enum class RxType {
         OBSERVABLE,
@@ -17,9 +21,24 @@ internal class AnnotationHelper {
                 responseClass: Class<*>): CacheInstruction? {
         var instruction: CacheInstruction? = null
 
+        if (annotations.isEmpty() && cacheConfiguration.cacheAllByDefault) {
+            return CacheInstruction(
+                    responseClass,
+                    CacheInstruction.Operation.Expiring.Cache(
+                            cacheConfiguration.cacheDurationInMillis,
+                            false,
+                            cacheConfiguration.mergeOnNextOnError,
+                            cacheConfiguration.encrypt,
+                            cacheConfiguration.compress,
+                            false
+                    )
+            )
+        }
+
         annotations.forEach { annotation ->
             when (annotation) {
                 is Cache -> CACHE
+                is DoNotCache -> DO_NOT_CACHE
                 is Refresh -> REFRESH
                 is Clear -> CLEAR
                 is ClearAll -> CLEAR_ALL
@@ -111,10 +130,10 @@ internal class AnnotationHelper {
 
     private fun getAnnotationName(foundOperation: Operation.Type): String = when (foundOperation) {
         CACHE -> "@Cache"
+        DO_NOT_CACHE -> "@DoNotCache"
         REFRESH -> "@Refresh"
         CLEAR -> "@Clear"
         CLEAR_ALL -> "@ClearAll"
-        else -> ""
     }
 
     class CacheInstructionException(message: String) : Exception(message)

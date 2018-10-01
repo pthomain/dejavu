@@ -56,7 +56,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     @Provides
     fun provideSqlOpenHelper() = SqlOpenHelper(
             context.applicationContext,
-            configuration.databaseName
+            "rx_cache_interceptor.db"
     )
 
     @Provides
@@ -150,7 +150,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             RetrofitCacheAdapterFactory(
                     RxJava2CallAdapterFactory.create(),
                     rxCacheInterceptorFactory,
-                    AnnotationHelper()
+                    AnnotationHelper(configuration)
             )
 
     interface Function<T, R> {

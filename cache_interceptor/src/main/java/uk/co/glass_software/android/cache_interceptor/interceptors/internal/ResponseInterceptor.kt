@@ -22,11 +22,9 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
     override fun apply(upstream: Observable<ResponseWrapper<E>>): Observable<Any> {
         var start = 0L
         return upstream
-                .compose {
-                    it.doOnSubscribe { start = System.currentTimeMillis() }
-                            .doAfterNext { start = System.currentTimeMillis() }
-                }
-                .flatMap { this.intercept(it, start) }!!
+                .doOnSubscribe { start = System.currentTimeMillis() }
+                .doAfterNext { start = System.currentTimeMillis() }!!
+                .flatMap { this.intercept(it, start) }
     }
 
     override fun apply(upstream: Single<ResponseWrapper<E>>) =
@@ -99,7 +97,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                          operation: CacheInstruction.Operation?,
                          mergeOnNextOnError: Boolean) {
         val message = "Could not add cache metadata to response '${responseClass.simpleName}'." +
-                " If you want to enable metadata for this class, have it extend the" +
+                " If you want to enable metadata for this class, it needs extend the" +
                 " 'CacheMetadata.Holder' interface." +
                 " The 'mergeOnNextOnError' directive will be ignored for classes" +
                 " that do not support cache metadata."
