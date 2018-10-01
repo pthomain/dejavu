@@ -5,7 +5,8 @@ import com.google.gson.Gson
 import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.BuildConfig
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
+import uk.co.glass_software.android.cache_interceptor.RxCache
+import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
 
 class CacheConfiguration<E> private constructor(internal var context: Context,
                                                 internal val logger: Logger,
@@ -23,17 +24,18 @@ class CacheConfiguration<E> private constructor(internal var context: Context,
 
     companion object {
 
-        fun builder() = builder(ApiErrorFactory())
-
-        fun <E> builder(errorFactory: ErrorFactory<E>)
+        internal fun <E> builder(errorFactory: ErrorFactory<E>,
+                                 componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>)
                 where E : Exception,
-                      E : NetworkErrorProvider = Builder(errorFactory)
-
+                      E : NetworkErrorProvider =
+                Builder(errorFactory, componentProvider)
     }
 
-    class Builder<E> internal constructor(private val errorFactory: ErrorFactory<E>)
-            where E : Exception,
-                  E : NetworkErrorProvider {
+    class Builder<E> internal constructor(
+            private val errorFactory: ErrorFactory<E>,
+            private val componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>
+    ) where E : Exception,
+            E : NetworkErrorProvider {
 
         private var logger: Logger? = null
         private var gson: Gson? = null
@@ -45,7 +47,7 @@ class CacheConfiguration<E> private constructor(internal var context: Context,
         private var compressData: Boolean = false
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
-        private var cacheAllByDefault: Boolean = false
+        private var cacheAllByDefault: Boolean = true
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -129,24 +131,26 @@ class CacheConfiguration<E> private constructor(internal var context: Context,
         fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cacheAllByDefault = cacheAllByDefault }
 
         /**
-         * Returns an instance of CacheConfiguration.
+         * Returns an instance of RxCache.
          */
-        fun build(context: Context): CacheConfiguration<E> {
+        fun build(context: Context): RxCache<E> {
             val logger = logger
                     ?: Boilerplate.init(context, BuildConfig.DEBUG).let { Boilerplate.logger }
 
-            return CacheConfiguration(
-                    context.applicationContext,
-                    logger,
-                    errorFactory,
-                    gson ?: Gson(),
-                    isCacheEnabled,
-                    encryptData,
-                    compressData,
-                    mergeOnNextOnError,
-                    networkTimeOutInSeconds,
-                    cacheDurationInMillis,
-                    cacheAllByDefault
+            return RxCache(
+                    componentProvider(CacheConfiguration(
+                            context.applicationContext,
+                            logger,
+                            errorFactory,
+                            gson ?: Gson(),
+                            isCacheEnabled,
+                            encryptData,
+                            compressData,
+                            mergeOnNextOnError,
+                            networkTimeOutInSeconds,
+                            cacheDurationInMillis,
+                            cacheAllByDefault
+                    ))
             )
         }
     }

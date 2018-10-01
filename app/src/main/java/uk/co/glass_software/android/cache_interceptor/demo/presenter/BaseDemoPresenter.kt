@@ -10,7 +10,6 @@ import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.io
 import uk.co.glass_software.android.cache_interceptor.RxCache
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
@@ -23,15 +22,12 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
     protected val gson by lazy { Gson() }
 
     protected val rxCache by lazy {
-        RxCache.build(
-                CacheConfiguration
-                        .builder()
-                        .gson(gson)
-                        .mergeOnNextOnError(true)
-                        .networkTimeOutInSeconds(5)
-                        .logger(uiLogger)
-                        .build(demoActivity)
-        )
+        RxCache.builder()
+                .gson(gson)
+                .mergeOnNextOnError(true)
+                .networkTimeOutInSeconds(5)
+                .logger(uiLogger)
+                .build(demoActivity)
     }
 
     final override fun loadCatFact(isRefresh: Boolean,
