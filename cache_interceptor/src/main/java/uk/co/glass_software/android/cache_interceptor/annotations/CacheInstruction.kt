@@ -48,15 +48,18 @@ data class CacheInstruction(val responseClass: Class<*>,
             )
         }
 
+        object Invalidate : Operation(INVALIDATE)
+
         data class Clear(val typeToClear: Class<*>? = null,
                          val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR)
 
-        enum class Type {
-            DO_NOT_CACHE,
-            CACHE,
-            REFRESH,
-            CLEAR,
-            CLEAR_ALL
+        enum class Type(val annotationName: String) {
+            DO_NOT_CACHE("@DoNotCache"),
+            CACHE("@Cache"),
+            INVALIDATE("@Invalidate"),
+            REFRESH("@Refresh"),
+            CLEAR("@Clear"),
+            CLEAR_ALL("@Clear")
         }
     }
 

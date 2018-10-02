@@ -4,21 +4,21 @@ import android.content.Context
 import com.google.gson.Gson
 import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.BuildConfig
+import uk.co.glass_software.android.cache_interceptor.BuildConfig.DEBUG
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
 
-class CacheConfiguration<E> private constructor(internal var context: Context,
-                                                internal val logger: Logger,
-                                                internal val errorFactory: ErrorFactory<E>,
-                                                internal val gson: Gson,
-                                                internal val isCacheEnabled: Boolean,
-                                                internal val encrypt: Boolean,
-                                                internal val compress: Boolean,
-                                                internal val mergeOnNextOnError: Boolean,
-                                                internal val networkTimeOutInSeconds: Int,
-                                                internal val cacheDurationInMillis: Long,
-                                                internal val cacheAllByDefault: Boolean)
+data class CacheConfiguration<E> internal constructor(var context: Context,
+                                                      val logger: Logger,
+                                                      val errorFactory: ErrorFactory<E>,
+                                                      val gson: Gson,
+                                                      val isCacheEnabled: Boolean,
+                                                      val encrypt: Boolean,
+                                                      val compress: Boolean,
+                                                      val mergeOnNextOnError: Boolean,
+                                                      val networkTimeOutInSeconds: Int,
+                                                      val cacheDurationInMillis: Long,
+                                                      val cacheAllByDefault: Boolean)
         where E : Exception,
               E : NetworkErrorProvider {
 
@@ -135,22 +135,24 @@ class CacheConfiguration<E> private constructor(internal var context: Context,
          */
         fun build(context: Context): RxCache<E> {
             val logger = logger
-                    ?: Boilerplate.init(context, BuildConfig.DEBUG).let { Boilerplate.logger }
+                    ?: Boilerplate.init(context, DEBUG).let { Boilerplate.logger }
 
             return RxCache(
-                    componentProvider(CacheConfiguration(
-                            context.applicationContext,
-                            logger,
-                            errorFactory,
-                            gson ?: Gson(),
-                            isCacheEnabled,
-                            encryptData,
-                            compressData,
-                            mergeOnNextOnError,
-                            networkTimeOutInSeconds,
-                            cacheDurationInMillis,
-                            cacheAllByDefault
-                    ))
+                    componentProvider(
+                            CacheConfiguration(
+                                    context.applicationContext,
+                                    logger,
+                                    errorFactory,
+                                    gson ?: Gson(),
+                                    isCacheEnabled,
+                                    encryptData,
+                                    compressData,
+                                    mergeOnNextOnError,
+                                    networkTimeOutInSeconds,
+                                    cacheDurationInMillis,
+                                    cacheAllByDefault
+                            ).also { logger.d("RxCache set up with the following configuration: $it") }
+                    )
             )
         }
     }

@@ -1,27 +1,37 @@
 package uk.co.glass_software.android.cache_interceptor.annotations
 
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper.RxType.*
+import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor.RxType.COMPLETABLE
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 
-internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfiguration<E>)
+internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
         where  E : Exception,
                E : NetworkErrorProvider {
 
-    enum class RxType {
-        OBSERVABLE,
-        SINGLE,
-        COMPLETABLE
+    enum class RxType(private val className: String) {
+        OBSERVABLE("Observable"),
+        SINGLE("Single"),
+        COMPLETABLE("Completable");
+
+        fun getTypedName(responseClass: Class<*>) =
+                "$className<${responseClass.simpleName}>"
     }
 
     fun process(annotations: Array<Annotation>,
-                rxType: RxType,
+                rxType: AnnotationProcessor.RxType,
                 responseClass: Class<*>): CacheInstruction? {
         var instruction: CacheInstruction? = null
 
-        if (annotations.isEmpty() && cacheConfiguration.cacheAllByDefault) {
+        if (annotations.isEmpty()
+                && rxType != COMPLETABLE
+                && cacheConfiguration.cacheAllByDefault) {
+
+            cacheConfiguration.logger.d(
+                    "No annotation for call returning ${rxType.getTypedName(responseClass)} but cacheAllByDefault directive is set to true"
+            )
+
             return CacheInstruction(
                     responseClass,
                     CacheInstruction.Operation.Expiring.Cache(
@@ -39,6 +49,7 @@ internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfigur
             when (annotation) {
                 is Cache -> CACHE
                 is DoNotCache -> DO_NOT_CACHE
+                is Invalidate -> INVALIDATE
                 is Refresh -> REFRESH
                 is Clear -> CLEAR
                 is ClearAll -> CLEAR_ALL
@@ -56,12 +67,33 @@ internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfigur
 
         instruction?.let {
             val operation = it.operation.type
-            if (rxType == COMPLETABLE && operation != CLEAR && operation != CLEAR_ALL) {
-                throw CacheInstructionException("Only @Clear or @ClearAll annotations can be used with Completable")
+            val completableOperations = arrayOf(
+                    CLEAR,
+                    CLEAR_ALL,
+                    INVALIDATE
+            )
+
+            if (completableOperations.contains(operation)) {
+                if (rxType != COMPLETABLE) {
+                    CacheInstructionException(
+                            "Only Completable can be used with the ${operation.annotationName} annotation"
+                    ).logAndThrow()
+                }
+            } else {
+                if (rxType == COMPLETABLE) {
+                    CacheInstructionException(
+                            "Only @Clear, @ClearAll or @Invalidate annotations can be used with Completable"
+                    ).logAndThrow()
+                }
             }
         }
 
         return instruction
+    }
+
+    private fun CacheInstructionException.logAndThrow() {
+        cacheConfiguration.logger.e(this)
+        throw this
     }
 
     @Throws(CacheInstructionException::class)
@@ -71,16 +103,11 @@ internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfigur
                                foundOperation: Operation.Type,
                                annotation: Annotation): CacheInstruction? {
         if (currentInstruction != null) {
-            val responseClassName = responseClass.simpleName
-            val signature = when (rxType) {
-                OBSERVABLE -> "Observable<$responseClassName>"
-                SINGLE -> "Single<$responseClassName>"
-                COMPLETABLE -> "Completable"
-            }
-
-            throw CacheInstructionException("More than one cache annotation defined for method returning $signature, " +
-                    "found ${getAnnotationName(foundOperation)} after existing annotation ${getAnnotationName(currentInstruction.operation.type)}. " +
-                    "Only one annotation can be used for this method.")
+            CacheInstructionException("More than one cache annotation defined for method returning"
+                    + " ${rxType.getTypedName(responseClass)}, found ${getAnnotationName(foundOperation)}"
+                    + " after existing annotation ${getAnnotationName(currentInstruction.operation.type)}."
+                    + " Only one annotation can be used for this method."
+            ).logAndThrow()
         }
 
         return when (annotation) {
@@ -93,6 +120,11 @@ internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfigur
                             annotation.encrypt.value,
                             annotation.compress.value
                     )
+            )
+
+            is Invalidate -> CacheInstruction(
+                    annotation.typeToClear.java,
+                    Operation.Invalidate
             )
 
             is Refresh -> CacheInstruction(
@@ -131,6 +163,7 @@ internal class AnnotationHelper<E>(private val cacheConfiguration: CacheConfigur
     private fun getAnnotationName(foundOperation: Operation.Type): String = when (foundOperation) {
         CACHE -> "@Cache"
         DO_NOT_CACHE -> "@DoNotCache"
+        INVALIDATE -> "@Invalidate"
         REFRESH -> "@Refresh"
         CLEAR -> "@Clear"
         CLEAR_ALL -> "@ClearAll"

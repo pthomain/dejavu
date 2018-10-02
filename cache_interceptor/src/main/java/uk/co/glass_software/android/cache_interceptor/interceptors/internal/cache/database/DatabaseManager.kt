@@ -6,7 +6,10 @@ import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.INVALIDATE
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.COLUMNS.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.TABLE_CACHE
@@ -70,6 +73,7 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
         logger.d("Checking for cached $simpleName")
 
         val key = instructionToken.getKey(hasher)
+        checkInvalidation(instruction, key)
 
         val projection = arrayOf(
                 DATE.columnName,
@@ -117,6 +121,28 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                 } else {
                     logger.d("Found no cached $simpleName")
                     return null
+                }
+            }
+        }
+    }
+
+    private fun checkInvalidation(instruction: CacheInstruction,
+                                  key: String) {
+        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            val map = HashMap<String, Any>()
+            map[EXPIRY_DATE.columnName] = 0
+
+            val selection = "${TOKEN.columnName} = ?"
+            val selectionArgs = arrayOf(key)
+
+            databaseProvider().useAndLogError {
+                it.update(
+                        TABLE_CACHE,
+                        contentValuesFactory(map),
+                        selection,
+                        selectionArgs
+                ).let {
+                    logger.d("Invalidating cache for $key: ${if (it > 0) "DONE" else "NOT FOUND"}")
                 }
             }
         }

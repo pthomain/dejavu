@@ -7,7 +7,7 @@ import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.lambda.Provide1
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationHelper
+import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
@@ -150,7 +150,8 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             RetrofitCacheAdapterFactory(
                     RxJava2CallAdapterFactory.create(),
                     rxCacheInterceptorFactory,
-                    AnnotationHelper(configuration)
+                    AnnotationProcessor(configuration),
+                    configuration.logger
             )
 
     interface Function<T, R> {
