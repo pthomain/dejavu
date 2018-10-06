@@ -42,9 +42,13 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
     }
 
     fun complete() = (
-            if (isCacheEnabled && instructionToken.instruction.operation is Operation.Clear)
-                clear(instructionToken.instruction.operation)
-            else
+            if (isCacheEnabled) {
+                when {
+                    instructionToken.instruction.operation is Operation.Clear -> clear(instructionToken.instruction.operation)
+                    instructionToken.instruction.operation is Operation.Invalidate -> invalidate()
+                    else -> Completable.complete()
+                }
+            } else
                 Completable.complete()
             )!!
 
@@ -54,6 +58,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                     operation.clearOldEntriesOnly
             )
 
+    private fun invalidate() = cacheManager.invalidate(instructionToken)
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =

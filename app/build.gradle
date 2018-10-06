@@ -63,18 +63,17 @@ android {
 
 dependencies {
     implementation project(path: ':cache_interceptor')
+    implementation appDependencies.multiDex
 
-    implementation "com.google.dagger:dagger:$daggerVersion"
-    kapt "com.google.dagger:dagger-compiler:$daggerVersion"
+    implementation appDependencies.dagger
+    kapt appDependencies.daggerCompiler
 
-    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
-    implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
-    implementation "androidx.multidex:multidex:$multidexVersion"
-    implementation "com.android.volley:volley:$volleyVersion"
+    implementation appDependencies.okHttp
+    implementation appDependencies.okHttpLogging
+    implementation appDependencies.volley
 
-    implementation "androidx.appcompat:appcompat:$supportLibVersion"
-    implementation "androidx.browser:browser:$supportLibVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation appDependencies.appCompat
+    implementation appDependencies.browser
 }
 
 repositories {

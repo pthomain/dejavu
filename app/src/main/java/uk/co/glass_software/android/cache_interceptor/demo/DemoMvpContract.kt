@@ -25,6 +25,7 @@ internal class DemoMvpContract {
                         freshOnly: Boolean)
 
         fun clearEntries()
+        fun invalidate()
 
     }
 

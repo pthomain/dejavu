@@ -10,25 +10,16 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         where  E : Exception,
                E : NetworkErrorProvider {
 
-    enum class RxType(private val className: String) {
-        OBSERVABLE("Observable"),
-        SINGLE("Single"),
-        COMPLETABLE("Completable");
-
-        fun getTypedName(responseClass: Class<*>) =
-                "$className<${responseClass.simpleName}>"
-    }
+    private val logger = cacheConfiguration.logger
 
     fun process(annotations: Array<Annotation>,
                 rxType: AnnotationProcessor.RxType,
                 responseClass: Class<*>): CacheInstruction? {
-        var instruction: CacheInstruction? = null
-
         if (annotations.isEmpty()
                 && rxType != COMPLETABLE
                 && cacheConfiguration.cacheAllByDefault) {
 
-            cacheConfiguration.logger.d(
+            logger.d(
                     "No annotation for call returning ${rxType.getTypedName(responseClass)} but cacheAllByDefault directive is set to true"
             )
 
@@ -45,6 +36,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             )
         }
 
+        var instruction: CacheInstruction? = null
         annotations.forEach { annotation ->
             when (annotation) {
                 is Cache -> CACHE
@@ -92,7 +84,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
     }
 
     private fun CacheInstructionException.logAndThrow() {
-        cacheConfiguration.logger.e(this)
+        logger.e(this)
         throw this
     }
 
@@ -104,8 +96,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                                annotation: Annotation): CacheInstruction? {
         if (currentInstruction != null) {
             CacheInstructionException("More than one cache annotation defined for method returning"
-                    + " ${rxType.getTypedName(responseClass)}, found ${getAnnotationName(foundOperation)}"
-                    + " after existing annotation ${getAnnotationName(currentInstruction.operation.type)}."
+                    + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
+                    + " after existing annotation ${currentInstruction.operation.type.annotationName}."
                     + " Only one annotation can be used for this method."
             ).logAndThrow()
         }
@@ -123,7 +115,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             )
 
             is Invalidate -> CacheInstruction(
-                    annotation.typeToClear.java,
+                    annotation.typeToInvalidate.java,
                     Operation.Invalidate
             )
 
@@ -160,15 +152,16 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         }
     }
 
-    private fun getAnnotationName(foundOperation: Operation.Type): String = when (foundOperation) {
-        CACHE -> "@Cache"
-        DO_NOT_CACHE -> "@DoNotCache"
-        INVALIDATE -> "@Invalidate"
-        REFRESH -> "@Refresh"
-        CLEAR -> "@Clear"
-        CLEAR_ALL -> "@ClearAll"
-    }
-
     class CacheInstructionException(message: String) : Exception(message)
+
+    enum class RxType(private val className: String) {
+        OBSERVABLE("Observable"),
+        SINGLE("Single"),
+        COMPLETABLE("Completable");
+
+        fun getTypedName(responseClass: Class<*>) =
+                if(this == COMPLETABLE) className
+                else "$className<${responseClass.simpleName}>"
+    }
 
 }

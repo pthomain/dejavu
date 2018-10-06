@@ -48,6 +48,8 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                              cacheDate: Date,
                              expiryDate: Date) = instructionToken.copy(
                 status = FRESH,
+                isCompressed = isCompressed,
+                isEncrypted = isEncrypted,
                 fetchDate = fetchDate,
                 cacheDate = cacheDate,
                 expiryDate = expiryDate

@@ -56,4 +56,6 @@ internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
 
     override fun getClearEntriesCompletable() = catFactClient.clearCache()
 
+    override fun getInvalidateCompletable() = catFactClient.invalidate()
+
 }

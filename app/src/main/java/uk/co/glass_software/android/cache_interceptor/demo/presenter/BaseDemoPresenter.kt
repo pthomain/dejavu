@@ -54,6 +54,14 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                 .autoSubscribe()
     }
 
+    final override fun invalidate() {
+        getInvalidateCompletable()
+                .io()
+                .doOnSubscribe { mvpView.onCallStarted() }
+                .doOnComplete(mvpView::onCallComplete)
+                .autoSubscribe()
+    }
+
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
         logger.d("Clearing subscriptions")
@@ -67,6 +75,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
             : Observable<out CatFactResponse>
 
     protected abstract fun getClearEntriesCompletable(): Completable
+    protected abstract fun getInvalidateCompletable(): Completable
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

@@ -26,11 +26,15 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
               E : NetworkErrorProvider {
 
     fun clearCache(typeToClear: Class<*>?,
-                   clearOlderEntriesOnly: Boolean) =
-            Completable.create {
-                databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
-                it.onComplete()
-            }!!
+                   clearOlderEntriesOnly: Boolean) = Completable.create {
+        databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
+        it.onComplete()
+    }!!
+
+    fun invalidate(instructionToken: CacheToken) = Completable.create {
+        databaseManager.invalidate(instructionToken)
+        it.onComplete()
+    }!!
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,

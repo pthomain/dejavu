@@ -6,6 +6,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import uk.co.glass_software.android.cache_interceptor.annotations.Cache
 import uk.co.glass_software.android.cache_interceptor.annotations.Clear
+import uk.co.glass_software.android.cache_interceptor.annotations.Invalidate
 import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.TRUE
 import uk.co.glass_software.android.cache_interceptor.annotations.Refresh
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
@@ -77,5 +78,11 @@ internal interface CatFactClient {
     @DELETE(ENDPOINT)
     @Clear(typeToClear = CatFactResponse::class)
     fun clearCache(): Completable
+
+    // CLEAR
+
+    @DELETE(ENDPOINT)
+    @Invalidate(typeToInvalidate = CatFactResponse::class)
+    fun invalidate(): Completable
 
 }

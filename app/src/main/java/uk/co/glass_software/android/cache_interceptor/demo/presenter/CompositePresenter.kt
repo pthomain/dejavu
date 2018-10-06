@@ -16,7 +16,6 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
     override var subscriptions = CompositeDisposable()
 
     enum class Method {
-
         RETROFIT,
         VOLLEY
     }
@@ -39,6 +38,8 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
             )
 
     override fun clearEntries() = getPresenter().clearEntries()
+
+    override fun invalidate() = getPresenter().invalidate()
 
     private fun getPresenter() =
             if (method == RETROFIT)

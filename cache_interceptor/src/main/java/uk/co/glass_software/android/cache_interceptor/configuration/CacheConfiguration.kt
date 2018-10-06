@@ -1,7 +1,10 @@
 package uk.co.glass_software.android.cache_interceptor.configuration
 
 import android.content.Context
+import android.os.Looper
 import com.google.gson.Gson
+import io.reactivex.android.plugins.RxAndroidPlugins
+import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.BuildConfig.DEBUG
@@ -136,6 +139,10 @@ data class CacheConfiguration<E> internal constructor(var context: Context,
         fun build(context: Context): RxCache<E> {
             val logger = logger
                     ?: Boilerplate.init(context, DEBUG).let { Boilerplate.logger }
+
+            RxAndroidPlugins.setInitMainThreadSchedulerHandler {
+                AndroidSchedulers.from(Looper.getMainLooper(), true)
+            }
 
             return RxCache(
                     componentProvider(

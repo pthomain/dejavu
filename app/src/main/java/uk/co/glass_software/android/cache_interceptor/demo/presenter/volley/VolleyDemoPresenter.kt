@@ -36,10 +36,6 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                 )
             }.let { getObservableForOperation(it) }
 
-    override fun getClearEntriesCompletable() =
-            getObservableForOperation(Clear()).ignoreElements()!!
-
-
     private fun getObservableForOperation(cacheOperation: Operation) =
             CacheInstruction(
                     CatFactResponse::class.java,
@@ -59,5 +55,9 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         URL
                 )
             }
+
+    override fun getClearEntriesCompletable() = getObservableForOperation(Clear()).ignoreElements()!!
+
+    override fun getInvalidateCompletable() = getObservableForOperation(Operation.Invalidate).ignoreElements()!!
 
 }

@@ -126,6 +126,13 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
         }
     }
 
+    fun invalidate(instructionToken: CacheToken) {
+        checkInvalidation(
+                instructionToken.instruction,
+                instructionToken.getKey(hasher)
+        )
+    }
+
     private fun checkInvalidation(instruction: CacheInstruction,
                                   key: String) {
         if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
@@ -142,7 +149,7 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                         selection,
                         selectionArgs
                 ).let {
-                    logger.d("Invalidating cache for $key: ${if (it > 0) "DONE" else "NOT FOUND"}")
+                    logger.d("Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
                 }
             }
         }
