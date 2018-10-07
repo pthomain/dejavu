@@ -48,7 +48,9 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
         logger.d("Checking for cached $simpleName")
         val cachedResponse = databaseManager.getCachedResponse(instructionToken, start)
-        val diskDuration = (System.currentTimeMillis() - start).toInt()
+
+        val diskDuration = cachedResponse?.metadata?.callDuration?.disk
+                ?: (System.currentTimeMillis() - start).toInt()
 
         if (cachedResponse == null) {
             return fetchAndCache(
@@ -118,12 +120,12 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                         metadata.copy(
                                 cacheToken = if (isRefreshFreshOnly) cacheToken.copy(status = REFRESHED)
                                 else cacheToken,
-                                callDuration = metadata.callDuration.copy(disk = diskDuration)
+                                callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
                         )
                     } else {
                         metadata.copy(
                                 cacheToken = metadata.cacheToken.copy(status = EMPTY),
-                                callDuration = metadata.callDuration.copy(disk = diskDuration)
+                                callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
                         )
                     }
                 }
@@ -139,6 +141,13 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                     }
                 }
     }
+
+    private fun getRefreshCallDuration(callDuration: CacheMetadata.Duration,
+                                       diskDuration: Int) =
+            callDuration.copy(
+                    disk = diskDuration,
+                    network = callDuration.network - diskDuration
+            )
 
     private fun refreshStale(previousCachedResponse: ResponseWrapper<E>,
                              diskDuration: Int,
@@ -166,8 +175,8 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                 val isCouldNotRefresh = error.isNetworkError() && !refreshOperation.freshOnly
                 previousCachedResponse.copy(
                         response = if (isCouldNotRefresh) previousCachedResponse.response else null,
-                        metadata = updateStatus(
-                                previousCachedResponse,
+                        metadata = updateRefreshStatus(
+                                responseWrapper.metadata,
                                 error,
                                 if (isCouldNotRefresh) COULD_NOT_REFRESH else EMPTY
                         )
@@ -185,8 +194,8 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
     private fun updateRefreshed(response: ResponseWrapper<E>,
                                 newStatus: CacheStatus): ResponseWrapper<E> {
         val simpleName = response.metadata.cacheToken.instruction.responseClass.simpleName
-        response.metadata = updateStatus(
-                response,
+        response.metadata = updateRefreshStatus(
+                response.metadata,
                 null,
                 newStatus
         )
@@ -196,10 +205,9 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         return response
     }
 
-    private fun updateStatus(response: ResponseWrapper<E>,
-                             exception: E?,
-                             newStatus: CacheStatus): CacheMetadata<E> {
-        val metadata = response.metadata
+    private fun updateRefreshStatus(metadata: CacheMetadata<E>,
+                                    exception: E?,
+                                    newStatus: CacheStatus): CacheMetadata<E> {
         val oldToken = metadata.cacheToken
         val newToken = oldToken.copy(status = newStatus)
 
