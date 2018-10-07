@@ -109,39 +109,44 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             )
 
     @Provides
-    fun provideErrorInterceptorFactory() = object : Function<CacheToken, ErrorInterceptor<E>> {
-        override fun get(t: CacheToken) = ErrorInterceptor(
+    fun provideErrorInterceptorFactory() = object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
+        override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
                 configuration.errorFactory,
                 configuration.logger,
-                t,
+                t1,
+                t2,
                 configuration.networkTimeOutInSeconds
         )
     }
 
     @Provides
-    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>) = object : Function<CacheToken, CacheInterceptor<E>> {
-        override fun get(t: CacheToken) = CacheInterceptor(
+    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>) = object : Function2<CacheToken, Long, CacheInterceptor<E>> {
+        override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
                 cacheManager,
                 configuration.isCacheEnabled,
                 configuration.logger,
-                t
+                t1,
+                t2
         )
     }
 
     @Provides
-    fun provideResponseInterceptor() = ResponseInterceptor<E>(
-            configuration.logger,
-            configuration.mergeOnNextOnError
-    )
+    fun provideResponseInterceptor() = object : Function1<Long, ResponseInterceptor<E>> {
+        override fun get(t1: Long) = ResponseInterceptor<E>(
+                configuration.logger,
+                t1,
+                configuration.mergeOnNextOnError
+        )
+    }
 
     @Provides
-    fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function<CacheToken, ErrorInterceptor<E>>,
-                                         cacheInterceptorFactory: Function<CacheToken, CacheInterceptor<E>>,
-                                         responseInterceptor: ResponseInterceptor<E>) =
+    fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
+                                         responseInterceptor: Function1<Long, ResponseInterceptor<E>>) =
             RxCacheInterceptor.Factory(
-                    { errorInterceptorFactory.get(it) },
-                    { cacheInterceptorFactory.get(it) },
-                    responseInterceptor,
+                    { t1, t2 -> errorInterceptorFactory.get(t1, t2) },
+                    { t1, t2 -> cacheInterceptorFactory.get(t1, t2) },
+                    { responseInterceptor.get(it) },
                     configuration
             )
 
@@ -154,7 +159,11 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
                     configuration.logger
             )
 
-    interface Function<T, R> {
-        fun get(t: T): R
+    interface Function1<T1, R> {
+        fun get(t1: T1): R
+    }
+
+    interface Function2<T1, T2, R> {
+        fun get(t1: T1, t2: T2): R
     }
 }

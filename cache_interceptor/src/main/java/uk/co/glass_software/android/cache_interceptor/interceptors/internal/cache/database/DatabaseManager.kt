@@ -1,6 +1,7 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database
 
 import android.content.ContentValues
+import androidx.annotation.VisibleForTesting
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
@@ -15,6 +16,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.TABLE_CACHE
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
@@ -28,7 +30,7 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                                   private val compressData: Boolean,
                                   private val encryptData: Boolean,
                                   private val durationInMillis: Long,
-                                  private val dateFactory: (Long) -> Date,
+                                  private val dateFactory: (Long?) -> Date,
                                   private val contentValuesFactory: (Map<String, *>) -> ContentValues)
         where E : Exception,
               E : NetworkErrorProvider {
@@ -67,7 +69,8 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
         }
     }
 
-    fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
+    fun getCachedResponse(instructionToken: CacheToken,
+                          start: Long): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
         logger.d("Checking for cached $simpleName")
@@ -112,6 +115,7 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
 
                     return getCachedResponse(
                             instructionToken,
+                            start,
                             cacheDate,
                             expiryDate,
                             isCompressed,
@@ -156,6 +160,7 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
     }
 
     private fun getCachedResponse(instructionToken: CacheToken,
+                                  start: Long,
                                   cacheDate: Date,
                                   expiryDate: Date,
                                   isCompressed: Boolean,
@@ -163,24 +168,38 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                                   localData: ByteArray) =
             serialisationManager.deserialise(
                     instructionToken,
+                    start,
                     localData,
                     isEncrypted,
                     isCompressed
             ) { clearCache(null, false) }
                     ?.also {
+                        val callDuration = CacheMetadata.Duration(
+                                (System.currentTimeMillis() - start).toInt(),
+                                0,
+                                0
+                        )
+
                         it.metadata = CacheMetadata(
                                 CacheToken.cached(
                                         instructionToken,
+                                        getCachedStatus(expiryDate),
                                         isCompressed,
                                         isEncrypted,
                                         cacheDate,
                                         expiryDate
                                 ),
-                                null
+                                null,
+                                callDuration
                         )
 
                         logger.d("Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
                     }
+
+    @VisibleForTesting
+    fun getCachedStatus(expiryDate: Date) =
+            if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
+
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,

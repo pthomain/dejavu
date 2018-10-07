@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFactory<E>,
                                                private val logger: Logger,
                                                private val instructionToken: CacheToken,
+                                               private val start: Long,
                                                private val timeOutInSeconds: Int)
     : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
@@ -28,7 +29,12 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
                 ResponseWrapper<E>(
                         instructionToken.instruction.responseClass,
                         it,
-                        CacheMetadata(instructionToken, null)
+                        start,
+                        CacheMetadata(
+                                instructionToken,
+                                null,
+                                getCallDuration()
+                        )
                 )
             }
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })!!
@@ -45,8 +51,20 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
         return ResponseWrapper(
                 responseClass,
                 null,
-                CacheMetadata(instructionToken, apiError)
+                start,
+                CacheMetadata(
+                        instructionToken,
+                        apiError,
+                        getCallDuration()
+                )
         )
     }
+
+    private fun getCallDuration() =
+            CacheMetadata.Duration(
+                    0,
+                    (System.currentTimeMillis() - start).toInt(),
+                    0
+            )
 
 }

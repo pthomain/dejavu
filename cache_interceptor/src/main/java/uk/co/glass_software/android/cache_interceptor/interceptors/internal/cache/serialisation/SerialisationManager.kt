@@ -16,6 +16,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
               E : NetworkErrorProvider {
 
     fun deserialise(instructionToken: CacheToken,
+                    start: Long,
                     data: ByteArray,
                     isEncrypted: Boolean,
                     isCompressed: Boolean,
@@ -39,6 +40,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
             return ResponseWrapper(
                     responseClass,
                     response,
+                    start,
                     CacheMetadata<E>(instructionToken, null)
             )
         } catch (e: Exception) {

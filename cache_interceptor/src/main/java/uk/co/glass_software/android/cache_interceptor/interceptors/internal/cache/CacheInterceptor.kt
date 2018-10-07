@@ -16,7 +16,8 @@ import java.util.*
 internal class CacheInterceptor<E> constructor(private val cacheManager: CacheManager<E>,
                                                private val isCacheEnabled: Boolean,
                                                private val logger: Logger,
-                                               private val instructionToken: CacheToken)
+                                               private val instructionToken: CacheToken,
+                                               private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorProvider {
@@ -29,7 +30,8 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                 is Expiring -> cacheManager.getCachedResponse(
                         upstream,
                         instructionToken,
-                        instruction.operation
+                        instruction.operation,
+                        start
                 )
                 else -> doNotCache(instructionToken, upstream)
             }
@@ -37,7 +39,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
 
         return observable.filter {
             val filterFinal = (instruction.operation as? Expiring)?.filterFinal ?: false
-            !filterFinal || it.metadata!!.cacheToken.status.isFinal
+            !filterFinal || it.metadata.cacheToken.status.isFinal
         }
     }
 

@@ -13,19 +13,15 @@ import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 
 @Suppress("UNCHECKED_CAST")
 internal class ResponseInterceptor<E>(private val logger: Logger,
+                                      private val start: Long,
                                       private val mergeOnNextOnError: Boolean)
     : ObservableTransformer<ResponseWrapper<E>, Any>,
         SingleTransformer<ResponseWrapper<E>, Any>
         where E : Exception,
               E : NetworkErrorProvider {
 
-    override fun apply(upstream: Observable<ResponseWrapper<E>>): Observable<Any> {
-        var start = 0L
-        return upstream
-                .doOnSubscribe { start = System.currentTimeMillis() }
-                .doAfterNext { start = System.currentTimeMillis() }!!
-                .flatMap { this.intercept(it, start) }
-    }
+    override fun apply(upstream: Observable<ResponseWrapper<E>>) =
+            upstream.flatMap(this::intercept)
 
     override fun apply(upstream: Single<ResponseWrapper<E>>) =
             upstream
@@ -33,10 +29,9 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                     .compose(this)
                     .firstOrError()!!
 
-    private fun intercept(wrapper: ResponseWrapper<E>,
-                          start: Long): Observable<Any> {
+    private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
         val responseClass = wrapper.responseClass
-        val metadata = wrapper.metadata!!
+        val metadata = wrapper.metadata
         val operation = metadata.cacheToken.instruction.operation
 
         val mergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
@@ -50,8 +45,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                     responseClass,
                     metadata,
                     operation,
-                    mergeOnNextOnError,
-                    start
+                    mergeOnNextOnError
             )
             logger.d("Returning response: $metadata")
             Observable.just(response)
@@ -83,11 +77,14 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                             responseClass: Class<*>,
                             metadata: CacheMetadata<E>,
                             operation: CacheInstruction.Operation?,
-                            mergeOnNextOnError: Boolean,
-                            start: Long) {
+                            mergeOnNextOnError: Boolean) {
         val holder = response as? CacheMetadata.Holder<E>?
         if (holder != null) {
-            holder.metadata = metadata.copy(callDuration = System.currentTimeMillis() - start)
+            holder.metadata = metadata.copy(
+                    callDuration = metadata.callDuration.copy(
+                            total = (System.currentTimeMillis() - start).toInt()
+                    )
+            )
         } else {
             logError(responseClass, operation, mergeOnNextOnError)
         }

@@ -9,8 +9,8 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.erro
  * CacheMetadata.Holder interface in a similar fashion as this class' implementation.
  * To provide your own error handling via an error factory, see ApiErrorFactory.
  */
-abstract class Cacheable : CacheMetadata.Holder<ApiError>{
+abstract class Cacheable : CacheMetadata.Holder<ApiError> {
 
-    override var metadata: CacheMetadata<ApiError>? = null
+    override lateinit var metadata: CacheMetadata<ApiError>
 
 }

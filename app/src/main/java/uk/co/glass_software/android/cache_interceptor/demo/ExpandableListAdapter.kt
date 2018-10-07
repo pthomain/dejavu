@@ -39,14 +39,20 @@ internal class ExpandableListAdapter(context: Context,
     }
 
     fun showCatFact(catFactResponse: CatFactResponse) {
-        val metadata = catFactResponse.metadata!!
+        val metadata = catFactResponse.metadata
         val cacheToken = metadata.cacheToken
         val exception = metadata.exception
         val operation = cacheToken.instruction.operation.type
+        val callDuration = metadata.callDuration
 
-        val elapsed = "${operation.name} -> ${cacheToken.status} (${metadata.callDuration}ms)"
+        val elapsed = "${operation.name} -> ${cacheToken.status} (${callDuration.total}ms)"
+        val duration = "Call duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms"
+
         val info = ArrayList<String>()
         val header: String
+
+        info.add("Cache token instruction: $operation")
+        info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
 
         if (exception != null) {
             header = "An error occurred: $elapsed"
@@ -54,13 +60,13 @@ internal class ExpandableListAdapter(context: Context,
             info.add("Description: " + exception.description)
             info.add("Message: " + exception.message)
             info.add("Cause: " + exception.cause)
+            info.add(duration)
         } else {
             factCallback(catFactResponse.fact!!)
             header = elapsed
 
-            info.add("Cache token instruction: $operation")
-            info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
             info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
+            info.add(duration)
 
             if (operation is Expiring) {
                 info.add("Cache token expiry date: "

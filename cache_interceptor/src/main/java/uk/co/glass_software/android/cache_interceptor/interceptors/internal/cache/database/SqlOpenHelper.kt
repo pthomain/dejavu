@@ -46,9 +46,9 @@ internal class SqlOpenHelper(context: Context,
     }
 
     companion object {
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 1
 
-        const val TABLE_CACHE = "http_cache"
+        const val TABLE_CACHE = "rx_cache"
 
         enum class COLUMNS(val columnName: String,
                            val type: String) {

@@ -56,11 +56,12 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         )
 
         internal fun cached(instructionToken: CacheToken,
+                            status: CacheStatus,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
                             cacheDate: Date,
                             expiryDate: Date) = instructionToken.copy(
-                status = CACHED,
+                status = status,
                 isCompressed = isCompressed,
                 isEncrypted = isEncrypted,
                 cacheDate = cacheDate,
