@@ -23,7 +23,7 @@ android {
     }
 
     buildTypes {
-        debug{
+        debug {
             minifyEnabled false
             multiDexEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
@@ -98,47 +98,45 @@ artifacts {
 }
 
 dependencies {
-    implementation 'com.github.jitpack:gradle-simple:1.0'
-    implementation "com.android.support:multidex:$multidexVersion"
+    implementation appDependencies.jitPack
+    implementation appDependencies.multiDex
+    implementation appDependencies.androidXcore
 
-    compileOnly "javax.annotation:jsr250-api:$jsr250Version"
-    implementation "androidx.annotation:annotation:$supportLibVersion"
+    api appDependencies.kotlinJdk8
+    api appDependencies.kotlinReflect
 
-    api "com.github.pthomain:SharedPreferenceStore:$sharedPrefStoreVersion"
-    api "com.github.pthomain:boilerplate:$boilerplateVersion"
+    compileOnly appDependencies.jsr250
+    implementation appDependencies.androidAnnotations
 
-    implementation "com.google.dagger:dagger:$daggerVersion"
-    kapt "com.google.dagger:dagger-compiler:$daggerVersion"
+    implementation appDependencies.sharedPreferenceStore
+    api appDependencies.boilerplate
 
-    api "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
-    api "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion"
-    api "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion"
+    implementation appDependencies.dagger
+    kapt appDependencies.daggerCompiler
 
-    api "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    api appDependencies.rxJava
+    api appDependencies.rxKotlin
+    api appDependencies.rxAndroid
 
-    implementation "org.apache.commons:commons-lang3:$apacheCommonsVersion"
-    implementation "androidx.core:core:$supportLibVersion"
-    implementation "androidx.multidex:multidex:$multidexVersion"
-    implementation "org.iq80.snappy:snappy:$snappyVersion"
-    implementation "io.requery:sqlite-android:$requeryVersion"
+    implementation appDependencies.snappy
+    implementation appDependencies.requery
 
-    api "com.squareup.retrofit2:retrofit:$retrofitVersion"
-    api "com.squareup.retrofit2:converter-gson:$retrofitVersion"
-    api "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion"
+    api appDependencies.retrofit
+    api appDependencies.retrofitConverterGson
+    api appDependencies.retrofitAdapterRxJava
 
-    api "com.google.code.gson:gson:$gsonVersion"
+    api appDependencies.gson
 
-    compileOnly "junit:junit:$jUnitVersion"
-    compileOnly "org.mockito:mockito-core:$mockitoVersion"
-    compileOnly "org.robolectric:robolectric:$robolectricVersion"
-    compileOnly "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+    compileOnly appDependencies.jUnit
+    compileOnly appDependencies.mockitoCore
+    compileOnly appDependencies.robolectric
+    compileOnly appDependencies.okHttpMock
 
-    testImplementation "junit:junit:$jUnitVersion"
-    testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$robolectricVersion"
-    testImplementation "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+    testImplementation appDependencies.jUnit
+    testImplementation appDependencies.mockitoCore
+    testImplementation appDependencies.robolectric
+    testImplementation appDependencies.okHttpMock
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 }
 
 repositories {

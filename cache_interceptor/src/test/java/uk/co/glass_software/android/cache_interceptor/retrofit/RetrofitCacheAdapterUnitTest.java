@@ -44,7 +44,7 @@ public class RetrofitCacheAdapterUnitTest {
     public void testAdapt() throws Exception {
         Call mockCall = mock(Call.class);
         HttpUrl url = HttpUrl.parse("http://test.com");
-        RequestBody mockBody = RequestBody.create(MediaType.parse("text/plain"), "body");
+        RequestBody mockBody = RequestBody.create(MediaType.parse("text/plain"), "uniqueParameters");
         Request mockRequest = new Request.Builder().url(url).put(mockBody).build();
         RxCacheInterceptor mockCacheInterceptor = mock(RxCacheInterceptor.class);
         TestResponse mockUpstreamResponse = mock(TestResponse.class);

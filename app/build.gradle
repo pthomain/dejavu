@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -62,15 +63,17 @@ android {
 
 dependencies {
     implementation project(path: ':cache_interceptor')
+    implementation appDependencies.multiDex
 
-    implementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
-    implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
-    implementation "androidx.multidex:multidex:$multidexVersion"
-    implementation "com.android.volley:volley:$volleyVersion"
+    implementation appDependencies.dagger
+    kapt appDependencies.daggerCompiler
 
-    implementation "androidx.appcompat:appcompat:$supportLibVersion"
-    implementation "androidx.browser:browser:$supportLibVersion"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation appDependencies.okHttp
+    implementation appDependencies.okHttpLogging
+    implementation appDependencies.volley
+
+    implementation appDependencies.appCompat
+    implementation appDependencies.browser
 }
 
 repositories {

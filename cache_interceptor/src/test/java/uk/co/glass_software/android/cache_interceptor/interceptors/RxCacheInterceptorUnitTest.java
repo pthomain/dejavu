@@ -6,11 +6,11 @@ import org.mockito.ArgumentCaptor;
 
 import io.reactivex.Observable;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheInterceptor;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheToken;
-import uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheTokenHelper;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheTokenHelper;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 import static junit.framework.Assert.assertEquals;
@@ -18,8 +18,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.CACHE;
-import static uk.co.glass_software.android.cache_interceptor.interceptors.cache.CacheStatus.REFRESH;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.CACHE;
+import static uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.REFRESH;
 
 @SuppressWarnings("unchecked")
 public class RxCacheInterceptorUnitTest {

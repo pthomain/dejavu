@@ -1,12 +1,11 @@
 package uk.co.glass_software.android.cache_interceptor.annotations
 
-@Target(AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY_GETTER)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Cache(val durationInMillis: Long = DEFAULT_DURATION,
-                       val mergeOnNextOnError: Boolean = false,
-                       val freshOnly: Boolean = false,
-                       val encrypt: Boolean = false,
-                       val compress: Boolean = true)
+import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.DEFAULT
 
-const val DEFAULT_DURATION = 300000L //5 min
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Cache(val freshOnly: Boolean = false,
+                       val durationInMillis: Long = -1L,
+                       val mergeOnNextOnError: OptionalBoolean = DEFAULT,
+                       val encrypt: OptionalBoolean = DEFAULT,
+                       val compress: OptionalBoolean = DEFAULT)

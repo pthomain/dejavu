@@ -11,8 +11,8 @@ import java.io.InputStreamReader;
 
 import io.reactivex.Observable;
 import uk.co.glass_software.android.boilerplate.log.Logger;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.interceptors.error.ErrorCode;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError;
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorCode;
 import uk.co.glass_software.android.cache_interceptor.utils.Function;
 
 public class AssetHelper {
