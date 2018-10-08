@@ -48,6 +48,8 @@ data class CacheInstruction(val responseClass: Class<*>,
             )
         }
 
+        object Offline : Operation(OFFLINE)
+
         object Invalidate : Operation(INVALIDATE)
 
         data class Clear(val typeToClear: Class<*>? = null,
@@ -58,6 +60,7 @@ data class CacheInstruction(val responseClass: Class<*>,
             CACHE("@Cache"),
             INVALIDATE("@Invalidate"),
             REFRESH("@Refresh"),
+            OFFLINE("@Offline"),
             CLEAR("@Clear"),
             CLEAR_ALL("@Clear")
         }

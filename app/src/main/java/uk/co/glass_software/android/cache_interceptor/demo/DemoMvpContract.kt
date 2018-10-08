@@ -26,6 +26,7 @@ internal class DemoMvpContract {
 
         fun clearEntries()
         fun invalidate()
+        fun offline()
 
     }
 

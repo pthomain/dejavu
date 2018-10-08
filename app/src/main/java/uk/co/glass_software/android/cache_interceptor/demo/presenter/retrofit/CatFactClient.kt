@@ -4,11 +4,8 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import uk.co.glass_software.android.cache_interceptor.annotations.Cache
-import uk.co.glass_software.android.cache_interceptor.annotations.Clear
-import uk.co.glass_software.android.cache_interceptor.annotations.Invalidate
+import uk.co.glass_software.android.cache_interceptor.annotations.*
 import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.TRUE
-import uk.co.glass_software.android.cache_interceptor.annotations.Refresh
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 
@@ -39,21 +36,21 @@ internal interface CatFactClient {
 
     @GET(ENDPOINT)
     @Cache(freshOnly = true)
-    fun freshOnly(): Observable<CatFactResponse>  //TODO single
+    fun freshOnly(): Observable<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
             freshOnly = true,
             compress = TRUE
     )
-    fun freshOnlyCompressed(): Observable<CatFactResponse>  //TODO single
+    fun freshOnlyCompressed(): Observable<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
             freshOnly = true,
             encrypt = TRUE
     )
-    fun freshOnlyEncrypted(): Observable<CatFactResponse>  //TODO single
+    fun freshOnlyEncrypted(): Observable<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
@@ -61,7 +58,7 @@ internal interface CatFactClient {
             compress = TRUE,
             encrypt = TRUE
     )
-    fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>  //TODO single
+    fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>
 
     // REFRESH
 
@@ -71,7 +68,7 @@ internal interface CatFactClient {
 
     @GET(ENDPOINT)
     @Refresh(freshOnly = true)
-    fun refreshFreshOnly(): Observable<CatFactResponse>  //TODO single
+    fun refreshFreshOnly(): Observable<CatFactResponse>
 
     // CLEAR
 
@@ -79,10 +76,16 @@ internal interface CatFactClient {
     @Clear(typeToClear = CatFactResponse::class)
     fun clearCache(): Completable
 
-    // CLEAR
+    // INVALIDATE
 
     @DELETE(ENDPOINT)
     @Invalidate(typeToInvalidate = CatFactResponse::class)
     fun invalidate(): Completable
+
+    // OFFLINE
+
+    @GET(ENDPOINT)
+    @Offline
+    fun offline(): Observable<CatFactResponse>
 
 }

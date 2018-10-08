@@ -43,6 +43,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                 is DoNotCache -> DO_NOT_CACHE
                 is Invalidate -> INVALIDATE
                 is Refresh -> REFRESH
+                is Offline -> OFFLINE
                 is Clear -> CLEAR
                 is ClearAll -> CLEAR_ALL
                 else -> null
@@ -126,6 +127,11 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
                     )
+            )
+
+            is Offline -> CacheInstruction(
+                    responseClass,
+                    Operation.Offline
             )
 
             is Clear -> {

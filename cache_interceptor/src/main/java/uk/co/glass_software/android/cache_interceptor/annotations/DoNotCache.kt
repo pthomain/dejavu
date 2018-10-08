@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.cache_interceptor.annotations
 
-@Target(AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY_GETTER)
+@Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class DoNotCache

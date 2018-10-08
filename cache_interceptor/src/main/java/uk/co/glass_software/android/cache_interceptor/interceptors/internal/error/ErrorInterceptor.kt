@@ -29,7 +29,6 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
                 ResponseWrapper<E>(
                         instructionToken.instruction.responseClass,
                         it,
-                        start,
                         CacheMetadata(
                                 instructionToken,
                                 null,
@@ -51,7 +50,6 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
         return ResponseWrapper(
                 responseClass,
                 null,
-                start,
                 CacheMetadata(
                         instructionToken,
                         apiError,

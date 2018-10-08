@@ -168,7 +168,6 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
                                   localData: ByteArray) =
             serialisationManager.deserialise(
                     instructionToken,
-                    start,
                     localData,
                     isEncrypted,
                     isCompressed

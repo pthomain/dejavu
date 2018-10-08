@@ -16,10 +16,10 @@ import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPre
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
     : BaseDemoPresenter(demoActivity, uiLogger) {
-
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
 
     companion object {
+
         private const val URL = BaseDemoPresenter.BASE_URL + BaseDemoPresenter.ENDPOINT
     }
 
@@ -55,6 +55,8 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         URL
                 )
             }
+
+    override fun getOfflineCompletable() = getObservableForOperation(Operation.Offline)
 
     override fun getClearEntriesCompletable() = getObservableForOperation(Clear()).ignoreElements()!!
 

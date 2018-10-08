@@ -31,6 +31,7 @@ internal class DemoActivity
     private val loadButton by lazy { findViewById<View>(R.id.load_button)!! }
     private val refreshButton by lazy { findViewById<View>(R.id.refresh_button)!! }
     private val clearButton by lazy { findViewById<View>(R.id.clear_button)!! }
+    private val offlineButton by lazy { findViewById<View>(R.id.offline_button)!! }
     private val invalidateButton by lazy { findViewById<View>(R.id.invalidate_button)!! }
     private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
 
@@ -71,6 +72,7 @@ internal class DemoActivity
         loadButton.setOnClickListener { loadCatFact(false) }
         refreshButton.setOnClickListener { loadCatFact(true) }
         clearButton.setOnClickListener { getPresenter().clearEntries() }
+        offlineButton.setOnClickListener { getPresenter().offline() }
         invalidateButton.setOnClickListener { getPresenter().invalidate() }
 
         gitHubButton.setOnClickListener { openGithub() }
@@ -130,6 +132,7 @@ internal class DemoActivity
         refreshButton.isEnabled = isEnabled
         clearButton.isEnabled = isEnabled
         invalidateButton.isEnabled = isEnabled
+        offlineButton.isEnabled = isEnabled
     }
 
     private fun openGithub() {

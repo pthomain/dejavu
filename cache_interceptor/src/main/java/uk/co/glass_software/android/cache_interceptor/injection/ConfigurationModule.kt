@@ -103,6 +103,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     fun cacheManager(databaseManager: DatabaseManager<E>) =
             CacheManager(
                     databaseManager,
+                    configuration.errorFactory,
                     dateFactory,
                     configuration.cacheDurationInMillis,
                     configuration.logger

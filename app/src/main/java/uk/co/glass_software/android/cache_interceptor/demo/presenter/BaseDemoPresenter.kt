@@ -46,6 +46,14 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                 .autoSubscribe(mvpView::showCatFact)
     }
 
+    final override fun offline() {
+        getOfflineCompletable()
+                .io()
+                .doOnSubscribe { mvpView.onCallStarted() }
+                .doOnComplete(mvpView::onCallComplete)
+                .autoSubscribe(mvpView::showCatFact)
+    }
+
     final override fun clearEntries() {
         getClearEntriesCompletable()
                 .io()
@@ -74,6 +82,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                                                  freshOnly: Boolean)
             : Observable<out CatFactResponse>
 
+    protected abstract fun getOfflineCompletable(): Observable<out CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): Completable
     protected abstract fun getInvalidateCompletable(): Completable
 

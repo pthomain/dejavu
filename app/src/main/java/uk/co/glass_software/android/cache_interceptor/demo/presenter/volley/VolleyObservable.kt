@@ -8,7 +8,6 @@ import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import io.reactivex.Observable
 import io.reactivex.Observer
-import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheTransformer
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
@@ -21,10 +20,10 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
         where E : Exception,
               E : NetworkErrorProvider {
 
-    private val publishSubject: PublishSubject<R> = PublishSubject.create()
+    private lateinit var observer: Observer<in R>
 
     override fun subscribeActual(observer: Observer<in R>) {
-        publishSubject.subscribe(observer)
+        this.observer = observer
         requestQueue.add(StringRequest(
                 Request.Method.GET,
                 url,
@@ -34,12 +33,12 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
     }
 
     private fun onResponse(response: String) {
-        publishSubject.onNext(gson.fromJson(response, responseClass))
-        publishSubject.onComplete()
+        observer.onNext(gson.fromJson(response, responseClass))
+        observer.onComplete()
     }
 
     private fun onError(volleyError: VolleyError) {
-        publishSubject.onError(volleyError)
+        observer.onError(volleyError)
     }
 
     companion object {
@@ -48,8 +47,9 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                           gson: Gson,
                           responseClass: Class<R>,
                           cacheInterceptor: RxCacheTransformer,
-                          url: String) where E : Exception,
-                                             E : NetworkErrorProvider =
+                          url: String)
+                where E : Exception,
+                      E : NetworkErrorProvider =
                 VolleyObservable<E, R>(
                         requestQueue,
                         gson,

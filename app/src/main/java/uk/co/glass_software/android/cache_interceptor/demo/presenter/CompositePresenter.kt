@@ -41,6 +41,8 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
 
     override fun invalidate() = getPresenter().invalidate()
 
+    override fun offline() = getPresenter().offline()
+
     private fun getPresenter() =
             if (method == RETROFIT)
                 retrofitDemoPresenter

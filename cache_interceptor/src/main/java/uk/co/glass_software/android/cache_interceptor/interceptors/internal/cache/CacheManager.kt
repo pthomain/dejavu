@@ -5,8 +5,10 @@ import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.On
 import uk.co.glass_software.android.boilerplate.utils.rx.schedule
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Refresh
+import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
@@ -15,9 +17,11 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import java.util.*
+import kotlin.NoSuchElementException
 
 
 internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
+                               private val errorFactory: ErrorFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val defaultDurationInMillis: Long,
                                private val logger: Logger)
@@ -37,14 +41,13 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
-                          cacheOperation: Expiring,
+                          cacheOperation: Operation,
                           start: Long)
             : Observable<ResponseWrapper<E>> {
 
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
-
-        val isRefreshFreshOnly = cacheOperation.freshOnly && cacheOperation is Refresh
+        val isRefreshFreshOnly = cacheOperation is Refresh && cacheOperation.freshOnly
 
         logger.d("Checking for cached $simpleName")
         val cachedResponse = databaseManager.getCachedResponse(instructionToken, start)
@@ -52,33 +55,61 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         val diskDuration = cachedResponse?.metadata?.callDuration?.disk
                 ?: (System.currentTimeMillis() - start).toInt()
 
-        if (cachedResponse == null) {
-            return fetchAndCache(
-                    null,
-                    upstream,
-                    cacheOperation,
-                    instructionToken,
-                    diskDuration,
-                    isRefreshFreshOnly
-            )
-        } else {
-            val metadata = cachedResponse.metadata
-            val cachedResponseToken = metadata.cacheToken
-            val status = cachedResponseToken.status
-
-            logger.d("Found cached $simpleName, status: $status")
-
-            return if (status === STALE) {
-                refreshStale(
-                        cachedResponse,
-                        diskDuration,
+        if (cacheOperation is Expiring) {
+            if (cachedResponse == null) {
+                return fetchAndCache(
+                        null,
+                        upstream,
                         cacheOperation,
-                        upstream
-                ).filter { !cacheOperation.freshOnly || it.metadata.cacheToken.status.isFresh }
+                        instructionToken,
+                        diskDuration,
+                        isRefreshFreshOnly
+                )
             } else {
-                Observable.just(cachedResponse)
+                val metadata = cachedResponse.metadata
+                val cachedResponseToken = metadata.cacheToken
+                val status = cachedResponseToken.status
+
+                logger.d("Found cached $simpleName, status: $status")
+
+                if (status === STALE) {
+                    return refreshStale(
+                            cachedResponse,
+                            diskDuration,
+                            cacheOperation,
+                            upstream
+                    )
+                }
             }
         }
+
+        return cachedResponse
+                ?.let {
+                    if (cacheOperation is Expiring
+                            && cacheOperation.freshOnly
+                            && !it.metadata.cacheToken.status.isFresh)
+                        null
+                    else
+                        Observable.just(it)
+                }
+                ?: Observable.just(ResponseWrapper(
+                        instruction.responseClass,
+                        null,
+                        CacheMetadata(
+                                instructionToken.copy(
+                                        fetchDate = Date(),
+                                        status = EMPTY
+                                ),
+                                errorFactory.getError(
+                                        NoSuchElementException("No ${instruction.responseClass.simpleName} response is available")
+                                ),
+                                CacheMetadata.Duration(
+                                        diskDuration,
+                                        0,
+                                        0
+                                )
+                        )
+                ))
     }
 
     private fun fetchAndCache(previousCachedResponse: ResponseWrapper<E>?,
@@ -207,14 +238,10 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
     private fun updateRefreshStatus(metadata: CacheMetadata<E>,
                                     exception: E?,
-                                    newStatus: CacheStatus): CacheMetadata<E> {
-        val oldToken = metadata.cacheToken
-        val newToken = oldToken.copy(status = newStatus)
-
-        return metadata.copy(
-                cacheToken = newToken,
-                exception = exception
-        )
-    }
+                                    newStatus: CacheStatus) =
+            metadata.copy(
+                    cacheToken = metadata.cacheToken.copy(status = newStatus),
+                    exception = exception
+            )
 
 }

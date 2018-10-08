@@ -5,8 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
@@ -27,7 +26,8 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
 
         val observable = if (isCacheEnabled) {
             when (instruction.operation) {
-                is Expiring -> cacheManager.getCachedResponse(
+                is Expiring,
+                is Offline -> cacheManager.getCachedResponse(
                         upstream,
                         instructionToken,
                         instruction.operation,
@@ -45,16 +45,15 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
 
     fun complete() = (
             if (isCacheEnabled) {
-                when {
-                    instructionToken.instruction.operation is Operation.Clear -> clear(instructionToken.instruction.operation)
-                    instructionToken.instruction.operation is Operation.Invalidate -> invalidate()
+                when (instructionToken.instruction.operation) {
+                    is Clear -> clear(instructionToken.instruction.operation)
+                    is Invalidate -> invalidate()
                     else -> Completable.complete()
                 }
-            } else
-                Completable.complete()
+            } else Completable.complete()
             )!!
 
-    private fun clear(operation: Operation.Clear) =
+    private fun clear(operation: Clear) =
             cacheManager.clearCache(
                     operation.typeToClear,
                     operation.clearOldEntriesOnly
