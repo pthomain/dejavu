@@ -88,4 +88,8 @@ internal interface CatFactClient {
     @Offline
     fun offline(): Observable<CatFactResponse>
 
+    @GET(ENDPOINT)
+    @Offline(freshOnly = true)
+    fun offlineFreshOnly(): Observable<CatFactResponse>
+
 }

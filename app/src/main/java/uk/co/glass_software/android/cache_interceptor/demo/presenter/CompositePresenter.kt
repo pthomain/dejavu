@@ -41,7 +41,7 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
 
     override fun invalidate() = getPresenter().invalidate()
 
-    override fun offline() = getPresenter().offline()
+    override fun offline(freshOnly: Boolean) = getPresenter().offline(freshOnly)
 
     private fun getPresenter() =
             if (method == RETROFIT)

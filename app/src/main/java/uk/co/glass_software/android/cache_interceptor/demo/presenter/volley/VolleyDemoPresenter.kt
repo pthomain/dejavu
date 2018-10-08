@@ -7,8 +7,8 @@ import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Clear
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Cache
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Refresh
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.*
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
@@ -56,10 +56,13 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                 )
             }
 
-    override fun getOfflineCompletable() = getObservableForOperation(Operation.Offline)
+    override fun getOfflineCompletable(freshOnly: Boolean) =
+            getObservableForOperation(Offline(freshOnly))
 
-    override fun getClearEntriesCompletable() = getObservableForOperation(Clear()).ignoreElements()!!
+    override fun getClearEntriesCompletable() =
+            getObservableForOperation(Clear()).ignoreElements()!!
 
-    override fun getInvalidateCompletable() = getObservableForOperation(Operation.Invalidate).ignoreElements()!!
+    override fun getInvalidateCompletable() =
+            getObservableForOperation(Invalidate).ignoreElements()!!
 
 }

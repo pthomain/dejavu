@@ -26,8 +26,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
 
         val observable = if (isCacheEnabled) {
             when (instruction.operation) {
-                is Expiring,
-                is Offline -> cacheManager.getCachedResponse(
+                is Expiring -> cacheManager.getCachedResponse(
                         upstream,
                         instructionToken,
                         instruction.operation,

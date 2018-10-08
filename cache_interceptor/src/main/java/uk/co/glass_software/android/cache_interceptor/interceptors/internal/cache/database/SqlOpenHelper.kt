@@ -46,7 +46,7 @@ internal class SqlOpenHelper(context: Context,
     }
 
     companion object {
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         const val TABLE_CACHE = "rx_cache"
 

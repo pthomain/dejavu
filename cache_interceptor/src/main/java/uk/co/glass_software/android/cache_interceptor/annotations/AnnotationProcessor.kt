@@ -131,7 +131,10 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
 
             is Offline -> CacheInstruction(
                     responseClass,
-                    Operation.Offline
+                    Operation.Expiring.Offline(
+                            annotation.freshOnly,
+                            annotation.mergeOnNextOnError.value
+                            )
             )
 
             is Clear -> {

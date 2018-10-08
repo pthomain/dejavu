@@ -5,8 +5,8 @@ import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.On
 import uk.co.glass_software.android.boilerplate.utils.rx.schedule
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
@@ -41,7 +41,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
-                          cacheOperation: Operation,
+                          cacheOperation: Expiring,
                           start: Long)
             : Observable<ResponseWrapper<E>> {
 
@@ -55,7 +55,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         val diskDuration = cachedResponse?.metadata?.callDuration?.disk
                 ?: (System.currentTimeMillis() - start).toInt()
 
-        if (cacheOperation is Expiring) {
+        if (cacheOperation !is Offline) {
             if (cachedResponse == null) {
                 return fetchAndCache(
                         null,
@@ -85,9 +85,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
         return cachedResponse
                 ?.let {
-                    if (cacheOperation is Expiring
-                            && cacheOperation.freshOnly
-                            && !it.metadata.cacheToken.status.isFresh)
+                    if (cacheOperation.freshOnly && !it.metadata.cacheToken.status.isFresh)
                         null
                     else
                         Observable.just(it)

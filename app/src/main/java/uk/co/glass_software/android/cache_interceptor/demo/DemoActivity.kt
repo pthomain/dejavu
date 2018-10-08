@@ -72,7 +72,7 @@ internal class DemoActivity
         loadButton.setOnClickListener { loadCatFact(false) }
         refreshButton.setOnClickListener { loadCatFact(true) }
         clearButton.setOnClickListener { getPresenter().clearEntries() }
-        offlineButton.setOnClickListener { getPresenter().offline() }
+        offlineButton.setOnClickListener { getPresenter().offline(freshOnly) }
         invalidateButton.setOnClickListener { getPresenter().invalidate() }
 
         gitHubButton.setOnClickListener { openGithub() }
@@ -92,7 +92,7 @@ internal class DemoActivity
             }
 
             override fun onChanged() {
-                for (x in 0 until listAdapter.groupCount - 1) {
+                for (x in 0 until listAdapter.groupCount) {
                     list.expandGroup(x)
                 }
             }

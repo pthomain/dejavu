@@ -34,41 +34,39 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                                    encrypt: Boolean,
                                    compress: Boolean,
                                    freshOnly: Boolean) {
-        getResponseObservable(
+        subscribe(getResponseObservable(
                 isRefresh,
                 encrypt,
                 compress,
                 freshOnly
-        )
-                .io()
-                .doOnSubscribe { mvpView.onCallStarted() }
-                .doOnComplete(mvpView::onCallComplete)
-                .autoSubscribe(mvpView::showCatFact)
+        ))
     }
 
-    final override fun offline() {
-        getOfflineCompletable()
-                .io()
-                .doOnSubscribe { mvpView.onCallStarted() }
-                .doOnComplete(mvpView::onCallComplete)
-                .autoSubscribe(mvpView::showCatFact)
+    final override fun offline(freshOnly: Boolean) {
+        subscribe(getOfflineCompletable(freshOnly))
     }
 
     final override fun clearEntries() {
-        getClearEntriesCompletable()
-                .io()
-                .doOnSubscribe { mvpView.onCallStarted() }
-                .doOnComplete(mvpView::onCallComplete)
-                .autoSubscribe()
+        subscribe(getClearEntriesCompletable())
     }
 
     final override fun invalidate() {
-        getInvalidateCompletable()
-                .io()
-                .doOnSubscribe { mvpView.onCallStarted() }
-                .doOnComplete(mvpView::onCallComplete)
-                .autoSubscribe()
+        subscribe(getInvalidateCompletable())
     }
+
+    private fun subscribe(observable: Observable<out CatFactResponse>) =
+            observable
+                    .io()
+                    .doOnSubscribe { mvpView.onCallStarted() }
+                    .doOnComplete(mvpView::onCallComplete)
+                    .autoSubscribe(mvpView::showCatFact)
+
+    private fun subscribe(completable: Completable) =
+            completable
+                    .io()
+                    .doOnSubscribe { mvpView.onCallStarted() }
+                    .doOnComplete(mvpView::onCallComplete)
+                    .autoSubscribe()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
@@ -82,7 +80,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                                                  freshOnly: Boolean)
             : Observable<out CatFactResponse>
 
-    protected abstract fun getOfflineCompletable(): Observable<out CatFactResponse>
+    protected abstract fun getOfflineCompletable(freshOnly: Boolean): Observable<out CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): Completable
     protected abstract fun getInvalidateCompletable(): Completable
 

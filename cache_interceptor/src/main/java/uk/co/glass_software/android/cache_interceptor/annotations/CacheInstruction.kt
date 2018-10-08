@@ -46,9 +46,19 @@ data class CacheInstruction(val responseClass: Class<*>,
                     filterFinal,
                     REFRESH
             )
-        }
 
-        object Offline : Operation(OFFLINE)
+            class Offline(freshOnly: Boolean = false,
+                          mergeOnNextOnError: Boolean? = null)
+                : Expiring(
+                    null,
+                    freshOnly,
+                    mergeOnNextOnError,
+                    null,
+                    null,
+                    false,
+                    OFFLINE
+            )
+        }
 
         object Invalidate : Operation(INVALIDATE)
 

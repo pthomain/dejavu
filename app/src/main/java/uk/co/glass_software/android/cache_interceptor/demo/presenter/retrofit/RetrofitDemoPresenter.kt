@@ -54,7 +54,9 @@ internal class RetrofitDemoPresenter(demoActivity: DemoActivity,
                 }
             }
 
-    override fun getOfflineCompletable() = catFactClient.offline()
+    override fun getOfflineCompletable(freshOnly: Boolean) =
+            if (freshOnly) catFactClient.offlineFreshOnly()
+            else catFactClient.offline()
 
     override fun getClearEntriesCompletable() = catFactClient.clearCache()
 
