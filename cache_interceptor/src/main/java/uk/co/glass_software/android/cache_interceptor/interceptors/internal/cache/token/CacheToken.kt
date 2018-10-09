@@ -1,7 +1,7 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token
 
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.*
 import java.security.MessageDigest

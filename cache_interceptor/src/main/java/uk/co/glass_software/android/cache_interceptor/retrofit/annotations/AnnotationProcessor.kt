@@ -1,10 +1,11 @@
-package uk.co.glass_software.android.cache_interceptor.annotations
+package uk.co.glass_software.android.cache_interceptor.retrofit.annotations
 
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor.RxType.COMPLETABLE
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
 
 internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
         where  E : Exception,
@@ -25,7 +26,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
 
             return CacheInstruction(
                     responseClass,
-                    CacheInstruction.Operation.Expiring.Cache(
+                    Operation.Expiring.Cache(
                             cacheConfiguration.cacheDurationInMillis,
                             false,
                             cacheConfiguration.mergeOnNextOnError,
@@ -134,7 +135,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     Operation.Expiring.Offline(
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
-                            )
+                    )
             )
 
             is Clear -> {

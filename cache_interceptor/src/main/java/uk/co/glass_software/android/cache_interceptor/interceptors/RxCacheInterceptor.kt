@@ -3,10 +3,10 @@ package uk.co.glass_software.android.cache_interceptor.interceptors
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.DoNotCache
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.DoNotCache
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.ResponseInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor

@@ -5,7 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata

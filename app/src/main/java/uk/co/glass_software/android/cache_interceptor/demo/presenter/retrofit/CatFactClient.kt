@@ -4,10 +4,10 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import uk.co.glass_software.android.cache_interceptor.annotations.*
-import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.TRUE
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.*
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.OptionalBoolean.TRUE
 
 internal interface CatFactClient {
 

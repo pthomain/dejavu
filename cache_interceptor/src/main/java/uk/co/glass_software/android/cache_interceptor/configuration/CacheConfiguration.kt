@@ -11,7 +11,7 @@ import uk.co.glass_software.android.cache_interceptor.BuildConfig.DEBUG
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
 
-data class CacheConfiguration<E> internal constructor(var context: Context,
+data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val logger: Logger,
                                                       val errorFactory: ErrorFactory<E>,
                                                       val gson: Gson,

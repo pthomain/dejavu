@@ -7,7 +7,6 @@ import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.lambda.Provide1
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
@@ -21,6 +20,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import java.util.*
@@ -29,6 +29,9 @@ import java.util.*
 internal abstract class ConfigurationModule<E>(private val configuration: CacheConfiguration<E>)
         where E : Exception,
               E : NetworkErrorProvider {
+
+    @Provides
+    fun provideConfiguration() = configuration
 
     @Provides
     fun provideGsonSerialiser() =

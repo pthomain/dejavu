@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.cache_interceptor.annotations
+package uk.co.glass_software.android.cache_interceptor.retrofit.annotations
 
 import kotlin.reflect.KClass
 

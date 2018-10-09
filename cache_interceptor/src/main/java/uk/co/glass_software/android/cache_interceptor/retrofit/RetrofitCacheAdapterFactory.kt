@@ -7,10 +7,10 @@ import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor
-import uk.co.glass_software.android.cache_interceptor.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.*
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 

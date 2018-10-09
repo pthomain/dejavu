@@ -12,6 +12,10 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpActivity
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoMvpView
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewModule
@@ -42,14 +46,19 @@ internal class DemoActivity
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
 
+    private val instructionView by lazy { findViewById<InstructionView>(R.id.instruction)!! }
+
     private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
-    private val list by lazy { findViewById<ExpandableListView>(R.id.result)!! }
+    private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
 
     private var encrypt: Boolean = false
     private var compress: Boolean = false
     private var freshOnly: Boolean = false
 
     private lateinit var presenterSwitcher: Callback1<Method>
+
+    private var instructionType: CacheInstruction.Operation.Type = CACHE
+    private var instructionIsAnnotation: Boolean = true
 
     override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
             .builder()
@@ -71,20 +80,31 @@ internal class DemoActivity
 
         loadButton.setOnClickListener { loadCatFact(false) }
         refreshButton.setOnClickListener { loadCatFact(true) }
-        clearButton.setOnClickListener { getPresenter().clearEntries() }
-        offlineButton.setOnClickListener { getPresenter().offline(freshOnly) }
-        invalidateButton.setOnClickListener { getPresenter().invalidate() }
+        clearButton.setOnClickListener { clearEntries() }
+        offlineButton.setOnClickListener { offline() }
+        invalidateButton.setOnClickListener { invalidate() }
 
+        retrofitRadio.setOnClickListener { switchPresenter(RETROFIT) }
+        volleyRadio.setOnClickListener { switchPresenter(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
-        retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
-        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
 
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> freshOnly = isChecked }
-        compressCheckBox.setOnCheckedChangeListener { _, isChecked -> compress = isChecked }
-        encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> encrypt = isChecked }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            freshOnly = isChecked
+            updateInstructionView()
+        }
+
+        compressCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            compress = isChecked
+            updateInstructionView()
+        }
+
+        encryptCheckBox.setOnCheckedChangeListener { _, isChecked ->
+            encrypt = isChecked
+            updateInstructionView()
+        }
 
         listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
-        list.setAdapter(listAdapter)
+        listView.setAdapter(listAdapter)
 
         listAdapter.registerDataSetObserver(object : DataSetObserver() {
             override fun onInvalidated() {
@@ -93,13 +113,20 @@ internal class DemoActivity
 
             override fun onChanged() {
                 for (x in 0 until listAdapter.groupCount) {
-                    list.expandGroup(x)
+                    listView.expandGroup(x)
                 }
             }
         })
     }
 
+    private fun switchPresenter(method: Method) {
+        updateInstructionType(method == RETROFIT)
+        presenterSwitcher(method)
+    }
+
     private fun loadCatFact(isRefresh: Boolean) {
+        updateInstruction(if (isRefresh) REFRESH else CACHE)
+
         getPresenter().loadCatFact(
                 isRefresh,
                 encrypt,
@@ -108,12 +135,74 @@ internal class DemoActivity
         )
     }
 
+    private fun clearEntries() {
+        updateInstruction(CLEAR)
+        getPresenter().clearEntries()
+    }
+
+    private fun offline() {
+        updateInstruction(OFFLINE)
+        getPresenter().offline(freshOnly)
+    }
+
+    private fun invalidate() {
+        updateInstruction(INVALIDATE)
+        getPresenter().invalidate()
+    }
+
+    private fun updateInstruction(type: CacheInstruction.Operation.Type) {
+        this.instructionType = type
+        updateInstructionView()
+    }
+
+    private fun updateInstructionType(isAnnotation: Boolean) {
+        this.instructionIsAnnotation = isAnnotation
+        updateInstructionView()
+    }
+
+    private fun updateInstructionView() {
+        val configuration = getPresenter().configuration
+
+        val operation = when (instructionType) {
+            CACHE -> Cache(
+                    configuration.cacheDurationInMillis,
+                    freshOnly,
+                    configuration.mergeOnNextOnError,
+                    encrypt,
+                    compress,
+                    false
+            )
+            REFRESH -> Refresh(
+                    configuration.cacheDurationInMillis,
+                    freshOnly,
+                    configuration.mergeOnNextOnError,
+                    false
+            )
+            DO_NOT_CACHE -> DoNotCache
+            INVALIDATE -> Invalidate
+            OFFLINE -> Offline(
+                    freshOnly,
+                    configuration.mergeOnNextOnError
+            )
+            CLEAR,
+            CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
+        }
+
+        instructionView.setInstruction(
+                CacheInstruction(
+                        CatFactResponse::class.java,
+                        operation
+                ),
+                instructionIsAnnotation
+        )
+    }
+
     override fun showCatFact(response: CatFactResponse) {
         listAdapter.showCatFact(response)
     }
 
     override fun onCallStarted() {
-        list.post {
+        listView.post {
             catFactView.text = ""
             setButtonsEnabled(false)
             listAdapter.onStart()
@@ -121,7 +210,7 @@ internal class DemoActivity
     }
 
     override fun onCallComplete() {
-        list.post {
+        listView.post {
             setButtonsEnabled(true)
             listAdapter.onComplete()
         }

@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.*

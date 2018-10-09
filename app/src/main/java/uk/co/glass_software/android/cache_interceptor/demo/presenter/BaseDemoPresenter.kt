@@ -30,6 +30,8 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                 .build(demoActivity)
     }
 
+    final override val configuration = rxCache.configuration
+
     final override fun loadCatFact(isRefresh: Boolean,
                                    encrypt: Boolean,
                                    compress: Boolean,

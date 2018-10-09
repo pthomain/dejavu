@@ -7,10 +7,10 @@ import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.INVALIDATE
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.REFRESH
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.INVALIDATE
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.COLUMNS.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.TABLE_CACHE

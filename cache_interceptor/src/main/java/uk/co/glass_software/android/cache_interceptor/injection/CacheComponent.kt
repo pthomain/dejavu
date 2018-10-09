@@ -1,5 +1,6 @@
 package uk.co.glass_software.android.cache_interceptor.injection
 
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
@@ -7,6 +8,8 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdap
 internal interface CacheComponent<E>
         where E : Exception,
               E : NetworkErrorProvider {
+
+    fun configuration(): CacheConfiguration<E>
 
     fun rxCacheInterceptorFactory(): RxCacheInterceptor.Factory<E>
 

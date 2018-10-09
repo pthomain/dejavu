@@ -5,8 +5,8 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.Call
 import retrofit2.CallAdapter
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import java.lang.reflect.Type

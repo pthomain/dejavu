@@ -14,6 +14,7 @@ open class RxCache<E> internal constructor(component: CacheComponent<E>)
         where E : Exception,
               E : NetworkErrorProvider {
 
+    val configuration: CacheConfiguration<E> = component.configuration()
     val retrofitCacheAdapterFactory: RetrofitCacheAdapterFactory<E> = component.retrofitCacheAdapterFactory()
     val rxCacheInterceptor: RxCacheInterceptor.Factory<E> = component.rxCacheInterceptorFactory()
 

@@ -13,6 +13,8 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
                                   private val retrofitDemoPresenter: RetrofitDemoPresenter,
                                   private val volleyDemoPresenter: VolleyDemoPresenter)
     : DemoPresenter, Callback1<Method> {
+
+    override val configuration = getPresenter().configuration
     override var subscriptions = CompositeDisposable()
 
     enum class Method {
@@ -44,9 +46,7 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
     override fun offline(freshOnly: Boolean) = getPresenter().offline(freshOnly)
 
     private fun getPresenter() =
-            if (method == RETROFIT)
-                retrofitDemoPresenter
-            else
-                volleyDemoPresenter
+            if (method == RETROFIT) retrofitDemoPresenter
+            else volleyDemoPresenter
 
 }

@@ -1,6 +1,6 @@
-package uk.co.glass_software.android.cache_interceptor.annotations
+package uk.co.glass_software.android.cache_interceptor.retrofit.annotations
 
-import uk.co.glass_software.android.cache_interceptor.annotations.OptionalBoolean.DEFAULT
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.OptionalBoolean.DEFAULT
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

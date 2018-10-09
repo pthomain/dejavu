@@ -5,9 +5,9 @@ import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.On
 import uk.co.glass_software.android.boilerplate.utils.rx.schedule
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Offline
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring.Refresh
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.Offline
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager

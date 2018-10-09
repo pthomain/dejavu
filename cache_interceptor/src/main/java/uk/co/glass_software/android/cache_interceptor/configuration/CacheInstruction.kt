@@ -1,9 +1,9 @@
-package uk.co.glass_software.android.cache_interceptor.annotations
+package uk.co.glass_software.android.cache_interceptor.configuration
 
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Type.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 
-data class CacheInstruction(val responseClass: Class<*>,
-                            val operation: Operation) {
+data class CacheInstruction constructor(val responseClass: Class<*>,
+                                        val operation: Operation) {
 
     sealed class Operation(val type: Type) {
 
