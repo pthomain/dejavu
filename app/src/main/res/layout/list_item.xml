@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/listItem"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:letterSpacing="-.05"
+        android:paddingLeft="10dp"
+        android:paddingTop="2sp"
+        android:paddingBottom="2sp"
+        android:textSize="11sp" />
 
-        <TextView
-            android:id="@+id/listItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:letterSpacing="-.05"
-            android:paddingLeft="10dp"
-            android:paddingTop="2sp"
-            android:paddingBottom="2sp"
-            android:textSize="11sp" />
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+    <uk.co.glass_software.android.cache_interceptor.demo.InstructionView
+        android:id="@+id/instruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginTop="5dp"
+        android:fontFamily="monospace"
+        android:lineSpacingExtra="1dp"
+        android:padding="5dp"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+</LinearLayout>

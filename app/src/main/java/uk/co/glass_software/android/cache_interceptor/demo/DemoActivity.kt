@@ -46,8 +46,6 @@ internal class DemoActivity
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
 
-    private val instructionView by lazy { findViewById<InstructionView>(R.id.instruction)!! }
-
     private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
     private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
 
@@ -58,7 +56,6 @@ internal class DemoActivity
     private lateinit var presenterSwitcher: Callback1<Method>
 
     private var instructionType: CacheInstruction.Operation.Type = CACHE
-    private var instructionIsAnnotation: Boolean = true
 
     override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
             .builder()
@@ -84,24 +81,13 @@ internal class DemoActivity
         offlineButton.setOnClickListener { offline() }
         invalidateButton.setOnClickListener { invalidate() }
 
-        retrofitRadio.setOnClickListener { switchPresenter(RETROFIT) }
-        volleyRadio.setOnClickListener { switchPresenter(VOLLEY) }
+        retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
+        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            freshOnly = isChecked
-            updateInstructionView()
-        }
-
-        compressCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            compress = isChecked
-            updateInstructionView()
-        }
-
-        encryptCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            encrypt = isChecked
-            updateInstructionView()
-        }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> freshOnly = isChecked }
+        compressCheckBox.setOnCheckedChangeListener { _, isChecked -> compress = isChecked }
+        encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> encrypt = isChecked }
 
         listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
         listView.setAdapter(listAdapter)
@@ -119,13 +105,8 @@ internal class DemoActivity
         })
     }
 
-    private fun switchPresenter(method: Method) {
-        updateInstructionType(method == RETROFIT)
-        presenterSwitcher(method)
-    }
-
     private fun loadCatFact(isRefresh: Boolean) {
-        updateInstruction(if (isRefresh) REFRESH else CACHE)
+        instructionType = if (isRefresh) REFRESH else CACHE
 
         getPresenter().loadCatFact(
                 isRefresh,
@@ -136,31 +117,21 @@ internal class DemoActivity
     }
 
     private fun clearEntries() {
-        updateInstruction(CLEAR)
+        instructionType = CLEAR
         getPresenter().clearEntries()
     }
 
     private fun offline() {
-        updateInstruction(OFFLINE)
+        instructionType = OFFLINE
         getPresenter().offline(freshOnly)
     }
 
     private fun invalidate() {
-        updateInstruction(INVALIDATE)
+        instructionType = INVALIDATE
         getPresenter().invalidate()
     }
 
-    private fun updateInstruction(type: CacheInstruction.Operation.Type) {
-        this.instructionType = type
-        updateInstructionView()
-    }
-
-    private fun updateInstructionType(isAnnotation: Boolean) {
-        this.instructionIsAnnotation = isAnnotation
-        updateInstructionView()
-    }
-
-    private fun updateInstructionView() {
+    private fun getInstruction(): CacheInstruction {
         val configuration = getPresenter().configuration
 
         val operation = when (instructionType) {
@@ -188,12 +159,9 @@ internal class DemoActivity
             CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
         }
 
-        instructionView.setInstruction(
-                CacheInstruction(
-                        CatFactResponse::class.java,
-                        operation
-                ),
-                instructionIsAnnotation
+        return CacheInstruction(
+                CatFactResponse::class.java,
+                operation
         )
     }
 
@@ -205,7 +173,7 @@ internal class DemoActivity
         listView.post {
             catFactView.text = ""
             setButtonsEnabled(false)
-            listAdapter.onStart()
+            listAdapter.onStart(getInstruction())
         }
     }
 

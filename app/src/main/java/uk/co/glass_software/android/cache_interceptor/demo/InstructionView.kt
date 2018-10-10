@@ -13,14 +13,26 @@ class InstructionView @JvmOverloads constructor(context: Context,
     : TextView(context, attrs, defStyleAttr) {
 
     //TODO add colour
-    fun setInstruction(instruction: CacheInstruction,
-                       isAnnotation: Boolean) {
-        text = if (isAnnotation || true) {
-            instruction.operation.type.annotationName
-        } else {
-            instruction.operation::class.java.simpleName
-        }.let { it + "${getDirectives(it.length + 1, instruction.operation)}\n${getMethod(instruction)}" }
+    fun setInstruction(instruction: CacheInstruction) {
+        text = instruction.operation.type.annotationName.let {
+            getRestMethod(instruction.operation)
+                    .plus(it)
+                    .plus(getDirectives(it.length + 1, instruction.operation))
+                    .plus(getMethod(instruction))
+        }
     }
+
+    private fun getRestMethod(operation: Operation) =
+            when (operation.type) {
+                DO_NOT_CACHE,
+                CACHE,
+                REFRESH,
+                OFFLINE -> "@GET(\"fact\")"
+
+                INVALIDATE,
+                CLEAR,
+                CLEAR_ALL -> "@DELETE(\"fact\")"
+            } + "\n"
 
     private fun getDirectives(length: Int,
                               operation: Operation) =
@@ -78,7 +90,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
             )
 
     private fun getMethod(instruction: CacheInstruction) =
-            "fun call() : " + when (instruction.operation.type) {
+            "\nfun call() : " + when (instruction.operation.type) {
                 CACHE,
                 REFRESH -> "Observable<${instruction.responseClass.simpleName}>"
 

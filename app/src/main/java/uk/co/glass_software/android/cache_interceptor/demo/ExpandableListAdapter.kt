@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
@@ -24,16 +25,20 @@ internal class ExpandableListAdapter(context: Context,
 
     private val headers: LinkedList<String> = LinkedList()
     private val logs: LinkedList<String> = LinkedList()
-    private val children: LinkedHashMap<String, List<String>> = LinkedHashMap()
+    private val children: LinkedHashMap<String, List<*>> = LinkedHashMap()
 
     private var callStart = 0L
 
-    fun onStart() {
+    fun onStart(instruction: CacheInstruction) {
         headers.clear()
         children.clear()
         logs.clear()
 
         callStart = System.currentTimeMillis()
+
+        val header = "Retrofit method"
+        headers.add(header)
+        children[header] = listOf(instruction)
 
         notifyDataSetChanged()
     }
@@ -135,7 +140,19 @@ internal class ExpandableListAdapter(context: Context,
                               parent: ViewGroup): View =
             (convertView ?: inflater.inflate(R.layout.list_item, parent, false))
                     .apply {
-                        findViewById<TextView>(R.id.listItem).text = getChild(groupPosition, childPosition)
+                        val child = getChild(groupPosition, childPosition)
+                        val text = findViewById<TextView>(R.id.listItem)
+                        val instruction = findViewById<InstructionView>(R.id.instruction)
+
+                        if (child is String) {
+                            text.visibility = View.VISIBLE
+                            instruction.visibility = View.GONE
+                            text.text = child
+                        } else if (child is CacheInstruction) {
+                            text.visibility = View.GONE
+                            instruction.visibility = View.VISIBLE
+                            instruction.setInstruction(child)
+                        }
                     }
 
     override fun getChildrenCount(groupPosition: Int) = children[headers[groupPosition]]!!.size
