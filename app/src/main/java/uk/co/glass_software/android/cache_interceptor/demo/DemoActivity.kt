@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.CheckBox
 import android.widget.ExpandableListView
-import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpActivity
@@ -46,7 +45,6 @@ internal class DemoActivity
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
 
-    private val catFactView by lazy { findViewById<TextView>(R.id.fact)!! }
     private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
 
     private var encrypt: Boolean = false
@@ -89,7 +87,7 @@ internal class DemoActivity
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> encrypt = isChecked }
 
-        listAdapter = ExpandableListAdapter(this) { catFactView.text = it }
+        listAdapter = ExpandableListAdapter(this)
         listView.setAdapter(listAdapter)
 
         listAdapter.registerDataSetObserver(object : DataSetObserver() {
@@ -171,7 +169,6 @@ internal class DemoActivity
 
     override fun onCallStarted() {
         listView.post {
-            catFactView.text = ""
             setButtonsEnabled(false)
             listAdapter.onStart(getInstruction())
         }

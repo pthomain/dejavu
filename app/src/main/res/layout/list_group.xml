@@ -9,8 +9,8 @@
         android:id="@+id/listHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/white"
         android:paddingLeft="?android:attr/expandableListPreferredItemPaddingLeft"
+        android:textColor="@android:color/white"
         android:textSize="14sp" />
 
 </LinearLayout>

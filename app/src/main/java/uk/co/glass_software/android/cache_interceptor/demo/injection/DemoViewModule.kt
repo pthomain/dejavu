@@ -57,7 +57,7 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             )
 
     @Provides
-    fun provideRetrofitPresenter( compositeLogger: CompositeLogger) =
+    fun provideRetrofitPresenter(compositeLogger: CompositeLogger) =
             RetrofitDemoPresenter(
                     demoActivity,
                     compositeLogger

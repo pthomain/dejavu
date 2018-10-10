@@ -16,8 +16,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class ExpandableListAdapter(context: Context,
-                                     private val factCallback: (String) -> Unit)
+internal class ExpandableListAdapter(context: Context)
     : BaseExpandableListAdapter() {
 
     private val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -36,7 +35,7 @@ internal class ExpandableListAdapter(context: Context,
 
         callStart = System.currentTimeMillis()
 
-        val header = "Retrofit method"
+        val header = "Retrofit Call"
         headers.add(header)
         children[header] = listOf(instruction)
 
@@ -67,7 +66,6 @@ internal class ExpandableListAdapter(context: Context,
             info.add("Cause: " + exception.cause)
             info.add(duration)
         } else {
-            factCallback(catFactResponse.fact!!)
             header = elapsed
 
             info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
@@ -81,18 +79,20 @@ internal class ExpandableListAdapter(context: Context,
                         + "s)"
                 )
             }
-
-            info.add("Cat fact: ${catFactResponse.fact!!}")
         }
 
         headers.add(header)
         children[header] = info
 
+        val catFactHeader = "Cat Fact (${catFactResponse.metadata.cacheToken.status})"
+        headers.add(catFactHeader)
+        children[catFactHeader] = listOf(catFactResponse.fact ?: "N/A")
+
         notifyDataSetChanged()
     }
 
     fun onComplete() {
-        val header = "Log output (total: " + (System.currentTimeMillis() - callStart) + "ms)"
+        val header = "Log Output (Total: " + (System.currentTimeMillis() - callStart) + "ms)"
         headers.add(header)
         children[header] = logs
         notifyDataSetChanged()
