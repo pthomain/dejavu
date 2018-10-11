@@ -4,6 +4,9 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
+import uk.co.glass_software.android.cache_interceptor.RxCache.Companion.RxCacheHeader
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.*
@@ -62,7 +65,7 @@ internal interface CatFactClient {
 
     // REFRESH
 
-    @GET("test")
+    @GET(ENDPOINT)
     @Refresh
     fun refresh(): Observable<CatFactResponse>
 
@@ -91,5 +94,10 @@ internal interface CatFactClient {
     @GET(ENDPOINT)
     @Offline(freshOnly = true)
     fun offlineFreshOnly(): Observable<CatFactResponse>
+
+    //HEADER
+
+    @GET(ENDPOINT)
+    fun instruct(@Header(RxCacheHeader) instruction: CacheInstruction): Observable<CatFactResponse>
 
 }

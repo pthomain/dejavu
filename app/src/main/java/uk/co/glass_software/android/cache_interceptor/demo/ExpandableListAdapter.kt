@@ -108,7 +108,7 @@ internal class ExpandableListAdapter(context: Context)
                 STALE,
                 COULD_NOT_REFRESH -> "disk"
                 EMPTY -> "network or disk"
-            }
+            } + ", " + (if (status.isFinal) "final" else "non-final")
 
     fun log(output: String) {
         logs.addLast(output)

@@ -160,7 +160,8 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
                     RxJava2CallAdapterFactory.create(),
                     rxCacheInterceptorFactory,
                     AnnotationProcessor(configuration),
-                    configuration.logger
+                    configuration.logger,
+                    configuration.gson
             )
 
     interface Function1<T1, R> {

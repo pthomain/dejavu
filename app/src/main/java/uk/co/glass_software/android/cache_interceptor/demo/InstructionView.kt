@@ -26,7 +26,6 @@ class InstructionView @JvmOverloads constructor(context: Context,
     private val blue = Color.parseColor("#467CDA")
     private val white = Color.parseColor("#A9B7C6")
 
-    //TODO add colour
     fun setInstruction(instruction: CacheInstruction) {
         text = instruction.operation.type.annotationName.let {
             TextUtils.concat(
@@ -100,11 +99,14 @@ class InstructionView @JvmOverloads constructor(context: Context,
                                 )
                             }
                         }.let {
-                            val array = arrayOfNulls<CharSequence>(it.size)
-                            it.forEachIndexed { index, charSequence ->
-                                array[index] = charSequence
+                            if (it.isEmpty()) ""
+                            else {
+                                val array = arrayOfNulls<CharSequence>(it.size)
+                                it.forEachIndexed { index, charSequence ->
+                                    array[index] = charSequence
+                                }
+                                TextUtils.concat("(", TextUtils.concat(*array), ")")
                             }
-                            TextUtils.concat("(", TextUtils.concat(*array), ")")
                         }
                     }.let {
                         if (it.isEmpty()) it
@@ -226,6 +228,12 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             StyleSpan(Typeface.BOLD),
                             0,
                             leftBracket,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    setSpan(
+                            ForegroundColorSpan(white),
+                            leftBracket,
+                            it.length,
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                     )
                 }

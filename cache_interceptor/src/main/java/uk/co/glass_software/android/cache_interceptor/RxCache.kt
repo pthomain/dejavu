@@ -20,6 +20,9 @@ open class RxCache<E> internal constructor(component: CacheComponent<E>)
 
     companion object {
 
+        //Use this value to provide the cache instruction as a header
+        const val RxCacheHeader = "RxCacheHeader"
+
         private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<ApiError> ->
             DaggerDefaultCacheComponent
                     .builder()

@@ -74,6 +74,8 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             CLEAR("@Clear"),
             CLEAR_ALL("@Clear")
         }
+
+        override fun toString() = type.name
     }
 
 }

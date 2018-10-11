@@ -39,6 +39,7 @@ internal class DemoActivity
     private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
 
     private val retrofitRadio by lazy { findViewById<View>(R.id.radio_button_retrofit)!! }
+    private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }

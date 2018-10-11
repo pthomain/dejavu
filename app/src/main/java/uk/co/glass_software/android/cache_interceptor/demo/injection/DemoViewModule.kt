@@ -40,11 +40,16 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
                         override fun print(priority: Int,
                                            tag: String?,
                                            message: String) {
-                            onLogOutput(clean(message))
+                             clean(message).also {
+                               if(!it.isNullOrBlank())
+                                   onLogOutput(it)
+                             }
                         }
 
                         private fun clean(message: String) =
-                                message.replace(Regex("(\\([^)]+\\))"), "").trim()
+                                message.replace(Regex("(\\([^)]+\\))"), "")
+                                        .replace(Regex("\\n+"), "\n")
+                                        .trim()
                     }
             ) as Logger
 
