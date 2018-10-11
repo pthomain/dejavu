@@ -62,7 +62,7 @@ internal interface CatFactClient {
 
     // REFRESH
 
-    @GET(ENDPOINT)
+    @GET("test")
     @Refresh
     fun refresh(): Observable<CatFactResponse>
 

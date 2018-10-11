@@ -1,6 +1,13 @@
 package uk.co.glass_software.android.cache_interceptor.demo
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextUtils
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.util.AttributeSet
 import android.widget.TextView
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
@@ -12,17 +19,26 @@ class InstructionView @JvmOverloads constructor(context: Context,
                                                 defStyleAttr: Int = 0)
     : TextView(context, attrs, defStyleAttr) {
 
+    private val orange = Color.parseColor("#CC7832")
+    private val purple = Color.parseColor("#9876AA")
+    private val yellow = Color.parseColor("#FFC66D")
+    private val green = Color.parseColor("#629755")
+    private val blue = Color.parseColor("#467CDA")
+    private val white = Color.parseColor("#A9B7C6")
+
     //TODO add colour
     fun setInstruction(instruction: CacheInstruction) {
         text = instruction.operation.type.annotationName.let {
-            getRestMethod(instruction.operation)
-                    .plus(it)
-                    .plus(getDirectives(it.length + 1, instruction.operation))
-                    .plus(getMethod(instruction))
+            TextUtils.concat(
+                    getRestMethod(instruction.operation),
+                    applyOperationStyle(it),
+                    getDirectives(it.length + 1, instruction.operation),
+                    getMethod(instruction)
+            )
         }
     }
 
-    private fun getRestMethod(operation: Operation) =
+    private fun getRestMethod(operation: Operation): CharSequence =
             when (operation.type) {
                 DO_NOT_CACHE,
                 CACHE,
@@ -32,10 +48,12 @@ class InstructionView @JvmOverloads constructor(context: Context,
                 INVALIDATE,
                 CLEAR,
                 CLEAR_ALL -> "@DELETE(\"fact\")"
-            } + "\n"
+            }.let {
+                applyAnnotationStyle(it, true)
+            }
 
     private fun getDirectives(length: Int,
-                              operation: Operation) =
+                              operation: Operation): CharSequence =
             "".padStart(length, ' ')
                     .let { padding ->
                         when (operation.type) {
@@ -74,11 +92,100 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             INVALIDATE,
                             DO_NOT_CACHE -> emptyArray()
                         }.let { directives ->
-                            directives.map { padding + it }
-                        }.joinToString(separator = ",\n").trim().let {
-                            if (it.isEmpty()) "" else "($it)"
+                            directives.mapIndexed { index, directive ->
+                                applyDirectiveStyle(
+                                        (if (index == 0) "" else padding)
+                                                .plus(directive)
+                                                .plus((if (index != directives.size - 1) ",\n" else ""))
+                                )
+                            }
+                        }.let {
+                            val array = arrayOfNulls<CharSequence>(it.size)
+                            it.forEachIndexed { index, charSequence ->
+                                array[index] = charSequence
+                            }
+                            TextUtils.concat("(", TextUtils.concat(*array), ")")
                         }
+                    }.let {
+                        if (it.isEmpty()) it
+                        else applyAnnotationStyle(it, false)
                     }
+
+    private fun applyAnnotationStyle(it: CharSequence,
+                                     colourParameters: Boolean): SpannableString {
+        val leftBracket = it.indexOf('(')
+        val rightBracket = it.indexOf(')')
+
+        return SpannableString(it).apply {
+            setSpan(
+                    ForegroundColorSpan(orange),
+                    0,
+                    leftBracket,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setSpan(
+                    ForegroundColorSpan(white),
+                    leftBracket,
+                    leftBracket + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            if (colourParameters) {
+                setSpan(
+                        ForegroundColorSpan(green),
+                        leftBracket + 1,
+                        rightBracket,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            setSpan(
+                    ForegroundColorSpan(white),
+                    rightBracket,
+                    rightBracket + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    0,
+                    leftBracket,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
+
+    private fun applyOperationStyle(operation: String): SpannableString {
+        return SpannableString("\n$operation").apply {
+            setSpan(
+                    ForegroundColorSpan(orange),
+                    0,
+                    operation.length + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    0,
+                    operation.length + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
+
+    private fun applyDirectiveStyle(directive: CharSequence): CharSequence {
+        val equal = directive.indexOf('=')
+        return SpannableString(directive).apply {
+            setSpan(
+                    ForegroundColorSpan(blue),
+                    0,
+                    equal + 1,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            setSpan(
+                    ForegroundColorSpan(purple),
+                    equal + 1,
+                    directive.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
 
     private fun getOptionalBoolean(optional: Boolean?) =
             "OptionalBoolean.".plus(
@@ -89,8 +196,8 @@ class InstructionView @JvmOverloads constructor(context: Context,
                     }
             )
 
-    private fun getMethod(instruction: CacheInstruction) =
-            "\nfun call() : " + when (instruction.operation.type) {
+    private fun getMethod(instruction: CacheInstruction): CharSequence =
+            ("\nfun call(): " + when (instruction.operation.type) {
                 CACHE,
                 REFRESH -> "Observable<${instruction.responseClass.simpleName}>"
 
@@ -100,5 +207,27 @@ class InstructionView @JvmOverloads constructor(context: Context,
                 INVALIDATE,
                 CLEAR,
                 CLEAR_ALL -> "Completable"
+            }).let {
+                val leftBracket = it.indexOf('(')
+                SpannableString(it).apply {
+                    setSpan(
+                            ForegroundColorSpan(orange),
+                            0,
+                            4,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    setSpan(
+                            ForegroundColorSpan(yellow),
+                            4,
+                            leftBracket,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    setSpan(
+                            StyleSpan(Typeface.BOLD),
+                            0,
+                            leftBracket,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
             }
 }
