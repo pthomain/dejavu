@@ -19,16 +19,36 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.base.network.retrofit;
+package uk.co.glass_software.android.cache_interceptor.base.network.model
 
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
-import io.reactivex.Observable;
-import retrofit2.http.GET;
-import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
+class User {
 
-public interface TestClient {
-    
-    @GET("/")
-    Observable<TestResponse> get();
-    
+    @SerializedName("id")
+    @Expose
+    var id: Int? = null
+    @SerializedName("name")
+    @Expose
+    var name: String? = null
+    @SerializedName("username")
+    @Expose
+    var username: String? = null
+    @SerializedName("email")
+    @Expose
+    var email: String? = null
+    @SerializedName("address")
+    @Expose
+    var address: Address? = null
+    @SerializedName("phone")
+    @Expose
+    var phone: String? = null
+    @SerializedName("website")
+    @Expose
+    var website: String? = null
+    @SerializedName("company")
+    @Expose
+    var company: Company? = null
+
 }

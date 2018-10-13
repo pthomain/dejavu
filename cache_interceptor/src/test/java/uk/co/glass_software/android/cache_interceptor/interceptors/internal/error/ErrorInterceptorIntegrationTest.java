@@ -28,6 +28,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 import io.reactivex.Observable;
+import uk.co.glass_software.android.boilerplate.utils.log.Logger;
 import uk.co.glass_software.android.cache_interceptor.base.BaseIntegrationTest;
 import uk.co.glass_software.android.cache_interceptor.base.network.model.TestResponse;
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken;
@@ -51,7 +52,7 @@ public class ErrorInterceptorIntegrationTest extends BaseIntegrationTest {
     public void setUp() throws Exception {
         CacheToken<TestResponse> cacheToken = CacheToken.Companion.newRequest(
                 TestResponse.class,
-                TestResponse.URL,
+                TestResponse.Companion.getURL(),
                 null,
                 5f
         );
@@ -88,7 +89,7 @@ public class ErrorInterceptorIntegrationTest extends BaseIntegrationTest {
         assertNotNull("TestResponse should have metadata", metadata);
         
         if (hasError) {
-            assertApiError(
+            Companion.assertApiError(
                     metadata.getError(),
                     "Connection timed out",
                     NETWORK,

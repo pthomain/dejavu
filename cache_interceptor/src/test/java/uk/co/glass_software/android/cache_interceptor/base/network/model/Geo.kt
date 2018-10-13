@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2017 Glass Software Ltd
  *
@@ -20,14 +19,18 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.base.network.model;
+package uk.co.glass_software.android.cache_interceptor.base.network.model
 
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError;
-import uk.co.glass_software.android.cache_interceptor.response.base.BaseCachedList;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
-public class TestResponse extends BaseCachedList<ApiError, TestResponse, User> {
-    
-    public static String STUB_FILE = "api_stub_test.json";
-    public static String URL = "http://test.com";
-    
+class Geo {
+
+    @SerializedName("lat")
+    @Expose
+    var lat: String? = null
+    @SerializedName("lng")
+    @Expose
+    var lng: String? = null
+
 }
