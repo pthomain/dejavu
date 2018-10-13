@@ -10,6 +10,7 @@ import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import java.lang.reflect.Type
@@ -75,15 +76,17 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
             )
         }
 
-        return try {
-            adaptedWithInstruction(
-                    call,
-                    gson.fromJson(header, CacheInstruction::class.java)
-            )
-        } catch (e: Exception) {
+        fun deserialisationFailed() = adaptedByDefaultRxJavaAdapter(call).also {
             logger.e("Found a header cache instruction on $methodDescription but it could not be deserialised."
                     + " This call won't be cached.")
-            adaptedByDefaultRxJavaAdapter(call)
+        }
+
+        return try {
+            CacheInstructionSerialiser.deserialise(header)?.let {
+                adaptedWithInstruction(call, it)
+            } ?: deserialisationFailed()
+        } catch (e: Exception) {
+            deserialisationFailed()
         }
     }
 

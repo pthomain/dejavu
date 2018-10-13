@@ -8,6 +8,7 @@ import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewMod
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
+import javax.inject.Singleton
 
 internal class DemoMvpContract {
 
@@ -34,6 +35,7 @@ internal class DemoMvpContract {
 
     }
 
+    @Singleton
     @Component(modules = [DemoViewModule::class])
     interface DemoViewComponent : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent> {
 

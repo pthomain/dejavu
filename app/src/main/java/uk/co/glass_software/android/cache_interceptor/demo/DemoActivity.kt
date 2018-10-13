@@ -7,25 +7,23 @@ import android.os.Bundle
 import android.view.View
 import android.widget.CheckBox
 import android.widget.ExpandableListView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
-import uk.co.glass_software.android.boilerplate.ui.mvp.MvpActivity
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
-import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoMvpView
-import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.DemoPresenter
+import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewModule
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
-import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.RETROFIT
-import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.VOLLEY
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method.*
 
 
 internal class DemoActivity
-    : MvpActivity<DemoMvpView, DemoPresenter, DemoMvpContract.DemoViewComponent>(),
+    : AppCompatActivity(),
         DemoMvpView,
         (String) -> Unit {
 
@@ -38,7 +36,7 @@ internal class DemoActivity
     private val invalidateButton by lazy { findViewById<View>(R.id.invalidate_button)!! }
     private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
 
-    private val retrofitRadio by lazy { findViewById<View>(R.id.radio_button_retrofit)!! }
+    private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
@@ -52,15 +50,27 @@ internal class DemoActivity
     private var compress: Boolean = false
     private var freshOnly: Boolean = false
 
+    private var instructionType: CacheInstruction.Operation.Type = CACHE
+
+    private lateinit var presenter: DemoPresenter
     private lateinit var presenterSwitcher: Callback1<Method>
 
-    private var instructionType: CacheInstruction.Operation.Type = CACHE
+    override fun getPresenter() = presenter
 
     override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
             .builder()
             .demoViewModule(DemoViewModule(this, this))
             .build()
-            .apply { presenterSwitcher = presenterSwitcher() }!!
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        onCreateComponent(savedInstanceState)
+    }
+
+    override fun onComponentReady(component: DemoViewComponent) {
+        this.presenter = component.presenter()
+        this.presenterSwitcher = component.presenterSwitcher()
+    }
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
@@ -80,7 +90,8 @@ internal class DemoActivity
         offlineButton.setOnClickListener { offline() }
         invalidateButton.setOnClickListener { invalidate() }
 
-        retrofitRadio.setOnClickListener { presenterSwitcher(RETROFIT) }
+        retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
+        retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
@@ -107,7 +118,7 @@ internal class DemoActivity
     private fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
 
-        getPresenter().loadCatFact(
+        presenter.loadCatFact(
                 isRefresh,
                 encrypt,
                 compress,
@@ -117,21 +128,21 @@ internal class DemoActivity
 
     private fun clearEntries() {
         instructionType = CLEAR
-        getPresenter().clearEntries()
+        presenter.clearEntries()
     }
 
     private fun offline() {
         instructionType = OFFLINE
-        getPresenter().offline(freshOnly)
+        presenter.offline(freshOnly)
     }
 
     private fun invalidate() {
         instructionType = INVALIDATE
-        getPresenter().invalidate()
+        presenter.invalidate()
     }
 
     private fun getInstruction(): CacheInstruction {
-        val configuration = getPresenter().configuration
+        val configuration = presenter.configuration
 
         val operation = when (instructionType) {
             CACHE -> Cache(

@@ -16,7 +16,7 @@ internal class SqlOpenHelper(context: Context,
 ) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(String.format("CREATE TABLE %s (%s)",
+        db.execSQL(String.format("CREATE TABLE IF NOT EXISTS %s (%s)",
                 TABLE_CACHE,
                 values().joinToString(separator = ", ") { it.columnName + " " + it.type }
         ))
@@ -27,7 +27,7 @@ internal class SqlOpenHelper(context: Context,
 
     private fun addIndex(db: SQLiteDatabase,
                          columnName: String) {
-        db.execSQL(String.format("CREATE INDEX %s_index ON %s(%s)",
+        db.execSQL(String.format("CREATE INDEX IF NOT EXISTS %s_index ON %s(%s)",
                 columnName,
                 TABLE_CACHE,
                 columnName

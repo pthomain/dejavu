@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="uk.co.glass_software.android.cache_interceptor.demo">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:allowBackup="false"
-        tools:replace="android:allowBackup,android:theme"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"

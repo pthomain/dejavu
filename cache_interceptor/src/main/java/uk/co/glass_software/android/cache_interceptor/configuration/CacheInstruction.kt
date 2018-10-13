@@ -1,13 +1,12 @@
 package uk.co.glass_software.android.cache_interceptor.configuration
 
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstructionSerialiser.serialise
 
 data class CacheInstruction constructor(val responseClass: Class<*>,
                                         val operation: Operation) {
 
     sealed class Operation(val type: Type) {
-
-        object DoNotCache : Operation(DO_NOT_CACHE)
 
         sealed class Expiring(val durationInMillis: Long?,
                               val freshOnly: Boolean,
@@ -30,7 +29,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                     encrypt,
                     compress,
                     filterFinal,
-                    CACHE
+                    Type.CACHE
             )
 
             class Refresh(durationInMillis: Long? = null,
@@ -58,12 +57,33 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                     false,
                     OFFLINE
             )
+
+            override fun toString() = serialise(
+                    type,
+                    durationInMillis,
+                    freshOnly,
+                    mergeOnNextOnError,
+                    encrypt,
+                    compress,
+                    filterFinal
+            )
+
         }
 
+        object DoNotCache : Operation(DO_NOT_CACHE)
         object Invalidate : Operation(INVALIDATE)
 
         data class Clear(val typeToClear: Class<*>? = null,
-                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR)
+                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR) {
+
+            override fun toString() = serialise(
+                    type,
+                    typeToClear,
+                    clearOldEntriesOnly
+            )
+        }
+
+        override fun toString() = serialise(type)
 
         enum class Type(val annotationName: String) {
             DO_NOT_CACHE("@DoNotCache"),
@@ -75,7 +95,12 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             CLEAR_ALL("@Clear")
         }
 
-        override fun toString() = type.name
     }
+
+    override fun toString() = serialise(
+            null,
+            responseClass,
+            operation
+    )
 
 }

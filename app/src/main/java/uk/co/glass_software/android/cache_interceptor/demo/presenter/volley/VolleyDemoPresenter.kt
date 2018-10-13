@@ -18,6 +18,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
     : BaseDemoPresenter(demoActivity, uiLogger) {
 
     private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
+    private val responseClass = CatFactResponse::class.java
 
     companion object {
         private const val URL = BaseDemoPresenter.BASE_URL + BaseDemoPresenter.ENDPOINT
@@ -27,34 +28,27 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                        encrypt: Boolean,
                                        compress: Boolean,
                                        freshOnly: Boolean) =
-            when {
+            getObservableForOperation(when {
                 isRefresh -> Refresh(freshOnly = freshOnly)
                 else -> Cache(
                         encrypt = encrypt,
                         compress = compress,
                         freshOnly = freshOnly
                 )
-            }.let { getObservableForOperation(it) }
+            })
 
     private fun getObservableForOperation(cacheOperation: Operation) =
-            CacheInstruction(
-                    CatFactResponse::class.java,
-                    cacheOperation
-            ).let { instruction ->
-                rxCache.rxCacheInterceptor.create(
-                        instruction,
-                        URL,
-                        null
-                )
-            }.let { interceptor ->
-                VolleyObservable.createDefault(
-                        requestQueue,
-                        gson,
-                        CatFactResponse::class.java,
-                        interceptor,
-                        URL
-                )
-            }
+            VolleyObservable.createDefault(
+                    requestQueue,
+                    gson,
+                    responseClass,
+                    rxCache.rxCacheInterceptor.create(
+                            CacheInstruction(responseClass, cacheOperation),
+                            URL,
+                            null
+                    ),
+                    URL
+            )
 
     override fun getOfflineCompletable(freshOnly: Boolean) =
             getObservableForOperation(Offline(freshOnly))

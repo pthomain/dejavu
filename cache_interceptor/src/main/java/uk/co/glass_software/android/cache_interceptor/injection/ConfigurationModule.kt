@@ -24,6 +24,7 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.Annot
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import java.util.*
+import javax.inject.Singleton
 
 @Module
 internal abstract class ConfigurationModule<E>(private val configuration: CacheConfiguration<E>)
@@ -31,13 +32,16 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
               E : NetworkErrorProvider {
 
     @Provides
+    @Singleton
     fun provideConfiguration() = configuration
 
     @Provides
+    @Singleton
     fun provideGsonSerialiser() =
             GsonSerialiser(configuration.gson)
 
     @Provides
+    @Singleton
     fun provideStoreEntryFactory(gsonSerialiser: GsonSerialiser) =
             StoreEntryFactory.builder(context)
                     .customSerialiser(gsonSerialiser)
@@ -45,10 +49,12 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
                     .build()
 
     @Provides
+    @Singleton
     fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory) =
             storeEntryFactory.encryptionManager
 
     @Provides
+    @Singleton
     fun provideSerialisationManager(encryptionManager: EncryptionManager?) =
             SerialisationManager<E>(
                     configuration.logger,
@@ -57,12 +63,14 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             )
 
     @Provides
+    @Singleton
     fun provideSqlOpenHelper() = SqlOpenHelper(
             context.applicationContext,
             "rx_cache_interceptor.db"
     )
 
     @Provides
+    @Singleton
     fun provideDatabase(sqlOpenHelper: SqlOpenHelper) = object : Provide1<SQLiteDatabase> {
         override fun invoke() = sqlOpenHelper.writableDatabase!!
     }
@@ -70,6 +78,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     private val dateFactory = { timeStamp: Long? -> timeStamp?.let { Date(it) } ?: Date() }
 
     @Provides
+    @Singleton
     fun provideDatabaseManager(databaseProvider: Provide1<SQLiteDatabase>,
                                serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
@@ -103,6 +112,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     }
 
     @Provides
+    @Singleton
     fun cacheManager(databaseManager: DatabaseManager<E>) =
             CacheManager(
                     databaseManager,
@@ -113,6 +123,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             )
 
     @Provides
+    @Singleton
     fun provideErrorInterceptorFactory() = object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
         override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
                 configuration.errorFactory,
@@ -124,6 +135,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     }
 
     @Provides
+    @Singleton
     fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>) = object : Function2<CacheToken, Long, CacheInterceptor<E>> {
         override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
                 cacheManager,
@@ -135,6 +147,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     }
 
     @Provides
+    @Singleton
     fun provideResponseInterceptor() = object : Function1<Long, ResponseInterceptor<E>> {
         override fun get(t1: Long) = ResponseInterceptor<E>(
                 configuration.logger,
@@ -144,6 +157,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     }
 
     @Provides
+    @Singleton
     fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                          cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                          responseInterceptor: Function1<Long, ResponseInterceptor<E>>) =
@@ -155,14 +169,21 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
             )
 
     @Provides
-    fun provideRetrofitCacheAdapterFactory(rxCacheInterceptorFactory: RxCacheInterceptor.Factory<E>) =
+    @Singleton
+    fun provideRetrofitCacheAdapterFactory(rxCacheInterceptorFactory: RxCacheInterceptor.Factory<E>,
+                                           annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCacheAdapterFactory(
                     RxJava2CallAdapterFactory.create(),
                     rxCacheInterceptorFactory,
-                    AnnotationProcessor(configuration),
+                    annotationProcessor,
                     configuration.logger,
                     configuration.gson
             )
+
+    @Provides
+    @Singleton
+    fun provideAnnotationProcessor() =
+            AnnotationProcessor(configuration)
 
     interface Function1<T1, R> {
         fun get(t1: T1): R

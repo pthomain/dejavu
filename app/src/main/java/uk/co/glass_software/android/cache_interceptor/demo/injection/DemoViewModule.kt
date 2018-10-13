@@ -12,15 +12,18 @@ import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.CompositePresenter.Method
-import uk.co.glass_software.android.cache_interceptor.demo.presenter.retrofit.RetrofitDemoPresenter
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
+import uk.co.glass_software.android.cache_interceptor.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.volley.VolleyDemoPresenter
 import javax.inject.Named
+import javax.inject.Singleton
 
 @Module
 internal class DemoViewModule constructor(private val demoActivity: DemoActivity,
                                           private val onLogOutput: (String) -> Unit) {
 
     @Provides
+    @Singleton
     @Named("boilerplate")
     fun providerBoilerplateLogger() =
             Boilerplate.init(
@@ -30,6 +33,7 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             ).let { Boilerplate.logger }
 
     @Provides
+    @Singleton
     @Named("ui")
     fun providerUiLogger() =
             SimpleLogger(
@@ -40,10 +44,10 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
                         override fun print(priority: Int,
                                            tag: String?,
                                            message: String) {
-                             clean(message).also {
-                               if(!it.isNullOrBlank())
-                                   onLogOutput(it)
-                             }
+                            clean(message).also {
+                                if (!it.isNullOrBlank())
+                                    onLogOutput(it)
+                            }
                         }
 
                         private fun clean(message: String) =
@@ -54,6 +58,7 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             ) as Logger
 
     @Provides
+    @Singleton
     fun providerCompositeLogger(@Named("boilerplate") boilerplateLogger: Logger,
                                 @Named("ui") uiLogger: Logger) =
             CompositeLogger(
@@ -62,13 +67,23 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             )
 
     @Provides
-    fun provideRetrofitPresenter(compositeLogger: CompositeLogger) =
-            RetrofitDemoPresenter(
+    @Singleton
+    fun provideRetrofitAnnotationPresenter(compositeLogger: CompositeLogger) =
+            RetrofitAnnotationDemoPresenter(
                     demoActivity,
                     compositeLogger
             )
 
     @Provides
+    @Singleton
+    fun provideRetrofitHeaderPresenter(compositeLogger: CompositeLogger) =
+            RetrofitHeaderDemoPresenter(
+                    demoActivity,
+                    compositeLogger
+            )
+
+    @Provides
+    @Singleton
     fun provideVolleyPresenter(compositeLogger: CompositeLogger) =
             VolleyDemoPresenter(
                     demoActivity,
@@ -76,19 +91,24 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             )
 
     @Provides
-    fun provideCompositePresenter(retrofitDemoPresenter: RetrofitDemoPresenter,
+    @Singleton
+    fun provideCompositePresenter(retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
+                                  retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
                                   volleyDemoPresenter: VolleyDemoPresenter) =
             CompositePresenter(
                     demoActivity,
-                    retrofitDemoPresenter,
+                    retrofitAnnotationDemoPresenter,
+                    retrofitHeaderDemoPresenter,
                     volleyDemoPresenter
             )
 
     @Provides
+    @Singleton
     fun provideDemoPresenter(compositePresenter: CompositePresenter) =
             compositePresenter as DemoMvpContract.DemoPresenter
 
     @Provides
+    @Singleton
     fun providePresenterSwitcher(compositePresenter: CompositePresenter) =
             compositePresenter as Callback1<Method>
 
