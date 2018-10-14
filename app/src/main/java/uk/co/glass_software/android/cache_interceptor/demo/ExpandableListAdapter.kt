@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2017 Glass Software Ltd
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package uk.co.glass_software.android.cache_interceptor.demo
 
 
@@ -8,15 +29,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import uk.co.glass_software.android.cache_interceptor.annotations.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class ExpandableListAdapter(context: Context,
-                                     private val factCallback: (String) -> Unit)
+internal class ExpandableListAdapter(context: Context)
     : BaseExpandableListAdapter() {
 
     private val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -24,16 +45,20 @@ internal class ExpandableListAdapter(context: Context,
 
     private val headers: LinkedList<String> = LinkedList()
     private val logs: LinkedList<String> = LinkedList()
-    private val children: LinkedHashMap<String, List<String>> = LinkedHashMap()
+    private val children: LinkedHashMap<String, List<*>> = LinkedHashMap()
 
     private var callStart = 0L
 
-    fun onStart() {
+    fun onStart(instruction: CacheInstruction) {
         headers.clear()
         children.clear()
         logs.clear()
 
         callStart = System.currentTimeMillis()
+
+        val header = "Retrofit Call"
+        headers.add(header)
+        children[header] = listOf(instruction)
 
         notifyDataSetChanged()
     }
@@ -62,10 +87,12 @@ internal class ExpandableListAdapter(context: Context,
             info.add("Cause: " + exception.cause)
             info.add(duration)
         } else {
-            factCallback(catFactResponse.fact!!)
             header = elapsed
 
-            info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
+            cacheToken.cacheDate?.also {
+                info.add("Cache token cache date: " + simpleDateFormat.format(it))
+            }
+
             info.add(duration)
 
             if (operation is Expiring) {
@@ -76,18 +103,20 @@ internal class ExpandableListAdapter(context: Context,
                         + "s)"
                 )
             }
-
-            info.add("Cat fact: ${catFactResponse.fact!!}")
         }
 
         headers.add(header)
         children[header] = info
 
+        val catFactHeader = "Cat Fact (${catFactResponse.metadata.cacheToken.status})"
+        headers.add(catFactHeader)
+        children[catFactHeader] = listOf(catFactResponse.fact ?: "N/A")
+
         notifyDataSetChanged()
     }
 
     fun onComplete() {
-        val header = "Log output (total: " + (System.currentTimeMillis() - callStart) + "ms)"
+        val header = "Log Output (Total: " + (System.currentTimeMillis() - callStart) + "ms)"
         headers.add(header)
         children[header] = logs
         notifyDataSetChanged()
@@ -103,7 +132,7 @@ internal class ExpandableListAdapter(context: Context,
                 STALE,
                 COULD_NOT_REFRESH -> "disk"
                 EMPTY -> "network or disk"
-            }
+            } + ", " + (if (status.isFinal) "final" else "non-final")
 
     fun log(output: String) {
         logs.addLast(output)
@@ -135,7 +164,19 @@ internal class ExpandableListAdapter(context: Context,
                               parent: ViewGroup): View =
             (convertView ?: inflater.inflate(R.layout.list_item, parent, false))
                     .apply {
-                        findViewById<TextView>(R.id.listItem).text = getChild(groupPosition, childPosition)
+                        val child = getChild(groupPosition, childPosition)
+                        val text = findViewById<TextView>(R.id.listItem)
+                        val instruction = findViewById<InstructionView>(R.id.instruction)
+
+                        if (child is String) {
+                            text.visibility = View.VISIBLE
+                            instruction.visibility = View.GONE
+                            text.text = child
+                        } else if (child is CacheInstruction) {
+                            text.visibility = View.GONE
+                            instruction.visibility = View.VISIBLE
+                            instruction.setInstruction(child)
+                        }
                     }
 
     override fun getChildrenCount(groupPosition: Int) = children[headers[groupPosition]]!!.size
