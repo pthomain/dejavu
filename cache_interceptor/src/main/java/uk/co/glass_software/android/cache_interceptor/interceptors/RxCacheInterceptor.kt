@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
@@ -62,16 +61,16 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                 .compose(responseInterceptor(start))!!
     }
 
-    override fun apply(upstream: Single<Any>) = upstream
-            .toObservable()
-            .compose(this)
-            .firstOrError()!!
-
-    override fun apply(upstream: Completable) =
-            cacheInterceptorFactory(
-                    instructionToken,
-                    System.currentTimeMillis()
-            ).complete()
+    override fun apply(upstream: Single<Any>): Single<Any> {
+        val start = System.currentTimeMillis()
+        return upstream
+                .toObservable()
+                .compose(errorInterceptorFactory(instructionToken, start))
+                .compose(cacheInterceptorFactory(instructionToken, start))
+                .filter { it.metadata.cacheToken.status.isFinal }
+                .firstOrError()
+                .compose(responseInterceptor(start))!!
+    }
 
     class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,

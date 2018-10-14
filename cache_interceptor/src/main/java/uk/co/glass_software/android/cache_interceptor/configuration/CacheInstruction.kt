@@ -106,14 +106,15 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
 
         override fun toString() = serialise(type)
 
-        enum class Type(val annotationName: String) {
+        enum class Type(val annotationName: String,
+                        val isCompletable: Boolean = false) {
             DO_NOT_CACHE("@DoNotCache"),
             CACHE("@Cache"),
-            INVALIDATE("@Invalidate"),
             REFRESH("@Refresh"),
             OFFLINE("@Offline"),
-            CLEAR("@Clear"),
-            CLEAR_ALL("@Clear")
+            INVALIDATE("@Invalidate", true),
+            CLEAR("@Clear", true),
+            CLEAR_ALL("@Clear", true)
         }
 
     }

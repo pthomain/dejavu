@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.cache_interceptor.retrofit
 
-import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -30,7 +29,6 @@ import retrofit2.CallAdapter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
@@ -53,7 +51,7 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
 
         return when {
             instruction != null -> if (header != null) adaptedByHeader(call, header, true)
-            else adaptedWithInstruction(call, instruction)
+            else adaptedWithInstruction(call, instruction, false)
 
             header != null -> adaptedByHeader(call, header, false)
 
@@ -62,34 +60,22 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
     }
 
     private fun adaptedWithInstruction(call: Call<Any>,
-                                       instruction: CacheInstruction): Any {
-        logger.d("Found a cache instruction on $methodDescription: $instruction")
+                                       instruction: CacheInstruction,
+                                       isFromHeader: Boolean): Any {
+        logger.d("Found ${if (isFromHeader) "a header" else "an annotation"} cache instruction on $methodDescription: $instruction")
 
-        return if (instruction.operation.type.let {
-                    it == CLEAR || it == CLEAR_ALL || it == INVALIDATE
-                }) {
-            Completable.complete().compose(getRxCacheInterceptor(call, instruction))
-        } else {
-            val responseClass = instruction.responseClass
-            val adapted = rxCallAdapter.adapt(call)
-
-            when (adapted) {
-                is Observable<*> -> adapted
-                        .cast(responseClass)
-                        .compose(getRxCacheInterceptor(call, instruction))
-
-                is Single<*> -> adapted
-                        .cast(responseClass)
-                        .compose(getRxCacheInterceptor(call, instruction))
-
-                else -> adapted as Any
-            }
-        }
+        return adaptRxCall(
+                call,
+                instruction,
+                rxCallAdapter.adapt(call)
+        )
     }
 
     private fun adaptedByHeader(call: Call<Any>,
                                 header: String,
                                 isOverridingAnnotation: Boolean): Any {
+        logger.d("Checking cache header on $methodDescription")
+
         if (isOverridingAnnotation) {
             logger.d("WARNING: $methodDescription contains a cache instruction BOTH by annotation and by header."
                     + " The header instruction will take precedence."
@@ -103,10 +89,30 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
 
         return try {
             CacheInstructionSerialiser.deserialise(header)?.let {
-                adaptedWithInstruction(call, it)
+                adaptedWithInstruction(call, it, true)
             } ?: deserialisationFailed()
         } catch (e: Exception) {
             deserialisationFailed()
+        }
+    }
+
+    private fun adaptRxCall(call: Call<Any>,
+                            instruction: CacheInstruction,
+                            adapted: Any): Any {
+        val responseClass = instruction.responseClass
+        return when (adapted) {
+            is Observable<*> -> adapted.cast(responseClass)
+                    .compose(getRxCacheInterceptor(call, instruction))
+
+            is Single<*> -> adapted.cast(responseClass)
+                    .compose(getRxCacheInterceptor(call, instruction))
+
+            is Completable -> adapted.toObservable<Any>()
+                    .cast(responseClass)
+                    .compose(getRxCacheInterceptor(call, instruction))
+                    .ignoreElements()
+
+            else -> adapted
         }
     }
 

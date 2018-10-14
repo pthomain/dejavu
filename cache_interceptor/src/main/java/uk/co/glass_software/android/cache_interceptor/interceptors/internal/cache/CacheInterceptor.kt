@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache
 
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
@@ -53,6 +52,15 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         instruction.operation,
                         start
                 )
+
+                is Clear -> cacheManager.clearCache(
+                        instructionToken,
+                        instruction.operation.typeToClear,
+                        instruction.operation.clearOldEntriesOnly
+                )
+
+                is Invalidate -> cacheManager.invalidate(instructionToken)
+
                 else -> doNotCache(instructionToken, upstream)
             }
         } else doNotCache(instructionToken, upstream)
@@ -62,24 +70,6 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
             !filterFinal || it.metadata.cacheToken.status.isFinal
         }
     }
-
-    fun complete() = (
-            if (isCacheEnabled) {
-                when (instructionToken.instruction.operation) {
-                    is Clear -> clear(instructionToken.instruction.operation)
-                    is Invalidate -> invalidate()
-                    else -> Completable.complete()
-                }
-            } else Completable.complete()
-            )!!
-
-    private fun clear(operation: Clear) =
-            cacheManager.clearCache(
-                    operation.typeToClear,
-                    operation.clearOldEntriesOnly
-            )
-
-    private fun invalidate() = cacheManager.invalidate(instructionToken)
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =

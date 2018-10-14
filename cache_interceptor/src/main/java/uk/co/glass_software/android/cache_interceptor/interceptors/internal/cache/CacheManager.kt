@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache
 
-import io.reactivex.Completable
 import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.On
@@ -49,16 +48,34 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         where E : Exception,
               E : NetworkErrorProvider {
 
-    fun clearCache(typeToClear: Class<*>?,
-                   clearOlderEntriesOnly: Boolean) = Completable.create {
+    fun clearCache(instructionToken: CacheToken,
+                   typeToClear: Class<*>?,
+                   clearOlderEntriesOnly: Boolean) = emptyResponse(instructionToken) {
         databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
-        it.onComplete()
-    }!!
+    }
 
-    fun invalidate(instructionToken: CacheToken) = Completable.create {
+    fun invalidate(instructionToken: CacheToken) = emptyResponse(instructionToken) {
         databaseManager.invalidate(instructionToken)
-        it.onComplete()
-    }!!
+    }
+
+    private fun emptyResponse(instructionToken: CacheToken,
+                              action: () -> Unit): Observable<ResponseWrapper<E>> {
+        return Observable.fromCallable {
+            action()
+          instructionToken.instruction.let {
+              ResponseWrapper<E>(
+                      it.responseClass,
+                      null,
+                      CacheMetadata(
+                              instructionToken.copy(
+                                      status = EMPTY,
+                                      instruction = it
+                              )
+                      )
+              )
+          }
+        }
+    }
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
