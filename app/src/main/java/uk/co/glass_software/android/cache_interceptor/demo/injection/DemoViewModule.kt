@@ -119,6 +119,7 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
             CompositePresenter(
                     demoActivity,
                     retrofitAnnotationDemoPresenter,
+                    retrofitAnnotationDemoPresenter,
                     retrofitHeaderDemoPresenter,
                     volleyDemoPresenter
             )

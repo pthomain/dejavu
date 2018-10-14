@@ -80,29 +80,6 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             }
         }
 
-        instruction?.let {
-            val operation = it.operation.type
-            val completableOperations = arrayOf(
-                    CLEAR,
-                    CLEAR_ALL,
-                    INVALIDATE
-            )
-
-            if (completableOperations.contains(operation)) {
-                if (rxType != COMPLETABLE) {
-                    CacheInstructionException(
-                            "Only Completable can be used with the ${operation.annotationName} annotation"
-                    ).logAndThrow()
-                }
-            } else {
-                if (rxType == COMPLETABLE) {
-                    CacheInstructionException(
-                            "Only @Clear, @ClearAll or @Invalidate annotations can be used with Completable"
-                    ).logAndThrow()
-                }
-            }
-        }
-
         return instruction
     }
 

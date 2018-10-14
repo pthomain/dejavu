@@ -31,6 +31,10 @@ import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.io
 import uk.co.glass_software.android.cache_interceptor.RxCache
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.*
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
@@ -39,6 +43,12 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                                                                 uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
+
+    private var instructionType: CacheInstruction.Operation.Type = CACHE
+
+    final override var encrypt: Boolean = false
+    final override var compress: Boolean = false
+    final override var freshOnly: Boolean = false
 
     protected val gson by lazy { Gson() }
 
@@ -51,12 +61,10 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                 .build(demoActivity)
     }
 
-    final override val configuration = rxCache.configuration
+    private val configuration = rxCache.configuration
 
-    final override fun loadCatFact(isRefresh: Boolean,
-                                   encrypt: Boolean,
-                                   compress: Boolean,
-                                   freshOnly: Boolean) {
+    final override fun loadCatFact(isRefresh: Boolean) {
+        instructionType = if (isRefresh) REFRESH else CACHE
         subscribe(getResponseObservable(
                 isRefresh,
                 encrypt,
@@ -65,17 +73,51 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
         ))
     }
 
-    final override fun offline(freshOnly: Boolean) {
+    final override fun offline() {
+        instructionType = OFFLINE
         subscribe(getOfflineCompletable(freshOnly))
     }
 
     final override fun clearEntries() {
+        instructionType = CLEAR
         subscribe(getClearEntriesCompletable())
     }
 
     final override fun invalidate() {
+        instructionType = INVALIDATE
         subscribe(getInvalidateCompletable())
     }
+
+    final override fun getCacheInstruction() =
+            when (instructionType) {
+                CACHE -> Cache(
+                        configuration.cacheDurationInMillis,
+                        freshOnly,
+                        configuration.mergeOnNextOnError,
+                        encrypt,
+                        compress,
+                        false
+                )
+                REFRESH -> Refresh(
+                        configuration.cacheDurationInMillis,
+                        freshOnly,
+                        configuration.mergeOnNextOnError,
+                        false
+                )
+                DO_NOT_CACHE -> DoNotCache
+                INVALIDATE -> Invalidate
+                OFFLINE -> Offline(
+                        freshOnly,
+                        configuration.mergeOnNextOnError
+                )
+                CLEAR,
+                CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
+            }.let { operation ->
+                CacheInstruction(
+                        CatFactResponse::class.java,
+                        operation
+                )
+            }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable
