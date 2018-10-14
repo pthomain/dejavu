@@ -89,7 +89,10 @@ internal class ExpandableListAdapter(context: Context)
         } else {
             header = elapsed
 
-            info.add("Cache token cache date: " + simpleDateFormat.format(cacheToken.cacheDate))
+            cacheToken.cacheDate?.also {
+                info.add("Cache token cache date: " + simpleDateFormat.format(it))
+            }
+
             info.add(duration)
 
             if (operation is Expiring) {

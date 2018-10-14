@@ -48,18 +48,23 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
     fun clearCache(instructionToken: CacheToken,
                    typeToClear: Class<*>?,
-                   clearOlderEntriesOnly: Boolean) = emptyResponse(instructionToken) {
+                   clearOlderEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
         databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
     }
 
-    fun invalidate(instructionToken: CacheToken) = emptyResponse(instructionToken) {
+    fun invalidate(instructionToken: CacheToken) = emptyResponseObservable(instructionToken) {
         databaseManager.invalidate(instructionToken)
     }
 
-    private fun emptyResponse(instructionToken: CacheToken,
-                              action: () -> Unit): Observable<ResponseWrapper<E>> {
+    private fun emptyResponseObservable(instructionToken: CacheToken,
+                                        action: () -> Unit): Observable<ResponseWrapper<E>> {
         return Observable.fromCallable {
             action()
+            emptyResponse(instructionToken)
+        }
+    }
+
+    private fun emptyResponse(instructionToken: CacheToken) =
             instructionToken.instruction.let {
                 ResponseWrapper<E>(
                         it.responseClass,
@@ -72,8 +77,6 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                         )
                 )
             }
-        }
-    }
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
@@ -93,7 +96,8 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
         val responseObservable =
                 if (cacheOperation is Offline) {
-                    if (cachedResponse == null)
+                    if (cachedResponse == null ||
+                            (cacheOperation.freshOnly && cachedResponse.metadata.cacheToken.status == STALE))
                         Observable.empty<ResponseWrapper<E>>()
                     else
                         Observable.just(cachedResponse)
@@ -115,9 +119,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                     else
                         Observable.just(it)
                 }
-                .switchIfEmpty {
-                    emptyResponse(instructionToken) {}
-                }
+                .defaultIfEmpty(emptyResponse(instructionToken))
     }
 
     private fun getOnlineObservable(cachedResponse: ResponseWrapper<E>?,
