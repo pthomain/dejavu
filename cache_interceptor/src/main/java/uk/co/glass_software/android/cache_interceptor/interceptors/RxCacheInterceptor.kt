@@ -47,8 +47,8 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
 
     private val instructionToken = fromInstruction(
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
-            (instruction.operation as? Expiring)?.compress ?: false,
-            (instruction.operation as? Expiring)?.encrypt ?: false,
+            (instruction.operation as? Expiring)?.compress ?: configuration.compress,
+            (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
             url,
             uniqueParameters
     )
@@ -91,6 +91,5 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                         errorInterceptorFactory,
                         cacheInterceptorFactory
                 ) as RxCacheTransformer
-
     }
 }

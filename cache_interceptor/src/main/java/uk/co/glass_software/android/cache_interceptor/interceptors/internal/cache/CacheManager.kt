@@ -57,11 +57,9 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
     }
 
     private fun emptyResponseObservable(instructionToken: CacheToken,
-                                        action: () -> Unit): Observable<ResponseWrapper<E>> {
-        return Observable.fromCallable {
-            action()
-            emptyResponse(instructionToken)
-        }
+                                        action: () -> Unit) = Observable.fromCallable {
+        action()
+        emptyResponse(instructionToken)
     }
 
     private fun emptyResponse(instructionToken: CacheToken) =

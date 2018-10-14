@@ -32,10 +32,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.*
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.injection.DemoViewModule
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
@@ -66,12 +62,6 @@ internal class DemoActivity
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
 
     private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
-
-    private var encrypt: Boolean = false
-    private var compress: Boolean = false
-    private var freshOnly: Boolean = false
-
-    private var instructionType: CacheInstruction.Operation.Type = CACHE
 
     private lateinit var presenter: DemoPresenter
     private lateinit var presenterSwitcher: Callback1<Method>
@@ -105,20 +95,20 @@ internal class DemoActivity
     override fun onCreateMvpView(savedInstanceState: Bundle?) {
         setContentView(R.layout.activity_main)
 
-        loadButton.setOnClickListener { loadCatFact(false) }
-        refreshButton.setOnClickListener { loadCatFact(true) }
-        clearButton.setOnClickListener { clearEntries() }
-        offlineButton.setOnClickListener { offline() }
-        invalidateButton.setOnClickListener { invalidate() }
+        loadButton.setOnClickListener { presenter.loadCatFact(false) }
+        refreshButton.setOnClickListener { presenter.loadCatFact(true) }
+        clearButton.setOnClickListener { presenter.clearEntries() }
+        offlineButton.setOnClickListener { presenter.offline() }
+        invalidateButton.setOnClickListener { presenter.invalidate() }
 
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> freshOnly = isChecked }
-        compressCheckBox.setOnCheckedChangeListener { _, isChecked -> compress = isChecked }
-        encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> encrypt = isChecked }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshOnly = isChecked }
+        compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
+        encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 
         listAdapter = ExpandableListAdapter(this)
         listView.setAdapter(listAdapter)
@@ -136,66 +126,6 @@ internal class DemoActivity
         })
     }
 
-    private fun loadCatFact(isRefresh: Boolean) {
-        instructionType = if (isRefresh) REFRESH else CACHE
-
-        presenter.loadCatFact(
-                isRefresh,
-                encrypt,
-                compress,
-                freshOnly
-        )
-    }
-
-    private fun clearEntries() {
-        instructionType = CLEAR
-        presenter.clearEntries()
-    }
-
-    private fun offline() {
-        instructionType = OFFLINE
-        presenter.offline(freshOnly)
-    }
-
-    private fun invalidate() {
-        instructionType = INVALIDATE
-        presenter.invalidate()
-    }
-
-    private fun getInstruction(): CacheInstruction {
-        val configuration = presenter.configuration
-
-        val operation = when (instructionType) {
-            CACHE -> Cache(
-                    configuration.cacheDurationInMillis,
-                    freshOnly,
-                    configuration.mergeOnNextOnError,
-                    encrypt,
-                    compress,
-                    false
-            )
-            REFRESH -> Refresh(
-                    configuration.cacheDurationInMillis,
-                    freshOnly,
-                    configuration.mergeOnNextOnError,
-                    false
-            )
-            DO_NOT_CACHE -> DoNotCache
-            INVALIDATE -> Invalidate
-            OFFLINE -> Offline(
-                    freshOnly,
-                    configuration.mergeOnNextOnError
-            )
-            CLEAR,
-            CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
-        }
-
-        return CacheInstruction(
-                CatFactResponse::class.java,
-                operation
-        )
-    }
-
     override fun showCatFact(response: CatFactResponse) {
         listAdapter.showCatFact(response)
     }
@@ -203,7 +133,7 @@ internal class DemoActivity
     override fun onCallStarted() {
         listView.post {
             setButtonsEnabled(false)
-            listAdapter.onStart(getInstruction())
+            listAdapter.onStart(presenter.getCacheInstruction())
         }
     }
 
