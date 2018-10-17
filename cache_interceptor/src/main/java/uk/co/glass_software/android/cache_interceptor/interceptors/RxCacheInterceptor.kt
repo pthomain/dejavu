@@ -37,7 +37,7 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.erro
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                                 url: String,
                                                 uniqueParameters: String?,
-                                                configuration: CacheConfiguration<E>,
+                                                private val configuration: CacheConfiguration<E>,
                                                 private val responseInterceptor: (Long) -> ResponseInterceptor<E>,
                                                 private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                                 private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
@@ -58,6 +58,9 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
         return upstream
                 .compose(errorInterceptorFactory(instructionToken, start))
                 .compose(cacheInterceptorFactory(instructionToken, start))
+                .filter {
+                    !((instructionToken.instruction.operation as? Expiring)?.filterFinal ?: false) || it.metadata.cacheToken.status.isFinal
+                }
                 .compose(responseInterceptor(start))!!
     }
 
@@ -67,7 +70,7 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                 .toObservable()
                 .compose(errorInterceptorFactory(instructionToken, start))
                 .compose(cacheInterceptorFactory(instructionToken, start))
-                .filter { it.metadata.cacheToken.status.isFinal }
+                .filter { configuration.allowStaleForSingle }
                 .firstOrError()
                 .compose(responseInterceptor(start))!!
     }

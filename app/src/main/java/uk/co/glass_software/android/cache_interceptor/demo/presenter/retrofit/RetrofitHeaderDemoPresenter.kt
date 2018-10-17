@@ -45,8 +45,8 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                 )
             })
 
-    override fun getOfflineCompletable(freshOnly: Boolean) =
-            executeOperation(Offline(freshOnly))
+    override fun getOfflineSingle(freshOnly: Boolean) =
+            executeOperation(Offline(freshOnly)).firstOrError()
 
     override fun getClearEntriesCompletable() =
             executeOperation(Clear())
@@ -57,7 +57,7 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     .ignoreElements()!!
 
     private fun executeOperation(cacheOperation: CacheInstruction.Operation) =
-            catFactClient.instruct(CacheInstruction(
+            catFactClient().instruct(CacheInstruction(
                     CatFactResponse::class.java,
                     cacheOperation
             ))

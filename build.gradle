@@ -34,7 +34,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 28
     buildToolsVersion = '28.0.2'
-    multidexVersion = '1.0.3'
+    multidexVersion = '2.0.0'
 
     jitPackVersion = '1.0'
 
@@ -58,7 +58,6 @@ ext {
 
     playServicesVersion = '10.2.1'
     supportLibVersion = '1.0.0'
-    multidexVersion = '2.0.0'
 
     jUnitVersion = '4.12'
     mockitoVersion = '2.1.0'

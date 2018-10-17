@@ -26,6 +26,7 @@ import androidx.lifecycle.OnLifecycleEvent
 import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 import uk.co.glass_software.android.boilerplate.Boilerplate.logger
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
@@ -39,27 +40,32 @@ import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
 
-internal abstract class BaseDemoPresenter protected constructor(demoActivity: DemoActivity,
-                                                                uiLogger: Logger
+internal abstract class BaseDemoPresenter protected constructor(private val demoActivity: DemoActivity,
+                                                                protected val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
     private var instructionType: CacheInstruction.Operation.Type = CACHE
 
+    final override var useSingle: Boolean = false
+    final override var allowStaleForSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
     final override var freshOnly: Boolean = false
 
     protected val gson by lazy { Gson() }
 
-    protected val rxCache by lazy {
-        RxCache.builder()
-                .gson(gson)
-                .mergeOnNextOnError(true)
-                .networkTimeOutInSeconds(5)
-                .logger(uiLogger)
-                .build(demoActivity)
-    }
+    protected val rxCache by lazy { getRxCache(false) }
+    protected val rxCacheStaleSingles by lazy { getRxCache(true) }
+
+    private fun getRxCache(allowStaleForSingle: Boolean) =
+            RxCache.builder()
+                    .gson(gson)
+                    .mergeOnNextOnError(true)
+                    .networkTimeOutInSeconds(5)
+                    .allowStaleForSingle(allowStaleForSingle)
+                    .logger(uiLogger)
+                    .build(demoActivity)
 
     private val configuration = rxCache.configuration
 
@@ -75,7 +81,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
 
     final override fun offline() {
         instructionType = OFFLINE
-        subscribe(getOfflineCompletable(freshOnly))
+        subscribe(getOfflineSingle(freshOnly).toObservable())
     }
 
     final override fun clearEntries() {
@@ -145,7 +151,7 @@ internal abstract class BaseDemoPresenter protected constructor(demoActivity: De
                                                  freshOnly: Boolean)
             : Observable<out CatFactResponse>
 
-    protected abstract fun getOfflineCompletable(freshOnly: Boolean): Observable<out CatFactResponse>
+    protected abstract fun getOfflineSingle(freshOnly: Boolean): Single<out CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): Completable
     protected abstract fun getInvalidateCompletable(): Completable
 

@@ -34,28 +34,28 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                        freshOnly: Boolean) =
             if (isRefresh) {
                 when {
-                    freshOnly -> catFactClient.refreshFreshOnly()
-                    else -> catFactClient.refresh()
+                    freshOnly -> catFactClient().refreshFreshOnly()
+                    else -> catFactClient().refresh()
                 }
             } else {
                 when {
-                    freshOnly && compress && encrypt -> catFactClient.freshOnlyCompressedEncrypted()
-                    freshOnly && compress -> catFactClient.freshOnlyCompressed()
-                    freshOnly && encrypt -> catFactClient.freshOnlyEncrypted()
-                    freshOnly -> catFactClient.freshOnly()
-                    compress && encrypt -> catFactClient.compressedEncrypted()
-                    compress -> catFactClient.compressed()
-                    encrypt -> catFactClient.encrypted()
-                    else -> catFactClient.get()
+                    freshOnly && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
+                    freshOnly && compress -> catFactClient().freshOnlyCompressed()
+                    freshOnly && encrypt -> catFactClient().freshOnlyEncrypted()
+                    freshOnly -> catFactClient().freshOnly()
+                    compress && encrypt -> catFactClient().compressedEncrypted()
+                    compress -> catFactClient().compressed()
+                    encrypt -> catFactClient().encrypted()
+                    else -> catFactClient().get()
                 }
             }
 
-    override fun getOfflineCompletable(freshOnly: Boolean) =
-            if (freshOnly) catFactClient.offlineFreshOnly()
-            else catFactClient.offline()
+    override fun getOfflineSingle(freshOnly: Boolean) =
+            if (freshOnly) catFactClient().offlineFreshOnly()
+            else catFactClient().offline()
 
-    override fun getClearEntriesCompletable() = catFactClient.clearCache()
+    override fun getClearEntriesCompletable() = catFactClient().clearCache()
 
-    override fun getInvalidateCompletable() = catFactClient.invalidate()
+    override fun getInvalidateCompletable() = catFactClient().invalidate()
 
 }
