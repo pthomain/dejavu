@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:3.3.0-alpha13'
+        classpath 'com.android.tools.build:gradle:3.3.0-beta02'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -104,7 +104,7 @@ ext {
             jUnit                 : "junit:junit:$jUnitVersion",
             mockitoCore           : "org.mockito:mockito-core:$mockitoVersion",
             robolectric           : "org.robolectric:robolectric:$robolectricVersion",
-            okHttpMock           : "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+            okHttpMock            : "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
     ]
 }
 

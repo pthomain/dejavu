@@ -70,7 +70,7 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                 .toObservable()
                 .compose(errorInterceptorFactory(instructionToken, start))
                 .compose(cacheInterceptorFactory(instructionToken, start))
-                .filter { configuration.allowStaleForSingle }
+                .filter { it.metadata.cacheToken.status.isFresh || configuration.allowStaleForSingle }
                 .firstOrError()
                 .compose(responseInterceptor(start))!!
     }

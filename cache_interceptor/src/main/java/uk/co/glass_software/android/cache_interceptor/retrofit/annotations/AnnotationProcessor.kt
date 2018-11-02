@@ -156,6 +156,11 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                 )
             }
 
+            is DoNotCache -> CacheInstruction(
+                    responseClass,
+                    Operation.DoNotCache
+            )
+
             else -> null
         }
     }
