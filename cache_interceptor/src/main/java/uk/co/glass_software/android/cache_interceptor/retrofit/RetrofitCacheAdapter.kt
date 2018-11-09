@@ -34,7 +34,12 @@ import uk.co.glass_software.android.cache_interceptor.configuration.NetworkError
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import java.lang.reflect.Type
 
-@Suppress("UNCHECKED_CAST")
+/**
+ * Retrofit call adapter composing with RxCacheInterceptor. It takes a type {@code E} for the exception
+ * used in generic error handling.
+ *
+ * @see uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
+ */
 internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterceptor.Factory<E>,
                                        private val logger: Logger,
                                        private val methodDescription: String,
@@ -44,8 +49,17 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Returns the value type as defined by the default RxJava adapter.
+     */
     override fun responseType(): Type = rxCallAdapter.responseType()
 
+    /**
+     * Adapts the call by composing it with a RxCacheInterceptor if a cache instruction is provided
+     * or via the default RxJava call adapter otherwise.
+     *
+     * @return the call adapted to RxJava type
+     */
     override fun adapt(call: Call<Any>): Any {
         val header = call.request().header(RxCache.RxCacheHeader)
 
@@ -59,6 +73,19 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         }
     }
 
+    /**
+     * Returns the adapted call composed with a RxCacheInterceptor with a given cache instruction,
+     * either processed by the annotation processor or set on the call as a header instruction.
+     *
+     * @param call the call to adapt
+     * @param instruction the cache instruction
+     * @param isFromHeader whether or not the instruction was processed from annotations or header
+     *
+     * @see uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
+     * @see RxCache.RxCacheHeader
+     *
+     * @return the call adapted to RxJava type
+     */
     private fun adaptedWithInstruction(call: Call<Any>,
                                        instruction: CacheInstruction,
                                        isFromHeader: Boolean): Any {
@@ -71,6 +98,15 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         )
     }
 
+    /**
+     * Returns the adapted call composed with a RxCacheInterceptor with a given header instruction.
+     *
+     * @param call the call to adapt
+     * @param header the serialised header
+     * @param isOverridingAnnotation whether or not the call also had annotations, in which case the header instruction takes precedence over them.
+     *
+     * @return the call adapted to RxJava type
+     */
     private fun adaptedByHeader(call: Call<Any>,
                                 header: String,
                                 isOverridingAnnotation: Boolean): Any {
@@ -96,6 +132,16 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         }
     }
 
+    /**
+     * Composes the call with RxCacheInterceptor with a given cache instruction if possible.
+     * Otherwise returns the call adapted with the default RxJava call adapter.
+     *
+     * @param call the call to be adapted
+     * @param instruction the cache instruction
+     * @param adapted the call adapted via the default RxJava call adapter
+     *
+     * @return the call adapted according to the cache instruction
+     */
     private fun adaptRxCall(call: Call<Any>,
                             instruction: CacheInstruction,
                             adapted: Any): Any {
@@ -116,6 +162,13 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         }
     }
 
+    /**
+     * Returns the call adapted with the default RxJava call adapter.
+     *
+     * @param call the call to adapt
+     *
+     * @return the call adapted with the default adapter
+     */
     private fun adaptedByDefaultRxJavaAdapter(call: Call<Any>): Any {
         logger.d("No annotation or header cache instruction found for $methodDescription,"
                 + " the call will be adapted with the default RxJava 2 adapter."
@@ -123,6 +176,14 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
         return rxCallAdapter.adapt(call)
     }
 
+    /**
+     * Returns a RxCacheInterceptor for the given cache instruction.
+     *
+     * @param call the call to adapt
+     * @param instruction the cache instruction
+     *
+     * @return the resulting RxCacheInterceptor
+     */
     private fun getRxCacheInterceptor(call: Call<Any>,
                                       instruction: CacheInstruction) =
             rxCacheFactory.create(

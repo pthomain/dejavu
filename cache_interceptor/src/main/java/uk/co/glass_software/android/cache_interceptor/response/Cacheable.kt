@@ -29,6 +29,8 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.erro
  * Alternatively, if your response class cannot extend this class, have it implement the
  * CacheMetadata.Holder interface in a similar fashion as this class' implementation.
  * To provide your own error handling via an error factory, see ApiErrorFactory.
+ *
+ * @see uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
  */
 abstract class Cacheable : CacheMetadata.Holder<ApiError> {
 

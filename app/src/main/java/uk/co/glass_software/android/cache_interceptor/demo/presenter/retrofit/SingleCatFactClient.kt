@@ -22,7 +22,7 @@
 package uk.co.glass_software.android.cache_interceptor.demo.presenter.retrofit
 
 import io.reactivex.Completable
-import io.reactivex.Observable
+import io.reactivex.Single
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -33,48 +33,48 @@ import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPre
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.*
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.OptionalBoolean.TRUE
 
-internal interface CatFactClient {
+internal interface SingleCatFactClient {
 
     // GET
 
     @GET(ENDPOINT)
     @Cache
-    fun get(): Observable<CatFactResponse>
+    fun get(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(compress = TRUE)
-    fun compressed(): Observable<CatFactResponse>
+    fun compressed(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(encrypt = TRUE)
-    fun encrypted(): Observable<CatFactResponse>
+    fun encrypted(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
             compress = TRUE,
             encrypt = TRUE
     )
-    fun compressedEncrypted(): Observable<CatFactResponse>
+    fun compressedEncrypted(): Single<CatFactResponse>
 
     // GET freshOnly
 
     @GET(ENDPOINT)
     @Cache(freshOnly = true)
-    fun freshOnly(): Observable<CatFactResponse>
+    fun freshOnly(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
             freshOnly = true,
             compress = TRUE
     )
-    fun freshOnlyCompressed(): Observable<CatFactResponse>
+    fun freshOnlyCompressed(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
             freshOnly = true,
             encrypt = TRUE
     )
-    fun freshOnlyEncrypted(): Observable<CatFactResponse>
+    fun freshOnlyEncrypted(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
@@ -82,17 +82,17 @@ internal interface CatFactClient {
             compress = TRUE,
             encrypt = TRUE
     )
-    fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>
+    fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
 
     // REFRESH
 
     @GET(ENDPOINT)
     @Refresh
-    fun refresh(): Observable<CatFactResponse>
+    fun refresh(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Refresh(freshOnly = true)
-    fun refreshFreshOnly(): Observable<CatFactResponse>
+    fun refreshFreshOnly(): Single<CatFactResponse>
 
     // CLEAR
 
@@ -110,15 +110,15 @@ internal interface CatFactClient {
 
     @GET(ENDPOINT)
     @Offline
-    fun offline(): Observable<CatFactResponse>
+    fun offline(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Offline(freshOnly = true)
-    fun offlineFreshOnly(): Observable<CatFactResponse>
+    fun offlineFreshOnly(): Single<CatFactResponse>
 
     //HEADER
 
     @GET(ENDPOINT)
-    fun instruct(@Header(RxCacheHeader) instruction: CacheInstruction): Observable<CatFactResponse>
+    fun instruct(@Header(RxCacheHeader) instruction: CacheInstruction): Single<CatFactResponse>
 
 }

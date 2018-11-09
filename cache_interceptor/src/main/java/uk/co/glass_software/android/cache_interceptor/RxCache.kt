@@ -31,17 +31,33 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.erro
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 
-open class RxCache<E> internal constructor(component: CacheComponent<E>)
+/**
+ * Contains the Retrofit call adapter, RxCacheInterceptor factory and current global configuration.
+ */
+class RxCache<E> internal constructor(component: CacheComponent<E>)
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Provides the current configuration
+     */
     val configuration: CacheConfiguration<E> = component.configuration()
+
+    /**
+     * Provides the adapter factory to use with Retrofit
+     */
     val retrofitCacheAdapterFactory: RetrofitCacheAdapterFactory<E> = component.retrofitCacheAdapterFactory()
+
+    /**
+     * Provides a generic RxCacheTransformer factory to use with any Observable/Single/Completable
+     */
     val rxCacheInterceptor: RxCacheInterceptor.Factory<E> = component.rxCacheInterceptorFactory()
 
     companion object {
 
-        //Use this value to provide the cache instruction as a header
+        /**
+         * Use this value to provide the cache instruction as a header
+         */
         const val RxCacheHeader = "RxCacheHeader"
 
         private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<ApiError> ->
@@ -51,6 +67,9 @@ open class RxCache<E> internal constructor(component: CacheComponent<E>)
                     .build()
         }
 
+        /**
+         * @return Builder for CacheConfiguration
+         */
         fun builder() = CacheConfiguration.builder(
                 ApiErrorFactory(),
                 defaultComponentProvider()

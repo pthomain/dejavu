@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:3.3.0-alpha13'
+        classpath 'com.android.tools.build:gradle:3.3.0-beta02'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -34,7 +34,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 28
     buildToolsVersion = '28.0.2'
-    multidexVersion = '1.0.3'
+    multidexVersion = '2.0.0'
 
     jitPackVersion = '1.0'
 
@@ -58,7 +58,6 @@ ext {
 
     playServicesVersion = '10.2.1'
     supportLibVersion = '1.0.0'
-    multidexVersion = '2.0.0'
 
     jUnitVersion = '4.12'
     mockitoVersion = '2.1.0'
@@ -105,7 +104,7 @@ ext {
             jUnit                 : "junit:junit:$jUnitVersion",
             mockitoCore           : "org.mockito:mockito-core:$mockitoVersion",
             robolectric           : "org.robolectric:robolectric:$robolectricVersion",
-            okHttpMock           : "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+            okHttpMock            : "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
     ]
 }
 

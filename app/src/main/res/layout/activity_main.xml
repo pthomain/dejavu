@@ -65,7 +65,8 @@
 
     <RadioGroup
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="42dp"
+        android:gravity="center"
         android:orientation="horizontal">
 
         <RadioButton
@@ -76,8 +77,9 @@
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:gravity="center_vertical"
             android:labelFor="@id/radio_button_retrofit_annotation"
             android:text="Use Retrofit Annotation" />
 
@@ -88,8 +90,9 @@
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:gravity="center_vertical"
             android:labelFor="@id/radio_button_retrofit_header"
             android:text="Use Retrofit Header" />
 
@@ -100,8 +103,9 @@
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            android:gravity="center_vertical"
             android:labelFor="@id/radio_button_volley"
             android:text="Use Volley" />
     </RadioGroup>
@@ -109,7 +113,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:orientation="horizontal">
 
@@ -154,11 +157,55 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <CheckBox
+                android:id="@+id/checkbox_use_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/checkbox_use_single"
+                android:text="Use Singles" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2">
+
+            <CheckBox
+                android:id="@+id/checkbox_allow_stale_for_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/checkbox_allow_stale_for_single"
+                android:text="Allow STALE for Singles" />
+        </LinearLayout>
+
+    </LinearLayout>
+
     <ExpandableListView
         android:id="@+id/list"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:layout_weight="1" />
 

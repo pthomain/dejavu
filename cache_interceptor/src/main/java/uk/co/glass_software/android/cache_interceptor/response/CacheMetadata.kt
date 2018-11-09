@@ -24,16 +24,35 @@ package uk.co.glass_software.android.cache_interceptor.response
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 
+/**
+ * Contains cache metadata for the given call. This metadata is used on the ResponseWrapper and is added
+ * to the target response if it implements CacheMetadata.Holder.
+ *
+ * @param cacheToken the cache token, containing information about the cache state of this response
+ * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
+ * @param callDuration how long the call took to execute at different stages of the caching process
+ */
 data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
                             @Transient val exception: E? = null,
                             @Transient val callDuration: Duration = Duration(0, 0, 0))
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Contains information about how long the call took to execute at different stages of the caching process.
+     *
+     * @param disk time taken to retrieve the data from the local cache
+     * @param network time taken to retrieve the data from the network
+     * @param total total time for this call, including disk, network and processing time.
+     */
     data class Duration(val disk: Int,
                         val network: Int,
                         val total: Int)
 
+    /**
+     * Interface to be set on any response requiring cache metadata to be provided. Only responses
+     * implementing this interface can use the mergeOnNextOnError directive.
+     */
     interface Holder<E>
             where E : Exception,
                   E : NetworkErrorProvider {

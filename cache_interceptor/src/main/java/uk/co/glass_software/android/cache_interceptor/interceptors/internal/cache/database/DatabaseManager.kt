@@ -45,7 +45,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteDatabase,
+internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
                                   private val compressData: Boolean,
@@ -74,13 +74,11 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
             if (typeToClear != null) add(typeToClear.name)
         }
 
-        databaseProvider().useAndLogError {
-            it.delete(
-                    TABLE_CACHE,
-                    arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
-                    args.toArray()
-            )
-        }.let { deleted ->
+        database.delete(
+                TABLE_CACHE,
+                arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
+                args.toArray()
+        ).let { deleted ->
             val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
             if (clearOlderEntriesOnly) {
                 logger.d("Deleted old$entryType entries from cache: $deleted found")
@@ -110,43 +108,41 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
         val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(key)
 
-        databaseProvider().useAndLogError {
-            it.query(
-                    TABLE_CACHE,
-                    projection,
-                    selection,
-                    selectionArgs,
-                    null,
-                    null,
-                    null,
-                    "1"
-            ).useAndLogError { cursor ->
-                if (cursor.count != 0 && cursor.moveToNext()) {
-                    logger.d("Found a cached $simpleName")
+        database.query(
+                TABLE_CACHE,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null,
+                "1"
+        ).useAndLogError { cursor ->
+            if (cursor.count != 0 && cursor.moveToNext()) {
+                logger.d("Found a cached $simpleName")
 
-                    val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
-                    val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
-                    val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
-                    val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
+                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
+                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
 
-                    val expiryDate = dateFactory(
-                            if (instruction.operation is Expiring.Refresh) 0L
-                            else cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName))
-                    )
+                val expiryDate = dateFactory(
+                        if (instruction.operation is Expiring.Refresh) 0L
+                        else cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName))
+                )
 
-                    return getCachedResponse(
-                            instructionToken,
-                            start,
-                            cacheDate,
-                            expiryDate,
-                            isCompressed,
-                            isEncrypted,
-                            localData
-                    )
-                } else {
-                    logger.d("Found no cached $simpleName")
-                    return null
-                }
+                return getCachedResponse(
+                        instructionToken,
+                        start,
+                        cacheDate,
+                        expiryDate,
+                        isCompressed,
+                        isEncrypted,
+                        localData
+                )
+            } else {
+                logger.d("Found no cached $simpleName")
+                return null
             }
         }
     }
@@ -167,15 +163,13 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
             val selection = "${TOKEN.columnName} = ?"
             val selectionArgs = arrayOf(key)
 
-            databaseProvider().useAndLogError {
-                it.update(
-                        TABLE_CACHE,
-                        contentValuesFactory(map),
-                        selection,
-                        selectionArgs
-                ).let {
-                    logger.d("Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
-                }
+            database.update(
+                    TABLE_CACHE,
+                    contentValuesFactory(map),
+                    selection,
+                    selectionArgs
+            ).let {
+                logger.d("Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
             }
         }
     }
@@ -254,14 +248,12 @@ internal class DatabaseManager<E>(private val databaseProvider: () -> SQLiteData
             values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
             values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
 
-            databaseProvider().useAndLogError {
-                it.insertWithOnConflict(
-                        TABLE_CACHE,
-                        null,
-                        contentValuesFactory(values),
-                        CONFLICT_REPLACE
-                )
-            }
+            database.insertWithOnConflict(
+                    TABLE_CACHE,
+                    null,
+                    contentValuesFactory(values),
+                    CONFLICT_REPLACE
+            )
         } ?: logger.e("Could not serialise and store data for $simpleName")
 
         it.onComplete()

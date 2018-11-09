@@ -22,13 +22,11 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache
 
 import io.reactivex.Observable
-import io.reactivex.ObservableSource
 import io.reactivex.ObservableTransformer
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
-import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import java.util.*
 
@@ -41,40 +39,34 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
         where E : Exception,
               E : NetworkErrorProvider {
 
-    override fun apply(upstream: Observable<ResponseWrapper<E>>): ObservableSource<ResponseWrapper<E>> {
-        val instruction = instructionToken.instruction
+    override fun apply(upstream: Observable<ResponseWrapper<E>>) =
+            instructionToken.instruction.let { instruction ->
+                if (isCacheEnabled) {
+                    when (instruction.operation) {
+                        is Expiring -> cacheManager.getCachedResponse(
+                                upstream,
+                                instructionToken,
+                                instruction.operation,
+                                start
+                        )
 
-        val observable = if (isCacheEnabled) {
-            when (instruction.operation) {
-                is Expiring -> cacheManager.getCachedResponse(
-                        upstream,
-                        instructionToken,
-                        instruction.operation,
-                        start
-                )
+                        is Clear -> cacheManager.clearCache(
+                                instructionToken,
+                                instruction.operation.typeToClear,
+                                instruction.operation.clearOldEntriesOnly
+                        )
 
-                is Clear -> cacheManager.clearCache(
-                        instructionToken,
-                        instruction.operation.typeToClear,
-                        instruction.operation.clearOldEntriesOnly
-                )
+                        is Invalidate -> cacheManager.invalidate(instructionToken)
 
-                is Invalidate -> cacheManager.invalidate(instructionToken)
-
-                else -> doNotCache(instructionToken, upstream)
+                        else -> doNotCache(instructionToken, upstream)
+                    }
+                } else doNotCache(instructionToken, upstream)
             }
-        } else doNotCache(instructionToken, upstream)
-
-        return observable.filter {
-            val filterFinal = (instruction.operation as? Expiring)?.filterFinal ?: false
-            !filterFinal || it.metadata.cacheToken.status.isFinal
-        }
-    }
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =
             upstream.doOnNext { responseWrapper ->
-                responseWrapper.metadata = CacheMetadata(
+                responseWrapper.metadata = responseWrapper.metadata.copy(
                         CacheToken.notCached(
                                 instructionToken,
                                 Date()

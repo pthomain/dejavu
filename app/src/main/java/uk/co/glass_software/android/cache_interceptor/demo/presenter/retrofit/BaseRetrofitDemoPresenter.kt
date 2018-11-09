@@ -26,6 +26,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.presenter.BaseDemoPresenter
 
@@ -33,12 +34,18 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
                                                   uiLogger: Logger)
     : BaseDemoPresenter(demoActivity, uiLogger) {
 
-    protected val retrofit = Retrofit.Builder()
-            .baseUrl(BaseDemoPresenter.BASE_URL)
-            .client(getOkHttpClient(uiLogger))
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .addCallAdapterFactory(rxCache.retrofitCacheAdapterFactory)
-            .build()
+    private val retrofit = retrofit(false)
+    private val retrofitStaleSingles = retrofit(true)
+
+    private fun retrofit(allowStaleForSingle: Boolean) =
+            Retrofit.Builder()
+                    .baseUrl(BaseDemoPresenter.BASE_URL)
+                    .client(getOkHttpClient(uiLogger))
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .addCallAdapterFactory((if (allowStaleForSingle) rxCacheStaleSingles else rxCache).retrofitCacheAdapterFactory)
+                    .build()
+
+    private fun retrofit() = if(allowStaleForSingle) retrofitStaleSingles else retrofit
 
     private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {
         it.addInterceptor(getHttpLoggingInterceptor(logger))
@@ -51,6 +58,26 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-    protected val catFactClient = retrofit.create(CatFactClient::class.java)
+    private val observableClient = retrofit().create(ObservableCatFactClient::class.java)
+    private val singleClient = SingleClientWrapper(retrofit().create(SingleCatFactClient::class.java))
 
+    protected fun catFactClient() = if (useSingle) singleClient else observableClient
+
+    private class SingleClientWrapper(private val singleClient: SingleCatFactClient) : ObservableCatFactClient {
+        override fun get() = singleClient.get().toObservable()
+        override fun compressed() = singleClient.compressed().toObservable()
+        override fun encrypted() = singleClient.encrypted().toObservable()
+        override fun compressedEncrypted() = singleClient.compressedEncrypted().toObservable()
+        override fun freshOnly() = singleClient.freshOnly().toObservable()
+        override fun freshOnlyCompressed() = singleClient.freshOnlyCompressed().toObservable()
+        override fun freshOnlyEncrypted() = singleClient.freshOnlyEncrypted().toObservable()
+        override fun freshOnlyCompressedEncrypted() = singleClient.freshOnlyCompressedEncrypted().toObservable()
+        override fun refresh() = singleClient.refresh().toObservable()
+        override fun refreshFreshOnly() = singleClient.refreshFreshOnly().toObservable()
+        override fun clearCache() = singleClient.clearCache()
+        override fun invalidate() = singleClient.invalidate()
+        override fun offline() = singleClient.offline()
+        override fun offlineFreshOnly() = singleClient.offlineFreshOnly()
+        override fun instruct(instruction: CacheInstruction) = singleClient.instruct(instruction).toObservable()
+    }
 }

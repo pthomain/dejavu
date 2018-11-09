@@ -19,14 +19,13 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.interceptors.internal.error
+package uk.co.glass_software.android.cache_interceptor.retrofit.annotations
 
-enum class ErrorCode constructor(val canRetry: Boolean) {
-    CONFIG(false),
-    NETWORK(true),
-    UNAUTHORISED(false),
-    NOT_FOUND(false),
-    UNEXPECTED_RESPONSE(true),
-    SERVER_ERROR(true),
-    UNKNOWN(true)
+class CacheException(val type: Type,
+                     message: String) : Exception(message) {
+
+    enum class Type {
+        ANNOTATION,
+        METADATA
+    }
 }

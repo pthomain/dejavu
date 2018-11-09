@@ -63,16 +63,18 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     requestQueue,
                     gson,
                     responseClass,
-                    rxCache.rxCacheInterceptor.create(
-                            CacheInstruction(responseClass, cacheOperation),
-                            URL,
-                            null
-                    ),
+                    (if (allowStaleForSingle) rxCacheStaleSingles else rxCache)
+                            .rxCacheInterceptor
+                            .create(
+                                    CacheInstruction(responseClass, cacheOperation),
+                                    URL,
+                                    null
+                            ),
                     URL
             )
 
-    override fun getOfflineCompletable(freshOnly: Boolean) =
-            getObservableForOperation(Offline(freshOnly))
+    override fun getOfflineSingle(freshOnly: Boolean) =
+            getObservableForOperation(Offline(freshOnly)).firstOrError()
 
     override fun getClearEntriesCompletable() =
             getObservableForOperation(Clear()).ignoreElements()!!

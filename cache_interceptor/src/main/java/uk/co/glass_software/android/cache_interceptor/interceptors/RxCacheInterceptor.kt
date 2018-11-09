@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
@@ -28,23 +29,22 @@ import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruc
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.ResponseInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.ResponseInterceptor
 
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                                 url: String,
                                                 uniqueParameters: String?,
-                                                configuration: CacheConfiguration<E>,
+                                                private val configuration: CacheConfiguration<E>,
                                                 private val responseInterceptor: (Long) -> ResponseInterceptor<E>,
                                                 private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                                 private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
     : RxCacheTransformer
         where E : Exception,
               E : NetworkErrorProvider {
-
     private val instructionToken = fromInstruction(
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             (instruction.operation as? Expiring)?.compress ?: configuration.compress,
@@ -58,6 +58,9 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
         return upstream
                 .compose(errorInterceptorFactory(instructionToken, start))
                 .compose(cacheInterceptorFactory(instructionToken, start))
+                .filter {
+                    !((instructionToken.instruction.operation as? Expiring)?.filterFinal ?: false) || it.metadata.cacheToken.status.isFinal
+                }
                 .compose(responseInterceptor(start))!!
     }
 
@@ -67,10 +70,15 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                 .toObservable()
                 .compose(errorInterceptorFactory(instructionToken, start))
                 .compose(cacheInterceptorFactory(instructionToken, start))
-                .filter { it.metadata.cacheToken.status.isFinal }
+                .filter { it.metadata.cacheToken.status.isFresh || configuration.allowStaleForSingle }
                 .firstOrError()
                 .compose(responseInterceptor(start))!!
     }
+
+    override fun apply(upstream: Completable)=
+            upstream.toObservable<Any>()
+                    .compose(this)
+                    .ignoreElements()!!
 
     class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,

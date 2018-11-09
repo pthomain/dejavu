@@ -49,7 +49,8 @@ internal class ExpandableListAdapter(context: Context)
 
     private var callStart = 0L
 
-    fun onStart(instruction: CacheInstruction) {
+    fun onStart(useSingle: Boolean,
+                instruction: CacheInstruction) {
         headers.clear()
         children.clear()
         logs.clear()
@@ -58,7 +59,7 @@ internal class ExpandableListAdapter(context: Context)
 
         val header = "Retrofit Call"
         headers.add(header)
-        children[header] = listOf(instruction)
+        children[header] = listOf(Pair(useSingle, instruction))
 
         notifyDataSetChanged()
     }
@@ -172,10 +173,13 @@ internal class ExpandableListAdapter(context: Context)
                             text.visibility = View.VISIBLE
                             instruction.visibility = View.GONE
                             text.text = child
-                        } else if (child is CacheInstruction) {
+                        } else if (child is Pair<*, *>) {
                             text.visibility = View.GONE
                             instruction.visibility = View.VISIBLE
-                            instruction.setInstruction(child)
+                            instruction.setInstruction(
+                                    child.first as Boolean,
+                                    child.second as CacheInstruction
+                            )
                         }
                     }
 
