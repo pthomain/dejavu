@@ -27,7 +27,6 @@ import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
-import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import java.util.*
 
@@ -67,7 +66,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =
             upstream.doOnNext { responseWrapper ->
-                responseWrapper.metadata = CacheMetadata(
+                responseWrapper.metadata = responseWrapper.metadata.copy(
                         CacheToken.notCached(
                                 instructionToken,
                                 Date()

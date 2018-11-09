@@ -27,6 +27,7 @@ import retrofit2.HttpException
 import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError.Companion.NON_HTTP_STATUS
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorCode.*
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.CacheException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
@@ -39,6 +40,7 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
                 is TimeoutException -> getIoError(throwable)
 
                 is HttpException -> getHttpError(throwable)
+                is CacheException -> getConfigError(throwable)
 
                 else -> getDefaultError(throwable)
             }
@@ -49,6 +51,14 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
                     throwable.code(),
                     parseErrorCode(throwable),
                     throwable.message()
+            )
+
+    private fun getConfigError(throwable: CacheException) =
+            ApiError(
+                    throwable,
+                    NON_HTTP_STATUS,
+                    CONFIG,
+                    "Configuration error"
             )
 
     private fun getIoError(throwable: Throwable) =

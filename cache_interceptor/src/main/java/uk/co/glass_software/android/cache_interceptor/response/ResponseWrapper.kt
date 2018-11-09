@@ -23,6 +23,13 @@ package uk.co.glass_software.android.cache_interceptor.response
 
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 
+/**
+ * Wraps the call and associated metadata for internal use.
+ *
+ * @param responseClass the target response class
+ * @param response the call's response if available
+ * @param metadata the call's metadata
+ */
 internal data class ResponseWrapper<E>(val responseClass: Class<*>,
                                        val response: Any?,
                                        override var metadata: CacheMetadata<E>)

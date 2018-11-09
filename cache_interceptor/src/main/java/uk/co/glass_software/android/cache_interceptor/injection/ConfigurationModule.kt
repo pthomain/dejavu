@@ -30,7 +30,6 @@ import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.ResponseInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager
@@ -39,6 +38,8 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.ResponseInterceptor
+import uk.co.glass_software.android.cache_interceptor.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
@@ -188,13 +189,29 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideRetrofitCacheAdapterFactory(rxCacheInterceptorFactory: RxCacheInterceptor.Factory<E>,
+    fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()
+
+    @Provides
+    @Singleton
+    fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory,
+                                           rxCacheInterceptorFactory: RxCacheInterceptor.Factory<E>,
+                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                            annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCacheAdapterFactory(
-                    RxJava2CallAdapterFactory.create(),
+                    defaultAdapterFactory,
                     rxCacheInterceptorFactory,
                     annotationProcessor,
+                    processingErrorAdapterFactory,
                     configuration.logger
+            )
+
+    @Provides
+    @Singleton
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                             responseInterceptor: Function1<Long, ResponseInterceptor<E>>) =
+            ProcessingErrorAdapter.Factory(
+                    { t1, t2 -> errorInterceptorFactory.get(t1, t2) },
+                    { responseInterceptor.get(it) }
             )
 
     @Provides

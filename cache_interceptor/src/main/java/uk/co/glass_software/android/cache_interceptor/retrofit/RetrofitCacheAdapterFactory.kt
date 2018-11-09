@@ -29,26 +29,49 @@ import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.*
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.CacheException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-@Suppress("UNCHECKED_CAST")
+/**
+ * Implements the call adapter factory for Retrofit composing the calls with RxCacheInterceptor.
+ *
+ * @param rxJava2CallAdapterFactory the default RxJava call adapter factory
+ * @param rxCacheFactory the RxCacheInterceptor factory, as returned by RxCache
+ * @param annotationProcessor the Retrofit annotation processor
+ * @param logger the logger
+ */
 class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
                                                           private val rxCacheFactory: RxCacheInterceptor.Factory<E>,
                                                           private val annotationProcessor: AnnotationProcessor<E>,
+                                                          private val processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                                           private val logger: Logger)
     : CallAdapter.Factory()
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Returns a call adapter for interface methods that return {@code returnType}, or null if it
+     * cannot be handled by this factory.
+     *
+     * @param returnType the call's return type
+     * @param annotations the call's annotations
+     * @param retrofit Retrofit instance
+     *
+     * @return the Retrofit call adapter handling the cache
+     */
     override fun get(returnType: Type,
                      annotations: Array<Annotation>,
                      retrofit: Retrofit): CallAdapter<*, *> {
-        val callAdapter = rxJava2CallAdapterFactory.get(
+        @Suppress("UNCHECKED_CAST")
+        val defaultCallAdapter = rxJava2CallAdapterFactory.get(
                 returnType,
                 annotations,
                 retrofit
@@ -72,32 +95,49 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
 
             logger.d("Processing annotation for method returning " + rxType.getTypedName(responseClass))
 
-            annotationProcessor.process(
-                    annotations,
-                    rxType,
-                    responseClass
-            ).let { instruction ->
-                val methodDescription = "method returning " + rxType.getTypedName(responseClass)
+            try {
+                annotationProcessor.process(
+                        annotations,
+                        rxType,
+                        responseClass
+                ).let { instruction ->
+                    val methodDescription = "method returning " + rxType.getTypedName(responseClass)
 
-                if (instruction == null) {
-                    logger.d("Annotation processor for $methodDescription"
-                            + " returned no instruction, checking cache header"
-                    )
-                } else {
-                    logger.d("Annotation processor for $methodDescription"
-                            + " returned the following instruction "
-                            + instruction
-                    )
+                    if (instruction == null) {
+                        logger.d("Annotation processor for $methodDescription"
+                                + " returned no instruction, checking cache header"
+                        )
+                        defaultCallAdapter
+                    } else {
+                        logger.d("Annotation processor for $methodDescription"
+                                + " returned the following instruction "
+                                + instruction
+                        )
+                        RetrofitCacheAdapter(
+                                rxCacheFactory,
+                                logger,
+                                methodDescription,
+                                instruction,
+                                defaultCallAdapter
+                        )
+                    }
                 }
-                RetrofitCacheAdapter(
-                        rxCacheFactory,
-                        logger,
-                        methodDescription,
-                        instruction,
-                        callAdapter
+            } catch (cacheException: CacheException) {
+                processingErrorAdapterFactory.create(
+                        defaultCallAdapter,
+                        CacheToken.fromInstruction(
+                                CacheInstruction(responseClass, DoNotCache),
+                                false,
+                                false,
+                                "",
+                                null
+                        ),
+                        System.currentTimeMillis(),
+                        rxType,
+                        cacheException
                 )
             }
-        } ?: callAdapter.also {
+        } ?: defaultCallAdapter.also {
             logger.d("Annotation processor did not return any instruction for call returning $returnType")
         }
     }

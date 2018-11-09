@@ -27,15 +27,32 @@ import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruc
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.CacheException.Type.ANNOTATION
 
+/**
+ * Processes Retrofit annotations and generates a CacheInstruction if needed.
+ *
+ * @see uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+ */
 internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
         where  E : Exception,
                E : NetworkErrorProvider {
 
     private val logger = cacheConfiguration.logger
 
+    /**
+     * Processes the annotations on the Retrofit call and tries to convert them to a CacheInstruction
+     * if applicable.
+     *
+     * @param annotations the calls annotations as provided by the Retrofit call adapter.
+     * @param rxType the type of RxJava operation for this call
+     * @param responseClass the target response class
+     *
+     * @return the processed CacheInstruction if applicable
+     */
+    @Throws(CacheException::class)
     fun process(annotations: Array<Annotation>,
-                rxType: AnnotationProcessor.RxType,
+                rxType: RxType,
                 responseClass: Class<*>): CacheInstruction? {
         if (annotations.isEmpty()
                 && rxType != COMPLETABLE
@@ -83,22 +100,28 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         return instruction
     }
 
-    private fun CacheInstructionException.logAndThrow() {
+    @Throws(CacheException::class)
+    private fun CacheException.logAndThrow() {
         logger.e(this)
         throw this
     }
 
-    @Throws(CacheInstructionException::class)
+    /**
+     *
+     */
+    @Throws(CacheException::class)
     private fun getInstruction(currentInstruction: CacheInstruction?,
                                rxType: RxType,
                                responseClass: Class<*>,
                                foundOperation: Operation.Type,
                                annotation: Annotation): CacheInstruction? {
         if (currentInstruction != null) {
-            CacheInstructionException("More than one cache annotation defined for method returning"
-                    + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
-                    + " after existing annotation ${currentInstruction.operation.type.annotationName}."
-                    + " Only one annotation can be used for this method."
+            CacheException(
+                    ANNOTATION,
+                    "More than one cache annotation defined for method returning"
+                            + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
+                            + " after existing annotation ${currentInstruction.operation.type.annotationName}."
+                            + " Only one annotation can be used for this method."
             ).logAndThrow()
         }
 
@@ -165,15 +188,13 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         }
     }
 
-    class CacheInstructionException(message: String) : Exception(message)
-
     enum class RxType(private val className: String) {
         OBSERVABLE("Observable"),
         SINGLE("Single"),
         COMPLETABLE("Completable");
 
         fun getTypedName(responseClass: Class<*>) =
-                if(this == COMPLETABLE) className
+                if (this == COMPLETABLE) className
                 else "$className<${responseClass.simpleName}>"
     }
 

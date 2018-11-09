@@ -50,11 +50,11 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                    typeToClear: Class<*>?,
                    clearOlderEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
         databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
-    }
+    }!!
 
     fun invalidate(instructionToken: CacheToken) = emptyResponseObservable(instructionToken) {
         databaseManager.invalidate(instructionToken)
-    }
+    }!!
 
     private fun emptyResponseObservable(instructionToken: CacheToken,
                                         action: () -> Unit) = Observable.fromCallable {

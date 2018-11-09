@@ -21,10 +21,15 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors
 
+import io.reactivex.CompletableTransformer
 import io.reactivex.ObservableTransformer
 import io.reactivex.SingleTransformer
 
+/**
+ * Convenience interface aggregating all the RxJava types composable by RxCacheInterceptor.
+ */
 interface RxCacheTransformer
     : ObservableTransformer<Any, Any>,
-        SingleTransformer<Any, Any>
+        SingleTransformer<Any, Any>,
+        CompletableTransformer
 
