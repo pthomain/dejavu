@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.cache_interceptor
 
+import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
@@ -29,6 +30,7 @@ import uk.co.glass_software.android.cache_interceptor.injection.DefaultConfigura
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
+import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 
 /**
@@ -52,6 +54,12 @@ class RxCache<E> internal constructor(component: CacheComponent<E>)
      * Provides a generic RxCacheTransformer factory to use with any Observable/Single/Completable
      */
     val rxCacheInterceptor: RxCacheInterceptor.Factory<E> = component.rxCacheInterceptorFactory()
+
+    /**
+     * Provides an observable emitting the responses metadata, for logging/stats purposes or to use
+     * as an alternative to implementing the CacheMetadata.Holder interface on responses.
+     */
+    val cacheMetadataObservable: Observable<CacheMetadata<E>> = component.cacheMetadataObservable()
 
     companion object {
 

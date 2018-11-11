@@ -57,7 +57,7 @@ internal class DemoActivity
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val allowStaleForSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_allow_stale_for_single)!! }
+    private val allowNonFinalForSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_allow_non_final_for_single)!! }
     private val useSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_use_single)!! }
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
@@ -108,7 +108,7 @@ internal class DemoActivity
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        allowStaleForSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.allowStaleForSingle = isChecked }
+        allowNonFinalForSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.allowNonFinalForSingle = isChecked }
         useSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.useSingle = isChecked }
         freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshOnly = isChecked }
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }

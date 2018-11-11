@@ -35,17 +35,17 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
     : BaseDemoPresenter(demoActivity, uiLogger) {
 
     private val retrofit = retrofit(false)
-    private val retrofitStaleSingles = retrofit(true)
+    private val retrofitNonFinalSingles = retrofit(true)
 
-    private fun retrofit(allowStaleForSingle: Boolean) =
+    private fun retrofit(allowNonFinalForSingle: Boolean) =
             Retrofit.Builder()
                     .baseUrl(BaseDemoPresenter.BASE_URL)
                     .client(getOkHttpClient(uiLogger))
                     .addConverterFactory(GsonConverterFactory.create(gson))
-                    .addCallAdapterFactory((if (allowStaleForSingle) rxCacheStaleSingles else rxCache).retrofitCacheAdapterFactory)
+                    .addCallAdapterFactory((if (allowNonFinalForSingle) rxCacheNonFinalSingles else rxCache).retrofitCacheAdapterFactory)
                     .build()
 
-    private fun retrofit() = if(allowStaleForSingle) retrofitStaleSingles else retrofit
+    private fun retrofit() = if(allowNonFinalForSingle) retrofitNonFinalSingles else retrofit
 
     private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {
         it.addInterceptor(getHttpLoggingInterceptor(logger))

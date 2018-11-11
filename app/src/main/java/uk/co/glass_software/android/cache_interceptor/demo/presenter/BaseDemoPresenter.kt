@@ -48,7 +48,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     private var instructionType: CacheInstruction.Operation.Type = CACHE
 
     final override var useSingle: Boolean = false
-    final override var allowStaleForSingle: Boolean = false
+    final override var allowNonFinalForSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
     final override var freshOnly: Boolean = false
@@ -56,14 +56,14 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     protected val gson by lazy { Gson() }
 
     protected val rxCache by lazy { getRxCache(false) }
-    protected val rxCacheStaleSingles by lazy { getRxCache(true) }
+    protected val rxCacheNonFinalSingles by lazy { getRxCache(true) }
 
-    private fun getRxCache(allowStaleForSingle: Boolean) =
+    private fun getRxCache(allowNonFinalForSingle: Boolean) =
             RxCache.builder()
                     .gson(gson)
                     .mergeOnNextOnError(true)
                     .networkTimeOutInSeconds(5)
-                    .allowStaleForSingle(allowStaleForSingle)
+                    .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
                     .build(demoActivity)
 

@@ -34,12 +34,14 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.EmptyResponseFactory
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 import java.util.*
 
 
 internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
+                               private val emptyResponseFactory: EmptyResponseFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val defaultDurationInMillis: Long,
                                private val logger: Logger)
@@ -50,31 +52,17 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                    typeToClear: Class<*>?,
                    clearOlderEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
         databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
-    }!!
+    }
 
     fun invalidate(instructionToken: CacheToken) = emptyResponseObservable(instructionToken) {
         databaseManager.invalidate(instructionToken)
-    }!!
-
-    private fun emptyResponseObservable(instructionToken: CacheToken,
-                                        action: () -> Unit) = Observable.fromCallable {
-        action()
-        emptyResponse(instructionToken)
     }
 
-    private fun emptyResponse(instructionToken: CacheToken) =
-            instructionToken.instruction.let {
-                ResponseWrapper<E>(
-                        it.responseClass,
-                        null,
-                        CacheMetadata(
-                                instructionToken.copy(
-                                        status = EMPTY,
-                                        instruction = it
-                                )
-                        )
-                )
-            }
+    private fun emptyResponseObservable(instructionToken: CacheToken,
+                                        action: () -> Unit) =
+            Observable.fromCallable(action::invoke).flatMap {
+                emptyResponseFactory.emptyResponseWrapperObservable(instructionToken)
+            }!!
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
@@ -92,32 +80,21 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         val diskDuration = cachedResponse?.metadata?.callDuration?.disk
                 ?: (System.currentTimeMillis() - start).toInt()
 
-        val responseObservable =
-                if (cacheOperation is Offline) {
-                    if (cachedResponse == null ||
-                            (cacheOperation.freshOnly && cachedResponse.metadata.cacheToken.status == STALE))
-                        Observable.empty<ResponseWrapper<E>>()
-                    else
-                        Observable.just(cachedResponse)
-                } else
-                    getOnlineObservable(
-                            cachedResponse,
-                            upstream,
-                            cacheOperation,
-                            instructionToken,
-                            diskDuration,
-                            isRefreshFreshOnly,
-                            simpleName
-                    )
-
-        return responseObservable
-                .flatMap {
-                    if (cacheOperation.freshOnly && !it.metadata.cacheToken.status.isFresh)
-                        Observable.empty<ResponseWrapper<E>>()
-                    else
-                        Observable.just(it)
-                }
-                .defaultIfEmpty(emptyResponse(instructionToken))
+        return if (cacheOperation is Offline) {
+            if (cachedResponse == null)
+                emptyResponseFactory.emptyResponseWrapperObservable(instructionToken)
+            else
+                Observable.just(cachedResponse)
+        } else
+            getOnlineObservable(
+                    cachedResponse,
+                    upstream,
+                    cacheOperation,
+                    instructionToken,
+                    diskDuration,
+                    isRefreshFreshOnly,
+                    simpleName
+            )
     }
 
     private fun getOnlineObservable(cachedResponse: ResponseWrapper<E>?,

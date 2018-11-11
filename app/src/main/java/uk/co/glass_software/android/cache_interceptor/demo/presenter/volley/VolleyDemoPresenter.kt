@@ -63,7 +63,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     requestQueue,
                     gson,
                     responseClass,
-                    (if (allowStaleForSingle) rxCacheStaleSingles else rxCache)
+                    (if (allowNonFinalForSingle) rxCacheNonFinalSingles else rxCache)
                             .rxCacheInterceptor
                             .create(
                                     CacheInstruction(responseClass, cacheOperation),

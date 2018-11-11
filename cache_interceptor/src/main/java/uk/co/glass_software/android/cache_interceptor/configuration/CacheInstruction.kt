@@ -48,7 +48,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
          * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
          * @param encrypt whether the cached data should be encrypted, useful for use on external storage
          * @param compress whether the cached data should be compressed, useful for large responses
-         * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+         * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
          * @param type the operation type
          */
         sealed class Expiring(val durationInMillis: Long?,
@@ -73,7 +73,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
              * @param encrypt whether the cached data should be encrypted, useful for use on external storage
              * @param compress whether the cached data should be compressed, useful for large responses
-             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
              */
             class Cache(durationInMillis: Long? = null,
                         freshOnly: Boolean = false,
@@ -100,7 +100,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
              * @param freshOnly whether or not the operation allows STALE data to be returned from the cache
              * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
-             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
              *
              * @see Invalidate
              * */

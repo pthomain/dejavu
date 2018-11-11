@@ -214,7 +214,6 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
     fun getCachedStatus(expiryDate: Date) =
             if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
 
-
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,
               response: ResponseWrapper<E>,

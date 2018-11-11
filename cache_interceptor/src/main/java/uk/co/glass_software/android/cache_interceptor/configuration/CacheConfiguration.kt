@@ -40,7 +40,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
                                                       val mergeOnNextOnError: Boolean,
-                                                      val allowStaleForSingle: Boolean,
+                                                      val allowNonFinalForSingle: Boolean,
                                                       val networkTimeOutInSeconds: Int,
                                                       val cacheDurationInMillis: Long,
                                                       val cacheAllByDefault: Boolean)
@@ -72,7 +72,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var compressData: Boolean = false
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
-        private var allowStaleForSingle: Boolean = false
+        private var allowNonFinalForSingle: Boolean = false
         private var cacheAllByDefault: Boolean = true
 
         /**
@@ -150,7 +150,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         fun mergeOnNextOnError(mergeOnNextOnError: Boolean) = apply { this.mergeOnNextOnError = mergeOnNextOnError }
 
         /**
-         * Allows Singles to return STALE responses. This means the call terminates earlier with
+         * Allows Singles to return non-final responses. This means the call terminates earlier with
          * the risk that the returned data might be STALE. The REFRESH call will still happen in
          * the background but the result of it won't be delivered. Instead it will be available
          * for the next call. By default, Singles will only return responses with final status.
@@ -159,7 +159,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * @see uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
          * @see uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring.filterFinal
          */
-        fun allowStaleForSingle(allowStaleForSingle: Boolean) = apply { this.allowStaleForSingle = allowStaleForSingle }
+        fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) = apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
 
         /**
          * Sets data caching globally (used by default for all calls with no annotation) using
@@ -190,7 +190,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     encryptData,
                                     compressData,
                                     mergeOnNextOnError,
-                                    allowStaleForSingle,
+                                    allowNonFinalForSingle,
                                     networkTimeOutInSeconds,
                                     cacheDurationInMillis,
                                     cacheAllByDefault

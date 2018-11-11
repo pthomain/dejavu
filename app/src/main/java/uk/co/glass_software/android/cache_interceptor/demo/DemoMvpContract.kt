@@ -43,7 +43,7 @@ internal class DemoMvpContract {
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         var useSingle: Boolean
-        var allowStaleForSingle: Boolean
+        var allowNonFinalForSingle: Boolean
         var encrypt: Boolean
         var compress: Boolean
         var freshOnly: Boolean

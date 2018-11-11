@@ -188,7 +188,7 @@
             android:layout_weight="2">
 
             <CheckBox
-                android:id="@+id/checkbox_allow_stale_for_single"
+                android:id="@+id/checkbox_allow_non_final_for_single"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false" />
@@ -196,8 +196,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:labelFor="@id/checkbox_allow_stale_for_single"
-                android:text="Allow STALE for Singles" />
+                android:labelFor="@id/checkbox_allow_non_final_for_single"
+                android:text="Allow non-final for Singles" />
         </LinearLayout>
 
     </LinearLayout>
