@@ -41,7 +41,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val compress: Boolean,
                                                       val mergeOnNextOnError: Boolean,
                                                       val allowNonFinalForSingle: Boolean,
-                                                      val networkTimeOutInSeconds: Int,
+                                                      val requestTimeOutInSeconds: Int,
+                                                      val connectivityTimeoutInMillis: Long,
                                                       val cacheDurationInMillis: Long,
                                                       val cacheAllByDefault: Boolean)
         where E : Exception,
@@ -65,7 +66,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var logger: Logger? = null
         private var gson: Gson? = null
 
-        private var networkTimeOutInSeconds: Int = 15
+        private var requestTimeOutInSeconds: Int = 15
+        private var connectivityTimeoutInMillis: Long = 0L
         private var cacheDurationInMillis: Long = 60 * 60 * 1000 //1h
 
         private var isCacheEnabled = true
@@ -79,12 +81,9 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Disables log output (default log output is only enabled in DEBUG mode).
          */
         fun noLog() = logger(object : Logger {
-            override fun d(message: String) = Unit
-            override fun d(tag: String, message: String) = Unit
-            override fun e(message: String) = Unit
-            override fun e(tag: String, message: String) = Unit
-            override fun e(tag: String, t: Throwable, message: String?) = Unit
-            override fun e(t: Throwable, message: String?) = Unit
+            override fun d(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
         })
 
         /**
@@ -100,7 +99,12 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         /**
          * Sets network call timeout in seconds globally (default is 15s).
          */
-        fun networkTimeOutInSeconds(networkTimeOutInSeconds: Int) = apply { this.networkTimeOutInSeconds = networkTimeOutInSeconds }
+        fun requestTimeOutInSeconds(requestTimeOutInSeconds: Int) = apply { this.requestTimeOutInSeconds = requestTimeOutInSeconds }
+
+        /**
+         *  Sets the maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
+         */
+        fun connectivityTimeoutInMillis(connectivityTimeoutInMillis: Long) = apply { this.connectivityTimeoutInMillis = connectivityTimeoutInMillis }
 
         /**
          * Sets the global cache duration in milliseconds (used by default for all calls with no specific directive,
@@ -191,10 +195,11 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     compressData,
                                     mergeOnNextOnError,
                                     allowNonFinalForSingle,
-                                    networkTimeOutInSeconds,
+                                    requestTimeOutInSeconds,
+                                    connectivityTimeoutInMillis,
                                     cacheDurationInMillis,
                                     cacheAllByDefault
-                            ).also { logger.d("RxCache set up with the following configuration: $it") }
+                            ).also { logger.d(this, "RxCache set up with the following configuration: $it") }
                     )
             )
         }

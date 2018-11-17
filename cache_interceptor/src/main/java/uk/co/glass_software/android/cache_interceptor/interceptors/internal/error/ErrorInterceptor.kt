@@ -64,6 +64,7 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
         val responseClass = instructionToken.instruction.responseClass
 
         logger.e(
+                this,
                 apiError,
                 "An error occurred during the network request for $responseClass"
         )

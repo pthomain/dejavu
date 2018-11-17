@@ -47,6 +47,7 @@ internal class DemoMvpContract {
         var encrypt: Boolean
         var compress: Boolean
         var freshOnly: Boolean
+        var connectivityTimeoutOn: Boolean
 
         fun loadCatFact(isRefresh: Boolean)
         fun clearEntries()

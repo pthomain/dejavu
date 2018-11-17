@@ -57,7 +57,8 @@ class AssetHelper(private val assetsFolder: String,
             val message = ("An error occurred while trying to read "
                     + "file: "
                     + fileName)
-            logger.e(javaClass.simpleName,
+            logger.e(
+                    this,
                     e,
                     message
             )

@@ -30,7 +30,7 @@ import io.reactivex.Single
 import uk.co.glass_software.android.boilerplate.Boilerplate.logger
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.io
+import uk.co.glass_software.android.boilerplate.utils.rx.ioUi
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.*
@@ -39,6 +39,7 @@ import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruc
 import uk.co.glass_software.android.cache_interceptor.demo.DemoActivity
 import uk.co.glass_software.android.cache_interceptor.demo.DemoMvpContract.*
 import uk.co.glass_software.android.cache_interceptor.demo.model.CatFactResponse
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
 
 internal abstract class BaseDemoPresenter protected constructor(private val demoActivity: DemoActivity,
                                                                 protected val uiLogger: Logger
@@ -49,25 +50,35 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     final override var useSingle: Boolean = false
     final override var allowNonFinalForSingle: Boolean = false
+        set(value) {
+            field = value
+            rxCache = newRxCache()
+        }
+
+    final override var connectivityTimeoutOn: Boolean = false
+        set(value) {
+            field = value
+            rxCache = newRxCache()
+        }
+
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
     final override var freshOnly: Boolean = false
 
     protected val gson by lazy { Gson() }
 
-    protected val rxCache by lazy { getRxCache(false) }
-    protected val rxCacheNonFinalSingles by lazy { getRxCache(true) }
+    protected var rxCache: RxCache<ApiError> = newRxCache()
+        private set
 
-    private fun getRxCache(allowNonFinalForSingle: Boolean) =
+    private fun newRxCache() =
             RxCache.builder()
                     .gson(gson)
                     .mergeOnNextOnError(true)
-                    .networkTimeOutInSeconds(5)
+                    .requestTimeOutInSeconds(10)
+                    .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 60000L else 0L)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
                     .build(demoActivity)
-
-    private val configuration = rxCache.configuration
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
@@ -95,53 +106,57 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     }
 
     final override fun getCacheInstruction() =
-            when (instructionType) {
-                CACHE -> Cache(
-                        configuration.cacheDurationInMillis,
-                        freshOnly,
-                        configuration.mergeOnNextOnError,
-                        encrypt,
-                        compress,
-                        false
-                )
-                REFRESH -> Refresh(
-                        configuration.cacheDurationInMillis,
-                        freshOnly,
-                        configuration.mergeOnNextOnError,
-                        false
-                )
-                DO_NOT_CACHE -> DoNotCache
-                INVALIDATE -> Invalidate
-                OFFLINE -> Offline(
-                        freshOnly,
-                        configuration.mergeOnNextOnError
-                )
-                CLEAR,
-                CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
-            }.let { operation ->
-                CacheInstruction(
-                        CatFactResponse::class.java,
-                        operation
-                )
+            rxCache.configuration.let { configuration ->
+                when (instructionType) {
+                    CACHE -> Cache(
+                            configuration.cacheDurationInMillis,
+                            configuration.connectivityTimeoutInMillis,
+                            freshOnly,
+                            configuration.mergeOnNextOnError,
+                            encrypt,
+                            compress,
+                            false
+                    )
+                    REFRESH -> Refresh(
+                            configuration.cacheDurationInMillis,
+                            configuration.connectivityTimeoutInMillis,
+                            freshOnly,
+                            configuration.mergeOnNextOnError,
+                            false
+                    )
+                    DO_NOT_CACHE -> DoNotCache
+                    INVALIDATE -> Invalidate
+                    OFFLINE -> Offline(
+                            freshOnly,
+                            configuration.mergeOnNextOnError
+                    )
+                    CLEAR,
+                    CLEAR_ALL -> Clear(clearOldEntriesOnly = false)
+                }.let { operation ->
+                    CacheInstruction(
+                            CatFactResponse::class.java,
+                            operation
+                    )
+                }
             }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable
-                    .io()
+                    .ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
                     .doOnComplete(mvpView::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 
     private fun subscribe(completable: Completable) =
             completable
-                    .io()
+                    .ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
                     .doOnComplete(mvpView::onCallComplete)
                     .autoSubscribe()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
-        logger.d("Clearing subscriptions")
+        logger.d(this, "Clearing subscriptions")
         subscriptions.clear()
     }
 

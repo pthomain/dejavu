@@ -63,7 +63,11 @@ internal class SerialisationManager<E>(private val logger: Logger,
                     CacheMetadata<E>(instructionToken, null)
             )
         } catch (e: Exception) {
-            logger.e(e, "Could not deserialise $simpleName: clearing the cache")
+            logger.e(
+                    this,
+                    e,
+                    "Could not deserialise $simpleName: clearing the cache"
+            )
             onError()
             return null
         }
@@ -92,7 +96,11 @@ internal class SerialisationManager<E>(private val logger: Logger,
     private fun logCompression(compressedData: ByteArray,
                                simpleName: String,
                                uncompressed: ByteArray) {
-        logger.d("Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B (${100 * compressedData.size / uncompressed.size}%)")
+        logger.d(
+                this,
+                "Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B "
+                        + "(${100 * compressedData.size / uncompressed.size}%)"
+        )
     }
 
     companion object {

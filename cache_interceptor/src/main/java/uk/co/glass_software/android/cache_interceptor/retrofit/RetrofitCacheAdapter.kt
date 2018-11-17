@@ -89,7 +89,10 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
     private fun adaptedWithInstruction(call: Call<Any>,
                                        instruction: CacheInstruction,
                                        isFromHeader: Boolean): Any {
-        logger.d("Found ${if (isFromHeader) "a header" else "an annotation"} cache instruction on $methodDescription: $instruction")
+        logger.d(
+                this,
+                "Found ${if (isFromHeader) "a header" else "an annotation"} cache instruction on $methodDescription: $instruction"
+        )
 
         return adaptRxCall(
                 call,
@@ -110,17 +113,21 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
     private fun adaptedByHeader(call: Call<Any>,
                                 header: String,
                                 isOverridingAnnotation: Boolean): Any {
-        logger.d("Checking cache header on $methodDescription")
+        logger.d(this, "Checking cache header on $methodDescription")
 
         if (isOverridingAnnotation) {
-            logger.d("WARNING: $methodDescription contains a cache instruction BOTH by annotation and by header."
-                    + " The header instruction will take precedence."
+            logger.d(
+                    this,
+                    "WARNING: $methodDescription contains a cache instruction BOTH by annotation and by header."
+                            + " The header instruction will take precedence."
             )
         }
 
         fun deserialisationFailed() = adaptedByDefaultRxJavaAdapter(call).also {
-            logger.e("Found a header cache instruction on $methodDescription but it could not be deserialised."
-                    + " This call won't be cached.")
+            logger.e(
+                    this,
+                    "Found a header cache instruction on $methodDescription but it could not be deserialised."
+                            + " This call won't be cached.")
         }
 
         return try {
@@ -170,8 +177,10 @@ internal class RetrofitCacheAdapter<E>(private val rxCacheFactory: RxCacheInterc
      * @return the call adapted with the default adapter
      */
     private fun adaptedByDefaultRxJavaAdapter(call: Call<Any>): Any {
-        logger.d("No annotation or header cache instruction found for $methodDescription,"
-                + " the call will be adapted with the default RxJava 2 adapter."
+        logger.d(
+                this,
+                "No annotation or header cache instruction found for $methodDescription,"
+                        + " the call will be adapted with the default RxJava 2 adapter."
         )
         return rxCallAdapter.adapt(call)
     }

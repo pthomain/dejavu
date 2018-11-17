@@ -24,6 +24,7 @@ package uk.co.glass_software.android.cache_interceptor.interceptors
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import uk.co.glass_software.android.boilerplate.utils.rx.waitForNetwork
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.DoNotCache
@@ -34,8 +35,9 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.ResponseInterceptor
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
-class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
+class RxCacheInterceptor<E> private constructor(private val instruction: CacheInstruction,
                                                 url: String,
                                                 uniqueParameters: String?,
                                                 configuration: CacheConfiguration<E>,
@@ -69,11 +71,18 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                 isSingle: Boolean,
                                 isCompletable: Boolean) =
             System.currentTimeMillis().let { start ->
-                upstream
+                upstream.compose { addConnectivityTimeOutIfNeeded(it) }
                         .compose(errorInterceptorFactory(instructionToken, start))
                         .compose(cacheInterceptorFactory(instructionToken, start))
                         .compose(responseInterceptorFactory(instructionToken, isSingle, isCompletable, start))
-            }
+            }!!
+
+    private fun addConnectivityTimeOutIfNeeded(upstream: Observable<Any>) =
+            if (instruction.operation is Expiring
+                    && instruction.operation.connectivityTimeoutInMillis > 0L) {
+                upstream.waitForNetwork()
+                        .timeout(instruction.operation.connectivityTimeoutInMillis, MILLISECONDS)
+            } else upstream
 
     class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,

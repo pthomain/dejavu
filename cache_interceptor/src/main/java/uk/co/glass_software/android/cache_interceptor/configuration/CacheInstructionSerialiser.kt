@@ -86,17 +86,19 @@ internal object CacheInstructionSerialiser {
             } else null
 
     private fun getExpiringOperation(params: List<String>) =
-            if (params.size == 8) {
+            if (params.size == 9) {
                 val durationInMillis = toLong(params[2])
-                val freshOnly = toBoolean(params[3]) ?: false
-                val mergeOnNextOnError = toBoolean(params[4])
-                val encrypt = toBoolean(params[5])
-                val compress = toBoolean(params[6])
-                val filterFinal = toBoolean(params[7]) ?: false
+                val connectivityTimeoutInMillis = toLong(params[3])
+                val freshOnly = toBoolean(params[4]) ?: false
+                val mergeOnNextOnError = toBoolean(params[5])
+                val encrypt = toBoolean(params[6])
+                val compress = toBoolean(params[7])
+                val filterFinal = toBoolean(params[8]) ?: false
 
                 when (params[1]) {
                     CACHE.name -> Cache(
                             durationInMillis,
+                            connectivityTimeoutInMillis ?: 0L,
                             freshOnly,
                             mergeOnNextOnError,
                             encrypt,
@@ -105,6 +107,7 @@ internal object CacheInstructionSerialiser {
                     )
                     REFRESH.name -> Refresh(
                             durationInMillis,
+                            connectivityTimeoutInMillis ?: 0L,
                             freshOnly,
                             mergeOnNextOnError,
                             filterFinal

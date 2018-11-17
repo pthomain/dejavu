@@ -155,7 +155,7 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
                         configuration.logger,
                         t1,
                         t2,
-                        configuration.networkTimeOutInSeconds
+                        configuration.requestTimeOutInSeconds
                 )
             }
 

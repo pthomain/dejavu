@@ -143,10 +143,10 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             ) ?: response
         }.let {
             if (it is Throwable) {
-                logger.d("Returning error: $it")
+                logger.d(this, "Returning error: $it")
                 Observable.error<Any>(it)
             } else {
-                logger.d("Returning response: $metadata")
+                logger.d(this, "Returning response: $metadata")
                 Observable.just(response)
             }
         }
@@ -195,7 +195,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         return if (operation is Expiring && mergeOnNextOnError) {
             CacheException(CacheException.Type.METADATA, message)
         } else {
-            logger.d(message)
+            logger.d(this, message)
             null
         }
     }

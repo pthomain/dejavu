@@ -108,18 +108,18 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
 
             try {
                 messageDigest = MessageDigest.getInstance("SHA-1")
-                logger.d("Using SHA-1 hasher")
+                logger.d(this, "Using SHA-1 hasher")
             } catch (e: NoSuchAlgorithmException) {
-                logger.e("Could not create a SHA-1 message digest")
+                logger.e(this, "Could not create a SHA-1 message digest")
                 messageDigest = null
             }
 
             if (messageDigest == null) {
                 try {
                     messageDigest = MessageDigest.getInstance("MD5")
-                    logger.d("Using MD5 hasher")
+                    logger.d(this, "Using MD5 hasher")
                 } catch (e: NoSuchAlgorithmException) {
-                    logger.e("Could not create a MD5 message digest")
+                    logger.e(this, "Could not create a MD5 message digest")
                     messageDigest = null
                 }
             }
