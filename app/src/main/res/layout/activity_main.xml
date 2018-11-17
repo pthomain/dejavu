@@ -156,62 +156,52 @@
             android:labelFor="@id/checkbox_encrypt"
             android:text="Encrypt" />
 
+        <CheckBox
+            android:id="@+id/checkbox_use_single"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:labelFor="@id/checkbox_use_single"
+            android:text="Singles" />
+
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:orientation="vertical">
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <CheckBox
-                android:id="@+id/checkbox_use_single"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="false" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:labelFor="@id/checkbox_use_single"
-                android:text="Use Singles" />
-
-            <CheckBox
-                android:id="@+id/checkbox_allow_non_final_for_single"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="false" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:labelFor="@id/checkbox_allow_non_final_for_single"
-                android:text="Allow non-final for Singles" />
-        </LinearLayout>
-
-        <LinearLayout
+        <CheckBox
+            android:id="@+id/checkbox_allow_non_final_for_single"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:checked="false" />
 
-            <CheckBox
-                android:id="@+id/checkbox_connectivity_timeout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="false" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:labelFor="@id/checkbox_allow_non_final_for_single"
+            android:text="Allow non-final for Singles" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@id/checkbox_connectivity_timeout"
-                android:text="Wait for connectivity (1m)" />
+        <CheckBox
+            android:id="@+id/checkbox_connectivity_timeout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false" />
 
-        </LinearLayout>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:labelFor="@id/checkbox_connectivity_timeout"
+            android:text="Wait for network (1m)" />
 
     </LinearLayout>
 
