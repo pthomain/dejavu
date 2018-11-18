@@ -55,7 +55,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
             rxCache = newRxCache()
         }
 
-    final override var connectivityTimeoutOn: Boolean = false
+    final override var connectivityTimeoutOn: Boolean = true
         set(value) {
             field = value
             rxCache = newRxCache()
@@ -75,7 +75,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
                     .gson(gson)
                     .mergeOnNextOnError(true)
                     .requestTimeOutInSeconds(10)
-                    .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 60000L else 0L)
+                    .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
                     .build(demoActivity)
@@ -142,14 +142,14 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable
-                    .ioUi()
+                    .ioUi(false)
                     .doOnSubscribe { mvpView.onCallStarted() }
                     .doOnComplete(mvpView::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 
     private fun subscribe(completable: Completable) =
             completable
-                    .ioUi()
+                    .ioUi(false)
                     .doOnSubscribe { mvpView.onCallStarted() }
                     .doOnComplete(mvpView::onCallComplete)
                     .autoSubscribe()

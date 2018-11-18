@@ -239,7 +239,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         }
 
         return Observable.just(Observable.just(previousCachedResponse), fetchAndCache)
-                .concatMap { observable -> observable.schedule(On.Io, On.Trampoline) }
+                .concatMap { observable -> observable.schedule(On.Io, On.Trampoline, false) }
                 as Observable<ResponseWrapper<E>>
     }
 
@@ -264,5 +264,4 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
                     cacheToken = metadata.cacheToken.copy(status = newStatus),
                     exception = exception
             )
-
 }

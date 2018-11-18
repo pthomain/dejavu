@@ -25,6 +25,8 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.waitForNetwork
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -57,7 +59,17 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
                         )
                 )
             }
+            .compose { addConnectivityTimeOutIfNeeded(instructionToken.instruction, it) }
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })!!
+
+    private fun addConnectivityTimeOutIfNeeded(instruction: CacheInstruction,
+                                               upstream: Observable<ResponseWrapper<E>>) =
+            instruction.operation.let {
+                if (it is CacheInstruction.Operation.Expiring && it.connectivityTimeoutInMillis > 0L) {
+                    upstream.waitForNetwork()
+                            .timeout(it.connectivityTimeoutInMillis, TimeUnit.MILLISECONDS)
+                } else upstream
+            }
 
     private fun getErrorResponse(throwable: Throwable): ResponseWrapper<E> {
         val apiError = errorFactory.getError(throwable)
