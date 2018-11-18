@@ -38,13 +38,14 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.resp
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                                 url: String,
                                                 uniqueParameters: String?,
-                                                private val configuration: CacheConfiguration<E>,
-                                                private val responseInterceptor: (Long) -> ResponseInterceptor<E>,
+                                                configuration: CacheConfiguration<E>,
+                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                 private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                                 private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
     : RxCacheTransformer
         where E : Exception,
               E : NetworkErrorProvider {
+
     private val instructionToken = fromInstruction(
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             (instruction.operation as? Expiring)?.compress ?: configuration.compress,
@@ -53,36 +54,29 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
             uniqueParameters
     )
 
-    override fun apply(upstream: Observable<Any>): Observable<Any> {
-        val start = System.currentTimeMillis()
-        return upstream
-                .compose(errorInterceptorFactory(instructionToken, start))
-                .compose(cacheInterceptorFactory(instructionToken, start))
-                .filter {
-                    !((instructionToken.instruction.operation as? Expiring)?.filterFinal ?: false) || it.metadata.cacheToken.status.isFinal
-                }
-                .compose(responseInterceptor(start))!!
-    }
+    override fun apply(upstream: Observable<Any>) =
+            composeInternal(upstream, false, false)
 
-    override fun apply(upstream: Single<Any>): Single<Any> {
-        val start = System.currentTimeMillis()
-        return upstream
-                .toObservable()
-                .compose(errorInterceptorFactory(instructionToken, start))
-                .compose(cacheInterceptorFactory(instructionToken, start))
-                .filter { it.metadata.cacheToken.status.isFresh || configuration.allowStaleForSingle }
-                .firstOrError()
-                .compose(responseInterceptor(start))!!
-    }
+    override fun apply(upstream: Single<Any>) =
+            composeInternal(upstream.toObservable(), true, false)
+                    .firstOrError()!!
 
-    override fun apply(upstream: Completable)=
-            upstream.toObservable<Any>()
-                    .compose(this)
+    override fun apply(upstream: Completable) =
+            composeInternal(upstream.toObservable<Any>(), false, true)
                     .ignoreElements()!!
+
+    private fun composeInternal(upstream: Observable<Any>,
+                                isSingle: Boolean,
+                                isCompletable: Boolean) =
+            System.currentTimeMillis().let { start ->
+                upstream.compose(errorInterceptorFactory(instructionToken, start))
+                        .compose(cacheInterceptorFactory(instructionToken, start))
+                        .compose(responseInterceptorFactory(instructionToken, isSingle, isCompletable, start))
+            }!!
 
     class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,
-                                          private val responseInterceptor: (Long) -> ResponseInterceptor<E>,
+                                          private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                           private val configuration: CacheConfiguration<E>)
             where E : Exception,
                   E : NetworkErrorProvider {
@@ -95,7 +89,7 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                         url,
                         uniqueParameters,
                         configuration,
-                        responseInterceptor,
+                        responseInterceptorFactory,
                         errorInterceptorFactory,
                         cacheInterceptorFactory
                 ) as RxCacheTransformer

@@ -24,6 +24,7 @@ package uk.co.glass_software.android.cache_interceptor.injection
 import android.content.ContentValues
 import dagger.Module
 import dagger.Provides
+import io.reactivex.subjects.PublishSubject
 import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
@@ -38,7 +39,9 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.EmptyResponseFactory
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.ResponseInterceptor
+import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
@@ -133,9 +136,11 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun cacheManager(databaseManager: DatabaseManager<E>) =
+    fun cacheManager(databaseManager: DatabaseManager<E>,
+                     emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
                     databaseManager,
+                    emptyResponseFactory,
                     dateFactory,
                     configuration.cacheDurationInMillis,
                     configuration.logger
@@ -143,53 +148,67 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideErrorInterceptorFactory() = object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
-        override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
-                configuration.errorFactory,
-                configuration.logger,
-                t1,
-                t2,
-                configuration.networkTimeOutInSeconds
-        )
-    }
+    fun provideErrorInterceptorFactory(): Function2<CacheToken, Long, ErrorInterceptor<E>> =
+            object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
+                override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
+                        configuration.errorFactory,
+                        configuration.logger,
+                        t1,
+                        t2,
+                        configuration.requestTimeOutInSeconds
+                )
+            }
 
     @Provides
     @Singleton
-    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>) = object : Function2<CacheToken, Long, CacheInterceptor<E>> {
-        override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
-                cacheManager,
-                configuration.isCacheEnabled,
-                configuration.logger,
-                t1,
-                t2
-        )
-    }
+    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>> =
+            object : Function2<CacheToken, Long, CacheInterceptor<E>> {
+                override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
+                        cacheManager,
+                        configuration.isCacheEnabled,
+                        configuration.logger,
+                        t1,
+                        t2
+                )
+            }
 
     @Provides
     @Singleton
-    fun provideResponseInterceptor() = object : Function1<Long, ResponseInterceptor<E>> {
-        override fun get(t1: Long) = ResponseInterceptor<E>(
-                configuration.logger,
-                t1,
-                configuration.mergeOnNextOnError
-        )
-    }
+    fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<E>>,
+                                   emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> =
+            object : Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> {
+                override fun get(t1: CacheToken,
+                                 t2: Boolean,
+                                 t3: Boolean,
+                                 t4: Long) = ResponseInterceptor(
+                        configuration.logger,
+                        emptyResponseFactory,
+                        configuration,
+                        metadataSubject,
+                        t1,
+                        t2,
+                        t3,
+                        t4,
+                        configuration.mergeOnNextOnError
+                )
+            }
 
     @Provides
     @Singleton
     fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                          cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
-                                         responseInterceptor: Function1<Long, ResponseInterceptor<E>>) =
+                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             RxCacheInterceptor.Factory(
-                    { t1, t2 -> errorInterceptorFactory.get(t1, t2) },
-                    { t1, t2 -> cacheInterceptorFactory.get(t1, t2) },
-                    { responseInterceptor.get(it) },
+                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, start -> cacheInterceptorFactory.get(token, start) },
+                    { token, isSingle, isCompletable, start -> responseInterceptor.get(token, isSingle, isCompletable, start) },
                     configuration
             )
 
     @Provides
     @Singleton
-    fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()
+    fun provideDefaultAdapterFactory() =
+            RxJava2CallAdapterFactory.create()!!
 
     @Provides
     @Singleton
@@ -208,22 +227,35 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
     @Provides
     @Singleton
     fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
-                                             responseInterceptor: Function1<Long, ResponseInterceptor<E>>) =
+                                             responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
-                    { t1, t2 -> errorInterceptorFactory.get(t1, t2) },
-                    { responseInterceptor.get(it) }
+                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) }
             )
 
     @Provides
     @Singleton
-    fun provideAnnotationProcessor() =
-            AnnotationProcessor(configuration)
+    fun provideCacheMetadataSubject() =
+            PublishSubject.create<CacheMetadata<E>>()
 
-    interface Function1<T1, R> {
-        fun get(t1: T1): R
-    }
+    @Provides
+    @Singleton
+    fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<E>>) =
+            subject.map { it }!!
+
+    @Provides
+    @Singleton
+    fun provideAnnotationProcessor() = AnnotationProcessor(configuration)
+
+    @Provides
+    @Singleton
+    fun provideEmptyResponseFactory() = EmptyResponseFactory<E>()
 
     interface Function2<T1, T2, R> {
         fun get(t1: T1, t2: T2): R
+    }
+
+    interface Function4<T1, T2, T3, T4, R> {
+        fun get(t1: T1, t2: T2, t3: T3, t4: T4): R
     }
 }

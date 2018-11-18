@@ -93,7 +93,10 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                 else -> null
             } ?: Any::class.java
 
-            logger.d("Processing annotation for method returning " + rxType.getTypedName(responseClass))
+            logger.d(
+                    this,
+                    "Processing annotation for method returning " + rxType.getTypedName(responseClass)
+            )
 
             try {
                 annotationProcessor.process(
@@ -104,14 +107,18 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                     val methodDescription = "method returning " + rxType.getTypedName(responseClass)
 
                     if (instruction == null) {
-                        logger.d("Annotation processor for $methodDescription"
-                                + " returned no instruction, checking cache header"
+                        logger.d(
+                                this,
+                                "Annotation processor for $methodDescription"
+                                        + " returned no instruction, checking cache header"
                         )
                         defaultCallAdapter
                     } else {
-                        logger.d("Annotation processor for $methodDescription"
-                                + " returned the following instruction "
-                                + instruction
+                        logger.d(
+                                this,
+                                "Annotation processor for $methodDescription"
+                                        + " returned the following instruction "
+                                        + instruction
                         )
                         RetrofitCacheAdapter(
                                 rxCacheFactory,
@@ -138,7 +145,10 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                 )
             }
         } ?: defaultCallAdapter.also {
-            logger.d("Annotation processor did not return any instruction for call returning $returnType")
+            logger.d(
+                    this,
+                    "Annotation processor did not return any instruction for call returning $returnType"
+            )
         }
     }
 

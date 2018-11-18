@@ -61,7 +61,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                         else -> doNotCache(instructionToken, upstream)
                     }
                 } else doNotCache(instructionToken, upstream)
-            }
+            }!!
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =

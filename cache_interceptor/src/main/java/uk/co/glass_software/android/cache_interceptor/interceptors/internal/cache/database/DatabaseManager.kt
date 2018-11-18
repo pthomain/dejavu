@@ -81,9 +81,9 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
         ).let { deleted ->
             val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
             if (clearOlderEntriesOnly) {
-                logger.d("Deleted old$entryType entries from cache: $deleted found")
+                logger.d(this, "Deleted old$entryType entries from cache: $deleted found")
             } else {
-                logger.d("Deleted all existing$entryType entries from cache: $deleted found")
+                logger.d(this, "Deleted all existing$entryType entries from cache: $deleted found")
             }
         }
     }
@@ -92,7 +92,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                           start: Long): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
-        logger.d("Checking for cached $simpleName")
+        logger.d(this, "Checking for cached $simpleName")
 
         val key = instructionToken.getKey(hasher)
         checkInvalidation(instruction, key)
@@ -119,7 +119,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                 "1"
         ).useAndLogError { cursor ->
             if (cursor.count != 0 && cursor.moveToNext()) {
-                logger.d("Found a cached $simpleName")
+                logger.d(this, "Found a cached $simpleName")
 
                 val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
                 val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
@@ -141,7 +141,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                         localData
                 )
             } else {
-                logger.d("Found no cached $simpleName")
+                logger.d(this, "Found no cached $simpleName")
                 return null
             }
         }
@@ -169,7 +169,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                     selection,
                     selectionArgs
             ).let {
-                logger.d("Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
+                logger.d(this, "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
             }
         }
     }
@@ -207,13 +207,12 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                                 callDuration
                         )
 
-                        logger.d("Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
+                        logger.d(this, "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
                     }
 
     @VisibleForTesting
     fun getCachedStatus(expiryDate: Date) =
             if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
-
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,
@@ -224,7 +223,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
         val simpleName = instruction.responseClass.simpleName
         val durationInMillis = operation.durationInMillis ?: durationInMillis
 
-        logger.d("Caching $simpleName")
+        logger.d(this, "Caching $simpleName")
 
         val (encryptData, compressData) = wasPreviouslyEncrypted(
                 previousCachedResponse,
@@ -254,7 +253,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                     contentValuesFactory(values),
                     CONFLICT_REPLACE
             )
-        } ?: logger.e("Could not serialise and store data for $simpleName")
+        } ?: logger.e(this, "Could not serialise and store data for $simpleName")
 
         it.onComplete()
     }!!

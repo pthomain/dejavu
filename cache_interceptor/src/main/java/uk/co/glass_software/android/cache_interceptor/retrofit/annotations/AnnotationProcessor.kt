@@ -59,6 +59,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                 && cacheConfiguration.cacheAllByDefault) {
 
             logger.d(
+                    this,
                     "No annotation for call returning ${rxType.getTypedName(responseClass)} but cacheAllByDefault directive is set to true"
             )
 
@@ -66,6 +67,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     responseClass,
                     Operation.Expiring.Cache(
                             cacheConfiguration.cacheDurationInMillis,
+                            cacheConfiguration.connectivityTimeoutInMillis,
                             false,
                             cacheConfiguration.mergeOnNextOnError,
                             cacheConfiguration.encrypt,
@@ -102,7 +104,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
 
     @Throws(CacheException::class)
     private fun CacheException.logAndThrow() {
-        logger.e(this)
+        logger.e(this, this)
         throw this
     }
 
@@ -130,6 +132,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     responseClass,
                     Operation.Expiring.Cache(
                             annotation.durationInMillis.let { if (it == -1L) null else it },
+                            annotation.connectivityTimeoutInMillis.let { if(it == 0L) cacheConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value,
                             annotation.encrypt.value,
@@ -146,6 +149,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     responseClass,
                     Operation.Expiring.Refresh(
                             annotation.durationInMillis.let { if (it == -1L) null else it },
+                            annotation.connectivityTimeoutInMillis.let { if(it == 0L) cacheConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
                     )

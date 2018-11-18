@@ -43,10 +43,11 @@ internal class DemoMvpContract {
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         var useSingle: Boolean
-        var allowStaleForSingle: Boolean
+        var allowNonFinalForSingle: Boolean
         var encrypt: Boolean
         var compress: Boolean
         var freshOnly: Boolean
+        var connectivityTimeoutOn: Boolean
 
         fun loadCatFact(isRefresh: Boolean)
         fun clearEntries()

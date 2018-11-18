@@ -34,18 +34,13 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
                                                   uiLogger: Logger)
     : BaseDemoPresenter(demoActivity, uiLogger) {
 
-    private val retrofit = retrofit(false)
-    private val retrofitStaleSingles = retrofit(true)
-
-    private fun retrofit(allowStaleForSingle: Boolean) =
+    private fun retrofit() =
             Retrofit.Builder()
                     .baseUrl(BaseDemoPresenter.BASE_URL)
                     .client(getOkHttpClient(uiLogger))
                     .addConverterFactory(GsonConverterFactory.create(gson))
-                    .addCallAdapterFactory((if (allowStaleForSingle) rxCacheStaleSingles else rxCache).retrofitCacheAdapterFactory)
+                    .addCallAdapterFactory(rxCache.retrofitCacheAdapterFactory)
                     .build()
-
-    private fun retrofit() = if(allowStaleForSingle) retrofitStaleSingles else retrofit
 
     private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {
         it.addInterceptor(getHttpLoggingInterceptor(logger))
@@ -54,14 +49,13 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
     }
 
     private fun getHttpLoggingInterceptor(logger: Logger) =
-            HttpLoggingInterceptor { logger.d(it) }.apply {
+            HttpLoggingInterceptor { logger.d(this, it) }.apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-    private val observableClient = retrofit().create(ObservableCatFactClient::class.java)
-    private val singleClient = SingleClientWrapper(retrofit().create(SingleCatFactClient::class.java))
-
-    protected fun catFactClient() = if (useSingle) singleClient else observableClient
+    protected fun catFactClient() =
+            if (useSingle) SingleClientWrapper(retrofit().create(SingleCatFactClient::class.java))
+            else retrofit().create(ObservableCatFactClient::class.java)
 
     private class SingleClientWrapper(private val singleClient: SingleCatFactClient) : ObservableCatFactClient {
         override fun get() = singleClient.get().toObservable()

@@ -44,14 +44,16 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
          * in milliseconds.
          *
          * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
+         * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
          * @param freshOnly whether or not the operation allows STALE data to be returned from the cache
          * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
          * @param encrypt whether the cached data should be encrypted, useful for use on external storage
          * @param compress whether the cached data should be compressed, useful for large responses
-         * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+         * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
          * @param type the operation type
          */
         sealed class Expiring(val durationInMillis: Long?,
+                              val connectivityTimeoutInMillis: Long,
                               val freshOnly: Boolean,
                               val mergeOnNextOnError: Boolean?,
                               val encrypt: Boolean?,
@@ -69,13 +71,15 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * @see CacheConfiguration.cacheAllByDefault
              *
              * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
+             * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
              * @param freshOnly whether or not the operation allows STALE data to be returned from the cache
              * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
              * @param encrypt whether the cached data should be encrypted, useful for use on external storage
              * @param compress whether the cached data should be compressed, useful for large responses
-             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
              */
             class Cache(durationInMillis: Long? = null,
+                        connectivityTimeoutInMillis: Long = 0L,
                         freshOnly: Boolean = false,
                         mergeOnNextOnError: Boolean? = null,
                         encrypt: Boolean? = null,
@@ -83,6 +87,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                         filterFinal: Boolean = false)
                 : Expiring(
                     durationInMillis,
+                    connectivityTimeoutInMillis,
                     freshOnly,
                     mergeOnNextOnError,
                     encrypt,
@@ -98,18 +103,21 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * until REFRESHED. This is the equivalent of chaining INVALIDATE and CACHE.
              *
              * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
+             * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
              * @param freshOnly whether or not the operation allows STALE data to be returned from the cache
              * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
-             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowStaleForSingle is set to true.
+             * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
              *
              * @see Invalidate
              * */
             class Refresh(durationInMillis: Long? = null,
+                          connectivityTimeoutInMillis: Long = 0L,
                           freshOnly: Boolean = false,
                           mergeOnNextOnError: Boolean? = null,
                           filterFinal: Boolean = false)
                 : Expiring(
                     durationInMillis,
+                    connectivityTimeoutInMillis,
                     freshOnly,
                     mergeOnNextOnError,
                     null,
@@ -130,6 +138,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                           mergeOnNextOnError: Boolean? = null)
                 : Expiring(
                     null,
+                    0L,
                     freshOnly,
                     mergeOnNextOnError,
                     null,

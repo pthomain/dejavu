@@ -27,6 +27,7 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.Optio
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Cache(val freshOnly: Boolean = false,
                        val durationInMillis: Long = -1L,
+                       val connectivityTimeoutInMillis: Long = 0L,
                        val mergeOnNextOnError: OptionalBoolean = DEFAULT,
                        val encrypt: OptionalBoolean = DEFAULT,
                        val compress: OptionalBoolean = DEFAULT)

@@ -21,9 +21,11 @@
 
 package uk.co.glass_software.android.cache_interceptor.injection
 
+import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
+import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 
 internal interface CacheComponent<E>
@@ -31,9 +33,8 @@ internal interface CacheComponent<E>
               E : NetworkErrorProvider {
 
     fun configuration(): CacheConfiguration<E>
-
     fun rxCacheInterceptorFactory(): RxCacheInterceptor.Factory<E>
-
     fun retrofitCacheAdapterFactory(): RetrofitCacheAdapterFactory<E>
+    fun cacheMetadataObservable(): Observable<CacheMetadata<E>>
 
 }

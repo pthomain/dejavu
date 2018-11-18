@@ -33,9 +33,20 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.Annot
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.CacheException
 
+/**
+ * This class adapts a call with a configuration error and emits this error via the expected RxJava type.
+ *
+ * @param defaultAdapter the default RxJava adapter
+ * @param errorInterceptorFactory the error interceptor factory used to provide an error response to wrap the given exception
+ * @param responseInterceptorFactory the response interceptor factory, used to decorate the response with metadata or emit the error via the default RxJava error mechanism according to the mergeOnNextOnError directive
+ * @param cacheToken the instruction cache token
+ * @param start the timestamp of the call's start
+ * @param rxType the expected RxJava return type
+ * @param exception the caught exception to be processed
+ */
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
                                                              errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
-                                                             responseInterceptorFactory: (Long) -> ResponseInterceptor<E>,
+                                                             responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                              cacheToken: CacheToken,
                                                              start: Long,
                                                              private val rxType: AnnotationProcessor.RxType,
@@ -44,7 +55,13 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
         where E : Exception,
               E : NetworkErrorProvider {
 
-    private val errorInterceptor = errorInterceptorFactory.invoke(cacheToken, start)
+    private val errorInterceptor = errorInterceptorFactory(cacheToken, start)
+    private val responseInterceptor = responseInterceptorFactory(
+            cacheToken,
+            false,
+            false,
+            start
+    )
 
     private val errorObservable = Observable.error<Any>(exception)
             .compose(errorInterceptor::apply)
@@ -57,8 +74,11 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                         )
                 )
             }
-            .compose { responseInterceptorFactory.invoke(start).apply(it) }
+            .compose(responseInterceptor)
 
+    /**
+     * Adapts the call to a RxJava type
+     */
     override fun adapt(call: Call<Any>) =
             when (rxType) {
                 OBSERVABLE -> errorObservable
@@ -67,7 +87,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             }!!
 
     class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
-                     private val responseInterceptorFactory: (Long) -> ResponseInterceptor<E>)
+                     private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>)
             where E : Exception,
                   E : NetworkErrorProvider {
 
