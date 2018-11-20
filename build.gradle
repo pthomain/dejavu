@@ -66,8 +66,8 @@ ext {
     rxKotlinVersion = '2.3.0'
     rxAndroidVersion = '2.1.0'
 
-    boilerplateVersion = '1.8'
-    sharedPrefStoreVersion = '1.1.9'
+    boilerplateVersion = '1.9'
+    sharedPrefStoreVersion = '1.2.0'
 
     snappyVersion = '0.4'
     requeryVersion = '3.23.1'
