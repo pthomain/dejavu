@@ -246,11 +246,13 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideAnnotationProcessor() = AnnotationProcessor(configuration)
+    fun provideAnnotationProcessor() =
+            AnnotationProcessor(configuration)
 
     @Provides
     @Singleton
-    fun provideEmptyResponseFactory() = EmptyResponseFactory<E>()
+    fun provideEmptyResponseFactory() =
+            EmptyResponseFactory(configuration.errorFactory)
 
     interface Function2<T1, T2, R> {
         fun get(t1: T1, t2: T2): R

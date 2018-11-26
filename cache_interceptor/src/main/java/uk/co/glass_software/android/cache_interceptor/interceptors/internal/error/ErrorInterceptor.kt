@@ -52,7 +52,7 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242
             .timeout(timeOutInSeconds.toLong(), TimeUnit.SECONDS) //fixing timeout not working in OkHttp
             .switchIfEmpty {
-                if (rxType == COMPLETABLE) Observable.just(RxIgnore)
+                if (rxType == COMPLETABLE) RxIgnore.observable()
                 else Observable.error(NoSuchElementException("Response was empty"))
             }
             .map { response ->

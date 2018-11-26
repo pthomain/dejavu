@@ -22,26 +22,28 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.response
 
 import io.reactivex.Observable
+import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
 
-internal class EmptyResponseFactory<E>
+internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>)
         where E : Exception,
               E : NetworkErrorProvider {
 
     fun emptyResponseWrapperObservable(instructionToken: CacheToken) =
             instructionToken.instruction.let {
-                ResponseWrapper<E>(
+                ResponseWrapper(
                         it.responseClass,
                         null,
                         CacheMetadata(
                                 instructionToken.copy(
                                         status = CacheStatus.EMPTY,
                                         instruction = it
-                                )
+                                ),
+                                errorFactory.getError(NoSuchElementException("Response was empty"))
                         )
                 )
             }.let { Observable.just(it) }!!
