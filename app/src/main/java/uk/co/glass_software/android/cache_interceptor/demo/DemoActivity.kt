@@ -164,7 +164,7 @@ internal class DemoActivity
     private fun openGithub() {
         val builder = CustomTabsIntent.Builder()
         val customTabsIntent = builder.build()
-        customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/RxCacheInterceptor"))
+        customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/RxCache"))
     }
 
 }

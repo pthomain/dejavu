@@ -34,13 +34,15 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cach
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ErrorInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.response.ResponseInterceptor
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.*
 
 class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
                                                 url: String,
                                                 uniqueParameters: String?,
                                                 configuration: CacheConfiguration<E>,
                                                 private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
-                                                private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+                                                private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
                                                 private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
     : RxCacheTransformer
         where E : Exception,
@@ -55,26 +57,25 @@ class RxCacheInterceptor<E> private constructor(instruction: CacheInstruction,
     )
 
     override fun apply(upstream: Observable<Any>) =
-            composeInternal(upstream, false, false)
+            composeInternal(upstream, OBSERVABLE)
 
     override fun apply(upstream: Single<Any>) =
-            composeInternal(upstream.toObservable(), true, false)
+            composeInternal(upstream.toObservable(), SINGLE)
                     .firstOrError()!!
 
     override fun apply(upstream: Completable) =
-            composeInternal(upstream.toObservable<Any>(), false, true)
+            composeInternal(upstream.toObservable<Any>(), COMPLETABLE)
                     .ignoreElements()!!
 
     private fun composeInternal(upstream: Observable<Any>,
-                                isSingle: Boolean,
-                                isCompletable: Boolean) =
+                                rxType: AnnotationProcessor.RxType) =
             System.currentTimeMillis().let { start ->
-                upstream.compose(errorInterceptorFactory(instructionToken, start))
+                upstream.compose(errorInterceptorFactory(instructionToken, start, rxType))
                         .compose(cacheInterceptorFactory(instructionToken, start))
-                        .compose(responseInterceptorFactory(instructionToken, isSingle, isCompletable, start))
+                        .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
             }!!
 
-    class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+    class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                           private val configuration: CacheConfiguration<E>)

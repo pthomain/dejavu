@@ -26,6 +26,7 @@ import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Predicate
 import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.RxIgnore
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
@@ -68,10 +69,10 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
 
     private val responseFilter = Predicate<ResponseWrapper<E>> {
         when {
+            isCompletable -> false
             it.metadata.cacheToken.status == EMPTY -> true
-            isCompletable -> true
-            isSingle -> isValidSingleResponse(it)
-            else -> isValidObservableResponse(it)
+            isSingle -> it.response != RxIgnore && isValidSingleResponse(it)
+            else -> it.response != RxIgnore && isValidObservableResponse(it)
         }
     }
 

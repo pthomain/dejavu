@@ -45,7 +45,7 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.Cache
  * @param exception the caught exception to be processed
  */
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
-                                                             errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+                                                             errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
                                                              responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                              cacheToken: CacheToken,
                                                              start: Long,
@@ -55,7 +55,12 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
         where E : Exception,
               E : NetworkErrorProvider {
 
-    private val errorInterceptor = errorInterceptorFactory(cacheToken, start)
+    private val errorInterceptor = errorInterceptorFactory(
+            cacheToken,
+            start,
+            rxType
+    )
+
     private val responseInterceptor = responseInterceptorFactory(
             cacheToken,
             false,
@@ -86,7 +91,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                 COMPLETABLE -> errorObservable.ignoreElements()
             }!!
 
-    class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+    class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
                      private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>)
             where E : Exception,
                   E : NetworkErrorProvider {
