@@ -148,13 +148,14 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideErrorInterceptorFactory(): Function2<CacheToken, Long, ErrorInterceptor<E>> =
-            object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
-                override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
+    fun provideErrorInterceptorFactory(): Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>> =
+            object : Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>> {
+                override fun get(t1: CacheToken, t2: Long, t3: AnnotationProcessor.RxType) = ErrorInterceptor(
                         configuration.errorFactory,
                         configuration.logger,
                         t1,
                         t2,
+                        t3,
                         configuration.requestTimeOutInSeconds
                 )
             }
@@ -195,11 +196,11 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    fun provideRxCacheInterceptorFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
                                          cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                          responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             RxCacheInterceptor.Factory(
-                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },
                     { token, start -> cacheInterceptorFactory.get(token, start) },
                     { token, isSingle, isCompletable, start -> responseInterceptor.get(token, isSingle, isCompletable, start) },
                     configuration
@@ -226,10 +227,10 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
                                              responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
-                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },
                     { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) }
             )
 
@@ -245,14 +246,20 @@ internal abstract class ConfigurationModule<E>(private val configuration: CacheC
 
     @Provides
     @Singleton
-    fun provideAnnotationProcessor() = AnnotationProcessor(configuration)
+    fun provideAnnotationProcessor() =
+            AnnotationProcessor(configuration)
 
     @Provides
     @Singleton
-    fun provideEmptyResponseFactory() = EmptyResponseFactory<E>()
+    fun provideEmptyResponseFactory() =
+            EmptyResponseFactory(configuration.errorFactory)
 
     interface Function2<T1, T2, R> {
         fun get(t1: T1, t2: T2): R
+    }
+
+    interface Function3<T1, T2, T3, R> {
+        fun get(t1: T1, t2: T2, t3: T3): R
     }
 
     interface Function4<T1, T2, T3, T4, R> {

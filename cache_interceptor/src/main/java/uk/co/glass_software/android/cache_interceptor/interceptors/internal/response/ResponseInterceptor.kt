@@ -26,9 +26,11 @@ import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Predicate
 import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.RxIgnore
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.OFFLINE
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus.EMPTY
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -68,10 +70,10 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
 
     private val responseFilter = Predicate<ResponseWrapper<E>> {
         when {
+            isCompletable -> false
             it.metadata.cacheToken.status == EMPTY -> true
-            isCompletable -> true
-            isSingle -> isValidSingleResponse(it)
-            else -> isValidObservableResponse(it)
+            isSingle -> it.response != RxIgnore && isValidSingleResponse(it)
+            else -> it.response != RxIgnore && isValidObservableResponse(it)
         }
     }
 
@@ -79,6 +81,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             (instructionToken.instruction.operation as? Expiring)?.let { operation ->
                 val status = wrapper.metadata.cacheToken.status
                 when {
+                    operation.type == OFFLINE -> status.isFresh || !operation.freshOnly
                     operation.freshOnly -> status.isFresh
                     operation.filterFinal -> status.isFinal
                     else -> true
@@ -89,6 +92,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             (instructionToken.instruction.operation as? Expiring)?.let { operation ->
                 val status = wrapper.metadata.cacheToken.status
                 when {
+                    operation.type == OFFLINE -> status.isFresh || !operation.freshOnly
                     operation.freshOnly -> status.isFresh
                     else -> status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
                 }

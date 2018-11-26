@@ -25,20 +25,24 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.rx.RxIgnore
 import uk.co.glass_software.android.boilerplate.utils.rx.waitForNetwork
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.cache_interceptor.configuration.ErrorFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.cache_interceptor.response.CacheMetadata
 import uk.co.glass_software.android.cache_interceptor.response.ResponseWrapper
-import java.util.*
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor
+import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
 import java.util.concurrent.TimeUnit
 
 internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFactory<E>,
                                                private val logger: Logger,
                                                private val instructionToken: CacheToken,
                                                private val start: Long,
+                                               private val rxType: AnnotationProcessor.RxType,
                                                private val timeOutInSeconds: Int)
     : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
@@ -46,14 +50,22 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
 
     override fun apply(upstream: Observable<Any>) = upstream
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242
-            .switchIfEmpty(Observable.error(NoSuchElementException("Response was empty")))
             .timeout(timeOutInSeconds.toLong(), TimeUnit.SECONDS) //fixing timeout not working in OkHttp
-            .map {
+            .switchIfEmpty {
+                if (rxType == COMPLETABLE) RxIgnore.observable()
+                else Observable.error(NoSuchElementException("Response was empty"))
+            }
+            .map { response ->
+                val token = instructionToken.let {
+                    if (response == RxIgnore)
+                        it.copy(instruction = instructionToken.instruction.copy(operation = DoNotCache))
+                    else it
+                }
                 ResponseWrapper<E>(
                         instructionToken.instruction.responseClass,
-                        it,
+                        response,
                         CacheMetadata(
-                                instructionToken,
+                                token,
                                 null,
                                 getCallDuration()
                         )
@@ -98,5 +110,4 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
                     (System.currentTimeMillis() - start).toInt(),
                     0
             )
-
 }
