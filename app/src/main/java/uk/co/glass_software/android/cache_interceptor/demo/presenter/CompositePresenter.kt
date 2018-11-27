@@ -36,7 +36,7 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
                                   private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
                                   private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
                                   private val volleyDemoPresenter: VolleyDemoPresenter)
-    : DemoPresenter by presenter, Callback1<Method> {
+    : DemoPresenter, Callback1<Method> {
 
     override var subscriptions = CompositeDisposable()
 
@@ -54,4 +54,28 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
         }
     }
 
+    override var useSingle = presenter.useSingle
+    override var allowNonFinalForSingle = presenter.allowNonFinalForSingle
+    override var encrypt = presenter.encrypt
+    override var compress = presenter.compress
+    override var freshOnly = presenter.freshOnly
+    override var connectivityTimeoutOn = presenter.connectivityTimeoutOn
+
+    override fun loadCatFact(isRefresh: Boolean) {
+        presenter.loadCatFact(isRefresh)
+    }
+
+    override fun clearEntries() {
+        presenter.clearEntries()
+    }
+
+    override fun invalidate() {
+        presenter.invalidate()
+    }
+
+    override fun offline() {
+        presenter.offline()
+    }
+
+    override fun getCacheInstruction() = presenter.getCacheInstruction()
 }

@@ -150,6 +150,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             override fun toString() = serialise(
                     type,
                     durationInMillis,
+                    connectivityTimeoutInMillis,
                     freshOnly,
                     mergeOnNextOnError,
                     encrypt,
