@@ -112,7 +112,6 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                                 "Annotation processor for $methodDescription"
                                         + " returned no instruction, checking cache header"
                         )
-                        defaultCallAdapter
                     } else {
                         logger.d(
                                 this,
@@ -120,14 +119,15 @@ class RetrofitCacheAdapterFactory<E> internal constructor(private val rxJava2Cal
                                         + " returned the following instruction "
                                         + instruction
                         )
-                        RetrofitCacheAdapter(
-                                rxCacheFactory,
-                                logger,
-                                methodDescription,
-                                instruction,
-                                defaultCallAdapter
-                        )
                     }
+
+                    RetrofitCacheAdapter(
+                            rxCacheFactory,
+                            logger,
+                            methodDescription,
+                            instruction,
+                            defaultCallAdapter
+                    )
                 }
             } catch (cacheException: CacheException) {
                 processingErrorAdapterFactory.create(
