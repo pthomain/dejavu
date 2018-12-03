@@ -1,6 +1,8 @@
 # RxCache [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/RxCache?utm_source=github.com&utm_medium=referral&utm_content=pthomain/RxCache&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/RxCache.svg)](https://jitpack.io/#pthomain/RxCache)
 
-**A simple RxJava/Retrofit HTTP cache**
+**A 0-configuration, transparent, client-controlled RxJava cache**
+
+Cache your HTTP responses with just an annotation and zero setup.
 
 TL;DR
 -----
