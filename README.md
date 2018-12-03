@@ -2,16 +2,19 @@
 
 **A 0-configuration, transparent, client-controlled RxJava cache**
 
-Cache your HTTP responses with just an annotation and zero setup.
-
 TL;DR
 -----
 
-Enable offline access and speed up screen loading by caching your API responses for a specific amount of time.
+Cache your HTTP responses via Retrofit transparently with just an annotation and _zero_ setup.
 All responses are automatically cached to disk and refreshed once they expire. 
 Snappy compression (https://github.com/google/snappy) and AES encryption are supported and optional.
 
 <a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
+
+About v2.0
+----------
+
+Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. The documentation below relates to v1.0+ and is now mostly out-of-date. It will be updated to reflect the new features of 2.0 once the lib is out of alpha/beta.
 
 Retrofit support
 ----------------
