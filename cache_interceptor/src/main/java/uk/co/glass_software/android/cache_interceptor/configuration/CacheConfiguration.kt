@@ -26,9 +26,7 @@ import android.os.Looper
 import com.google.gson.Gson
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
-import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.cache_interceptor.BuildConfig.DEBUG
 import uk.co.glass_software.android.cache_interceptor.RxCache
 import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
 
@@ -80,11 +78,15 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
          */
-        fun noLog() = logger(object : Logger {
-            override fun d(tagOrCaller: Any, message: String) = Unit
-            override fun e(tagOrCaller: Any, message: String) = Unit
-            override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
-        })
+        fun noLog() = logger(getSilentLogger())
+
+        private fun getSilentLogger(): Logger {
+            return object : Logger {
+                override fun d(tagOrCaller: Any, message: String) = Unit
+                override fun e(tagOrCaller: Any, message: String) = Unit
+                override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
+            }
+        }
 
         /**
          * Sets custom logger.
@@ -176,8 +178,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Returns an instance of RxCache.
          */
         fun build(context: Context): RxCache<E> {
-            val logger = logger
-                    ?: Boilerplate.init(context, DEBUG).let { Boilerplate.logger }
+            val logger = logger ?: getSilentLogger()
 
             RxAndroidPlugins.setInitMainThreadSchedulerHandler {
                 AndroidSchedulers.from(Looper.getMainLooper(), true)

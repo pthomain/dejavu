@@ -19,12 +19,18 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.test.network.model
 
-import dagger.Module
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
-@Module
-internal class DefaultConfigurationModule(configuration: CacheConfiguration<ApiError>)
-    : BaseConfigurationModule<ApiError>(configuration)
+class Geo {
+
+    @SerializedName("lat")
+    @Expose
+    var lat: String? = null
+    @SerializedName("lng")
+    @Expose
+    var lng: String? = null
+
+}

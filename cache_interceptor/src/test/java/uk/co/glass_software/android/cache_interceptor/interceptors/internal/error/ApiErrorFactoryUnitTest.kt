@@ -88,9 +88,26 @@ class ApiErrorFactoryUnitTest {
     }
 
     @Test
-    fun testParseHttpExceptionUnknown() {
+    fun testParseHttpExceptionServerError() {
         val exception = mock(HttpException::class.java)
         `when`(exception.code()).thenReturn(500)
+        `when`(exception.message()).thenReturn("server error")
+
+        val apiError = target.getError(exception)
+
+        assertApiError(
+                apiError,
+                "server error",
+                ErrorCode.SERVER_ERROR,
+                500,
+                false
+        )
+    }
+
+    @Test
+    fun testParseHttpExceptionUnknown() {
+        val exception = mock(HttpException::class.java)
+        `when`(exception.code()).thenReturn(1)
         `when`(exception.message()).thenReturn("unknown")
 
         val apiError = target.getError(exception)
@@ -99,7 +116,7 @@ class ApiErrorFactoryUnitTest {
                 apiError,
                 "unknown",
                 ErrorCode.UNKNOWN,
-                500,
+                1,
                 false
         )
     }

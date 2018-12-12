@@ -19,12 +19,15 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.test.network.model
 
-import dagger.Module
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.cache_interceptor.response.Cacheable
 
-@Module
-internal class DefaultConfigurationModule(configuration: CacheConfiguration<ApiError>)
-    : BaseConfigurationModule<ApiError>(configuration)
+class TestResponse : Cacheable() {
+
+    companion object {
+        var STUB_FILE = "api_stub_test.json"
+        var URL = "http://test.com"
+    }
+
+}

@@ -19,12 +19,15 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.test.network.retrofit
 
-import dagger.Module
-import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
+import io.reactivex.Observable
+import retrofit2.http.GET
+import uk.co.glass_software.android.cache_interceptor.test.network.model.TestResponse
 
-@Module
-internal class DefaultConfigurationModule(configuration: CacheConfiguration<ApiError>)
-    : BaseConfigurationModule<ApiError>(configuration)
+interface TestClient {
+
+    @GET("/")
+    fun get(): Observable<TestResponse>
+
+}
