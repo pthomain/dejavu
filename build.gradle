@@ -70,12 +70,14 @@ ext {
     sharedPrefStoreVersion = '1.2.1'
 
     snappyVersion = '0.4'
-    requeryVersion = '3.25.2'
+    requeryVersion = '3.25.3'
+    androidXsqliteVersion = '2.0.0'
 
     gsonVersion = '2.8.5'
     retrofitVersion = '2.4.0'
     okhttpVersion = '3.10.0'
     volleyVersion = '1.1.1'
+    reactiveNetworkVersion = '3.0.1'
 
     playServicesVersion = '10.2.1'
     androidXversion = '1.0.0'
@@ -91,8 +93,11 @@ ext {
 
             multiDex              : "androidx.multidex:multidex:$multidexVersion",
             androidXcore          : "androidx.core:core:$androidXversion",
+            androidXsqlite        : "androidx.sqlite:sqlite:$androidXsqliteVersion",
+            androidXroom          : "androidx.room:room-runtime:$androidXsqliteVersion",
             appCompat             : "androidx.appcompat:appcompat:$androidXversion",
             browser               : "androidx.browser:browser:$androidXversion",
+            reactiveNetwork       : "com.github.pwittchen:reactivenetwork-rx2:$reactiveNetworkVersion",
 
             kotlinJdk8            : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
             kotlinReflect         : "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",

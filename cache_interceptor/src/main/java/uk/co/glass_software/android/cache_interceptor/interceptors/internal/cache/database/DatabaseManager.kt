@@ -23,8 +23,8 @@ package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cac
 
 import android.content.ContentValues
 import androidx.annotation.VisibleForTesting
+import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable.create
-import io.requery.android.database.sqlite.SQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
@@ -33,8 +33,8 @@ import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruc
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.COLUMNS.*
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.TABLE_CACHE
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheStatus
@@ -45,7 +45,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DatabaseManager<E>(private val database: SQLiteDatabase,
+internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
                                   private val compressData: Boolean,
@@ -105,19 +105,14 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
                 IS_ENCRYPTED.columnName
         )
 
-        val selection = "${TOKEN.columnName} = ?"
-        val selectionArgs = arrayOf(key)
+        val query = """
+            SELECT ${projection.joinToString(", ")}
+            FROM $TABLE_CACHE
+            WHERE ${TOKEN.columnName} = '$key'
+            LIMIT 1
+            """
 
-        database.query(
-                TABLE_CACHE,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null,
-                "1"
-        ).useAndLogError { cursor ->
+        database.query(query).useAndLogError { cursor ->
             if (cursor.count != 0 && cursor.moveToNext()) {
                 logger.d(this, "Found a cached $simpleName")
 
@@ -165,6 +160,7 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
 
             database.update(
                     TABLE_CACHE,
+                    CONFLICT_REPLACE,
                     contentValuesFactory(map),
                     selection,
                     selectionArgs
@@ -247,11 +243,10 @@ internal class DatabaseManager<E>(private val database: SQLiteDatabase,
             values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
             values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
 
-            database.insertWithOnConflict(
+            database.insert(
                     TABLE_CACHE,
-                    null,
-                    contentValuesFactory(values),
-                    CONFLICT_REPLACE
+                    CONFLICT_REPLACE,
+                    contentValuesFactory(values)
             )
         } ?: logger.e(this, "Could not serialise and store data for $simpleName")
 

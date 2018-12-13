@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.component
 
 import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration

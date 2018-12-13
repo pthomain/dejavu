@@ -22,7 +22,7 @@
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache
 
 
-import junit.framework.Assert.assertEquals
+import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -165,7 +165,6 @@ class HasherIntegrationTest : BaseIntegrationTest() {
             "DBBE320400BDFDD1D2A39A6BBB9DFD18",
             "A83A7ED720A60B5C40AC3DE9EF5AF901"
     )
-
 
     @Test
     @Throws(Exception::class)

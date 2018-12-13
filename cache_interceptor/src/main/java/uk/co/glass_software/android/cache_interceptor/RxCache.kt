@@ -24,9 +24,9 @@ package uk.co.glass_software.android.cache_interceptor
 import io.reactivex.Observable
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
-import uk.co.glass_software.android.cache_interceptor.injection.DaggerDefaultCacheComponent
-import uk.co.glass_software.android.cache_interceptor.injection.DefaultConfigurationModule
+import uk.co.glass_software.android.cache_interceptor.injection.component.CacheComponent
+import uk.co.glass_software.android.cache_interceptor.injection.component.DaggerDefaultCacheComponent
+import uk.co.glass_software.android.cache_interceptor.injection.module.DefaultCacheModule
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
@@ -71,16 +71,18 @@ class RxCache<E> internal constructor(component: CacheComponent<E>)
         private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<ApiError> ->
             DaggerDefaultCacheComponent
                     .builder()
-                    .defaultConfigurationModule(DefaultConfigurationModule(cacheConfiguration))
+                    .defaultCacheModule(DefaultCacheModule(cacheConfiguration))
                     .build()
         }
 
         /**
          * @return Builder for CacheConfiguration
          */
-        fun builder() = CacheConfiguration.builder(
-                ApiErrorFactory(),
-                defaultComponentProvider()
-        )
+        fun builder() =
+                CacheConfiguration.builder(
+                        ApiErrorFactory(),
+                        defaultComponentProvider()
+                )
+
     }
 }

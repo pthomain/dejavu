@@ -21,26 +21,26 @@
 
 package uk.co.glass_software.android.cache_interceptor.test
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
+import com.nhaarman.mockitokotlin2.mock
 import okhttp3.OkHttpClient
 import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.BuildConfig
 import uk.co.glass_software.android.cache_interceptor.RxCache
-import uk.co.glass_software.android.cache_interceptor.injection.DaggerIntegrationTestComponent
-import uk.co.glass_software.android.cache_interceptor.injection.IntegrationTestConfigurationModule
+import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.injection.component.CacheComponent
+import uk.co.glass_software.android.cache_interceptor.injection.integration.component.DaggerIntegrationCacheComponent
+import uk.co.glass_software.android.cache_interceptor.injection.integration.component.DaggerIntegrationTestComponent
+import uk.co.glass_software.android.cache_interceptor.injection.integration.module.IntegrationCacheModule
+import uk.co.glass_software.android.cache_interceptor.injection.integration.module.IntegrationTestModule
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiErrorFactory
 import uk.co.glass_software.android.cache_interceptor.test.network.MockClient
 import uk.co.glass_software.android.cache_interceptor.test.network.retrofit.TestClient
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
-import uk.co.glass_software.android.cache_interceptor.retrofit.RetrofitCacheAdapterFactory
 import java.io.IOException
 import javax.inject.Inject
 
@@ -70,9 +70,31 @@ abstract class BaseIntegrationTest {
     @Inject
     lateinit var assetHelper: AssetHelper
 
+    private val configuration = CacheConfiguration(
+            ApplicationProvider.getApplicationContext(),
+            mock(),
+            ApiErrorFactory(),
+            Gson(),
+            true,
+            true,
+            true,
+            true,
+            false,
+            15,
+            15,
+            60000,
+            false
+    )
+
+    private val cacheComponent: CacheComponent<ApiError> = DaggerIntegrationCacheComponent.builder()
+            .integrationCacheModule(IntegrationCacheModule(configuration))
+            .build()
+
+    private val rxCache = RxCache(cacheComponent)
+
     init {
         DaggerIntegrationTestComponent.builder()
-                .integrationTestConfigurationModule(IntegrationTestConfigurationModule())
+                .integrationTestModule(IntegrationTestModule(rxCache))
                 .build()
                 .inject(this)
     }

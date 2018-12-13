@@ -19,9 +19,12 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.unit
 
 import android.content.ContentValues
+import android.content.Context
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.nhaarman.mockitokotlin2.mock
 import dagger.Module
 import io.reactivex.Observable
@@ -29,11 +32,11 @@ import io.reactivex.subjects.PublishSubject
 import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
+import uk.co.glass_software.android.cache_interceptor.injection.module.CacheModule
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -50,8 +53,14 @@ import uk.co.glass_software.android.shared_preferences.encryption.manager.Encryp
 import java.util.*
 
 @Module
-internal class UnitTestConfigurationModule
-    : ConfigurationModule<ApiError> {
+internal class UnitTestCacheModule
+    : CacheModule<ApiError> {
+
+    override fun provideContext(): Context = mock()
+
+    override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback = mock()
+
+    override fun provideSqlOpenHelper(context: Context, callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper = mock()
 
     override val dateFactory: (Long?) -> Date = mock()
 
@@ -65,29 +74,27 @@ internal class UnitTestConfigurationModule
 
     override fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<ApiError> = mock()
 
-    override fun provideSqlOpenHelper(): SqlOpenHelper = mock()
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SQLiteDatabase = mock()
 
-    override fun provideDatabase(sqlOpenHelper: SqlOpenHelper): SQLiteDatabase = mock()
-
-    override fun provideDatabaseManager(database: SQLiteDatabase, serialisationManager: SerialisationManager<ApiError>): DatabaseManager<ApiError> = mock()
+    override fun provideDatabaseManager(database: SupportSQLiteDatabase, serialisationManager: SerialisationManager<ApiError>): DatabaseManager<ApiError> = mock()
 
     override fun mapToContentValues(map: Map<String, *>): ContentValues = mock()
 
     override fun provideCacheManager(databaseManager: DatabaseManager<ApiError>, emptyResponseFactory: EmptyResponseFactory<ApiError>): CacheManager<ApiError> = mock()
 
-    override fun provideErrorInterceptorFactory(): ConfigurationModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>> = mock()
+    override fun provideErrorInterceptorFactory(): CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>> = mock()
 
-    override fun provideCacheInterceptorFactory(cacheManager: CacheManager<ApiError>): ConfigurationModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>> = mock()
+    override fun provideCacheInterceptorFactory(cacheManager: CacheManager<ApiError>): CacheModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>> = mock()
 
-    override fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<ApiError>>, emptyResponseFactory: EmptyResponseFactory<ApiError>): ConfigurationModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>> = mock()
+    override fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<ApiError>>, emptyResponseFactory: EmptyResponseFactory<ApiError>): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>> = mock()
 
-    override fun provideRxCacheInterceptorFactory(errorInterceptorFactory: ConfigurationModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, cacheInterceptorFactory: ConfigurationModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>>, responseInterceptor: ConfigurationModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): RxCacheInterceptor.Factory<ApiError> = mock()
+    override fun provideRxCacheInterceptorFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, cacheInterceptorFactory: CacheModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>>, responseInterceptor: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): RxCacheInterceptor.Factory<ApiError> = mock()
 
     override fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory = mock()
 
     override fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory, rxCacheInterceptorFactory: RxCacheInterceptor.Factory<ApiError>, processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<ApiError>, annotationProcessor: AnnotationProcessor<ApiError>): RetrofitCacheAdapterFactory<ApiError> = mock()
 
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: ConfigurationModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, responseInterceptorFactory: ConfigurationModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): ProcessingErrorAdapter.Factory<ApiError> = mock()
+    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, responseInterceptorFactory: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): ProcessingErrorAdapter.Factory<ApiError> = mock()
 
     override fun provideCacheMetadataSubject(): PublishSubject<CacheMetadata<ApiError>> = mock()
 

@@ -77,9 +77,9 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
     private fun addConnectivityTimeOutIfNeeded(instruction: CacheInstruction,
                                                upstream: Observable<ResponseWrapper<E>>) =
             instruction.operation.let {
-                if (it is CacheInstruction.Operation.Expiring && it.connectivityTimeoutInMillis > 0L) {
+                if (it is CacheInstruction.Operation.Expiring && it.connectivityTimeoutInMillis ?: 0L > 0L) {
                     upstream.waitForNetwork()
-                            .timeout(it.connectivityTimeoutInMillis, TimeUnit.MILLISECONDS)
+                            .timeout(it.connectivityTimeoutInMillis!!, TimeUnit.MILLISECONDS)
                 } else upstream
             }
 

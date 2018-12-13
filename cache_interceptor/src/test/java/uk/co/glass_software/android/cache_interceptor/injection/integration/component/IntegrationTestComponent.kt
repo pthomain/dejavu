@@ -19,14 +19,15 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.integration.component
 
 import dagger.Component
+import uk.co.glass_software.android.cache_interceptor.injection.integration.module.IntegrationTestModule
 import uk.co.glass_software.android.cache_interceptor.test.BaseIntegrationTest
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [IntegrationTestConfigurationModule::class])
+@Component(modules = [IntegrationTestModule::class])
 internal interface IntegrationTestComponent {
 
     fun inject(target: BaseIntegrationTest)

@@ -53,7 +53,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
          * @param type the operation type
          */
         sealed class Expiring(val durationInMillis: Long?,
-                              val connectivityTimeoutInMillis: Long,
+                              val connectivityTimeoutInMillis: Long?,
                               val freshOnly: Boolean,
                               val mergeOnNextOnError: Boolean?,
                               val encrypt: Boolean?,
@@ -79,7 +79,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
              */
             class Cache(durationInMillis: Long? = null,
-                        connectivityTimeoutInMillis: Long = 0L,
+                        connectivityTimeoutInMillis: Long? = null,
                         freshOnly: Boolean = false,
                         mergeOnNextOnError: Boolean? = null,
                         encrypt: Boolean? = null,
@@ -111,7 +111,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * @see Invalidate
              * */
             class Refresh(durationInMillis: Long? = null,
-                          connectivityTimeoutInMillis: Long = 0L,
+                          connectivityTimeoutInMillis: Long? = null,
                           freshOnly: Boolean = false,
                           mergeOnNextOnError: Boolean? = null,
                           filterFinal: Boolean = false)

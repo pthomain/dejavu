@@ -19,9 +19,8 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.integration.module
 
-import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -40,16 +39,14 @@ import javax.inject.Singleton
 
 
 @Module
-internal class IntegrationTestConfigurationModule {
+internal class IntegrationTestModule(private val rxCache: RxCache<ApiError>) {
 
     val ASSETS_FOLDER = "src/main/assets/"
     val BASE_URL = "http://test.com"
 
     @Provides
     @Singleton
-    fun provideRxCache(): RxCache<ApiError> =
-            RxCache.builder()
-                    .build(ApplicationProvider.getApplicationContext())
+    fun provideRxCache(): RxCache<ApiError> = rxCache
 
     @Provides
     @Singleton

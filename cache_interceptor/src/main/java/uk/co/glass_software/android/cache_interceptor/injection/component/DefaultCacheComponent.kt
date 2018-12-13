@@ -19,12 +19,13 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.component
 
 import dagger.Component
+import uk.co.glass_software.android.cache_interceptor.injection.module.DefaultCacheModule
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.error.ApiError
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [UnitTestConfigurationModule::class])
-internal interface UnitTestComponent
+@Component(modules = [DefaultCacheModule::class])
+internal interface DefaultCacheComponent : CacheComponent<ApiError>

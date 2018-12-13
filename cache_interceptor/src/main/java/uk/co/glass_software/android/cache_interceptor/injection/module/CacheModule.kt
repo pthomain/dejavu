@@ -1,9 +1,11 @@
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.module
 
 import android.content.ContentValues
+import android.content.Context
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
-import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
@@ -11,7 +13,6 @@ import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterc
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -26,11 +27,13 @@ import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import java.util.*
 
-internal interface ConfigurationModule<E>
+internal interface CacheModule<E>
         where E : Exception,
               E : NetworkErrorProvider {
 
     val dateFactory: (Long?) -> Date
+
+    fun provideContext(): Context
 
     fun provideConfiguration(): CacheConfiguration<E>
 
@@ -42,11 +45,14 @@ internal interface ConfigurationModule<E>
 
     fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<E>
 
-    fun provideSqlOpenHelper(): SqlOpenHelper
+    fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback
 
-    fun provideDatabase(sqlOpenHelper: SqlOpenHelper): SQLiteDatabase
+    fun provideSqlOpenHelper(context: Context,
+                             callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper
 
-    fun provideDatabaseManager(database: SQLiteDatabase,
+    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase
+
+    fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                serialisationManager: SerialisationManager<E>): DatabaseManager<E>
 
     fun provideCacheManager(databaseManager: DatabaseManager<E>,

@@ -19,21 +19,20 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.cache_interceptor.injection
+package uk.co.glass_software.android.cache_interceptor.injection.module
 
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import io.reactivex.subjects.PublishSubject
-import io.requery.android.database.sqlite.SQLiteDatabase
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.cache_interceptor.configuration.CacheConfiguration
 import uk.co.glass_software.android.cache_interceptor.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.cache_interceptor.injection.ConfigurationModule.*
 import uk.co.glass_software.android.cache_interceptor.interceptors.RxCacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.token.CacheToken
@@ -47,13 +46,22 @@ import uk.co.glass_software.android.cache_interceptor.retrofit.annotations.Annot
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import java.util.*
+import uk.co.glass_software.android.cache_interceptor.injection.module.CacheModule.*
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelperCallback
 import javax.inject.Singleton
 
 @Module
-internal abstract class BaseConfigurationModule<E>(val configuration: CacheConfiguration<E>)
-    : ConfigurationModule<E>
+internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration<E>)
+    : CacheModule<E>
         where E : Exception,
               E : NetworkErrorProvider {
+
+    val DATABASE_NAME = "rx_cache_interceptor.db"
+    val DATABASE_VERSION = 2
+
+    @Provides
+    @Singleton
+    override fun provideContext() = configuration.context
 
     @Provides
     @Singleton
@@ -86,23 +94,23 @@ internal abstract class BaseConfigurationModule<E>(val configuration: CacheConfi
                     configuration.gson
             )
 
-    @Provides
-    @Singleton
-    override fun provideSqlOpenHelper() = SqlOpenHelper(
-            configuration.context,
-            "rx_cache_interceptor.db"
-    )
-
-    @Provides
-    @Singleton
-    override fun provideDatabase(sqlOpenHelper: SqlOpenHelper) =
-            sqlOpenHelper.writableDatabase!!
-
     override val dateFactory = { timeStamp: Long? -> timeStamp?.let { Date(it) } ?: Date() }
 
     @Provides
     @Singleton
-    override fun provideDatabaseManager(database: SQLiteDatabase,
+    override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback =
+            SqlOpenHelperCallback(
+                    DATABASE_VERSION
+            )
+
+    @Provides
+    @Singleton
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper) =
+            sqlOpenHelper.writableDatabase!!
+
+    @Provides
+    @Singleton
+    override fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                         serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
                     database,

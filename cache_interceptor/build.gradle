@@ -125,6 +125,7 @@ dependencies {
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex
     implementation appDependencies.androidXcore
+    implementation appDependencies.androidXsqlite
 
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
@@ -162,6 +163,7 @@ dependencies {
 
     testImplementation appDependencies.snappy
     testImplementation appDependencies.requery
+    testImplementation appDependencies.androidXsqlite
 
     testImplementation appDependencies.dagger
     kaptTest appDependencies.daggerCompiler
@@ -175,6 +177,9 @@ dependencies {
     testImplementation appDependencies.robolectric
     testImplementation appDependencies.okHttpMock
     testImplementation appDependencies.mockitoKotlin
+
+    testImplementation appDependencies.androidXroom
+    testImplementation appDependencies.reactiveNetwork
 
 }
 

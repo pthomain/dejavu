@@ -28,7 +28,7 @@ import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.cache_interceptor.RxCache
-import uk.co.glass_software.android.cache_interceptor.injection.CacheComponent
+import uk.co.glass_software.android.cache_interceptor.injection.component.CacheComponent
 
 data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val logger: Logger,
@@ -53,6 +53,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                 where E : Exception,
                       E : NetworkErrorProvider =
                 Builder(errorFactory, componentProvider)
+
     }
 
     class Builder<E> internal constructor(

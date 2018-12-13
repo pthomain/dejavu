@@ -21,22 +21,14 @@
 
 package uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database
 
-import android.content.Context
-import io.requery.android.database.sqlite.SQLiteCursor
-import io.requery.android.database.sqlite.SQLiteDatabase
-import io.requery.android.database.sqlite.SQLiteOpenHelper
-import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelper.Companion.COLUMNS.*
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import uk.co.glass_software.android.cache_interceptor.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 
-internal class SqlOpenHelper(context: Context,
-                             databaseName: String)
-    : SQLiteOpenHelper(
-        context,
-        databaseName,
-        cursorFactory,
-        DATABASE_VERSION
-) {
+internal class SqlOpenHelperCallback(databaseVersion: Int)
+    : SupportSQLiteOpenHelper.Callback(databaseVersion) {
 
-    override fun onCreate(db: SQLiteDatabase) {
+    override fun onCreate(db: SupportSQLiteDatabase) {
         db.execSQL(String.format("CREATE TABLE IF NOT EXISTS %s (%s)",
                 TABLE_CACHE,
                 values().joinToString(separator = ", ") { it.columnName + " " + it.type }
@@ -46,7 +38,7 @@ internal class SqlOpenHelper(context: Context,
         addIndex(db, EXPIRY_DATE.columnName)
     }
 
-    private fun addIndex(db: SQLiteDatabase,
+    private fun addIndex(db: SupportSQLiteDatabase,
                          columnName: String) {
         db.execSQL(String.format("CREATE INDEX IF NOT EXISTS %s_index ON %s(%s)",
                 columnName,
@@ -55,11 +47,11 @@ internal class SqlOpenHelper(context: Context,
         ))
     }
 
-    override fun onDowngrade(db: SQLiteDatabase,
+    override fun onDowngrade(db: SupportSQLiteDatabase,
                              oldVersion: Int,
                              newVersion: Int) = onUpgrade(db, oldVersion, newVersion)
 
-    override fun onUpgrade(sqLiteDatabase: SQLiteDatabase,
+    override fun onUpgrade(sqLiteDatabase: SupportSQLiteDatabase,
                            oldVersion: Int,
                            newVersion: Int) {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_CACHE")
@@ -67,8 +59,6 @@ internal class SqlOpenHelper(context: Context,
     }
 
     companion object {
-        private const val DATABASE_VERSION = 2
-
         const val TABLE_CACHE = "rx_cache"
 
         enum class COLUMNS(val columnName: String,
@@ -82,8 +72,5 @@ internal class SqlOpenHelper(context: Context,
             IS_COMPRESSED("is_compressed", "INTEGER");
         }
 
-        private val cursorFactory = SQLiteDatabase.CursorFactory { _, driver, editTable, query ->
-            SQLiteCursor(driver, editTable, query)
-        }
     }
 }
