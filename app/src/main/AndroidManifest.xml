@@ -32,7 +32,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat">
         <activity
-            android:name=".DemoActivity"
+            android:name="uk.co.glass_software.android.dejavu.demo.DemoActivity"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
