@@ -53,7 +53,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors.internal.cache
 //    private fun getInterceptor(provideCacheManager: CacheManager<*>?,
 //                               isCacheEnabled: Boolean,
 //                               isDoNotCache: Boolean,
-//                               isNetworkError: Function<ApiError, Boolean>): CacheInterceptor<ApiError, TestResponse> {
+//                               isNetworkError: Function<Glitch, Boolean>): CacheInterceptor<Glitch, TestResponse> {
 //        return CacheInterceptor<E>(
 //                provideCacheManager!!,
 //                isCacheEnabled,
@@ -189,7 +189,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors.internal.cache
 //        val errorResponse = TestResponse()
 //        errorResponse.metadata = ResponseMetadata.create(
 //                getToken(true),
-//                ApiError(IOException("test"), 404, ErrorCode.NOT_FOUND, "some Exception")
+//                Glitch(IOException("test"), 404, ErrorCode.NOT_FOUND, "some Exception")
 //        )
 //
 //        val expectedResponse: TestResponse?

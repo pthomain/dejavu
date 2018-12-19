@@ -24,10 +24,10 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.error
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode.UNKNOWN
 
-data class ApiError constructor(private val throwable: Throwable,
-                                val httpStatus: Int = NON_HTTP_STATUS,
-                                val errorCode: ErrorCode = UNKNOWN,
-                                val description: String? = null)
+data class Glitch constructor(private val throwable: Throwable,
+                              val httpStatus: Int = NON_HTTP_STATUS,
+                              val errorCode: ErrorCode = UNKNOWN,
+                              val description: String? = null)
     : Exception(throwable),
         NetworkErrorProvider {
 
@@ -35,6 +35,6 @@ data class ApiError constructor(private val throwable: Throwable,
 
     companion object {
         const val NON_HTTP_STATUS = -1
-        fun from(throwable: Throwable) = throwable as? ApiError
+        fun from(throwable: Throwable) = throwable as? Glitch
     }
 }

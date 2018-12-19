@@ -25,13 +25,13 @@ import com.google.gson.JsonParseException
 import com.google.gson.stream.MalformedJsonException
 import retrofit2.HttpException
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError.Companion.NON_HTTP_STATUS
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch.Companion.NON_HTTP_STATUS
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
-class ApiErrorFactory : ErrorFactory<ApiError> {
+class GlitchFactory : ErrorFactory<Glitch> {
 
     override fun getError(throwable: Throwable) =
             when (throwable) {
@@ -46,7 +46,7 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
             }
 
     private fun getHttpError(throwable: HttpException) =
-            ApiError(
+            Glitch(
                     throwable,
                     throwable.code(),
                     parseErrorCode(throwable),
@@ -54,7 +54,7 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
             )
 
     private fun getConfigError(throwable: CacheException) =
-            ApiError(
+            Glitch(
                     throwable,
                     NON_HTTP_STATUS,
                     CONFIG,
@@ -62,7 +62,7 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
             )
 
     private fun getIoError(throwable: Throwable) =
-            ApiError(
+            Glitch(
                     throwable,
                     NON_HTTP_STATUS,
                     if (throwable is MalformedJsonException || throwable is JsonParseException) UNEXPECTED_RESPONSE else NETWORK,
@@ -70,7 +70,7 @@ class ApiErrorFactory : ErrorFactory<ApiError> {
             )
 
     private fun getDefaultError(throwable: Throwable) =
-            ApiError.from(throwable) ?: ApiError(
+            Glitch.from(throwable) ?: Glitch(
                     throwable,
                     NON_HTTP_STATUS,
                     UNKNOWN,

@@ -32,7 +32,7 @@ import static org.mockito.Mockito.mock;
 //
 //    private final String message = "Connection timed out";
 //
-//    private ErrorInterceptor<TestResponse, ApiError> target;
+//    private ErrorInterceptor<TestResponse, Glitch> target;
 //
 //    @Before
 //    public void setUp() throws Exception {
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.mock;
 //        );
 //
 //        target = new ErrorInterceptor.Factory<>(
-//                new ApiErrorFactory(),
+//                new GlitchFactory(),
 //                mock(Logger.class)
 //        ).create(cacheToken);
 //    }
@@ -71,11 +71,11 @@ import static org.mockito.Mockito.mock;
 //
 //        TestResponse response = observable.compose(target).blockingFirst();
 //
-//        ResponseMetadata<TestResponse, ApiError> metadata = response.getMetadata();
+//        ResponseMetadata<TestResponse, Glitch> metadata = response.getMetadata();
 //        assertNotNull("TestResponse should have metadata", metadata);
 //
 //        if (hasError) {
-//            Companion.assertApiError(
+//            Companion.assertGlitch(
 //                    metadata.getError(),
 //                    "Connection timed out",
 //                    NETWORK,

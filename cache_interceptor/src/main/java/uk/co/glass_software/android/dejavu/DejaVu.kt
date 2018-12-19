@@ -28,8 +28,8 @@ import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
 import uk.co.glass_software.android.dejavu.injection.component.DaggerDefaultCacheComponent
 import uk.co.glass_software.android.dejavu.injection.module.DefaultCacheModule
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiErrorFactory
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 
@@ -68,7 +68,7 @@ class DejaVu<E> internal constructor(component: CacheComponent<E>)
          */
         const val DejaVuHeader = "DejaVuHeader"
 
-        private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<ApiError> ->
+        private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<Glitch> ->
             DaggerDefaultCacheComponent
                     .builder()
                     .defaultCacheModule(DefaultCacheModule(cacheConfiguration))
@@ -80,7 +80,7 @@ class DejaVu<E> internal constructor(component: CacheComponent<E>)
          */
         fun builder() =
                 CacheConfiguration.builder(
-                        ApiErrorFactory(),
+                        GlitchFactory(),
                         defaultComponentProvider()
                 )
 

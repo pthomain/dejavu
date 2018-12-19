@@ -30,14 +30,14 @@ import org.mockito.Mockito.mock
 import retrofit2.HttpException
 import java.io.IOException
 
-class ApiErrorFactoryUnitTest {
+class GlitchFactoryUnitTest {
 
-    private lateinit var target: ApiErrorFactory
+    private lateinit var target: GlitchFactory
 
     @Before
     @Throws(Exception::class)
     fun setUp() {
-        target = ApiErrorFactory()
+        target = GlitchFactory()
     }
 
     @Test
@@ -46,7 +46,7 @@ class ApiErrorFactoryUnitTest {
 
         val apiError = target.getError(exception)
 
-        assertApiError(
+        assertGlitch(
                 apiError,
                 "malformed",
                 ErrorCode.UNEXPECTED_RESPONSE,
@@ -61,7 +61,7 @@ class ApiErrorFactoryUnitTest {
 
         val apiError = target.getError(exception)
 
-        assertApiError(
+        assertGlitch(
                 apiError,
                 "time out",
                 ErrorCode.NETWORK,
@@ -78,7 +78,7 @@ class ApiErrorFactoryUnitTest {
 
         val apiError = target.getError(exception)
 
-        assertApiError(
+        assertGlitch(
                 apiError,
                 "not authorised",
                 ErrorCode.UNAUTHORISED,
@@ -95,7 +95,7 @@ class ApiErrorFactoryUnitTest {
 
         val apiError = target.getError(exception)
 
-        assertApiError(
+        assertGlitch(
                 apiError,
                 "server error",
                 ErrorCode.SERVER_ERROR,
@@ -112,7 +112,7 @@ class ApiErrorFactoryUnitTest {
 
         val apiError = target.getError(exception)
 
-        assertApiError(
+        assertGlitch(
                 apiError,
                 "unknown",
                 ErrorCode.UNKNOWN,
@@ -123,16 +123,16 @@ class ApiErrorFactoryUnitTest {
 
     companion object {
 
-        fun assertApiError(error: ApiError,
-                           expectedRawDescription: String?,
-                           expectedErrorCode: ErrorCode,
-                           expectedHttpCode: Int,
-                           isNetworkError: Boolean) {
-            assertNotNull("error should not be null", error)
+        fun assertGlitch(glitch: Glitch,
+                         expectedRawDescription: String?,
+                         expectedErrorCode: ErrorCode,
+                         expectedHttpCode: Int,
+                         isNetworkError: Boolean) {
+            assertNotNull("glitch should not be null", glitch)
 
-            val rawDescription = error.description
+            val rawDescription = glitch.description
 
-            val httpStatus = error.httpStatus
+            val httpStatus = glitch.httpStatus
             assertEquals("httpStatus should be $expectedHttpCode", expectedHttpCode, httpStatus)
 
             if (httpStatus == 200) {
@@ -146,12 +146,12 @@ class ApiErrorFactoryUnitTest {
                 }
             }
 
-            assertEquals("Expected network error == $isNetworkError",
+            assertEquals("Expected network glitch == $isNetworkError",
                     isNetworkError,
-                    error.isNetworkError()
+                    glitch.isNetworkError()
             )
 
-            val errorCode = error.errorCode
+            val errorCode = glitch.errorCode
             assertNotNull("errorCode should not be null", errorCode)
             assertEquals("errorCode should be $expectedErrorCode", expectedErrorCode, errorCode)
         }

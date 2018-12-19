@@ -138,7 +138,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                           mergeOnNextOnError: Boolean? = null)
                 : Expiring(
                     null,
-                    0L,
+                    null,
                     freshOnly,
                     mergeOnNextOnError,
                     null,
@@ -219,5 +219,11 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             responseClass,
             operation
     )
+
+    override fun equals(other: Any?) =
+            other is CacheInstruction && other.toString() == toString()
+
+    override fun hashCode() =
+            toString().hashCode()
 
 }

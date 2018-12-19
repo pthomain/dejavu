@@ -28,12 +28,12 @@ import dagger.Module
 import dagger.Provides
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.injection.module.BaseCacheModule
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import javax.inject.Singleton
 
 @Module
-internal class IntegrationCacheModule(configuration: CacheConfiguration<ApiError>)
-    : BaseCacheModule<ApiError>(configuration) {
+internal class IntegrationCacheModule(configuration: CacheConfiguration<Glitch>)
+    : BaseCacheModule<Glitch>(configuration) {
 
     @Provides
     @Singleton

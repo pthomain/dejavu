@@ -40,7 +40,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyResponseFactory
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
@@ -54,7 +54,7 @@ import java.util.*
 
 @Module
 internal class UnitTestCacheModule
-    : CacheModule<ApiError> {
+    : CacheModule<Glitch> {
 
     override fun provideContext(): Context = mock()
 
@@ -64,7 +64,7 @@ internal class UnitTestCacheModule
 
     override val dateFactory: (Long?) -> Date = mock()
 
-    override fun provideConfiguration(): CacheConfiguration<ApiError> = mock()
+    override fun provideConfiguration(): CacheConfiguration<Glitch> = mock()
 
     override fun provideGsonSerialiser(): GsonSerialiser = mock()
 
@@ -72,37 +72,37 @@ internal class UnitTestCacheModule
 
     override fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory): EncryptionManager? = mock()
 
-    override fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<ApiError> = mock()
+    override fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<Glitch> = mock()
 
     override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SQLiteDatabase = mock()
 
-    override fun provideDatabaseManager(database: SupportSQLiteDatabase, serialisationManager: SerialisationManager<ApiError>): DatabaseManager<ApiError> = mock()
+    override fun provideDatabaseManager(database: SupportSQLiteDatabase, serialisationManager: SerialisationManager<Glitch>): DatabaseManager<Glitch> = mock()
 
     override fun mapToContentValues(map: Map<String, *>): ContentValues = mock()
 
-    override fun provideCacheManager(databaseManager: DatabaseManager<ApiError>, emptyResponseFactory: EmptyResponseFactory<ApiError>): CacheManager<ApiError> = mock()
+    override fun provideCacheManager(databaseManager: DatabaseManager<Glitch>, emptyResponseFactory: EmptyResponseFactory<Glitch>): CacheManager<Glitch> = mock()
 
-    override fun provideErrorInterceptorFactory(): CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>> = mock()
+    override fun provideErrorInterceptorFactory(): CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<Glitch>> = mock()
 
-    override fun provideCacheInterceptorFactory(cacheManager: CacheManager<ApiError>): CacheModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>> = mock()
+    override fun provideCacheInterceptorFactory(cacheManager: CacheManager<Glitch>): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>> = mock()
 
-    override fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<ApiError>>, emptyResponseFactory: EmptyResponseFactory<ApiError>): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>> = mock()
+    override fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<Glitch>>, emptyResponseFactory: EmptyResponseFactory<Glitch>): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>> = mock()
 
-    override fun provideRxCacheInterceptorFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, cacheInterceptorFactory: CacheModule.Function2<CacheToken, Long, CacheInterceptor<ApiError>>, responseInterceptor: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): DejaVuInterceptor.Factory<ApiError> = mock()
+    override fun provideDejaVuInterceptorFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<Glitch>>, cacheInterceptorFactory: CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>, responseInterceptor: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>): DejaVuInterceptor.Factory<Glitch> = mock()
 
     override fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory = mock()
 
-    override fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory, dejaVuInterceptorFactory: DejaVuInterceptor.Factory<ApiError>, processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<ApiError>, annotationProcessor: AnnotationProcessor<ApiError>): RetrofitCallAdapterFactory<ApiError> = mock()
+    override fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory, dejaVuInterceptorFactory: DejaVuInterceptor.Factory<Glitch>, processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<Glitch>, annotationProcessor: AnnotationProcessor<Glitch>): RetrofitCallAdapterFactory<Glitch> = mock()
 
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<ApiError>>, responseInterceptorFactory: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<ApiError>>): ProcessingErrorAdapter.Factory<ApiError> = mock()
+    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<Glitch>>, responseInterceptorFactory: CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>): ProcessingErrorAdapter.Factory<Glitch> = mock()
 
-    override fun provideCacheMetadataSubject(): PublishSubject<CacheMetadata<ApiError>> = mock()
+    override fun provideCacheMetadataSubject(): PublishSubject<CacheMetadata<Glitch>> = mock()
 
-    override fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<ApiError>>): Observable<CacheMetadata<ApiError>> = mock()
+    override fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<Glitch>>): Observable<CacheMetadata<Glitch>> = mock()
 
-    override fun provideAnnotationProcessor(): AnnotationProcessor<ApiError> = mock()
+    override fun provideAnnotationProcessor(): AnnotationProcessor<Glitch> = mock()
 
-    override fun provideEmptyResponseFactory(): EmptyResponseFactory<ApiError> = mock()
+    override fun provideEmptyResponseFactory(): EmptyResponseFactory<Glitch> = mock()
 
 
 }

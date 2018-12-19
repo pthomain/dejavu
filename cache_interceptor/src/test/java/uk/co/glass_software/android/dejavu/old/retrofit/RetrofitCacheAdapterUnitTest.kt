@@ -23,10 +23,10 @@ package uk.co.glass_software.android.dejavu.old.retrofit
 
 //class RetrofitCacheAdapterUnitTest {
 //
-//    private var mockInterceptorFactory: DejaVuInterceptor.Factory<ApiError>? = null
+//    private var mockInterceptorFactory: DejaVuInterceptor.Factory<Glitch>? = null
 //    private var mockCallAdapter: CallAdapter<*, *>? = null
 //
-//    private var target: RetrofitCallAdapter<ApiError>? = null
+//    private var target: RetrofitCallAdapter<Glitch>? = null
 //
 //    @Before
 //    @Throws(Exception::class)

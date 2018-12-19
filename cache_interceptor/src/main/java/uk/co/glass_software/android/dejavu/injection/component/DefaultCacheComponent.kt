@@ -23,9 +23,9 @@ package uk.co.glass_software.android.dejavu.injection.component
 
 import dagger.Component
 import uk.co.glass_software.android.dejavu.injection.module.DefaultCacheModule
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [DefaultCacheModule::class])
-internal interface DefaultCacheComponent : CacheComponent<ApiError>
+internal interface DefaultCacheComponent : CacheComponent<Glitch>

@@ -34,7 +34,7 @@ internal object CacheInstructionSerialiser {
                   vararg properties: Any?) =
             properties.joinToString(separator = separator) {
                 when (it) {
-                    is Class<*> -> it.canonicalName!!
+                    is Class<*> -> it.name
                     else -> it.toString()
                 }
             }.let {
@@ -98,7 +98,7 @@ internal object CacheInstructionSerialiser {
                 when (params[1]) {
                     CACHE.name -> Cache(
                             durationInMillis,
-                            connectivityTimeoutInMillis ?: 0L,
+                            connectivityTimeoutInMillis,
                             freshOnly,
                             mergeOnNextOnError,
                             encrypt,
@@ -107,7 +107,7 @@ internal object CacheInstructionSerialiser {
                     )
                     REFRESH.name -> Refresh(
                             durationInMillis,
-                            connectivityTimeoutInMillis ?: 0L,
+                            connectivityTimeoutInMillis,
                             freshOnly,
                             mergeOnNextOnError,
                             filterFinal

@@ -21,19 +21,19 @@
 
 package uk.co.glass_software.android.dejavu.response
 
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 
 /**
  * Default implementation of CacheMetadata.Holder. Have the response extend this class
  * if you want to inherit from the default metadata holding and error handling mechanisms.
  * Alternatively, if your response class cannot extend this class, have it implement the
  * CacheMetadata.Holder interface in a similar fashion as this class' implementation.
- * To provide your own error handling via an error factory, see ApiErrorFactory.
+ * To provide your own error handling via an error factory, see GlitchFactory.
  *
- * @see uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiErrorFactory
+ * @see uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
  */
-abstract class Cacheable : CacheMetadata.Holder<ApiError> {
+abstract class Cacheable : CacheMetadata.Holder<Glitch> {
 
-    override lateinit var metadata: CacheMetadata<ApiError>
+    override lateinit var metadata: CacheMetadata<Glitch>
 
 }

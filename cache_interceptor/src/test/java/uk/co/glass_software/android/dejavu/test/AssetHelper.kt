@@ -25,8 +25,8 @@ import com.google.gson.Gson
 import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import java.io.*
 
@@ -62,9 +62,9 @@ class AssetHelper(private val assetsFolder: String,
                     e,
                     message
             )
-            return Observable.error(ApiError(
+            return Observable.error(Glitch(
                     e,
-                    ApiError.NON_HTTP_STATUS,
+                    Glitch.NON_HTTP_STATUS,
                     ErrorCode.UNKNOWN,
                     message
             ))
@@ -75,21 +75,18 @@ class AssetHelper(private val assetsFolder: String,
     companion object {
 
         @Throws(IOException::class)
-        internal fun fileToString(inputStream: InputStream): String {
-            val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
+        internal fun fileToString(inputStream: InputStream) =
+                BufferedReader(InputStreamReader(inputStream, "UTF-8")).use { reader ->
+                    val builder = StringBuilder()
+                    var line: String?
+                    do {
+                        line = reader.readLine()
+                        builder.append(line)
+                        builder.append('\n')
+                    } while (line != null)
 
-            reader.use { reader ->
-                val builder = StringBuilder()
-                var line: String?
-                do {
-                    line = reader.readLine()
-                    builder.append(line)
-                    builder.append('\n')
-                } while (line != null)
-
-                return builder.toString()
-            }
-        }
+                    builder.toString()
+                }
     }
 
 }

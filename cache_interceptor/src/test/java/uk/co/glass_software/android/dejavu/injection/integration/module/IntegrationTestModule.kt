@@ -30,7 +30,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.test.AssetHelper
 import uk.co.glass_software.android.dejavu.test.network.MockClient
@@ -39,18 +39,18 @@ import javax.inject.Singleton
 
 
 @Module
-internal class IntegrationTestModule(private val dejaVu: DejaVu<ApiError>) {
+internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     val ASSETS_FOLDER = "src/main/assets/"
     val BASE_URL = "http://test.com"
 
     @Provides
     @Singleton
-    fun provideDejaVu(): DejaVu<ApiError> = dejaVu
+    fun provideDejaVu(): DejaVu<Glitch> = dejaVu
 
     @Provides
     @Singleton
-    fun provideRetrofitCacheAdapterFactory(dejaVu: DejaVu<ApiError>) =
+    fun provideRetrofitCacheAdapterFactory(dejaVu: DejaVu<Glitch>) =
             dejaVu.retrofitCallAdapterFactory
 
     @Provides
@@ -77,7 +77,7 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<ApiError>) {
 
     @Provides
     @Singleton
-    fun provideRetrofit(adapterFactory: RetrofitCallAdapterFactory<ApiError>,
+    fun provideRetrofit(adapterFactory: RetrofitCallAdapterFactory<Glitch>,
                         okHttpClient: OkHttpClient,
                         gsonConverterFactory: GsonConverterFactory) =
             Retrofit.Builder()

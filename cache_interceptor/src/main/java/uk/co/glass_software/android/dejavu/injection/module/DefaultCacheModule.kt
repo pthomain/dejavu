@@ -27,12 +27,12 @@ import dagger.Module
 import dagger.Provides
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import javax.inject.Singleton
 
 @Module
-internal class DefaultCacheModule(configuration: CacheConfiguration<ApiError>)
-    : BaseCacheModule<ApiError>(configuration) {
+internal class DefaultCacheModule(configuration: CacheConfiguration<Glitch>)
+    : BaseCacheModule<Glitch>(configuration) {
 
     @Provides
     @Singleton

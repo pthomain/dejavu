@@ -37,8 +37,8 @@ import uk.co.glass_software.android.dejavu.injection.integration.component.Dagge
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiErrorFactory
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.test.network.MockClient
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import java.io.IOException
@@ -73,7 +73,7 @@ abstract class BaseIntegrationTest {
     private val configuration = CacheConfiguration(
             ApplicationProvider.getApplicationContext(),
             mock(),
-            ApiErrorFactory(),
+            GlitchFactory(),
             Gson(),
             true,
             true,
@@ -86,7 +86,7 @@ abstract class BaseIntegrationTest {
             false
     )
 
-    private val cacheComponent: CacheComponent<ApiError> = DaggerIntegrationCacheComponent.builder()
+    private val cacheComponent: CacheComponent<Glitch> = DaggerIntegrationCacheComponent.builder()
             .integrationCacheModule(IntegrationCacheModule(configuration))
             .build()
 

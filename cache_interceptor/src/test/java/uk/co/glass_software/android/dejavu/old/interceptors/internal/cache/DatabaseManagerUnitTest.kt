@@ -86,7 +86,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors.internal.cache
 //        `when`<Date>(mockCacheToken!!.expiryDate).thenReturn(mockExpiryDate)
 //
 //        mockMetadata = mock(ResponseMetadata::class.java)
-//        `when`<CacheMetadata<ApiError>>(mockResponse!!.metadata).thenReturn(mockMetadata)
+//        `when`<CacheMetadata<Glitch>>(mockResponse!!.metadata).thenReturn(mockMetadata)
 //        `when`(mockMetadata!!.getCacheToken()).thenReturn(mockCacheToken)
 //
 //        target = DatabaseManager(

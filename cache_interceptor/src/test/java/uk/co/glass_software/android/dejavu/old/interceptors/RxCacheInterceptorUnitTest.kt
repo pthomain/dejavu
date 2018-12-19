@@ -27,10 +27,10 @@ package uk.co.glass_software.android.dejavu.old.interceptors
 //    private val mockUrl = "mockUrl"
 //    private val mockBody = "mockBody"
 //    private var mockLogger: Logger? = null
-//    private var mockErrorInterceptorFactory: ErrorInterceptor.Factory<ApiError>? = null
-//    private var mockCacheInterceptorFactory: CacheInterceptor.Factory<ApiError>? = null
-//    private var mockErrorInterceptor: ErrorInterceptor<TestResponse, ApiError>? = null
-//    private var mockCacheInterceptor: CacheInterceptor<ApiError, TestResponse>? = null
+//    private var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>? = null
+//    private var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>? = null
+//    private var mockErrorInterceptor: ErrorInterceptor<TestResponse, Glitch>? = null
+//    private var mockCacheInterceptor: CacheInterceptor<Glitch, TestResponse>? = null
 //    private var mockObservable: Observable<TestResponse>? = null
 //
 //    @Before
@@ -45,7 +45,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors
 //        mockObservable = Observable.just(mock(TestResponse::class.java))
 //
 //        `when`<Observable<ResponseWrapper<TestResponse>>>(mockErrorInterceptor!!.apply(any<Observable<Any>>())).thenReturn(mockObservable)
-//        `when`<ObservableSource<ResponseWrapper<ApiError>>>(mockCacheInterceptor!!.apply(any<Observable<ResponseWrapper<ApiError>>>())).thenReturn(mockObservable)
+//        `when`<ObservableSource<ResponseWrapper<Glitch>>>(mockCacheInterceptor!!.apply(any<Observable<ResponseWrapper<Glitch>>>())).thenReturn(mockObservable)
 //
 //        `when`<Any>(mockErrorInterceptorFactory!!.create(any<T>())).thenReturn(mockErrorInterceptor)
 //        `when`<Any>(mockCacheInterceptorFactory!!.create(any<T>(), any<T>())).thenReturn(mockCacheInterceptor)
@@ -84,7 +84,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors
 //        val cacheTokenCaptor = ArgumentCaptor.forClass(CacheToken::class.java)
 //
 //        verify<Any>(mockErrorInterceptorFactory).create(errorTokenCaptor.capture())
-//        verify<Any>(mockCacheInterceptorFactory).create(cacheTokenCaptor.capture(), any(Function::class.java) as Function<ApiError, Boolean>)
+//        verify<Any>(mockCacheInterceptorFactory).create(cacheTokenCaptor.capture(), any(Function::class.java) as Function<Glitch, Boolean>)
 //
 //        val errorToken = errorTokenCaptor.value
 //        val cacheToken = cacheTokenCaptor.value

@@ -31,7 +31,7 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuTransformer
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 
 class VolleyObservable<E, R> private constructor(private val requestQueue: RequestQueue,
                                                  private val gson: Gson,
@@ -85,7 +85,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                               responseClass: Class<R>,
                               cacheInterceptor: DejaVuTransformer,
                               url: String) =
-                create<ApiError, R>(
+                create<Glitch, R>(
                         requestQueue,
                         gson,
                         responseClass,

@@ -39,7 +39,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract.*
 import uk.co.glass_software.android.dejavu.demo.model.CatFactResponse
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ApiError
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 
 internal abstract class BaseDemoPresenter protected constructor(private val demoActivity: DemoActivity,
                                                                 protected val uiLogger: Logger
@@ -67,7 +67,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     protected val gson by lazy { Gson() }
 
-    protected var dejaVu: DejaVu<ApiError> = newDejaVu()
+    protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
     private fun newDejaVu() =
