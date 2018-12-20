@@ -220,7 +220,8 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                                                       responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
                     { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },
-                    { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) }
+                    { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) },
+                    dateFactory
             )
 
     @Provides

@@ -32,6 +32,7 @@ import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
+import java.util.*
 
 /**
  * This class adapts a call with a configuration error and emits this error via the expected RxJava type.
@@ -47,6 +48,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
                                                              errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
                                                              responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
+                                                             private val dateFactory: (Long?) -> Date,
                                                              cacheToken: CacheToken,
                                                              start: Long,
                                                              private val rxType: AnnotationProcessor.RxType,
@@ -75,7 +77,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                         callDuration = CacheMetadata.Duration(
                                 0,
                                 0,
-                                (System.currentTimeMillis() - start).toInt()
+                                (dateFactory(null).time - start).toInt()
                         )
                 )
             }
@@ -92,7 +94,8 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             }!!
 
     class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
-                     private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>)
+                     private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
+                     private val dateFactory: (Long?) -> Date)
             where E : Exception,
                   E : NetworkErrorProvider {
 
@@ -105,6 +108,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                         defaultAdapter,
                         errorInterceptorFactory,
                         responseInterceptorFactory,
+                        dateFactory,
                         cacheToken,
                         start,
                         rxType,
