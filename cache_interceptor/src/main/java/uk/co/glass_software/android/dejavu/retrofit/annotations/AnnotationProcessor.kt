@@ -109,7 +109,15 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
     }
 
     /**
+     * Returns a cache instructions for the given annotation and checks for duplicate annotations
+     * on the same call.
      *
+     * @param currentInstruction the previous existing annotation if found, to detect duplicates
+     * @param rxType the RxJava type
+     * @param responseClass the targeted response class for this call
+     * @param foundOperation the operation type associated with the given annotation
+     * @param annotation the annotation being processed
+     * @return the processed cache instruction for the given annotation
      */
     @Throws(CacheException::class)
     private fun getInstruction(currentInstruction: CacheInstruction?,
@@ -131,8 +139,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             is Cache -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Cache(
-                            annotation.durationInMillis.let { if (it == -1L) null else it },
-                            annotation.connectivityTimeoutInMillis.let { if(it == 0L) cacheConfiguration.connectivityTimeoutInMillis else it },
+                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it },
+                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value,
                             annotation.encrypt.value,
@@ -148,8 +156,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             is Refresh -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Refresh(
-                            annotation.durationInMillis.let { if (it == -1L) null else it },
-                            annotation.connectivityTimeoutInMillis.let { if(it == 0L) cacheConfiguration.connectivityTimeoutInMillis else it },
+                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it },
+                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
                     )

@@ -22,53 +22,66 @@
 package uk.co.glass_software.android.dejavu.test
 
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.fail
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action
+import junit.framework.TestCase.*
+import kotlin.reflect.full.createInstance
 
-object TestUtils {
+fun <E> expectException(exceptionType: Class<E>,
+                        message: String,
+                        action: () -> Unit,
+                        checkCause: Boolean = false) {
+    try {
+        action()
+    } catch (e: Exception) {
+        val toCheck = if (checkCause) e.cause else e
 
-    /**
-     * Convenience method used to expect exceptions on calls. This is for RxJava calls since the
-     * exception mechanism is delivered onError. For calls to Observable.blockingFirst(), the exception
-     * is thrown as a RuntimeException.
-     *
-     * @param exceptionType the exception expected to be called during the call
-     * @param message       the expected message of the exception
-     * @param `action`          the method to be called
-     * @param <E>           the type of the inferred exception
-    </E> */
-    fun <E> expectException(exceptionType: Class<E>,
-                            message: String,
-                            action: Action) {
-        expectException(exceptionType, message, action, false)
-    }
-
-    fun <E> expectExceptionCause(exceptionType: Class<E>,
-                                 message: String,
-                                 action: Action) {
-        expectException(exceptionType, message, action, true)
-    }
-
-    private fun <E> expectException(exceptionType: Class<E>,
-                                    message: String,
-                                    action: Action,
-                                    checkCause: Boolean) {
-        try {
-            action.invoke()
-        } catch (e: Exception) {
-            val toCheck = if (checkCause) e.cause else e
-
-            if (toCheck != null && exceptionType == toCheck.javaClass) {
-                assertEquals("The exception did not have the right message",
-                        message,
-                        toCheck.message
-                )
-                return
-            }
+        if (toCheck != null && exceptionType == toCheck.javaClass) {
+            assertEquals("The exception did not have the right message",
+                    message,
+                    toCheck.message
+            )
+            return
+        } else {
+            fail("Expected exception was not caught: $exceptionType, another one was caught instead $toCheck")
         }
-
-        fail("Expected exception was not caught: $exceptionType")
     }
 
+    fail("Expected exception was not caught: $exceptionType")
 }
+
+fun <T> assertEqualsWithContext(t1: T,
+                                t2: T,
+                                description: String,
+                                context: String? = null) =
+        assertEquals(withContext(description, context), t1, t2)
+
+fun <T> assertNullWithContext(value: T?,
+                              description: String,
+                              context: String? = null) =
+        assertNull(withContext(description, context), value)
+
+fun <T> assertNotNullWithContext(value: T?,
+                                 description: String,
+                                 context: String? = null) =
+        assertNotNull(withContext(description, context), value)
+
+fun failWithContext(description: String,
+                    context: String? = null) {
+    fail(withContext(description, context))
+}
+
+fun withContext(description: String,
+                context: String? = null) =
+        if (context == null) description
+        else "$context => $description"
+
+
+inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>) =
+        T::class.constructors
+                .first()
+                .parameters
+                .mapIndexed { index, param -> Pair(param, args[index]) }
+                .toMap()
+
+inline fun <reified T : Annotation> getAnnotation(args: List<Any?>) =
+        if (args.isNullOrEmpty()) T::class.createInstance()
+        else T::class.constructors.first().callBy(getAnnotationParams<T>(args))

@@ -27,6 +27,6 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.OptionalBoolean.
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Refresh(val freshOnly: Boolean = false,
                          val durationInMillis: Long = -1L,
-                         val connectivityTimeoutInMillis: Long = 0L,
+                         val connectivityTimeoutInMillis: Long = -1L,
                          val mergeOnNextOnError: OptionalBoolean = DEFAULT)
 
