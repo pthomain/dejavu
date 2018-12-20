@@ -72,16 +72,4 @@ fun failWithContext(description: String,
 fun withContext(description: String,
                 context: String? = null) =
         if (context == null) description
-        else "$context => $description"
-
-
-inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>) =
-        T::class.constructors
-                .first()
-                .parameters
-                .mapIndexed { index, param -> Pair(param, args[index]) }
-                .toMap()
-
-inline fun <reified T : Annotation> getAnnotation(args: List<Any?>) =
-        if (args.isNullOrEmpty()) T::class.createInstance()
-        else T::class.constructors.first().callBy(getAnnotationParams<T>(args))
+        else "$context\n=> $description"

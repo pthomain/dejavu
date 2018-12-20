@@ -129,7 +129,7 @@ class AnnotationProcessorUnitTest {
                                 true,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -154,7 +154,7 @@ class AnnotationProcessorUnitTest {
                                 true,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -179,7 +179,7 @@ class AnnotationProcessorUnitTest {
                                 true,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -196,11 +196,11 @@ class AnnotationProcessorUnitTest {
                 )),
                 cacheInstruction(
                         CacheInstruction.Operation.Expiring.Refresh(
-                                -1L,
-                                -1L,
+                                defaultCacheDuration,
+                                defaultNetworkTimeOut,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -218,10 +218,10 @@ class AnnotationProcessorUnitTest {
                 cacheInstruction(
                         CacheInstruction.Operation.Expiring.Refresh(
                                 4567L,
-                                -1L,
+                                defaultNetworkTimeOut,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -242,7 +242,7 @@ class AnnotationProcessorUnitTest {
                                 5678L,
                                 true,
                                 true,
-                                true
+                                false
                         )
                 )
         )
@@ -339,7 +339,7 @@ class AnnotationProcessorUnitTest {
     @Test
     fun testProcessClearAllOlderEntries() {
         testProcessAnnotation(
-                getAnnotation<ClearAll>(listOf()),
+                getAnnotation<ClearAll>(listOf(true)),
                 cacheInstruction(
                         CacheInstruction.Operation.Clear(
                                 null,

@@ -6,6 +6,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import kotlin.reflect.full.createInstance
 
 fun assertInstruction(expectedInstruction: CacheInstruction,
                       actualInstruction: CacheInstruction?,
@@ -14,6 +15,12 @@ fun assertInstruction(expectedInstruction: CacheInstruction,
             expectedInstruction.responseClass,
             actualInstruction?.responseClass,
             "Instruction response class didn't match",
+            context
+    )
+
+    assertInstruction(
+            expectedInstruction.operation,
+            actualInstruction,
             context
     )
 }
@@ -140,3 +147,14 @@ private fun assertClear(expectedOperation: Clear,
 
 fun cacheInstruction(operation: CacheInstruction.Operation) =
         CacheInstruction(TestResponse::class.java, operation)
+
+inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>) =
+        T::class.constructors
+                .first()
+                .parameters
+                .mapIndexed { index, param -> Pair(param, args[index]) }
+                .toMap()
+
+inline fun <reified T : Annotation> getAnnotation(args: List<Any?>) =
+        if (args.isNullOrEmpty()) T::class.createInstance()
+        else T::class.constructors.first().callBy(getAnnotationParams<T>(args))
