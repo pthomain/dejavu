@@ -21,13 +21,25 @@
 
 package uk.co.glass_software.android.dejavu.test.network.retrofit
 
+import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
+import retrofit2.Call
 import retrofit2.http.GET
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 
 interface TestClient {
 
     @GET("/")
-    fun get(): Observable<TestResponse>
+    fun observable(): Observable<TestResponse>
+
+    @GET("/")
+    fun single(): Single<TestResponse>
+
+    @GET("/")
+    fun completable(): Completable
+
+    @GET("/")
+    fun call(): Call<TestResponse>
 
 }

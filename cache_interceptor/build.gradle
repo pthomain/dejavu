@@ -180,7 +180,6 @@ dependencies {
 
     testImplementation appDependencies.androidXroom
     testImplementation appDependencies.reactiveNetwork
-
 }
 
 repositories {

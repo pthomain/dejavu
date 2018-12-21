@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
+import io.reactivex.Completable
 import io.reactivex.Observable
 import retrofit2.Call
 import retrofit2.CallAdapter
@@ -70,8 +71,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             start
     )
 
-    private val errorObservable = Observable.error<Any>(exception)
-            .compose(errorInterceptor::apply)
+    private val errorObservable = errorInterceptor.apply(Observable.error<Any>(exception))
             .doOnNext {
                 it.metadata = it.metadata.copy(
                         callDuration = CacheMetadata.Duration(
@@ -90,7 +90,11 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             when (rxType) {
                 OBSERVABLE -> errorObservable
                 SINGLE -> errorObservable.firstOrError()
-                COMPLETABLE -> errorObservable.ignoreElements()
+                COMPLETABLE -> errorObservable.flatMapCompletable {
+                    if (it is CacheMetadata.Holder<*> && it.metadata.exception != null) {
+                        Completable.error(it.metadata.exception)
+                    } else Completable.complete()
+                }
             }!!
 
     class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,

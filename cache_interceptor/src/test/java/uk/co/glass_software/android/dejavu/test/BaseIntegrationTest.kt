@@ -32,43 +32,28 @@ import retrofit2.Retrofit
 import uk.co.glass_software.android.dejavu.BuildConfig
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
+import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.test.network.MockClient
+import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import java.io.IOException
-import javax.inject.Inject
-
-private const val folder = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE
 
 @RunWith(RobolectricTestRunner::class)
-@Config(
-//        manifest = "build/intermediates/manifests/aapt/$folder/AndroidManifest.xml",
-//        resourceDir = "build/intermediates/res/merged/$folder",
-//        assetDir = "build/intermediates/assets/$folder",
-        packageName = BuildConfig.APPLICATION_ID
-)
-abstract class BaseIntegrationTest {
+@Config(packageName = BuildConfig.APPLICATION_ID)
+internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCacheComponent) -> T) {
 
-    @Inject
-    lateinit var okHttpClient: OkHttpClient
-
-    @Inject
-    lateinit var retrofit: Retrofit
-
-    @Inject
-    lateinit var testClient: TestClient
-
-    @Inject
-    lateinit var mockClient: MockClient
-
-    @Inject
-    lateinit var assetHelper: AssetHelper
+    protected val okHttpClient: OkHttpClient
+    protected val retrofit: Retrofit
+    protected val mockClient: MockClient
+    protected val testClient: TestClient
+    protected val assetHelper: AssetHelper
 
     private val configuration = CacheConfiguration(
             ApplicationProvider.getApplicationContext(),
@@ -86,18 +71,39 @@ abstract class BaseIntegrationTest {
             false
     )
 
-    private val cacheComponent: CacheComponent<Glitch> = DaggerIntegrationCacheComponent.builder()
+    protected val cacheComponent: IntegrationCacheComponent = DaggerIntegrationCacheComponent.builder()
             .integrationCacheModule(IntegrationCacheModule(configuration))
             .build()
 
     private val dejaVu = DejaVu(cacheComponent)
 
+    protected val target: T
+
     init {
-        DaggerIntegrationTestComponent.builder()
+        val testComponent = DaggerIntegrationTestComponent.builder()
                 .integrationTestModule(IntegrationTestModule(dejaVu))
                 .build()
-                .inject(this)
+
+        okHttpClient = testComponent.okHttpClient()
+        retrofit = testComponent.retrofit()
+        mockClient = testComponent.mockClient()
+        testClient = testComponent.testClient()
+        assetHelper = testComponent.assetHelper()
+
+
+        target = targetExtractor(cacheComponent)
     }
+
+    protected fun instructionToken(operation: CacheInstruction.Operation) = CacheToken.fromInstruction(
+            CacheInstruction(
+                    TestResponse::class.java,
+                    operation
+            ),
+            true,
+            true,
+            "/",
+            null
+    )
 
     protected fun enqueueResponse(response: String,
                                   httpCode: Int) {

@@ -22,14 +22,20 @@
 package uk.co.glass_software.android.dejavu.injection.integration.component
 
 import dagger.Component
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
-import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
+import uk.co.glass_software.android.dejavu.test.AssetHelper
+import uk.co.glass_software.android.dejavu.test.network.MockClient
+import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [IntegrationTestModule::class])
 internal interface IntegrationTestComponent {
-
-    fun inject(target: BaseIntegrationTest)
-
+    fun okHttpClient(): OkHttpClient
+    fun retrofit(): Retrofit
+    fun mockClient(): MockClient
+    fun testClient(): TestClient
+    fun assetHelper(): AssetHelper
 }

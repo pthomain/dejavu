@@ -48,6 +48,7 @@ import java.util.*
 internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
+                                  private val hasher: Hasher,
                                   private val compressData: Boolean,
                                   private val encryptData: Boolean,
                                   private val durationInMillis: Long,
@@ -57,11 +58,9 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
               E : NetworkErrorProvider {
 
     private val dateFormat: DateFormat
-    private val hasher: Hasher
 
     init {
         dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
-        hasher = CacheToken.getHasher(logger)
     }
 
     fun clearCache(typeToClear: Class<*>?,

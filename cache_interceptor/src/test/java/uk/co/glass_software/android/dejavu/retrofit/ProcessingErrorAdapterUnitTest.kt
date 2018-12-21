@@ -1,10 +1,12 @@
 package uk.co.glass_software.android.dejavu.retrofit
 
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.observers.TestObserver
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentCaptor
@@ -57,7 +59,7 @@ class ProcessingErrorAdapterUnitTest {
         mockMetadata = CacheMetadata(
                 mock(),
                 mock(),
-                mock()
+                CacheMetadata.Duration(0, 0, 0)
         )
 
         mockResponseWrapper = ResponseWrapper(
@@ -68,9 +70,6 @@ class ProcessingErrorAdapterUnitTest {
 
         upstreamCaptor = ArgumentCaptor.forClass(Observable::class.java) as ArgumentCaptor<Observable<Any>>
         metadataCaptor = ArgumentCaptor.forClass(CacheMetadata::class.java) as ArgumentCaptor<CacheMetadata<Glitch>>
-
-        whenever(mockErrorInterceptor.apply(any())).thenReturn(Observable.just(mockResponseWrapper))
-        whenever(mockResponseWrapper.metadata).thenReturn(mockMetadata)
 
         targetFactory = ProcessingErrorAdapter.Factory(
                 mockErrorInterceptorFactory,
@@ -112,45 +111,22 @@ class ProcessingErrorAdapterUnitTest {
         testAdapt(SINGLE)
     }
 
-    @Test
-    fun testAdaptCompletable() {
-        testAdapt(COMPLETABLE)
-    }
-
     private fun testAdapt(rxType: AnnotationProcessor.RxType) {
-        val target = createTarget(rxType)
-        val errorSubscriber = TestObserver<Any>()
+        whenever(mockErrorInterceptor.apply(any())).thenReturn(Observable.just(mockResponseWrapper))
+        whenever(mockResponseInterceptor.apply(any())).thenReturn(Observable.just(mockResponseWrapper))
 
-        val adapted = target.adapt(mockCall)
+        val adapted = createTarget(rxType).adapt(mockCall)
 
-        when(rxType){
-            OBSERVABLE -> (adapted as Observable<Any>).subscribe(errorSubscriber)
-            SINGLE -> (adapted as Single<Any>).subscribe(errorSubscriber)
-            COMPLETABLE -> (adapted as Completable).subscribe(errorSubscriber)
+        val wrapper = when (rxType) {
+            OBSERVABLE -> (adapted as Observable<Any>).blockingFirst()
+            SINGLE -> (adapted as Single<Any>).blockingGet()
+            COMPLETABLE -> (adapted as Completable).blockingAwait()
         }
 
         assertEqualsWithContext(
-                0,
-                mockMetadata.callDuration.disk,
-                "Call duration for disk was wrong"
-        )
-
-        assertEqualsWithContext(
-                0,
-                mockMetadata.callDuration.network,
-                "Call duration for network was wrong"
-        )
-
-        assertEqualsWithContext(
-                4321L - 1234L,
-                mockMetadata.callDuration.total,
-                "Call duration for disk was wrong"
-        )
-
-        assertEqualsWithContext(
-                1,
-                errorSubscriber.errorCount(),
-                "Observable should emit one exception"
+                mockResponseWrapper,
+                wrapper,
+                "The adapted call return the wrong response wrapper"
         )
     }
 

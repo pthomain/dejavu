@@ -29,11 +29,14 @@ import io.reactivex.subjects.PublishSubject
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorInterceptor
@@ -46,8 +49,6 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import java.util.*
-import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback
 import javax.inject.Singleton
 
 @Module
@@ -110,12 +111,19 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
+    override fun provideHasher() =
+            CacheToken.getHasher(configuration.logger)
+
+    @Provides
+    @Singleton
     override fun provideDatabaseManager(database: SupportSQLiteDatabase,
+                                        hasher: Hasher,
                                         serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
                     database,
                     serialisationManager,
                     configuration.logger,
+                    hasher,
                     configuration.compress,
                     configuration.encrypt,
                     configuration.cacheDurationInMillis,
@@ -186,7 +194,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideDejaVuInterceptorFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
-                                                  cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
+                                                 cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                                   responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },

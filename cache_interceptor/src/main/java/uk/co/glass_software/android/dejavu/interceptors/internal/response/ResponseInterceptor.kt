@@ -70,7 +70,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
 
     private val responseFilter = Predicate<ResponseWrapper<E>> {
         when {
-            isCompletable -> false
+            isCompletable -> true
             it.metadata.cacheToken.status == EMPTY -> true
             isSingle -> it.response != RxIgnore && isValidSingleResponse(it)
             else -> it.response != RxIgnore && isValidObservableResponse(it)
@@ -149,9 +149,12 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             if (it is Throwable) {
                 logger.d(this, "Returning error: $it")
                 Observable.error<Any>(it)
+            } else if (isCompletable && metadata.exception != null) {
+                logger.d(this, "Returning exception for Completable: $metadata")
+                Observable.error<Any>(metadata.exception)
             } else {
                 logger.d(this, "Returning response: $metadata")
-                Observable.just(response)
+                Observable.just<Any>(response)
             }
         }
     }
@@ -196,11 +199,8 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                 " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
                 " that do not support cache metadata."
 
-        return if (operation is Expiring && mergeOnNextOnError) {
+        return if (operation is Expiring && mergeOnNextOnError)
             CacheException(CacheException.Type.METADATA, message)
-        } else {
-            logger.d(this, message)
-            null
-        }
+        else null
     }
 }
