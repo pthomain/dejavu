@@ -32,8 +32,6 @@ internal interface CacheModule<E>
         where E : Exception,
               E : NetworkErrorProvider {
 
-    val dateFactory: (Long?) -> Date
-
     fun provideContext(): Context
 
     fun provideConfiguration(): CacheConfiguration<E>
@@ -43,6 +41,8 @@ internal interface CacheModule<E>
     fun provideStoreEntryFactory(gsonSerialiser: GsonSerialiser): StoreEntryFactory
 
     fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory): EncryptionManager?
+
+    fun provideDateFactory(): Function1<Long?, Date>
 
     fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<E>
 
@@ -57,21 +57,24 @@ internal interface CacheModule<E>
 
     fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                hasher: Hasher,
+                               dateFactory: Function1<Long?, Date>,
                                serialisationManager: SerialisationManager<E>): DatabaseManager<E>
 
     fun provideCacheManager(databaseManager: DatabaseManager<E>,
+                            dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 
-    fun provideErrorInterceptorFactory(): Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>
+    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>>
 
     fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
 
     fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>
 
-    fun provideDejaVuInterceptorFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
-                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
-                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>
+    fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+                                        errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                        cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
+                                        responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>
 
     fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory
 
@@ -80,7 +83,8 @@ internal interface CacheModule<E>
                                            processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                            annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
 
-    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                             dateFactory: Function1<Long?, Date>,
                                              responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): ProcessingErrorAdapter.Factory<E>
 
     fun provideCacheMetadataSubject(): PublishSubject<CacheMetadata<E>>
@@ -107,6 +111,10 @@ internal interface CacheModule<E>
             }
         }
         return values
+    }
+
+    interface Function1<T1, R> {
+        fun get(t1: T1): R
     }
 
     interface Function2<T1, T2, R> {

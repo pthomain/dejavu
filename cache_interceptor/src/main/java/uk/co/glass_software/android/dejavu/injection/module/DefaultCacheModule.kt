@@ -28,11 +28,19 @@ import dagger.Provides
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import java.util.*
 import javax.inject.Singleton
 
 @Module
 internal class DefaultCacheModule(configuration: CacheConfiguration<Glitch>)
     : BaseCacheModule<Glitch>(configuration) {
+
+    @Provides
+    @Singleton
+    override fun provideDateFactory() = object : CacheModule.Function1<Long?, Date> {
+        override fun get(t1: Long?) =
+                t1?.let { Date(it) } ?: Date()
+    }
 
     @Provides
     @Singleton

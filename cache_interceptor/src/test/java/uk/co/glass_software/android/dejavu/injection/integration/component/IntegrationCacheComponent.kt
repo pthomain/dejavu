@@ -44,11 +44,14 @@ import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import java.util.*
 import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [IntegrationCacheModule::class])
 internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
+
+    fun dateFactory(): CacheModule.Function1<Long?, Date>
 
     fun gsonSerialiser(): GsonSerialiser
 
@@ -70,7 +73,7 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun cacheManager(): CacheManager<Glitch>
 
-    fun errorInterceptorFactory(): CacheModule.Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<Glitch>>
+    fun errorInterceptorFactory(): CacheModule.Function2<CacheToken, Long, ErrorInterceptor<Glitch>>
 
     fun cacheInterceptorFactory(): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>
 

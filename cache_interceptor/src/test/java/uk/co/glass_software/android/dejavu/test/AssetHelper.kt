@@ -23,70 +23,42 @@ package uk.co.glass_software.android.dejavu.test
 
 import com.google.gson.Gson
 import io.reactivex.Observable
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
-                  private val gson: Gson,
-                  private val logger: Logger) {
+                  private val gson: Gson) {
 
-    fun <E, R> getStubbedResponse(fileName: String,
-                                  responseClass: Class<R>)
+    fun <E, R> observeStubbedResponse(fileName: String,
+                                      responseClass: Class<R>)
             : Observable<R> where E : Exception,
                                   E : NetworkErrorProvider,
-                                  R : CacheMetadata.Holder<E> {
-        return observeFile(fileName).map { json -> gson.fromJson(json, responseClass) }
-    }
+                                  R : CacheMetadata.Holder<E> =
+            observeFile(fileName)
+                    .map { gson.fromJson(it, responseClass) }
 
-    internal fun observeFile(fileName: String): Observable<String> {
-        var inputStream: InputStream? = null
-
-        try {
-            try {
-                val file = File(assetsFolder + fileName)
-                inputStream = FileInputStream(file)
-                return Observable.just(fileToString(inputStream))
-            } finally {
-                inputStream?.close()
+    fun observeFile(fileName: String): Observable<String> =
+            File(assetsFolder + fileName).let {
+                FileInputStream(it).useAndLogError {
+                    Observable.just(fileToString(it))
+                }
             }
-        } catch (e: IOException) {
-            val message = ("An error occurred while trying to read "
-                    + "file: "
-                    + fileName)
-            logger.e(
-                    this,
-                    e,
-                    message
-            )
-            return Observable.error(Glitch(
-                    e,
-                    Glitch.NON_HTTP_STATUS,
-                    ErrorCode.UNKNOWN,
-                    message
-            ))
-        }
 
-    }
-
-    companion object {
-
-        @Throws(IOException::class)
-        internal fun fileToString(inputStream: InputStream) =
-                BufferedReader(InputStreamReader(inputStream, "UTF-8")).use { reader ->
-                    val builder = StringBuilder()
-                    var line: String?
-                    do {
-                        line = reader.readLine()
+    @Throws(IOException::class)
+    private fun fileToString(inputStream: InputStream) =
+            BufferedReader(InputStreamReader(inputStream, "UTF-8")).useAndLogError { reader ->
+                val builder = StringBuilder()
+                var line: String?
+                do {
+                    line = reader.readLine()
+                    if (line != null) {
                         builder.append(line)
                         builder.append('\n')
-                    } while (line != null)
-
-                    builder.toString()
-                }
-    }
+                    }
+                } while (line != null)
+                builder.toString()
+            }
 
 }

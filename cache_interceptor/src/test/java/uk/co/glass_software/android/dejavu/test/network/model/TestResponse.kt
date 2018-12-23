@@ -21,9 +21,12 @@
 
 package uk.co.glass_software.android.dejavu.test.network.model
 
-import uk.co.glass_software.android.dejavu.response.Cacheable
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.response.CacheMetadata
 
-class TestResponse : Cacheable() {
+class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
+
+    override lateinit var metadata: CacheMetadata<Glitch>
 
     companion object {
         var STUB_FILE = "api_stub_test.json"

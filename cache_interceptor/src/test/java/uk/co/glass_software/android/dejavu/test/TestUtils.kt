@@ -23,7 +23,7 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import junit.framework.TestCase.*
-import kotlin.reflect.full.createInstance
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
@@ -47,6 +47,16 @@ fun <E> expectException(exceptionType: Class<E>,
 
     fail("Expected exception was not caught: $exceptionType")
 }
+
+fun assertTrueWithContext(assumption: Boolean,
+                          description: String,
+                          context: String? = null) =
+        assertTrue(withContext(description, context), assumption)
+
+fun assertFalseWithContext(assumption: Boolean,
+                           description: String,
+                           context: String? = null) =
+        assertFalse(withContext(description, context), assumption)
 
 fun <T> assertEqualsWithContext(t1: T,
                                 t2: T,
@@ -73,3 +83,57 @@ fun withContext(description: String,
                 context: String? = null) =
         if (context == null) description
         else "$context\n=> $description"
+
+fun assertGlitchWithContext(expectedGlitch: Glitch,
+                            actualGlitch: Any?,
+                            context: String? = null) {
+    assertTrueWithContext(
+            actualGlitch is Glitch,
+            withContext("Value was not a Glitch", context)
+    )
+
+    actualGlitch as Glitch
+
+    val expectedCause = expectedGlitch.cause
+    val actualCause = actualGlitch.cause
+
+    if (expectedCause == null) {
+        assertTrueWithContext(
+                actualCause == null,
+                "Glitch cause should be null"
+        )
+    } else {
+        assertFalseWithContext(
+                actualCause == null,
+                "Glitch cause shouldn't be null"
+        )
+
+        assertTrueWithContext(
+                expectedCause.javaClass == actualCause!!.javaClass,
+                "Glitch cause type was different"
+        )
+
+        assertTrueWithContext(
+                expectedCause.message == actualCause.message,
+                "Glitch cause message was different"
+        )
+    }
+
+    assertEqualsWithContext(
+            expectedGlitch.httpStatus,
+            actualGlitch.httpStatus,
+            withContext("Glitch httpStatus didn't match", context)
+    )
+
+    assertEqualsWithContext(
+            expectedGlitch.errorCode,
+            actualGlitch.errorCode,
+            withContext("Glitch errorCode didn't match", context)
+    )
+
+    assertEqualsWithContext(
+            expectedGlitch.description,
+            actualGlitch.description,
+            withContext("Glitch description didn't match", context)
+    )
+}

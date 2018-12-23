@@ -32,7 +32,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors.internal.cache
 //    private var spyCacheManager: CacheManager<*>? = null
 //
 //    private val response: TestResponse
-//        get() = assetHelper.getStubbedResponse(TestResponse.STUB_FILE, TestResponse::class.java)
+//        get() = assetHelper.observeStubbedResponse(TestResponse.STUB_FILE, TestResponse::class.java)
 //                .doOnNext { response ->
 //                    response.metadata = ResponseMetadata.create(getToken(false), null
 //                    )

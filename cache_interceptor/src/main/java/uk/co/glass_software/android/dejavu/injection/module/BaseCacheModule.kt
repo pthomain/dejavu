@@ -95,8 +95,6 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                     configuration.gson
             )
 
-    override val dateFactory = { timeStamp: Long? -> timeStamp?.let { Date(it) } ?: Date() }
-
     @Provides
     @Singleton
     override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback =
@@ -118,6 +116,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Singleton
     override fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                         hasher: Hasher,
+                                        dateFactory: Function1<Long?, Date>,
                                         serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
                     database,
@@ -127,32 +126,33 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                     configuration.compress,
                     configuration.encrypt,
                     configuration.cacheDurationInMillis,
-                    dateFactory,
+                    { dateFactory.get(it) },
                     this::mapToContentValues
             )
 
     @Provides
     @Singleton
     override fun provideCacheManager(databaseManager: DatabaseManager<E>,
+                                     dateFactory: Function1<Long?, Date>,
                                      emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
                     databaseManager,
                     emptyResponseFactory,
-                    dateFactory,
+                    { dateFactory.get(it) },
                     configuration.cacheDurationInMillis,
                     configuration.logger
             )
 
     @Provides
     @Singleton
-    override fun provideErrorInterceptorFactory(): Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>> =
-            object : Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>> {
-                override fun get(t1: CacheToken, t2: Long, t3: AnnotationProcessor.RxType) = ErrorInterceptor(
+    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>> =
+            object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
+                override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
                         configuration.errorFactory,
                         configuration.logger,
+                        { dateFactory.get(it) },
                         t1,
                         t2,
-                        t3,
                         configuration.requestTimeOutInSeconds
                 )
             }
@@ -193,11 +193,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDejaVuInterceptorFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
+    override fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+                                                 errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                                  cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
-                                                  responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
+                                                 responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
-                    { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },
+                    { dateFactory.get(it) },
+                    { token, start -> errorInterceptorFactory.get(token, start) },
                     { token, start -> cacheInterceptorFactory.get(token, start) },
                     { token, isSingle, isCompletable, start -> responseInterceptor.get(token, isSingle, isCompletable, start) },
                     configuration
@@ -224,12 +226,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<CacheToken, Long, AnnotationProcessor.RxType, ErrorInterceptor<E>>,
+    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                                      dateFactory: Function1<Long?, Date>,
                                                       responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
-                    { token, start, rxType -> errorInterceptorFactory.get(token, start, rxType) },
+                    { token, start -> errorInterceptorFactory.get(token, start) },
                     { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) },
-                    dateFactory
+                    { dateFactory.get(it) }
             )
 
     @Provides

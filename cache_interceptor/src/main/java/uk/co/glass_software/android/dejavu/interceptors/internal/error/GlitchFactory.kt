@@ -73,8 +73,7 @@ class GlitchFactory : ErrorFactory<Glitch> {
             Glitch.from(throwable) ?: Glitch(
                     throwable,
                     NON_HTTP_STATUS,
-                    UNKNOWN,
-                    "${throwable.javaClass.name}: ${throwable.message}"
+                    UNKNOWN
             )
 
     private fun parseErrorCode(httpException: HttpException) =

@@ -24,11 +24,11 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.error
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode.UNKNOWN
 
-data class Glitch constructor(private val throwable: Throwable,
+data class Glitch constructor(override val cause: Throwable,
                               val httpStatus: Int = NON_HTTP_STATUS,
                               val errorCode: ErrorCode = UNKNOWN,
-                              val description: String? = null)
-    : Exception(throwable),
+                              val description: String? = "${cause.javaClass.name}: ${cause.message}")
+    : Exception(cause),
         NetworkErrorProvider {
 
     override fun isNetworkError() = errorCode === ErrorCode.NETWORK
@@ -37,4 +37,5 @@ data class Glitch constructor(private val throwable: Throwable,
         const val NON_HTTP_STATUS = -1
         fun from(throwable: Throwable) = throwable as? Glitch
     }
+
 }

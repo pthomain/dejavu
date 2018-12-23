@@ -39,7 +39,7 @@ package uk.co.glass_software.android.dejavu.old.interceptors.internal.cache
 //                5
 //        )
 //
-//        stubbedResponse = assetHelper.getStubbedResponse<Glitch, TestResponse>(TestResponse.STUB_FILE, TestResponse::class.java).blockingFirst()
+//        stubbedResponse = assetHelper.observeStubbedResponse<Glitch, TestResponse>(TestResponse.STUB_FILE, TestResponse::class.java).blockingFirst()
 //        stubbedResponse!!.metadata = ResponseMetadata.create(requestToken, null)
 //
 //        mockUpstream = mock<Observable<*>>(Observable<*>::class.java)

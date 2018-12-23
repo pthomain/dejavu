@@ -43,7 +43,7 @@ package uk.co.glass_software.android.dejavu.old.retrofit
 //
 //    @Test
 //    @Throws(Exception::class)
-//    fun testAdapt() {
+//    fun testApply() {
 //        val mockCall = mock(Call<*>::class.java)
 //        val url = HttpUrl.parse("http://test.com")
 //        val mockBody = RequestBody.create(MediaType.parse("text/plain"), "uniqueParameters")

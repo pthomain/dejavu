@@ -28,12 +28,22 @@ import dagger.Module
 import dagger.Provides
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.injection.module.BaseCacheModule
+import uk.co.glass_software.android.dejavu.injection.module.CacheModule
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import java.util.*
 import javax.inject.Singleton
 
 @Module
 internal class IntegrationCacheModule(configuration: CacheConfiguration<Glitch>)
     : BaseCacheModule<Glitch>(configuration) {
+
+    val NOW = Date(1234L)
+
+    @Provides
+    @Singleton
+    override fun provideDateFactory() = object : CacheModule.Function1<Long?, Date> {
+        override fun get(t1: Long?) = NOW
+    }
 
     @Provides
     @Singleton

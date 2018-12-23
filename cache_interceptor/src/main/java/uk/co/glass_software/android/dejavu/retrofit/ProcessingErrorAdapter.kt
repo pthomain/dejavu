@@ -47,7 +47,7 @@ import java.util.*
  * @param exception the caught exception to be processed
  */
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
-                                                             errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
+                                                             errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                                              responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                              private val dateFactory: (Long?) -> Date,
                                                              cacheToken: CacheToken,
@@ -60,8 +60,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
 
     private val errorInterceptor = errorInterceptorFactory(
             cacheToken,
-            start,
-            rxType
+            start
     )
 
     private val responseInterceptor = responseInterceptorFactory(
@@ -97,7 +96,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                 }
             }!!
 
-    class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
+    class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                      private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                      private val dateFactory: (Long?) -> Date)
             where E : Exception,

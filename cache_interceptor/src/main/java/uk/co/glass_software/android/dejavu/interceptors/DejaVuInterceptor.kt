@@ -36,13 +36,15 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorInte
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
+import java.util.*
 
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                                                url: String,
                                                uniqueParameters: String?,
                                                configuration: CacheConfiguration<E>,
+                                               private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
-                                               private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
+                                               private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                                private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
     : DejaVuTransformer
         where E : Exception,
@@ -69,13 +71,14 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
 
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: AnnotationProcessor.RxType) =
-            System.currentTimeMillis().let { start ->
-                upstream.compose(errorInterceptorFactory(instructionToken, start, rxType))
+            dateFactory(null).time.let { start ->
+                upstream.compose(errorInterceptorFactory(instructionToken, start))
                         .compose(cacheInterceptorFactory(instructionToken, start))
                         .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
             }!!
 
-    class Factory<E> internal constructor(private val errorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<E>,
+    class Factory<E> internal constructor(private val dateFactory: (Long?) -> Date,
+                                          private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                           private val configuration: CacheConfiguration<E>)
@@ -90,6 +93,7 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                         url,
                         uniqueParameters,
                         configuration,
+                        dateFactory,
                         responseInterceptorFactory,
                         errorInterceptorFactory,
                         cacheInterceptorFactory

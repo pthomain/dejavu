@@ -29,7 +29,7 @@ import java.util.*
 class ProcessingErrorAdapterUnitTest {
 
     private lateinit var mockDefaultAdapter: CallAdapter<Any, Any>
-    private lateinit var mockErrorInterceptorFactory: (CacheToken, Long, AnnotationProcessor.RxType) -> ErrorInterceptor<Glitch>
+    private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<Glitch>
     private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<Glitch>
     private lateinit var mockCacheToken: CacheToken
     private lateinit var mockException: CacheException
@@ -81,8 +81,7 @@ class ProcessingErrorAdapterUnitTest {
     private fun createTarget(mockRxType: AnnotationProcessor.RxType): ProcessingErrorAdapter<Glitch> {
         whenever(mockErrorInterceptorFactory.invoke(
                 eq(mockCacheToken),
-                eq(mockStart),
-                eq(mockRxType)
+                eq(mockStart)
         )).thenReturn(mockErrorInterceptor)
 
         whenever(mockResponseInterceptorFactory.invoke(
