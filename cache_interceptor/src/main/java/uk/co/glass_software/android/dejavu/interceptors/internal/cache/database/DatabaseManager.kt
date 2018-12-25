@@ -69,7 +69,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         val typeClause = typeToClear?.let { "${CLASS.columnName} = ?" }
 
         val args = arrayListOf<String>().apply {
-            if (clearOlderEntriesOnly) add(System.currentTimeMillis().toString())
+            if (clearOlderEntriesOnly) add(dateFactory(null).time.toString())
             if (typeToClear != null) add(typeToClear.name)
         }
 
@@ -184,7 +184,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             ) { clearCache(null, false) }
                     ?.also {
                         val callDuration = CacheMetadata.Duration(
-                                (System.currentTimeMillis() - start).toInt(),
+                                (dateFactory(null).time - start).toInt(),
                                 0,
                                 0
                         )
@@ -232,7 +232,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         )?.also {
             val hash = instructionToken.getKey(hasher)
             val values = HashMap<String, Any>()
-            val now = System.currentTimeMillis()
+            val now = dateFactory(null).time
 
             values[TOKEN.columnName] = hash
             values[DATE.columnName] = now

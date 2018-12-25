@@ -44,7 +44,16 @@ internal interface CacheModule<E>
 
     fun provideDateFactory(): Function1<Long?, Date>
 
-    fun provideSerialisationManager(encryptionManager: EncryptionManager?): SerialisationManager<E>
+    fun provideCompresser(): Function1<ByteArray, ByteArray>
+
+    fun provideUncompresser(): Function3<ByteArray, Int, Int, ByteArray>
+
+    fun provideByteToStringConverter(): Function1<ByteArray, String>
+
+    fun provideSerialisationManager(encryptionManager: EncryptionManager?,
+                                    byteToStringConverter: Function1<ByteArray, String>,
+                                    compresser: Function1<ByteArray, ByteArray>,
+                                    uncompresser: Function3<ByteArray, Int, Int, ByteArray>): SerialisationManager<E>
 
     fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback
 
@@ -68,7 +77,8 @@ internal interface CacheModule<E>
 
     fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
 
-    fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<E>>,
+    fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
+                                   metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>
 
     fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
@@ -78,7 +88,8 @@ internal interface CacheModule<E>
 
     fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory
 
-    fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory,
+    fun provideRetrofitCacheAdapterFactory(dateFactory: Function1<Long?, Date>,
+                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
                                            dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                            processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                            annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>

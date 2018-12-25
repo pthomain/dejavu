@@ -77,8 +77,11 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         logger.d(this, "Checking for cached $simpleName")
         val cachedResponse = databaseManager.getCachedResponse(instructionToken, start)
 
-        val diskDuration = cachedResponse?.metadata?.callDuration?.disk
-                ?: (System.currentTimeMillis() - start).toInt()
+        val diskDuration = cachedResponse
+                ?.metadata
+                ?.callDuration
+                ?.disk
+                ?: (dateFactory(null).time - start).toInt()
 
         return if (cacheOperation is Offline) {
             if (cachedResponse == null)

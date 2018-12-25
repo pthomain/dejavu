@@ -99,12 +99,10 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideAssetHelper(logger: Logger,
-                           gson: Gson) =
+    fun provideAssetHelper(gson: Gson) =
             AssetHelper(
                     ASSETS_FOLDER,
-                    gson,
-                    logger
+                    gson
             )
 
 }

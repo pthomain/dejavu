@@ -37,6 +37,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
+import java.util.*
 
 /**
  * Intercepts the response wrapper returned from the error and cache interceptors and returns the actual
@@ -47,6 +48,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
  * filterFinal/freshOnly/allowNonFinalForSingle directives set for this call globally or specifically.
  *
  * @param logger the logger
+ * @param dateFactory provides a date for a given timestamp or the current date with no argument
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  * @param instructionToken the instruction cache token
@@ -56,6 +58,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
  * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An error is emitted otherwise.
  */
 internal class ResponseInterceptor<E>(private val logger: Logger,
+                                      private val dateFactory: (Long?) -> Date,
                                       private val emptyResponseFactory: EmptyResponseFactory<E>,
                                       private val configuration: CacheConfiguration<E>,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
@@ -175,7 +178,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         } else {
             holder.metadata = metadata.copy(
                     callDuration = metadata.callDuration.copy(
-                            total = (System.currentTimeMillis() - start).toInt()
+                            total = (dateFactory(null).time - start).toInt()
                     )
             )
             null

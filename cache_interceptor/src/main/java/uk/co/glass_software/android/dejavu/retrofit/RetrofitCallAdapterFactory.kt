@@ -39,16 +39,19 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.util.*
 
 /**
  * Implements the call adapter factory for Retrofit composing the calls with DejaVuInterceptor.
  *
  * @param rxJava2CallAdapterFactory the default RxJava call adapter factory
+ * @param dateFactory provides a date for a given timestamp or the current date with no argument
  * @param dejaVuFactory the DejaVuInterceptor factory, as returned by DejaVu
  * @param annotationProcessor the Retrofit annotation processor
  * @param logger the logger
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
+                                                         private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val annotationProcessor: AnnotationProcessor<E>,
                                                          private val processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
@@ -139,7 +142,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                                 "",
                                 null
                         ),
-                        System.currentTimeMillis(),
+                        dateFactory(null).time,
                         rxType,
                         cacheException
                 )

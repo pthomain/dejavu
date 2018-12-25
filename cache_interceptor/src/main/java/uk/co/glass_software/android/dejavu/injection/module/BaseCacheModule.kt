@@ -26,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import io.reactivex.subjects.PublishSubject
+import org.iq80.snappy.Snappy
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
@@ -88,10 +89,36 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideSerialisationManager(encryptionManager: EncryptionManager?) =
+    override fun provideCompresser() = object : Function1<ByteArray, ByteArray> {
+        override fun get(t1: ByteArray) =
+                Snappy.compress(t1)
+    }
+
+    @Provides
+    @Singleton
+    override fun provideUncompresser() = object : Function3<ByteArray, Int, Int, ByteArray> {
+        override fun get(t1: ByteArray, t2: Int, t3: Int) =
+                Snappy.uncompress(t1, t2, t3)
+    }
+
+    @Provides
+    @Singleton
+    override fun provideByteToStringConverter() = object : Function1<ByteArray, String> {
+        override fun get(t1: ByteArray) = String(t1)
+    }
+
+    @Provides
+    @Singleton
+    override fun provideSerialisationManager(encryptionManager: EncryptionManager?,
+                                             byteToStringConverter: Function1<ByteArray, String>,
+                                             compresser: Function1<ByteArray, ByteArray>,
+                                             uncompresser: Function3<ByteArray, Int, Int, ByteArray>) =
             SerialisationManager<E>(
                     configuration.logger,
+                    { byteToStringConverter.get(it) },
                     encryptionManager,
+                    { compresser.get(it) },
+                    { compressed, compressedOffset, compressedSize -> uncompresser.get(compressed, compressedOffset, compressedSize) },
                     configuration.gson
             )
 
@@ -172,7 +199,8 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideResponseInterceptor(metadataSubject: PublishSubject<CacheMetadata<E>>,
+    override fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
+                                            metadataSubject: PublishSubject<CacheMetadata<E>>,
                                             emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> =
             object : Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
@@ -180,6 +208,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                                  t3: Boolean,
                                  t4: Long) = ResponseInterceptor(
                         configuration.logger,
+                        { dateFactory.get(it) },
                         emptyResponseFactory,
                         configuration,
                         metadataSubject,
@@ -212,12 +241,14 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideRetrofitCacheAdapterFactory(defaultAdapterFactory: RxJava2CallAdapterFactory,
+    override fun provideRetrofitCacheAdapterFactory(dateFactory: Function1<Long?, Date>,
+                                                    defaultAdapterFactory: RxJava2CallAdapterFactory,
                                                     dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                                     processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                                     annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     defaultAdapterFactory,
+                    { dateFactory.get(it) },
                     dejaVuInterceptorFactory,
                     annotationProcessor,
                     processingErrorAdapterFactory,

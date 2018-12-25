@@ -137,3 +137,31 @@ fun assertGlitchWithContext(expectedGlitch: Glitch,
             withContext("Glitch description didn't match", context)
     )
 }
+
+fun assertArrayEqualsWithContext(expected: ByteArray?,
+                                 other: ByteArray?,
+                                 context: String? = null) {
+    when {
+        expected == null -> assertNullWithContext(
+                other,
+                "Byte array should be null",
+                context
+        )
+        other != null && other.size == expected.size -> {
+            other.forEachIndexed { index, byte ->
+                if (expected[index] != byte) {
+                    assertEqualsWithContext(
+                            expected[index],
+                            byte,
+                            "Byte didn't match at index $index",
+                            context
+                    )
+                }
+            }
+        }
+        else -> failWithContext(
+                "Byte array had the wrong size",
+                context
+        )
+    }
+}
