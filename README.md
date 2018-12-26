@@ -16,6 +16,8 @@ About v2.0
 
 Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. The documentation below relates to v1.0+ and is now mostly out-of-date. It will be updated to reflect the new features of 2.0 once the lib is out of alpha/beta.
 
+The library was renamed DéjaVu to avoid confusion with pre-existing similar libraries names RxCache.
+
 Retrofit support
 ----------------
 
