@@ -95,6 +95,10 @@ android {
             includeAndroidResources = true
         }
     }
+
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
 }
 
 sourceSets {
@@ -121,6 +125,7 @@ dependencies {
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex
     implementation appDependencies.androidXcore
+    implementation appDependencies.androidXsqlite
 
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
@@ -147,16 +152,34 @@ dependencies {
 
     api appDependencies.gson
 
-    compileOnly appDependencies.jUnit
+    compileOnly appDependencies.androidXtestCore
+    compileOnly appDependencies.androidXtestRunner
+    compileOnly appDependencies.androidXtestRules
+    compileOnly appDependencies.androidXjUnit
+
     compileOnly appDependencies.mockitoCore
     compileOnly appDependencies.robolectric
     compileOnly appDependencies.okHttpMock
 
-    testImplementation appDependencies.jUnit
+    testImplementation appDependencies.snappy
+    testImplementation appDependencies.requery
+    testImplementation appDependencies.androidXsqlite
+
+    testImplementation appDependencies.dagger
+    kaptTest appDependencies.daggerCompiler
+
+    testImplementation appDependencies.androidXtestCore
+    testImplementation appDependencies.androidXtestRunner
+    testImplementation appDependencies.androidXtestRules
+    testImplementation appDependencies.androidXjUnit
+
     testImplementation appDependencies.mockitoCore
     testImplementation appDependencies.robolectric
     testImplementation appDependencies.okHttpMock
+    testImplementation appDependencies.mockitoKotlin
 
+    testImplementation appDependencies.androidXroom
+    testImplementation appDependencies.reactiveNetwork
 }
 
 repositories {

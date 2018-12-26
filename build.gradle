@@ -22,7 +22,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlinVersion = '1.2.71'
+    ext.kotlinVersion = '1.3.11'
 
     repositories {
         google()
@@ -30,7 +30,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:3.3.0-beta04'
+        classpath 'com.android.tools.build:gradle:3.4.0-alpha09'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -70,27 +70,34 @@ ext {
     sharedPrefStoreVersion = '1.2.1'
 
     snappyVersion = '0.4'
-    requeryVersion = '3.23.1'
+    requeryVersion = '3.25.3'
+    androidXsqliteVersion = '2.0.0'
 
     gsonVersion = '2.8.5'
     retrofitVersion = '2.4.0'
     okhttpVersion = '3.10.0'
     volleyVersion = '1.1.1'
+    reactiveNetworkVersion = '3.0.1'
 
     playServicesVersion = '10.2.1'
-    supportLibVersion = '1.0.0'
+    androidXversion = '1.0.0'
+    androidXtestVersion = '1.1.0'
 
     jUnitVersion = '4.12'
     mockitoVersion = '2.1.0'
-    robolectricVersion = '3.8'
+    robolectricVersion = '4.0.2'
+    mockitoKotlinVersion = '2.0.0'
 
     appDependencies = [
             jitPack               : "com.github.jitpack:gradle-simple:$jitPackVersion",
 
             multiDex              : "androidx.multidex:multidex:$multidexVersion",
-            androidXcore          : "androidx.core:core:$supportLibVersion",
-            appCompat             : "androidx.appcompat:appcompat:$supportLibVersion",
-            browser               : "androidx.browser:browser:$supportLibVersion",
+            androidXcore          : "androidx.core:core:$androidXversion",
+            androidXsqlite        : "androidx.sqlite:sqlite:$androidXsqliteVersion",
+            androidXroom          : "androidx.room:room-runtime:$androidXsqliteVersion",
+            appCompat             : "androidx.appcompat:appcompat:$androidXversion",
+            browser               : "androidx.browser:browser:$androidXversion",
+            reactiveNetwork       : "com.github.pwittchen:reactivenetwork-rx2:$reactiveNetworkVersion",
 
             kotlinJdk8            : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
             kotlinReflect         : "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
@@ -105,7 +112,7 @@ ext {
             daggerAndroidProcessor: "com.google.dagger:dagger-android-processor:$daggerVersion",
 
             jsr250                : "javax.annotation:jsr250-api:$jsr250Version",
-            androidAnnotations    : "androidx.annotation:annotation:$supportLibVersion",
+            androidAnnotations    : "androidx.annotation:annotation:$androidXversion",
 
             boilerplate           : "com.github.pthomain:boilerplate:$boilerplateVersion",
             sharedPreferenceStore : "com.github.pthomain:SharedPreferenceStore:$sharedPrefStoreVersion",
@@ -122,10 +129,16 @@ ext {
             snappy                : "org.iq80.snappy:snappy:$snappyVersion",
             requery               : "io.requery:sqlite-android:$requeryVersion",
 
-            jUnit                 : "junit:junit:$jUnitVersion",
+            androidXtestCore      : "androidx.test:core:$androidXversion",
+            androidXtestRunner    : "androidx.test:runner:$androidXtestVersion",
+            androidXtestRules     : "androidx.test:rules:$androidXtestVersion",
+            androidXjUnit         : "androidx.test.ext:junit:$androidXversion",
+
             mockitoCore           : "org.mockito:mockito-core:$mockitoVersion",
             robolectric           : "org.robolectric:robolectric:$robolectricVersion",
-            okHttpMock            : "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+            okHttpMock            : "com.squareup.okhttp3:mockwebserver:$okhttpVersion",
+            mockitoKotlin         : "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+
     ]
 }
 
