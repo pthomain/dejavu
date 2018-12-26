@@ -21,25 +21,36 @@
 
 package uk.co.glass_software.android.dejavu.test.network.model
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
-
 class Address {
 
-    @SerializedName("street")
-    @Expose
     var street: String? = null
-    @SerializedName("suite")
-    @Expose
     var suite: String? = null
-    @SerializedName("city")
-    @Expose
     var city: String? = null
-    @SerializedName("zipcode")
-    @Expose
     var zipcode: String? = null
-    @SerializedName("geo")
-    @Expose
     var geo: Geo? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Address
+
+        if (street != other.street) return false
+        if (suite != other.suite) return false
+        if (city != other.city) return false
+        if (zipcode != other.zipcode) return false
+        if (geo != other.geo) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = street?.hashCode() ?: 0
+        result = 31 * result + (suite?.hashCode() ?: 0)
+        result = 31 * result + (city?.hashCode() ?: 0)
+        result = 31 * result + (zipcode?.hashCode() ?: 0)
+        result = 31 * result + (geo?.hashCode() ?: 0)
+        return result
+    }
 
 }

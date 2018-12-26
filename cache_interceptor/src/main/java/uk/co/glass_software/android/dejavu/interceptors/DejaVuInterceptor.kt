@@ -24,6 +24,7 @@ package uk.co.glass_software.android.dejavu.interceptors
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import uk.co.glass_software.android.boilerplate.utils.rx.RxIgnore
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
@@ -66,8 +67,13 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                     .firstOrError()!!
 
     override fun apply(upstream: Completable) =
-            composeInternal(upstream.toObservable<Any>(), COMPLETABLE)
+            composeInternal(upstream.andThen(RxIgnore.observable().cast(Any::class.java)), COMPLETABLE)
                     .ignoreElements()!!
+//                    .onErrorResumeNext { error: Throwable ->
+//                        //TODO check this
+//                        if (error is NoSuchElementException || error.cause is NoSuchElementException) Completable.complete()
+//                        else Completable.error(error)
+//}
 
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: AnnotationProcessor.RxType) =

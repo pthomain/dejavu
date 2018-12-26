@@ -90,7 +90,6 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
         testClient = testComponent.testClient()
         assetHelper = testComponent.assetHelper()
 
-
         target = targetExtractor(cacheComponent)
     }
 

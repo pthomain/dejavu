@@ -24,6 +24,7 @@ package uk.co.glass_software.android.dejavu.test
 
 import junit.framework.TestCase.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
@@ -135,6 +136,31 @@ fun assertGlitchWithContext(expectedGlitch: Glitch,
             expectedGlitch.description,
             actualGlitch.description,
             withContext("Glitch description didn't match", context)
+    )
+}
+
+internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
+                                              actual: ResponseWrapper<Glitch>,
+                                              context: String? = null) {
+    assertEqualsWithContext(
+            expected.responseClass,
+            actual.responseClass,
+            "Response class didn't match",
+            context
+    )
+
+    assertEqualsWithContext(
+            expected.response,
+            actual.response,
+            "Responses didn't match",
+            context
+    )
+
+    assertEqualsWithContext(
+            expected.metadata,
+            actual.metadata,
+            "Response metadata didn't match",
+            context
     )
 }
 

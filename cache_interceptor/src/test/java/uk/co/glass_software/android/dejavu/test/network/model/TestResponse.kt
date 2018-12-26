@@ -26,7 +26,30 @@ import uk.co.glass_software.android.dejavu.response.CacheMetadata
 
 class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
 
+    @Transient
     override lateinit var metadata: CacheMetadata<Glitch>
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as TestResponse
+
+        if (other.size != size) return false
+
+        this.forEachIndexed { index, user ->
+            if (other[index] != user) return false
+        }
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + metadata.hashCode()
+        return result
+    }
 
     companion object {
         var STUB_FILE = "api_stub_test.json"

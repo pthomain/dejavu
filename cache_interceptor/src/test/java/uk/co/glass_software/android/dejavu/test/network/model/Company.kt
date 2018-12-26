@@ -21,19 +21,30 @@
 
 package uk.co.glass_software.android.dejavu.test.network.model
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
-
 class Company {
 
-    @SerializedName("name")
-    @Expose
     var name: String? = null
-    @SerializedName("catchPhrase")
-    @Expose
     var catchPhrase: String? = null
-    @SerializedName("bs")
-    @Expose
     var bs: String? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Company
+
+        if (name != other.name) return false
+        if (catchPhrase != other.catchPhrase) return false
+        if (bs != other.bs) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name?.hashCode() ?: 0
+        result = 31 * result + (catchPhrase?.hashCode() ?: 0)
+        result = 31 * result + (bs?.hashCode() ?: 0)
+        return result
+    }
 
 }

@@ -35,6 +35,7 @@ import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
+import kotlin.NoSuchElementException
 
 internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFactory<E>,
                                                private val logger: Logger,
