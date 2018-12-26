@@ -32,16 +32,13 @@ import retrofit2.Retrofit
 import uk.co.glass_software.android.dejavu.BuildConfig
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.test.network.MockClient
-import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import java.io.IOException
 
@@ -92,17 +89,6 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
 
         target = targetExtractor(cacheComponent)
     }
-
-    protected fun instructionToken(operation: CacheInstruction.Operation) = CacheToken.fromInstruction(
-            CacheInstruction(
-                    TestResponse::class.java,
-                    operation
-            ),
-            true,
-            true,
-            "/",
-            null
-    )
 
     protected fun enqueueResponse(response: String,
                                   httpCode: Int) {

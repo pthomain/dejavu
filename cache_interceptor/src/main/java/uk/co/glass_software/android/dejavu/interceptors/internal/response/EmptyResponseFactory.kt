@@ -24,7 +24,7 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.response
 import io.reactivex.Observable
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -39,10 +39,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                         it.responseClass,
                         null,
                         CacheMetadata(
-                                instructionToken.copy(
-                                        status = CacheStatus.EMPTY,
-                                        instruction = it
-                                ),
+                                instructionToken.copy(status = EMPTY),
                                 errorFactory.getError(NoSuchElementException("Response was empty"))
                         )
                 )

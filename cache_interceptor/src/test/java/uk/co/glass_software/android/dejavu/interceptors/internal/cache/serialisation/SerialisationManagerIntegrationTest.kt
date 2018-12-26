@@ -15,6 +15,7 @@ import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
 import uk.co.glass_software.android.dejavu.test.assertResponseWrapperWithContext
+import uk.co.glass_software.android.dejavu.test.instructionToken
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 
 internal class SerialisationManagerIntegrationTest

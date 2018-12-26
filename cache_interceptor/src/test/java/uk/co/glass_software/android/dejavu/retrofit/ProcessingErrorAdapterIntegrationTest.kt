@@ -20,10 +20,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
-import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
-import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
-import uk.co.glass_software.android.dejavu.test.assertNotNullWithContext
-import uk.co.glass_software.android.dejavu.test.getAnnotation
+import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type

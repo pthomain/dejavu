@@ -32,6 +32,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisa
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
 import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
+import uk.co.glass_software.android.dejavu.test.instructionToken
 import java.security.MessageDigest
 import java.util.*
 
