@@ -137,7 +137,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideHasher() =
-            CacheToken.getHasher(configuration.logger)
+            Hasher.Factory(configuration.logger).create()
 
     @Provides
     @Singleton

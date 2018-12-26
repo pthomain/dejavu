@@ -22,18 +22,24 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
 
-import junit.framework.TestCase.assertEquals
+import android.net.Uri
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
+import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import java.security.MessageDigest
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCacheComponent::hasher) {
+
+    private val paramsKeys = "bedac"
+    private val paramsKeysInOrder = "abcde"
 
     private val strings = Arrays.asList(
             "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",
@@ -68,103 +74,103 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
             "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"
     )
 
-    private val defaultHashes = Arrays.asList(
-            "-1567798240742212974",
-            "5825089772276355885",
-            "6964146928167801327",
-            "3361058624495546819",
-            "-4770087482288699251",
-            "-5355052865064663405",
-            "7319368432861589482",
-            "1096983737957884835",
-            "-4790571242571077894",
-            "296205826928483503",
-            "-7707499130833708257",
-            "-7656259067797627585",
-            "5297295654358932572",
-            "5858813023160791942",
-            "6322587556498416649",
-            "-5863675416460579589",
-            "593966310324084263",
-            "-3346703602694025614",
-            "-3432694904156403453",
-            "-6829386488398946458",
-            "4765806947490108717",
-            "4798511846558543558",
-            "-5475455149387882914",
-            "-94029621740876070",
-            "4921112670177858296",
-            "-3460865430977511317",
-            "-7401489409155434796",
-            "422848797528419196",
-            "8957871570441518549",
-            "-2973551517875527482"
-    )
-
     private val sha1Hashes = Arrays.asList(
             "0EBF58E82F2AC43388490B3D67E416F7B76DBAF5",
-            "2C9886E1F836B70A3FDFB90B2F16D971EE659B91",
+            "55611F94FF861F79ED3ED97E0733423E4EB6D43F",
             "D7E35F91A4601A5D1BF802BFEA9EFC6BB3DFCE27",
-            "D0335E08F540DBFBFC50E1985C715CA4B0C7FEA3",
+            "B797EF56982C95EABEC3AEBBE5F5F88E0CA2C128",
             "2A49E6AEF80D3D320D046B5D75BBA8F7C4428E4F",
-            "174212F6F51B3E755C9A432759461D7FE9B8211F",
+            "EA2CF79AA1F296368DF88239121357EFB3DF2911",
             "59742175E9D40226197CDC180666E1140D753F75",
-            "72FFF0F6EBB97A7F5F106EB45AFD7786A2B87322",
+            "DF1BAC42D48C61C6D867652216BC232ACB055F5A",
             "8002C2E1DBEBA4DB6774B1A93A975A3246D032FD",
-            "40CDFD139E043D315BEC93076827E99603B7488E",
+            "E5791D7286A32472E79F0B176E7DA84BC9567CEF",
             "6C1B2F2A002CA8073AA809F2FE268BBD1B3A13BB",
-            "FDC760F9B1EBAA3F827092936A7D02DB53F1A20B",
+            "F7014E8F84B1372A7EF04BD9D91DD7F3F6EFB08C",
             "ABF0C0B0E69CC55FDE99F5CD7E27633E5D8A927A",
-            "14405EA5E166460C94338F561DBA402E45C0FEEA",
+            "0D9EDD7009E1CA1B1C665DFA45DCC2A8E14D498B",
             "4CA209BC443FA85476B3DE06D8B073B6A612390A",
-            "7F2DB35C2676BAD17C88D341C96831641A54C0FF",
+            "E092C8E0E51EC8C95CB01C46DB03742931219E77",
             "427480975F195030E8346A4D36A93381B41C312A",
-            "1A78CA7C7EE7846FB0B095C2CD81D8006832192C",
+            "E2BCA31AAD8DE9736CC41267A3F611369277D1C7",
             "E8277E20E7F67868DC8D4571BA93BAFBA616A908",
-            "7954B1E291A18B1A1587E398B34E01161D96F971",
+            "29D356D8B8535FEE6CC1016561AB818D152EDC78",
             "1EC07A81FEF688EDCC403225FEB79D82640BA105",
-            "60119E5E1D1E2BA68E5F4A67215D61BE2ED6ACAD",
+            "8EA050AD5E0FBF63D519374DA806F68BEFFD2677",
             "ABF4A776EB701D946203F9F51FF8FC9E56635FCF",
-            "5D832B43D0193B3D97BBCA493217DA035EEF4B7E",
+            "11AD80047B478761CE9D078D437326935F7D5068",
             "5A0738C9BC2687DF501AB6D6BA9D93BABC8A9424",
-            "793D1ABA3042E4C77CE80E55D9E25B739EFA7FC9",
+            "55BA8903C0FD3C8BE4C2B8CACA50F2B053A873FD",
             "226ACC79E9930911F014D935E807A5407D837BB7",
-            "0B9323D880E1C9061C5B34A3398C93EA47A3AF54",
+            "756A086B9AC467514B306ECC8F23CD0124A73AB9",
             "FE647F4C465A1E63D7463E991FEB8A65630AA995",
-            "C428DD6DBD760FF50800F313D62B49B7719AD571"
+            "FEDE827E4FAF0F6EB7E2EA847313F5114F1B99FA"
     )
 
     private val md5Hashes = Arrays.asList(
             "75121F43C803360A1E00A701A799B840",
-            "3E62A4A3B7DEC5DBFA8CF7D38D579A88",
+            "3709AED603436D492084F612DC9E9A36",
             "A873EDD7F3B0AC7511DD3C99B600CD75",
-            "29A934384A3841942D6D76C9F0D5F6E0",
+            "A98B614D2E0F23976AA3095A58165FFF",
             "5B8186317B91737CA6AF12DC7E20C535",
-            "4B5112E8F07AD2B9B8E906EC3902F471",
+            "9A4246D35FEFB515EFBB53286784A832",
             "7D8075E3B1EB3E734AE9BE1192AB761E",
-            "05F7ED70BB4E3CFA2EDD4EE19E196E01",
+            "9F33CE4852161248DAE0B114B25D7021",
             "4E790F942EEDBA6D33914BBD19D861F1",
-            "CC533980F4D668BA9F2A54F262C4B4B2",
+            "F179F08AC29634182A69C2DCB2FDC092",
             "8094EDDE78AE5E4D36ECFA16EBB39846",
-            "51F5C1F206D5CDF464E1675A6897E06C",
+            "FBBFD62A9C873E9CCCEDCED6261D4FD6",
             "A47E08E36DF115BF0FBB27C9AC8E082D",
-            "6DB2CEE2E6E1B941FF6B0DE28737FB7A",
+            "11A634E1E941F8068326DEB896073495",
             "99BE4B88E465AE1EECEE225BD11ACCC1",
-            "E02BCF7614F193384DA2E503BA8B7EBA",
+            "81BA041C16577894296A337F4B70B477",
             "3A5166D2A523B3BD623BB96F4D9BAB4E",
-            "937D20992AAB4D618D5AE5B03A4B7E60",
+            "E99B8A8560A1B22AFE35215F014B53CE",
             "2DCF182D5C11B005333EBF132CF06E61",
-            "7C3B6BA95F572D401DC4A08590CB27B9",
+            "59F25AE6C7FCB47F570591DA5315CA83",
             "306F16AB5402B8B5DAE2858E3DFDDD33",
-            "71B7425AA4E7BD278CA9C98EB0ED03C5",
+            "8DB125ACE717FE6195AA2D02ECB77EE3",
             "BE9EA1B2F42E969F927E2193FD8FC380",
-            "A5887143190FDAF0B9B1E158A0E0CF68",
+            "801D1E12B32AC0F89D72E142BDCBC7C2",
             "4F80E29D87D018FE01F3E230E9230246",
-            "B13C6645CDE778D5D9249D042E7D476B",
+            "0077133C28E1E816F9F96FF4F01C385C",
             "C4F6B8602FCE0F51A8DE3097C00C9AE5",
-            "1AEAE775884F9ACF82DBCE6A32020E77",
+            "31721465DE5BDD50DCDFE817A4FBAC5B",
             "DBBE320400BDFDD1D2A39A6BBB9DFD18",
-            "A83A7ED720A60B5C40AC3DE9EF5AF901"
+            "141ABF2F10C47F3A92B978A9A988CE63"
+    )
+
+    private val defaultHashes = Arrays.asList(
+            "-1567798240742212974",
+            "-6464697437433993236",
+            "6964146928167801327",
+            "4374261615011883472",
+            "-4770087482288699251",
+            "-3918329749999273129",
+            "7319368432861589482",
+            "9063086329733127728",
+            "-4790571242571077894",
+            "8829621694316307631",
+            "-7707499130833708257",
+            "3157302423599306888",
+            "5297295654358932572",
+            "-4069446544631320290",
+            "6322587556498416649",
+            "8294033970921170968",
+            "593966310324084263",
+            "-1127537055093627898",
+            "-3432694904156403453",
+            "393258519067044951",
+            "4765806947490108717",
+            "5953442913889268118",
+            "-5475455149387882914",
+            "4514780305308406265",
+            "4921112670177858296",
+            "-7613372044097366363",
+            "-7401489409155434796",
+            "7999267652705711000",
+            "8957871570441518549",
+            "-8504762855000543526"
     )
 
     @Test
@@ -175,9 +181,71 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
         val defaultHasher = Hasher(null)
 
         for (i in strings.indices) {
-            assertEquals("SHA-1 hash failed at position $i", sha1Hashes[i], sha1Hasher.hash(strings[i]))
-            assertEquals("MD5 hash failed at position $i", md5Hashes[i], md5Hasher.hash(strings[i]))
-            assertEquals("Default hash failed at position $i", defaultHashes[i], defaultHasher.hash(strings[i]))
+            assertEqualsWithContext(
+                    sha1Hashes[i],
+                    sha1Hasher.getTokenKey(getToken(strings[i], i, "SHA-1 hashing failed")),
+                    "SHA-1 hash failed at position $i"
+            )
+
+            assertEqualsWithContext(
+                    md5Hashes[i],
+                    md5Hasher.getTokenKey(getToken(strings[i], i, "MD5 hashing failed")),
+                    "MD5 hash failed at position $i"
+            )
+
+            assertEqualsWithContext(
+                    defaultHashes[i],
+                    defaultHasher.getTokenKey(getToken(strings[i], i, "Default hashing failed")),
+                    "Default hash failed at position $i"
+            )
+        }
+    }
+
+    private fun getToken(url: String?,
+                         index: Int,
+                         context: String) = instructionToken(Cache()).copy(
+            apiUrl = url!!,
+            uniqueParameters = getParams(url, index)
+    ).also {
+        checkParamsInOrder(it, index, context)
+    }
+
+    private fun getParams(url: String,
+                          index: Int): String? {
+        return if (index % 2 == 0) null
+        else {
+            val numParams = paramsKeys.length
+            val length = Math.floor(url.length / numParams.toDouble()).toInt()
+
+            StringBuilder().apply {
+                for (i in 0 until numParams) {
+                    val startIndex = i * numParams
+                    val substring = url.substring(startIndex, startIndex + length)
+                    if (!isEmpty()) append("&")
+                    append("${paramsKeys[i]}=$substring")
+                }
+            }.toString()
+        }
+    }
+
+    private fun checkParamsInOrder(cacheToken: CacheToken,
+                                   index: Int,
+                                   context: String) {
+        if (cacheToken.uniqueParameters != null) {
+            val params = target.getParameters(cacheToken)
+
+            val keys = StringBuilder().apply {
+                Uri.parse("http://test.com?$params").queryParameterNames.forEach {
+                    append(it)
+                }
+            }.toString()
+
+            assertEqualsWithContext(
+                    paramsKeysInOrder,
+                    keys,
+                    "Parameters were not in order at index $index",
+                    context
+            )
         }
     }
 
