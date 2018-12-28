@@ -201,4 +201,23 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
                     call.request().body()?.toString()
             )
 
+    /**
+     * Factory method for unit testing
+     */
+    internal class Factory<E>(private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
+                              private val logger: Logger,
+                              private val methodDescription: String,
+                              private val instruction: CacheInstruction?,
+                              private val rxCallAdapter: CallAdapter<Any, Any>)
+            where E : Exception,
+                  E : NetworkErrorProvider {
+
+        fun create() = RetrofitCallAdapter(
+                dejaVuFactory,
+                logger,
+                methodDescription,
+                instruction,
+                rxCallAdapter
+        )
+    }
 }

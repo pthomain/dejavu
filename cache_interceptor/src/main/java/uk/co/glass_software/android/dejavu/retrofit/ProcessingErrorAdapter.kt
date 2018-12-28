@@ -116,6 +116,6 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                         start,
                         rxType,
                         exception
-                )
+                ) as CallAdapter<*, *>
     }
 }

@@ -51,6 +51,7 @@ import java.util.*
  * @param logger the logger
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
+                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val annotationProcessor: AnnotationProcessor<E>,
@@ -124,7 +125,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                         )
                     }
 
-                    RetrofitCallAdapter(
+                    innerFactory(
                             dejaVuFactory,
                             logger,
                             methodDescription,

@@ -8,7 +8,6 @@ import io.reactivex.observers.TestObserver
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import retrofit2.CallAdapter
-import retrofit2.http.GET
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -19,11 +18,8 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
-import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
 import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 
 
 @Suppress("UNCHECKED_CAST")
@@ -34,22 +30,13 @@ internal class ProcessingErrorAdapterIntegrationTest
     private lateinit var cacheToken: CacheToken
     private lateinit var testObserver: TestObserver<Any>
 
-    private lateinit var targetAdapter: ProcessingErrorAdapter<Glitch>
+    private lateinit var targetAdapter: CallAdapter<Any, Any>
 
     private fun setUp(rxClass: Class<*>,
                       rxType: AnnotationProcessor.RxType) {
-        val defaultAdapter = cacheComponent.defaultAdapterFactory().get(
-                object : ParameterizedType {
-                    override fun getRawType() = rxClass
-                    override fun getOwnerType() = null
-                    override fun getActualTypeArguments() = arrayOf<Type>(TestResponse::class.java)
-                },
-                arrayOf(
-                        getAnnotation<GET>(listOf("/")),
-                        getAnnotation<DoNotCache>(emptyList())
-                ),
-                retrofit
-        ) as CallAdapter<Any, Any>
+        val defaultAdapter = callAdapterFactory(rxClass, retrofit) { returnType, annotations, retrofit ->
+            cacheComponent.defaultAdapterFactory().get(returnType, annotations, retrofit) as CallAdapter<Any, Any>
+        }
 
         cacheException = CacheException(
                 ANNOTATION,
@@ -64,7 +51,7 @@ internal class ProcessingErrorAdapterIntegrationTest
                 1234L,
                 rxType,
                 cacheException
-        )
+        ) as CallAdapter<Any, Any>
 
         enqueueResponse("", 200)
 

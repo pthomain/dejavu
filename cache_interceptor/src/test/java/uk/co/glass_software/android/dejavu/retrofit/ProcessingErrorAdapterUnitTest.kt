@@ -78,7 +78,7 @@ class ProcessingErrorAdapterUnitTest {
         )
     }
 
-    private fun createTarget(mockRxType: AnnotationProcessor.RxType): ProcessingErrorAdapter<Glitch> {
+    private fun createTarget(mockRxType: AnnotationProcessor.RxType): CallAdapter<Any, Any> {
         whenever(mockErrorInterceptorFactory.invoke(
                 eq(mockCacheToken),
                 eq(mockStart)
@@ -97,7 +97,7 @@ class ProcessingErrorAdapterUnitTest {
                 1234L,
                 mockRxType,
                 mockException
-        )
+        ) as CallAdapter<Any, Any>
     }
 
     @Test

@@ -6,8 +6,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
+import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
@@ -22,6 +25,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyR
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
@@ -88,11 +92,14 @@ internal interface CacheModule<E>
 
     fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory
 
-    fun provideRetrofitCacheAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
-                                           dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
-                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
-                                           annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
+    fun provideRetrofitCallAdapterInnerFactory(): Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>
+
+    fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
+                                          innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                          defaultAdapterFactory: RxJava2CallAdapterFactory,
+                                          dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
+                                          processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
+                                          annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
 
     fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                              dateFactory: Function1<Long?, Date>,
@@ -138,5 +145,9 @@ internal interface CacheModule<E>
 
     interface Function4<T1, T2, T3, T4, R> {
         fun get(t1: T1, t2: T2, t3: T3, t4: T4): R
+    }
+
+    interface Function5<T1, T2, T3, T4, T5, R> {
+        fun get(t1: T1, t2: T2, t3: T3, t4: T4, t5: T5): R
     }
 }

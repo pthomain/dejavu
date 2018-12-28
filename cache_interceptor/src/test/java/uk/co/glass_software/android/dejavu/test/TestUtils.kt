@@ -23,12 +23,18 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import junit.framework.TestCase.*
+import retrofit2.CallAdapter
+import retrofit2.Retrofit
+import retrofit2.http.GET
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
+import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
@@ -206,3 +212,19 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         "/",
         null
 )
+
+fun callAdapterFactory(rxClass: Class<*>,
+                       retrofit: Retrofit,
+                       constructor: Function3<Type, Array<Annotation>, Retrofit, CallAdapter<Any, Any>>) =
+        constructor.invoke(
+                object : ParameterizedType {
+                    override fun getRawType() = rxClass
+                    override fun getOwnerType() = null
+                    override fun getActualTypeArguments() = arrayOf<Type>(TestResponse::class.java)
+                },
+                arrayOf(
+                        getAnnotation<GET>(listOf("/")),
+                        getAnnotation<DoNotCache>(emptyList())
+                ),
+                retrofit
+        )

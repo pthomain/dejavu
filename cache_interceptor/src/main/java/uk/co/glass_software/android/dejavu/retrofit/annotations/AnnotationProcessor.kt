@@ -21,6 +21,9 @@
 
 package uk.co.glass_software.android.dejavu.retrofit.annotations
 
+import io.reactivex.Completable
+import io.reactivex.Observable
+import io.reactivex.Single
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
@@ -200,14 +203,14 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         }
     }
 
-    enum class RxType(private val className: String) {
-        OBSERVABLE("Observable"),
-        SINGLE("Single"),
-        COMPLETABLE("Completable");
+    enum class RxType(val rxClass: Class<*>) {
+        OBSERVABLE(Observable::class.java),
+        SINGLE(Single::class.java),
+        COMPLETABLE(Completable::class.java);
 
         fun getTypedName(responseClass: Class<*>) =
-                if (this == COMPLETABLE) className
-                else "$className<${responseClass.simpleName}>"
+                if (this == COMPLETABLE) rxClass.simpleName
+                else "${rxClass.simpleName}<${responseClass.simpleName}>"
     }
 
 }
