@@ -32,6 +32,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
@@ -253,7 +254,14 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                         t3: String,
                         t4: CacheInstruction?,
                         t5: CallAdapter<Any, Any>
-                ) = RetrofitCallAdapter(t1, t2, t3, t4, t5)
+                ) = RetrofitCallAdapter(
+                        t1,
+                        CacheInstructionSerialiser(),
+                        t2,
+                        t3,
+                        t4,
+                        t5
+                )
             }
 
     @Provides

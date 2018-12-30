@@ -26,9 +26,11 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
 
-internal object CacheInstructionSerialiser {
+class CacheInstructionSerialiser {
 
-    private const val separator = ":"
+    private companion object {
+        private const val separator = ":"
+    }
 
     fun serialise(type: Operation.Type?,
                   vararg properties: Any?) =

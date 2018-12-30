@@ -28,6 +28,7 @@ import retrofit2.Call
 import retrofit2.CallAdapter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
+import uk.co.glass_software.android.dejavu.DejaVu.Companion.DejaVuHeader
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
@@ -41,6 +42,7 @@ import java.lang.reflect.Type
  * @see uk.co.glass_software.android.dejavu.configuration.ErrorFactory
  */
 internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
+                                      private val serialiser: CacheInstructionSerialiser,
                                       private val logger: Logger,
                                       private val methodDescription: String,
                                       private val instruction: CacheInstruction?,
@@ -61,13 +63,27 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
      * @return the call adapted to RxJava type
      */
     override fun adapt(call: Call<Any>): Any {
-        val header = call.request().header(DejaVu.DejaVuHeader)
+        val header = call.request().header(DejaVuHeader)
 
         return when {
-            instruction != null -> if (header != null) adaptedByHeader(call, header, true)
-            else adaptedWithInstruction(call, instruction, false)
+            instruction != null -> {
+                if (header != null) adaptedByHeader(
+                        call,
+                        header,
+                        true
+                )
+                else adaptedWithInstruction(
+                        call,
+                        instruction,
+                        false
+                )
+            }
 
-            header != null -> adaptedByHeader(call, header, false)
+            header != null -> adaptedByHeader(
+                    call,
+                    header,
+                    false
+            )
 
             else -> adaptedByDefaultRxJavaAdapter(call)
         }
@@ -123,17 +139,36 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
             )
         }
 
-        fun deserialisationFailed() = adaptedByDefaultRxJavaAdapter(call).also {
-            logger.e(
-                    this,
-                    "Found a header cache instruction on $methodDescription but it could not be deserialised."
-                            + " This call won't be cached.")
-        }
+        /**
+         * Called if the header deserialisation fails, will try to fall back to annotation instruction
+         * if present or to the default adapter otherwise.
+         */
+        fun deserialisationFailed() =
+                if (instruction != null) {
+                    logger.e(
+                            this,
+                            "Found a header cache instruction on $methodDescription but it could not be deserialised."
+                                    + " The annotation instruction will be used instead."
+                    )
+                    adaptedWithInstruction(
+                            call,
+                            instruction,
+                            false
+                    )
+                } else {
+                    adaptedByDefaultRxJavaAdapter(call).also {
+                        logger.e(
+                                this,
+                                "Found a header cache instruction on $methodDescription but it could not be deserialised."
+                                        + " This call won't be cached."
+                        )
+                    }
+                }
 
         return try {
-            CacheInstructionSerialiser.deserialise(header)?.let {
-                adaptedWithInstruction(call, it, true)
-            } ?: deserialisationFailed()
+            serialiser.deserialise(header)
+                    ?.let { adaptedWithInstruction(call, it, true) }
+                    ?: deserialisationFailed()
         } catch (e: Exception) {
             deserialisationFailed()
         }
@@ -151,23 +186,13 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
      */
     private fun adaptRxCall(call: Call<Any>,
                             instruction: CacheInstruction,
-                            adapted: Any): Any {
-        val responseClass = instruction.responseClass
-        return when (adapted) {
-            is Observable<*> -> adapted.cast(responseClass)
-                    .compose(getDejaVuInterceptor(call, instruction))
-
-            is Single<*> -> adapted.cast(responseClass)
-                    .compose(getDejaVuInterceptor(call, instruction))
-
-            is Completable -> adapted.toObservable<Any>()
-                    .cast(responseClass)
-                    .compose(getDejaVuInterceptor(call, instruction))
-                    .ignoreElements()
-
-            else -> adapted
-        }
-    }
+                            adapted: Any) =
+            when (adapted) {
+                is Observable<*> -> adapted.compose(getDejaVuInterceptor(call, instruction))
+                is Single<*> -> adapted.compose(getDejaVuInterceptor(call, instruction))
+                is Completable -> adapted.compose(getDejaVuInterceptor(call, instruction))
+                else -> adapted
+            }
 
     /**
      * Returns the call adapted with the default RxJava call adapter.
@@ -201,23 +226,4 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
                     call.request().body()?.toString()
             )
 
-    /**
-     * Factory method for unit testing
-     */
-    internal class Factory<E>(private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                              private val logger: Logger,
-                              private val methodDescription: String,
-                              private val instruction: CacheInstruction?,
-                              private val rxCallAdapter: CallAdapter<Any, Any>)
-            where E : Exception,
-                  E : NetworkErrorProvider {
-
-        fun create() = RetrofitCallAdapter(
-                dejaVuFactory,
-                logger,
-                methodDescription,
-                instruction,
-                rxCallAdapter
-        )
-    }
 }
