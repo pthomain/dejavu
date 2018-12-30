@@ -38,6 +38,27 @@ internal class SerialisationManager<E>(private val logger: Logger,
         where E : Exception,
               E : NetworkErrorProvider {
 
+    fun serialise(responseWrapper: ResponseWrapper<E>,
+                  encryptData: Boolean,
+                  compressData: Boolean) =
+            gson.toJson(responseWrapper.response)
+                    .toByteArray()
+                    .let {
+                        if (encryptData && encryptionManager != null)
+                            encryptionManager.encryptBytes(it, DATA_TAG)
+                        else it
+                    }
+                    ?.let {
+                        if (compressData) compresser(it).also { compressed ->
+                            logCompression(
+                                    compressed,
+                                    responseWrapper.responseClass.simpleName,
+                                    it
+                            )
+                        }
+                        else it
+                    }
+
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
                     isEncrypted: Boolean,
@@ -77,27 +98,6 @@ internal class SerialisationManager<E>(private val logger: Logger,
             return null
         }
     }
-
-    fun serialise(responseWrapper: ResponseWrapper<E>,
-                  encryptData: Boolean,
-                  compressData: Boolean) =
-            gson.toJson(responseWrapper.response)
-                    .toByteArray()
-                    .let {
-                        if (encryptData && encryptionManager != null)
-                            encryptionManager.encryptBytes(it, DATA_TAG)
-                        else it
-                    }
-                    ?.let {
-                        if (compressData) compresser(it).also { compressed ->
-                            logCompression(
-                                    compressed,
-                                    responseWrapper.responseClass.simpleName,
-                                    it
-                            )
-                        }
-                        else it
-                    }
 
     private fun logCompression(compressedData: ByteArray,
                                simpleName: String,

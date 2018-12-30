@@ -27,8 +27,12 @@ import dagger.Module
 import dagger.Provides
 import io.reactivex.subjects.PublishSubject
 import org.iq80.snappy.Snappy
+import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
@@ -45,6 +49,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyR
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
@@ -137,7 +142,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideHasher() =
-            CacheToken.getHasher(configuration.logger)
+            Hasher.Factory(configuration.logger).create()
 
     @Provides
     @Singleton
@@ -241,13 +246,35 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideRetrofitCacheAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                                    defaultAdapterFactory: RxJava2CallAdapterFactory,
-                                                    dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
-                                                    processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
-                                                    annotationProcessor: AnnotationProcessor<E>) =
+    override fun provideRetrofitCallAdapterInnerFactory() =
+            object : Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
+                override fun get(
+                        t1: DejaVuInterceptor.Factory<E>,
+                        t2: Logger,
+                        t3: String,
+                        t4: CacheInstruction?,
+                        t5: CallAdapter<Any, Any>
+                ) = RetrofitCallAdapter(
+                        t1,
+                        CacheInstructionSerialiser(),
+                        t2,
+                        t3,
+                        t4,
+                        t5
+                )
+            }
+
+    @Provides
+    @Singleton
+    override fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
+                                                   innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                                   defaultAdapterFactory: RxJava2CallAdapterFactory,
+                                                   dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
+                                                   processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
+                                                   annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     defaultAdapterFactory,
+                    { t1, t2, t3, t4, t5 -> innerFactory.get(t1, t2, t3, t4, t5) },
                     { dateFactory.get(it) },
                     dejaVuInterceptorFactory,
                     annotationProcessor,

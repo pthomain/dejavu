@@ -66,8 +66,13 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                     .firstOrError()!!
 
     override fun apply(upstream: Completable) =
-            composeInternal(upstream.toObservable<Any>(), COMPLETABLE)
+            composeInternal(upstream.toObservable(), COMPLETABLE)
                     .ignoreElements()!!
+//                    .onErrorResumeNext { error: Throwable ->
+//                        //TODO check this, might not be needed
+//                        if (error is NoSuchElementException || error.cause is NoSuchElementException) Completable.complete()
+//                        else Completable.error(error)
+//}
 
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: AnnotationProcessor.RxType) =

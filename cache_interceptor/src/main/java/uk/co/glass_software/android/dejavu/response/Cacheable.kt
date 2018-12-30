@@ -34,6 +34,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
  */
 abstract class Cacheable : CacheMetadata.Holder<Glitch> {
 
+    @Transient
     override lateinit var metadata: CacheMetadata<Glitch>
 
 }

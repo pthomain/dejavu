@@ -10,7 +10,6 @@ import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
-import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.assertArrayEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
@@ -255,8 +254,10 @@ class SerialisationManagerUnitTest {
             mockStoredData
         }.let { expectedInput ->
 
-            val decrypted = if (isEncrypted && decryptionSucceeds) {
-                if (isCompressed) mockDecryptedUncompressedByteArray else mockDecryptedByteArray
+            val decrypted = if (isEncrypted) {
+                if (decryptionSucceeds) {
+                    if (isCompressed) mockDecryptedUncompressedByteArray else mockDecryptedByteArray
+                } else null
             } else expectedInput
 
             if (isEncrypted) {
@@ -269,9 +270,11 @@ class SerialisationManagerUnitTest {
             decrypted
         }
 
-        whenever(
-                mockByteToStringConverter.invoke(eq(mockJsonByteArray))
-        ).thenReturn(mockJson)
+        if (mockJsonByteArray != null) {
+            whenever(
+                    mockByteToStringConverter.invoke(eq(mockJsonByteArray))
+            ).thenReturn(mockJson)
+        }
 
         whenever(mockGson.fromJson(
                 eq(mockJson),

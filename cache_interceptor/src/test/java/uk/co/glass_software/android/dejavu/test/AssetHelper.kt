@@ -25,6 +25,7 @@ import com.google.gson.Gson
 import io.reactivex.Observable
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import java.io.*
 
@@ -32,12 +33,20 @@ class AssetHelper(private val assetsFolder: String,
                   private val gson: Gson) {
 
     fun <E, R> observeStubbedResponse(fileName: String,
-                                      responseClass: Class<R>)
+                                      responseClass: Class<R>,
+                                      cacheToken: CacheToken)
             : Observable<R> where E : Exception,
                                   E : NetworkErrorProvider,
                                   R : CacheMetadata.Holder<E> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }
+                    .doOnNext {
+                        it.metadata = CacheMetadata(
+                                cacheToken,
+                                null,
+                                CacheMetadata.Duration(0, 0, 0)
+                        )
+                    }
 
     fun observeFile(fileName: String): Observable<String> =
             File(assetsFolder + fileName).let {

@@ -93,7 +93,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         val simpleName = instruction.responseClass.simpleName
         logger.d(this, "Checking for cached $simpleName")
 
-        val key = instructionToken.getKey(hasher)
+        val key = hasher.getTokenKey(instructionToken)
         checkInvalidation(instruction, key)
 
         val projection = arrayOf(
@@ -144,7 +144,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     fun invalidate(instructionToken: CacheToken) {
         checkInvalidation(
                 instructionToken.instruction,
-                instructionToken.getKey(hasher)
+                hasher.getTokenKey(instructionToken)
         )
     }
 
@@ -230,7 +230,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 encryptData,
                 compressData
         )?.also {
-            val hash = instructionToken.getKey(hasher)
+            val hash = hasher.getTokenKey(instructionToken)
             val values = HashMap<String, Any>()
             val now = dateFactory(null).time
 

@@ -78,7 +78,7 @@ class CacheInstructionSerialiserUnitTest {
         getMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
                     "${entry.value.operation.type} at position $index could not be deserialised",
-                    CacheInstructionSerialiser.deserialise(entry.key),
+                    CacheInstructionSerialiser().deserialise(entry.key),
                     entry.value
             )
         }

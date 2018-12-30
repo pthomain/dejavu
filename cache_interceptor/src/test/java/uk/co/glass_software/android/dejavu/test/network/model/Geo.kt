@@ -21,16 +21,27 @@
 
 package uk.co.glass_software.android.dejavu.test.network.model
 
-import com.google.gson.annotations.Expose
-import com.google.gson.annotations.SerializedName
-
 class Geo {
 
-    @SerializedName("lat")
-    @Expose
     var lat: String? = null
-    @SerializedName("lng")
-    @Expose
     var lng: String? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Geo
+
+        if (lat != other.lat) return false
+        if (lng != other.lng) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = lat?.hashCode() ?: 0
+        result = 31 * result + (lng?.hashCode() ?: 0)
+        return result
+    }
 
 }

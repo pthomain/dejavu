@@ -22,7 +22,6 @@
 package uk.co.glass_software.android.dejavu.configuration
 
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
-import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser.serialise
 
 /**
  * Contains the cache operation, target response class and call-specific directives.
@@ -32,12 +31,14 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSeriali
  * @param operation the cache operation with call-specific directives
  */
 data class CacheInstruction constructor(val responseClass: Class<*>,
-                                        val operation: Operation) {
+                                        val operation: Operation,
+                                        private val serialiser: CacheInstructionSerialiser = CacheInstructionSerialiser()) {
 
     /**
      * Represent a cache operation. Directives defined here take precedence over global config.
      */
-    sealed class Operation(val type: Type) {
+    sealed class Operation(val type: Type,
+                           protected val serialiser: CacheInstructionSerialiser = CacheInstructionSerialiser()) {
 
         /**
          * Expiring instructions contain a durationInMillis indicating the duration of the cached value
@@ -147,7 +148,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                     OFFLINE
             )
 
-            override fun toString() = serialise(
+            override fun toString() = serialiser.serialise(
                     type,
                     durationInMillis,
                     connectivityTimeoutInMillis,
@@ -186,14 +187,14 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
         data class Clear(val typeToClear: Class<*>? = null,
                          val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR) {
 
-            override fun toString() = serialise(
+            override fun toString() = serialiser.serialise(
                     type,
                     typeToClear,
                     clearOldEntriesOnly
             )
         }
 
-        override fun toString() = serialise(type)
+        override fun toString() = serialiser.serialise(type)
 
         /**
          * The operation's type.
@@ -214,7 +215,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
 
     }
 
-    override fun toString() = serialise(
+    override fun toString() = serialiser.serialise(
             null,
             responseClass,
             operation

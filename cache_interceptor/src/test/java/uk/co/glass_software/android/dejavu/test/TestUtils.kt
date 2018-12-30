@@ -23,7 +23,18 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import junit.framework.TestCase.*
+import retrofit2.CallAdapter
+import retrofit2.Retrofit
+import retrofit2.http.GET
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.response.ResponseWrapper
+import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
+import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
@@ -84,7 +95,7 @@ fun withContext(description: String,
         if (context == null) description
         else "$context\n=> $description"
 
-fun assertGlitchWithContext(expectedGlitch: Glitch,
+fun assertGlitchWithContext(expectedGlitch: Glitch?,
                             actualGlitch: Any?,
                             context: String? = null) {
     assertTrueWithContext(
@@ -92,10 +103,10 @@ fun assertGlitchWithContext(expectedGlitch: Glitch,
             withContext("Value was not a Glitch", context)
     )
 
-    actualGlitch as Glitch
+    actualGlitch as Glitch?
 
-    val expectedCause = expectedGlitch.cause
-    val actualCause = actualGlitch.cause
+    val expectedCause = expectedGlitch?.cause
+    val actualCause = actualGlitch?.cause
 
     if (expectedCause == null) {
         assertTrueWithContext(
@@ -117,24 +128,49 @@ fun assertGlitchWithContext(expectedGlitch: Glitch,
                 expectedCause.message == actualCause.message,
                 "Glitch cause message was different"
         )
+
+        assertEqualsWithContext(
+                expectedGlitch.httpStatus,
+                actualGlitch?.httpStatus,
+                withContext("Glitch httpStatus didn't match", context)
+        )
+
+        assertEqualsWithContext(
+                expectedGlitch.errorCode,
+                actualGlitch?.errorCode,
+                withContext("Glitch errorCode didn't match", context)
+        )
+
+        assertEqualsWithContext(
+                expectedGlitch.description,
+                actualGlitch?.description,
+                withContext("Glitch description didn't match", context)
+        )
     }
+}
 
+internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
+                                              actual: ResponseWrapper<Glitch>,
+                                              context: String? = null) {
     assertEqualsWithContext(
-            expectedGlitch.httpStatus,
-            actualGlitch.httpStatus,
-            withContext("Glitch httpStatus didn't match", context)
+            expected.responseClass,
+            actual.responseClass,
+            "Response class didn't match",
+            context
     )
 
     assertEqualsWithContext(
-            expectedGlitch.errorCode,
-            actualGlitch.errorCode,
-            withContext("Glitch errorCode didn't match", context)
+            expected.response,
+            actual.response,
+            "Responses didn't match",
+            context
     )
 
     assertEqualsWithContext(
-            expectedGlitch.description,
-            actualGlitch.description,
-            withContext("Glitch description didn't match", context)
+            expected.metadata,
+            actual.metadata,
+            "Response metadata didn't match",
+            context
     )
 }
 
@@ -165,3 +201,30 @@ fun assertArrayEqualsWithContext(expected: ByteArray?,
         )
     }
 }
+
+fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheToken.fromInstruction(
+        CacheInstruction(
+                TestResponse::class.java,
+                operation
+        ),
+        true,
+        true,
+        "/",
+        null
+)
+
+fun callAdapterFactory(rxClass: Class<*>,
+                       retrofit: Retrofit,
+                       constructor: Function3<Type, Array<Annotation>, Retrofit, CallAdapter<Any, Any>>) =
+        constructor.invoke(
+                object : ParameterizedType {
+                    override fun getRawType() = rxClass
+                    override fun getOwnerType() = null
+                    override fun getActualTypeArguments() = arrayOf<Type>(TestResponse::class.java)
+                },
+                arrayOf(
+                        getAnnotation<GET>(listOf("/")),
+                        getAnnotation<DoNotCache>(emptyList())
+                ),
+                retrofit
+        )
