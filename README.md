@@ -1,6 +1,6 @@
 # DéjàVu [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
 
-**A 0-configuration, transparent, client-controlled RxJava cache**
+**A 0-configuration, transparent, client-controlled RxJava/Retrofit HTTP cache**
 
 TL;DR
 -----
@@ -15,6 +15,8 @@ About v2.0
 ----------
 
 Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. The documentation below relates to v1.0+ and is now mostly out-of-date. It will be updated to reflect the new features of 2.0 once the lib is out of alpha/beta.
+
+The library was renamed DéjaVu to avoid confusion with pre-existing similar libraries names RxCache.
 
 Retrofit support
 ----------------
