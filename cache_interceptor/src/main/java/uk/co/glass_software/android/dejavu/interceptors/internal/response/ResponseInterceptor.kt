@@ -26,13 +26,10 @@ import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Predicate
 import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.RxIgnore
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.OFFLINE
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -72,34 +69,16 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
               E : NetworkErrorProvider {
 
     private val responseFilter = Predicate<ResponseWrapper<E>> {
-        when {
-            isCompletable -> true
-            it.metadata.cacheToken.status == EMPTY -> true
-            isSingle -> it.response != RxIgnore && isValidSingleResponse(it)
-            else -> it.response != RxIgnore && isValidObservableResponse(it)
-        }
+        val status = it.metadata.cacheToken.status
+        val operation = instructionToken.instruction.operation
+
+        if (operation is Expiring) when {
+            isSingle -> status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
+            operation.filterFinal -> status.isFinal
+            operation.freshOnly -> status.isFresh
+            else -> true
+        } else true
     }
-
-    private fun isValidObservableResponse(wrapper: ResponseWrapper<E>) =
-            (instructionToken.instruction.operation as? Expiring)?.let { operation ->
-                val status = wrapper.metadata.cacheToken.status
-                when {
-                    operation.type == OFFLINE -> status.isFresh || !operation.freshOnly
-                    operation.freshOnly -> status.isFresh
-                    operation.filterFinal -> status.isFinal
-                    else -> true
-                }
-            } ?: true
-
-    private fun isValidSingleResponse(wrapper: ResponseWrapper<E>) =
-            (instructionToken.instruction.operation as? Expiring)?.let { operation ->
-                val status = wrapper.metadata.cacheToken.status
-                when {
-                    operation.type == OFFLINE -> status.isFresh || !operation.freshOnly
-                    operation.freshOnly -> status.isFresh
-                    else -> status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
-                }
-            } ?: true
 
     /**
      * Composes an Observable call.
