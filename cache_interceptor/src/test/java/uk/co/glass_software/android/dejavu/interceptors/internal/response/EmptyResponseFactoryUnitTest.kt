@@ -50,9 +50,9 @@ class EmptyResponseFactoryUnitTest {
 
         whenever(mockErrorFactory.getError(any())).thenReturn(mockError)
 
-        val wrapper = target.emptyResponseWrapperObservable(
+        val wrapper = target.emptyResponseWrapperSingle(
                 instructionToken
-        ).blockingFirst()
+        ).blockingGet()
 
         val captor = argumentCaptor<NoSuchElementException>()
         verify(mockErrorFactory).getError(captor.capture())
