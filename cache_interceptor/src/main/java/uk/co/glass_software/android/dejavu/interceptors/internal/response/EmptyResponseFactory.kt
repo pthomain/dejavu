@@ -21,7 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.response
 
-import io.reactivex.Observable
+import io.reactivex.Single
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
@@ -33,17 +33,19 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
         where E : Exception,
               E : NetworkErrorProvider {
 
-    fun emptyResponseWrapperObservable(instructionToken: CacheToken) =
-            instructionToken.instruction.let {
-                ResponseWrapper(
-                        it.responseClass,
-                        null,
-                        CacheMetadata(
-                                instructionToken.copy(status = EMPTY),
-                                errorFactory.getError(NoSuchElementException("Response was empty"))
+    fun emptyResponseWrapperSingle(instructionToken: CacheToken) =
+            Single.create<ResponseWrapper<E>> {
+                it.onSuccess(
+                        ResponseWrapper(
+                                instructionToken.instruction.responseClass,
+                                null,
+                                CacheMetadata(
+                                        instructionToken.copy(status = EMPTY),
+                                        errorFactory.getError(NoSuchElementException("Response was empty"))
+                                )
                         )
                 )
-            }.let { Observable.just(it) }!!
+            }!!
 
     /**
      * Creates an empty response to be returned in lieu of an exception if the mergeOnNextOnError

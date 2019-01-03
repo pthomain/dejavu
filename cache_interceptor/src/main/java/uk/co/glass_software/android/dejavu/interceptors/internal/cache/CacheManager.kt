@@ -61,7 +61,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
     private fun emptyResponseObservable(instructionToken: CacheToken,
                                         action: () -> Unit) =
             Observable.fromCallable(action::invoke).flatMap {
-                emptyResponseFactory.emptyResponseWrapperObservable(instructionToken)
+                emptyResponseFactory.emptyResponseWrapperSingle(instructionToken).toObservable()
             }!!
 
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
@@ -85,7 +85,7 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
 
         return if (cacheOperation is Offline) {
             if (cachedResponse == null)
-                emptyResponseFactory.emptyResponseWrapperObservable(instructionToken)
+                emptyResponseFactory.emptyResponseWrapperSingle(instructionToken).toObservable()
             else
                 Observable.just(cachedResponse)
         } else
