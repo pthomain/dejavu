@@ -22,7 +22,12 @@
 package uk.co.glass_software.android.dejavu.test
 
 
+import com.nhaarman.mockitokotlin2.atLeastOnce
+import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
+import org.mockito.internal.verification.VerificationModeFactory
+import org.mockito.internal.verification.api.VerificationData
+import org.mockito.verification.VerificationMode
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.http.GET
@@ -173,6 +178,24 @@ internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
             context
     )
 }
+
+internal fun <T> verifyWithContext(target: T,
+                                   mode: VerificationMode = atLeastOnce(),
+                                   context: String?) =
+        verify(
+                target,
+                object : VerificationMode {
+                    override fun verify(data: VerificationData?) {
+                        mode.verify(data)
+                    }
+
+                    override fun description(description: String?) =
+                            VerificationModeFactory.description(
+                                    this,
+                                    "$context\n=> $description"
+                            )
+                }
+        )
 
 fun assertArrayEqualsWithContext(expected: ByteArray?,
                                  other: ByteArray?,

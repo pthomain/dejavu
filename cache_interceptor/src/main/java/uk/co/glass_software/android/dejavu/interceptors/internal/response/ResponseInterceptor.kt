@@ -88,7 +88,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      */
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             upstream.filter(responseFilter)
-                    .switchIfEmpty(emptyResponseFactory.emptyResponseWrapperObservable(instructionToken))
+                    .switchIfEmpty(emptyResponseFactory.emptyResponseWrapperSingle(instructionToken).toObservable())
                     .flatMap(this::intercept)!!
 
     /**
