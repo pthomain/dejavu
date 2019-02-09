@@ -12,14 +12,14 @@ import org.junit.Before
 import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.*
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.instructionToken
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import uk.co.glass_software.android.dejavu.test.operationSequence
 import uk.co.glass_software.android.dejavu.test.verifyWithContext
 import java.util.*
 import kotlin.NoSuchElementException
@@ -59,41 +59,7 @@ class ResponseInterceptorUnitTest {
 
     private fun testApply(isSingle: Boolean,
                           isCompletable: Boolean) {
-        sequenceOf(
-                DoNotCache,
-                Invalidate,
-                Clear(),
-                Offline(true, mergeOnNextOnError = null),
-                Offline(false, mergeOnNextOnError = null),
-                Offline(true, mergeOnNextOnError = false),
-                Offline(false, mergeOnNextOnError = false),
-                Offline(true, mergeOnNextOnError = true),
-                Offline(false, mergeOnNextOnError = true),
-                Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-                Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-                Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-                Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-                Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-                Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-                Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-                Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-                Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-                Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-                Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-                Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
-                Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-                Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-                Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-                Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-                Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-                Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-                Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-                Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-                Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-                Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-                Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-                Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
-        ).forEach { operation ->
+        operationSequence().forEach { operation ->
             CacheStatus.values().forEach { cacheStatus ->
                 sequenceOf(true, false).forEach { hasResponse ->
                     sequenceOf(true, false).forEach { isEmptyObservable ->
@@ -120,7 +86,7 @@ class ResponseInterceptorUnitTest {
     private fun testApplyWithVariants(isSingle: Boolean,
                                       isCompletable: Boolean,
                                       hasResponse: Boolean,
-                                      isEmptyObservable: Boolean,
+                                      isEmptyUpstreamObservable: Boolean,
                                       allowNonFinalForSingle: Boolean,
                                       mergeOnNextOnError: Boolean,
                                       cacheStatus: CacheStatus,
@@ -130,12 +96,12 @@ class ResponseInterceptorUnitTest {
                 "\nisSingle = $isSingle," +
                 "\nisCompletable = $isCompletable," +
                 "\nhasResponse = $hasResponse," +
-                "\nisEmptyObservable = $isEmptyObservable," +
+                "\nisEmptyUpstreamObservable = $isEmptyUpstreamObservable," +
                 "\nallowNonFinalForSingle = $allowNonFinalForSingle," +
                 "\noperation.mergeOnNextOnError = ${(operation as? Expiring)?.mergeOnNextOnError}," +
                 "\nconf.mergeOnNextOnError = $mergeOnNextOnError"
 
-        System.out.println(context)
+//        System.out.println(context)
 
         setUp() //reset mocks
 
@@ -155,7 +121,7 @@ class ResponseInterceptorUnitTest {
                 mockMetadata
         )
 
-        val mockObservable = if (isEmptyObservable)
+        val mockUpstreamObservable = if (false && isEmptyUpstreamObservable) //FIXME
             Observable.empty<ResponseWrapper<Glitch>>()
         else
             Observable.just(mockWrapper)
@@ -198,7 +164,7 @@ class ResponseInterceptorUnitTest {
 
         val testObserver = TestObserver<Any>()
 
-        target.apply(mockObservable).subscribe(testObserver)
+        target.apply(mockUpstreamObservable).subscribe(testObserver)
 
         if (isValid) {
             verifyWithContext(
@@ -206,7 +172,14 @@ class ResponseInterceptorUnitTest {
                     atLeastOnce(),
                     context
             ).onNext(eq(mockMetadata))
+//        } else {
+//            verifyWithContext(
+//                    mockMetadataSubject,
+//                    never(),
+//                    any()
+//            ).onNext(any())
         }
+
     }
 
 }

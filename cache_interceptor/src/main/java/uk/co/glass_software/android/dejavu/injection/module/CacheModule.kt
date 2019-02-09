@@ -79,7 +79,8 @@ internal interface CacheModule<E>
 
     fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>>
 
-    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
+    fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
+                                       cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
 
     fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,

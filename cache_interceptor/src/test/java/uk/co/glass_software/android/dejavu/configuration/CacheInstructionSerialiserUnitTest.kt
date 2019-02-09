@@ -8,11 +8,8 @@ import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 
 class CacheInstructionSerialiserUnitTest {
 
-
     private fun getMap(targetClass: Class<*>) = targetClass.name.let {
-
-        fun newCacheInstruction(operation: CacheInstruction.Operation) =
-                CacheInstruction(targetClass, operation)
+        fun newCacheInstruction(operation: CacheInstruction.Operation) = CacheInstruction(targetClass, operation)
 
         LinkedHashMap<String, CacheInstruction>().apply {
             put("$it:DO_NOT_CACHE:", newCacheInstruction(DoNotCache))

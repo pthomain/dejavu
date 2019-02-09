@@ -191,10 +191,12 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>> =
+    override fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
+                                                cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>> =
             object : Function2<CacheToken, Long, CacheInterceptor<E>> {
                 override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
                         cacheManager,
+                        { dateFactory.get(it) },
                         configuration.isCacheEnabled,
                         configuration.logger,
                         t1,

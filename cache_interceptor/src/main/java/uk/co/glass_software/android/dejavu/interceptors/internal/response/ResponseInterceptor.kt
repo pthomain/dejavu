@@ -128,15 +128,19 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                     mergeOnNextOnError
             ) ?: response
         }.let {
-            if (it is Throwable) {
-                logger.d(this, "Returning error: $it")
-                Observable.error<Any>(it)
-            } else if (isCompletable && metadata.exception != null) {
-                logger.d(this, "Returning exception for Completable: $metadata")
-                Observable.error<Any>(metadata.exception)
-            } else {
-                logger.d(this, "Returning response: $metadata")
-                Observable.just<Any>(response)
+            when {
+                it is Throwable -> {
+                    logger.d(this, "Returning error: $it")
+                    Observable.error<Any>(it)
+                }
+                isCompletable && metadata.exception != null -> {
+                    logger.d(this, "Returning exception for Completable: $metadata")
+                    Observable.error<Any>(metadata.exception)
+                }
+                else -> {
+                    logger.d(this, "Returning response: $metadata")
+                    Observable.just<Any>(response)
+                }
             }
         }
     }

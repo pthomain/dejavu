@@ -32,7 +32,10 @@ import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.http.GET
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -234,6 +237,42 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         true,
         "/",
         null
+)
+
+fun operationSequence() = sequenceOf(
+        Operation.DoNotCache,
+        Invalidate,
+        Clear(),
+        Offline(true, mergeOnNextOnError = null),
+        Offline(false, mergeOnNextOnError = null),
+        Offline(true, mergeOnNextOnError = false),
+        Offline(false, mergeOnNextOnError = false),
+        Offline(true, mergeOnNextOnError = true),
+        Offline(false, mergeOnNextOnError = true),
+        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
+        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
+        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
+        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
+        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
+        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
+        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
+        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
+        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
+        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
+        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
+        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
+        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
+        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
+        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
+        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
+        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
+        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
+        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
+        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
+        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
+        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
+        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
+        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
 )
 
 fun callAdapterFactory(rxClass: Class<*>,

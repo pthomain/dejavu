@@ -30,11 +30,12 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
 
-internal class CacheInterceptor<E> constructor(private val cacheManager: CacheManager<E>,
-                                               private val isCacheEnabled: Boolean,
-                                               private val logger: Logger,
-                                               private val instructionToken: CacheToken,
-                                               private val start: Long)
+internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
+                                   private val dateFactory: (Long?) -> Date,
+                                   private val isCacheEnabled: Boolean,
+                                   private val logger: Logger,
+                                   private val instructionToken: CacheToken,
+                                   private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorProvider {
@@ -69,7 +70,7 @@ internal class CacheInterceptor<E> constructor(private val cacheManager: CacheMa
                 responseWrapper.metadata = responseWrapper.metadata.copy(
                         CacheToken.notCached(
                                 instructionToken,
-                                Date()
+                                dateFactory(null)
                         )
                 )
             }
