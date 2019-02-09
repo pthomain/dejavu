@@ -264,4 +264,12 @@
             app:srcCompat="@drawable/ic_github_logo" />
 
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Icon made by Revicon from www.flaticon.com is licensed by CC 3.0 BY"
+        android:textColor="@android:color/white"
+        android:textSize="9dp" />
 </LinearLayout>

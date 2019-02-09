@@ -1,11 +1,13 @@
-# DéjàVu [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
+# DéjàVu <img src="https://github.com/pthomain/dejavu/blob/test/app/src/main/res/drawable/logo.svg" width="100"/>
 
-**A 0-configuration, transparent, client-controlled RxJava/Retrofit HTTP cache**
+**A simple yet fully-featured RxJava/Retrofit HTTP cache**
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
 
 TL;DR
 -----
 
-Cache your HTTP responses via Retrofit transparently with just an annotation and _zero_ setup.
+Cache your HTTP responses via Retrofit transparently with just an annotation and (almost) zero setup.
 All responses are automatically cached to disk and refreshed once they expire. 
 Snappy compression (https://github.com/google/snappy) and AES encryption are supported and optional.
 
