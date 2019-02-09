@@ -16,7 +16,6 @@ import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -30,6 +29,7 @@ import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 
 internal interface CacheModule<E>
@@ -40,9 +40,9 @@ internal interface CacheModule<E>
 
     fun provideConfiguration(): CacheConfiguration<E>
 
-    fun provideGsonSerialiser(): GsonSerialiser
+    fun provideSerialiser(): Serialiser
 
-    fun provideStoreEntryFactory(gsonSerialiser: GsonSerialiser): StoreEntryFactory
+    fun provideStoreEntryFactory(serialiser: Serialiser): StoreEntryFactory
 
     fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory): EncryptionManager?
 

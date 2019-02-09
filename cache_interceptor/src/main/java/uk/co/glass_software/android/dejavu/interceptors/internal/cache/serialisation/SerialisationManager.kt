@@ -21,43 +21,45 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
-import com.google.gson.Gson
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 
 internal class SerialisationManager<E>(private val logger: Logger,
                                        private val byteToStringConverter: (ByteArray) -> String,
                                        private val encryptionManager: EncryptionManager?,
                                        private val compresser: (ByteArray) -> ByteArray,
                                        private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
-                                       private val gson: Gson)
+                                       private val serialiser: Serialiser)
         where E : Exception,
               E : NetworkErrorProvider {
 
     fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,
                   compressData: Boolean) =
-            gson.toJson(responseWrapper.response)
-                    .toByteArray()
-                    .let {
-                        if (encryptData && encryptionManager != null)
-                            encryptionManager.encryptBytes(it, DATA_TAG)
-                        else it
-                    }
-                    ?.let {
-                        if (compressData) compresser(it).also { compressed ->
-                            logCompression(
-                                    compressed,
-                                    responseWrapper.responseClass.simpleName,
-                                    it
-                            )
+            if (serialiser.canHandleType(responseWrapper.responseClass)) {
+                serialiser.serialise(responseWrapper.response!!)
+                        .toByteArray()
+                        .let {
+                            if (encryptData && encryptionManager != null)
+                                encryptionManager.encryptBytes(it, DATA_TAG)
+                            else it
                         }
-                        else it
-                    }
+                        ?.let {
+                            if (compressData) compresser(it).also { compressed ->
+                                logCompression(
+                                        compressed,
+                                        responseWrapper.responseClass.simpleName,
+                                        it
+                                )
+                            }
+                            else it
+                        }
+            } else null
 
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
@@ -80,7 +82,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
                             ?: throw IllegalStateException("Could not decrypt data")
                 else it
             }.let {
-                gson.fromJson(byteToStringConverter(it), responseClass)
+                serialiser.deserialise(byteToStringConverter(it), responseClass)
             }.let {
                 ResponseWrapper(
                         responseClass,

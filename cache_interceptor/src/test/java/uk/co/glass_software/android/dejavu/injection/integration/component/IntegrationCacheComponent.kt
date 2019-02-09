@@ -31,7 +31,6 @@ import uk.co.glass_software.android.dejavu.injection.module.CacheModule
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -44,6 +43,7 @@ import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 import javax.inject.Singleton
 
@@ -53,7 +53,7 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun dateFactory(): CacheModule.Function1<Long?, Date>
 
-    fun gsonSerialiser(): GsonSerialiser
+    fun serialiser(): Serialiser
 
     fun storeEntryFactory(): StoreEntryFactory
 

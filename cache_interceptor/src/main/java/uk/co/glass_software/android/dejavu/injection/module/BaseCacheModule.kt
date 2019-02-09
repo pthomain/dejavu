@@ -40,7 +40,6 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInte
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -54,6 +53,7 @@ import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 import javax.inject.Singleton
 
@@ -76,14 +76,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideGsonSerialiser() =
-            GsonSerialiser(configuration.gson)
+    override fun provideSerialiser() = configuration.serialiser
 
     @Provides
     @Singleton
-    override fun provideStoreEntryFactory(gsonSerialiser: GsonSerialiser) =
+    override fun provideStoreEntryFactory(serialiser: Serialiser) =
             StoreEntryFactory.builder(configuration.context)
-                    .customSerialiser(gsonSerialiser)
+                    .customSerialiser(serialiser)
                     .logger(configuration.logger)
                     .build()
 
@@ -124,7 +123,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                     encryptionManager,
                     { compresser.get(it) },
                     { compressed, compressedOffset, compressedSize -> uncompresser.get(compressed, compressedOffset, compressedSize) },
-                    configuration.gson
+                    configuration.serialiser
             )
 
     @Provides

@@ -19,13 +19,13 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
+package uk.co.glass_software.android.dejavu.configuration
 
 import com.google.gson.Gson
 
 import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 
-internal class GsonSerialiser(private val gson: Gson) : Serialiser {
+class GsonSerialiser(private val gson: Gson) : Serialiser {
 
     override fun canHandleType(targetClass: Class<*>) = true
     override fun canHandleSerialisedFormat(serialised: String) = true

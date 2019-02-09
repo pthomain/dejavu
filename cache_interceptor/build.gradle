@@ -133,7 +133,7 @@ dependencies {
     compileOnly appDependencies.jsr250
     implementation appDependencies.androidAnnotations
 
-    implementation appDependencies.sharedPreferenceStore
+    api appDependencies.sharedPreferenceStore
     api appDependencies.boilerplate
 
     implementation appDependencies.dagger
