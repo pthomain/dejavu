@@ -1,6 +1,6 @@
-# DéjaVu [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/RxCache?utm_source=github.com&utm_medium=referral&utm_content=pthomain/RxCache&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/RxCache.svg)](https://jitpack.io/#pthomain/RxCache)
+# DéjàVu [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
 
-**A 0-configuration, transparent, client-controlled RxJava cache**
+**A 0-configuration, transparent, client-controlled RxJava/Retrofit HTTP cache**
 
 TL;DR
 -----
@@ -16,7 +16,7 @@ About v2.0
 
 Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. The documentation below relates to v1.0+ and is now mostly out-of-date. It will be updated to reflect the new features of 2.0 once the lib is out of alpha/beta.
 
-The library was renamed DéjaVu to avoid confusion with pre-existing similar libraries names RxCache.
+The library was renamed DéjàVu to avoid confusion with pre-existing similar libraries names RxCache.
 
 Retrofit support
 ----------------
@@ -33,7 +33,7 @@ The documentation below will refer exclusively to the Retrofit implementation.
 
 *Note: This library needs to be used in conjunction with RxJava and Gson.*
 
-Adding the dependency [![](https://jitpack.io/v/pthomain/RxCache.svg)](https://jitpack.io/#pthomain/RxCache)
+Adding the dependency [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
 ---------------------
 
 To add the library to your project, add the following block to your root gradle file:
@@ -51,7 +51,7 @@ allprojects {
  
  ```
  dependencies {
-    compile 'com.github.pthomain:RxCache:2.0.0-alpha1'
+    compile 'com.github.pthomain:dejavu:2.0.0-alpha6'
 }
 ```
 
@@ -256,43 +256,43 @@ The sequence diagrams below illustrate the cache mechanism with all the possible
 
 ### CACHE → FRESH
 
-![CACHE → FRESH](https://github.com/pthomain/RxCache/blob/master/github/diagrams/cache_fresh.png)
+![CACHE → FRESH](https://github.com/pthomain/dejavu/blob/master/github/diagrams/cache_fresh.png)
 
 ---
 
 ### CACHE → CACHED
 
-![CACHE → CACHED](https://github.com/pthomain/RxCache/blob/master/github/diagrams/cache_cached.png)
+![CACHE → CACHED](https://github.com/pthomain/dejavu/blob/master/github/diagrams/cache_cached.png)
 
 ---
 
 ### CACHE → STALE → REFRESHED
 
-![CACHE → STALE → REFRESHED](https://github.com/pthomain/RxCache/blob/master/github/diagrams/cache_refreshed.png)
+![CACHE → STALE → REFRESHED](https://github.com/pthomain/dejavu/blob/master/github/diagrams/cache_refreshed.png)
 
 ---
 
 ### CACHE → STALE → COULD_NOT_REFRESH
 
-![CACHE → STALE → COULD_NOT_REFRESH](https://github.com/pthomain/RxCache/blob/master/github/diagrams/cache_could_not_refresh.png)
+![CACHE → STALE → COULD_NOT_REFRESH](https://github.com/pthomain/dejavu/blob/master/github/diagrams/cache_could_not_refresh.png)
 
 ---
 
 ### REFRESH → REFRESHED
 
-![REFRESH → REFRESHED](https://github.com/pthomain/RxCache/blob/master/github/diagrams/refresh_refreshed.png)
+![REFRESH → REFRESHED](https://github.com/pthomain/dejavu/blob/master/github/diagrams/refresh_refreshed.png)
 
 ---
 
 ### REFRESH → COULD_NOT_REFRESH
 
-![REFRESH → COULD_NOT_REFRESH](https://github.com/pthomain/RxCache/blob/master/github/diagrams/refresh_could_not_refresh.png)
+![REFRESH → COULD_NOT_REFRESH](https://github.com/pthomain/dejavu/blob/master/github/diagrams/refresh_could_not_refresh.png)
 
 ---
 
 ### DO_NOT_CACHE → NOT_CACHED
 
-![DO_NOT_CACHE → NOT_CACHED](https://github.com/pthomain/RxCache/blob/master/github/diagrams/do_not_cache.png)
+![DO_NOT_CACHE → NOT_CACHED](https://github.com/pthomain/dejavu/blob/master/github/diagrams/do_not_cache.png)
 
 
 
