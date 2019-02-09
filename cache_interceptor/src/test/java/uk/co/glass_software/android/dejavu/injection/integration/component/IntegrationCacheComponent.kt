@@ -25,13 +25,13 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import io.reactivex.subjects.PublishSubject
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import uk.co.glass_software.android.dejavu.configuration.GsonSerialiser
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.GsonSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
