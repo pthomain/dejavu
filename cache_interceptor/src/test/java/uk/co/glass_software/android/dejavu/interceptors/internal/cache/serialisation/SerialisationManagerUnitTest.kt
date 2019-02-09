@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
-import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -16,12 +15,13 @@ import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertNullWithContext
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 
 class SerialisationManagerUnitTest {
 
     private lateinit var mockEncryptionManager: EncryptionManager
     private lateinit var mockWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockGson: Gson
+    private lateinit var mockSerialiser: Serialiser
     private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
     private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
@@ -48,7 +48,7 @@ class SerialisationManagerUnitTest {
     @Before
     fun setUp() {
         mockEncryptionManager = mock()
-        mockGson = mock()
+        mockSerialiser = mock()
         mockCompresser = mock()
         mockUncompresser = mock()
         mockByteToStringConverter = mock()
@@ -134,7 +134,7 @@ class SerialisationManagerUnitTest {
                 if (hasEncryptionManager) mockEncryptionManager else null,
                 mockCompresser,
                 mockUncompresser,
-                mockGson
+                mockSerialiser
         )
     }
 
@@ -144,7 +144,8 @@ class SerialisationManagerUnitTest {
                               compressData: Boolean) {
         prepareTarget(hasEncryptionManager)
 
-        whenever(mockGson.toJson(mockResponse)).thenReturn(mockJson)
+        whenever(mockSerialiser.canHandleType(TestResponse::class.java)).thenReturn(true)
+        whenever(mockSerialiser.serialise(mockResponse)).thenReturn(mockJson)
 
         if (encryptData) {
             whenever(mockEncryptionManager.encryptBytes(
@@ -276,7 +277,7 @@ class SerialisationManagerUnitTest {
             ).thenReturn(mockJson)
         }
 
-        whenever(mockGson.fromJson(
+        whenever(mockSerialiser.deserialise(
                 eq(mockJson),
                 eq(TestResponse::class.java)
         )).thenReturn(mockResponse)

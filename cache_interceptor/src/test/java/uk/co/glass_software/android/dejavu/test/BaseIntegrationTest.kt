@@ -32,6 +32,7 @@ import retrofit2.Retrofit
 import uk.co.glass_software.android.dejavu.BuildConfig
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
+import uk.co.glass_software.android.dejavu.configuration.GsonSerialiser
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
@@ -56,7 +57,7 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
-            Gson(),
+            GsonSerialiser(Gson()),
             true,
             true,
             true,

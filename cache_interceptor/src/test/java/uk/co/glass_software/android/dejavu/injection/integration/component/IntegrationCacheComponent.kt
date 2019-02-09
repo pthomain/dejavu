@@ -25,7 +25,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import io.reactivex.subjects.PublishSubject
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import uk.co.glass_software.android.dejavu.configuration.GsonSerialiser
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule
@@ -44,6 +43,7 @@ import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 import javax.inject.Singleton
 
@@ -53,7 +53,7 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun dateFactory(): CacheModule.Function1<Long?, Date>
 
-    fun gsonSerialiser(): GsonSerialiser
+    fun serialiser(): Serialiser
 
     fun storeEntryFactory(): StoreEntryFactory
 
