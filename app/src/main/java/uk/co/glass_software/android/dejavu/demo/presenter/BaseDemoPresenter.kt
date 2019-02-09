@@ -73,7 +73,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     private fun newDejaVu() =
             DejaVu.builder()
-                    .serialiser(GsonSerialiser(gson) as uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser)
+                    .serialiser(GsonSerialiser(gson))
                     .mergeOnNextOnError(true)
                     .requestTimeOutInSeconds(10)
                     .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L)
