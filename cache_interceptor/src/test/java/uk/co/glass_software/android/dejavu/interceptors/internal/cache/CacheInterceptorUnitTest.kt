@@ -70,8 +70,7 @@ class CacheInterceptorUnitTest {
     }
 
     private fun testApply(isCacheEnabled: Boolean) {
-        operationSequence().forEach { operation ->
-
+        operationSequence { operation ->
             val target = getTarget(
                     isCacheEnabled,
                     operation
