@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors
 
+import android.net.Uri
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -39,8 +40,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import java.util.*
 
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
-                                               url: String,
-                                               uniqueParameters: String?,
+                                               url: Uri,
                                                configuration: CacheConfiguration<E>,
                                                private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
@@ -54,8 +54,7 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             (instruction.operation as? Expiring)?.compress ?: configuration.compress,
             (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
-            url,
-            uniqueParameters
+            url
     )
 
     override fun apply(upstream: Observable<Any>) =
@@ -68,11 +67,6 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
     override fun apply(upstream: Completable) =
             composeInternal(upstream.toObservable(), COMPLETABLE)
                     .ignoreElements()!!
-//                    .onErrorResumeNext { error: Throwable ->
-//                        //TODO check this, might not be needed
-//                        if (error is NoSuchElementException || error.cause is NoSuchElementException) Completable.complete()
-//                        else Completable.error(error)
-//}
 
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: AnnotationProcessor.RxType) =
@@ -91,12 +85,10 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                   E : NetworkErrorProvider {
 
         fun create(instruction: CacheInstruction,
-                   url: String,
-                   uniqueParameters: String?) =
+                   url: Uri) =
                 DejaVuInterceptor(
                         instruction,
                         url,
-                        uniqueParameters,
                         configuration,
                         dateFactory,
                         responseInterceptorFactory,

@@ -47,7 +47,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
         this.observer = observer
         requestQueue.add(StringRequest(
                 Request.Method.GET,
-                url,
+                url.toString(),
                 Response.Listener(this::onResponse),
                 Response.ErrorListener(this::onError)
         ))

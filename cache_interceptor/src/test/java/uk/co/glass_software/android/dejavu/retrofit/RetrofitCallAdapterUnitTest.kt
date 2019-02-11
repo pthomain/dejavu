@@ -1,5 +1,6 @@
 package uk.co.glass_software.android.dejavu.retrofit
 
+import android.net.Uri
 import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -120,8 +121,7 @@ class RetrofitCallAdapterUnitTest {
                 if (rxType != null) {
                     whenever(mockDejaVuFactory.create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("url"),
-                            eq("body")
+                            eq(Uri.parse("http://test.com"))
                     )).thenReturn(mockDejaVuTransformer)
 
                     when (rxType) {
@@ -139,7 +139,6 @@ class RetrofitCallAdapterUnitTest {
             if (rxType == null) {
                 verify(mockDejaVuFactory, never()).create(
                         any(),
-                        any(),
                         any()
                 )
 
@@ -153,8 +152,7 @@ class RetrofitCallAdapterUnitTest {
                 if (hasInstruction || isHeaderDeserialisationSuccess) {
                     verify(mockDejaVuFactory).create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("url"),
-                            eq("body")
+                            eq(Uri.parse("http://test.com"))
                     )
                 }
 

@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
+import android.net.Uri
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -222,8 +223,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
                                      instruction: CacheInstruction) =
             dejaVuFactory.create(
                     instruction,
-                    call.request().url().toString(),
-                    call.request().body()?.toString()
+                    Uri.parse(call.request().url().toString())
             )
 
 }

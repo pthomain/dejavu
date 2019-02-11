@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
+import android.net.Uri
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import java.util.*
@@ -29,8 +30,7 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,
                                            val isEncrypted: Boolean,
-                                           val apiUrl: String = "",
-                                           val uniqueParameters: String? = null,
+                                           val url: Uri,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
                                            val expiryDate: Date? = null) {
@@ -40,14 +40,12 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         internal fun fromInstruction(instruction: CacheInstruction,
                                      isCompressed: Boolean,
                                      isEncrypted: Boolean,
-                                     apiUrl: String,
-                                     uniqueParameters: String?) = CacheToken(
+                                     url: Uri) = CacheToken(
                 instruction,
                 INSTRUCTION,
                 isCompressed,
                 isEncrypted,
-                apiUrl,
-                uniqueParameters
+                url
         )
 
         internal fun notCached(instructionToken: CacheToken,

@@ -15,7 +15,10 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
-import uk.co.glass_software.android.dejavu.test.*
+import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
+import uk.co.glass_software.android.dejavu.test.assertFalseWithContext
+import uk.co.glass_software.android.dejavu.test.callAdapterFactory
+import uk.co.glass_software.android.dejavu.test.instructionToken
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.lang.reflect.Type
 import java.util.*
@@ -152,13 +155,8 @@ class RetrofitCallAdapterFactoryUnitTest {
 
             assertEqualsWithContext(
                     "",
-                    token.apiUrl,
+                    token.url,
                     "Exception cache token URL should be empty"
-            )
-
-            assertNullWithContext(
-                    token.uniqueParameters,
-                    "Exception cache token parameters should be null"
             )
         } else {
             verify(mockProcessingErrorAdapterFactory, never()).create(

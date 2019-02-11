@@ -35,6 +35,7 @@ import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.instructionToken
 import java.security.MessageDigest
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 @RunWith(RobolectricTestRunner::class)
 internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCacheComponent::hasher) {
@@ -205,49 +206,49 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
     private fun getToken(url: String?,
                          index: Int,
                          context: String) = instructionToken(Cache()).copy(
-            apiUrl = url!!,
-            uniqueParameters = getParams(url, index)
+            url = Uri.parse(url!!).apply {
+                getParams(url, index)?.forEach { (key, value) ->
+                    queryParameterNames.add("$key=$value")
+                }
+            }
     ).also {
         checkParamsInOrder(it, index, context)
     }
 
     private fun getParams(url: String,
-                          index: Int): String? {
+                          index: Int): LinkedHashMap<String, String>? {
         return if (index % 2 == 0) null
         else {
             val numParams = paramsKeys.length
             val length = Math.floor(url.length / numParams.toDouble()).toInt()
 
-            StringBuilder().apply {
+            LinkedHashMap<String, String>().apply {
                 for (i in 0 until numParams) {
                     val startIndex = i * numParams
                     val substring = url.substring(startIndex, startIndex + length)
-                    if (!isEmpty()) append("&")
-                    append("${paramsKeys[i]}=$substring")
+                    put(paramsKeys[i] + "", substring)
                 }
-            }.toString()
+            }
         }
     }
 
     private fun checkParamsInOrder(cacheToken: CacheToken,
                                    index: Int,
                                    context: String) {
-        if (cacheToken.uniqueParameters != null) {
-            val params = target.getParameters(cacheToken)
+        val params = target.getSortedParameters(cacheToken)
 
-            val keys = StringBuilder().apply {
-                Uri.parse("http://test.com?$params").queryParameterNames.forEach {
-                    append(it)
-                }
-            }.toString()
+        val keys = StringBuilder().apply {
+            Uri.parse("http://test.com?$params").queryParameterNames.forEach {
+                append(it)
+            }
+        }.toString()
 
-            assertEqualsWithContext(
-                    paramsKeysInOrder,
-                    keys,
-                    "Parameters were not in order at index $index",
-                    context
-            )
-        }
+        assertEqualsWithContext(
+                paramsKeysInOrder,
+                keys,
+                "Parameters were not in order at index $index",
+                context
+        )
     }
 
 }

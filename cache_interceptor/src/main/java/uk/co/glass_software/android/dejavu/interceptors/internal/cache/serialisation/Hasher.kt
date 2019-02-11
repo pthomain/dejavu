@@ -31,32 +31,29 @@ import java.security.NoSuchAlgorithmException
 internal class Hasher(private val messageDigest: MessageDigest?) {
 
     fun getTokenKey(cacheToken: CacheToken): String =
-            getParameters(cacheToken).let { parameters ->
+            getSortedParameters(cacheToken).let { parameters ->
                 try {
-                    parameters?.let { hash("${cacheToken.apiUrl}$$it") }
-                            ?: hash(cacheToken.apiUrl)
+                    hash(getSortedUrl(
+                            cacheToken.url,
+                            parameters
+                    ))
                 } catch (e: Exception) {
-                    if (parameters == null)
-                        cacheToken.apiUrl.hashCode().toString()
-                    else
-                        (cacheToken.apiUrl.hashCode() * 31 + parameters.hashCode()).toString()
+                    (cacheToken.url.hashCode() * 31 + parameters.hashCode()).toString()
                 }
             }
 
-    fun getParameters(cacheToken: CacheToken) =
-            cacheToken.uniqueParameters?.let { params ->
-                try {
-                    Uri.parse("${cacheToken.apiUrl}?$params").let { uri ->
-                        uri.queryParameterNames
-                                .sorted()
-                                .joinToString(separator = "&") {
-                                    "$it=${uri.getQueryParameter(it)}"
-                                }
+    private fun getSortedUrl(url: Uri,
+                             sortedParameters: String) = with(url) {
+        "$scheme:$host$path?$sortedParameters"
+    }
+
+    fun getSortedParameters(cacheToken: CacheToken) =
+            cacheToken.url
+                    .queryParameterNames
+                    .sorted()
+                    .joinToString(separator = "&") {
+                        "$it=${cacheToken.url.getQueryParameter(it)}"
                     }
-                } catch (e: Exception) {
-                    params
-                }
-            }
 
     @Throws(UnsupportedEncodingException::class)
     private fun hash(text: String): String =

@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.demo.presenter.volley
 
+import android.net.Uri
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import uk.co.glass_software.android.boilerplate.Boilerplate.context
@@ -65,8 +66,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     responseClass,
                     dejaVu.dejaVuInterceptor.create(
                             CacheInstruction(responseClass, cacheOperation),
-                            URL,
-                            null
+                            Uri.parse(URL)
                     ),
                     URL
             )
