@@ -286,6 +286,39 @@ fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
     CacheStatus.values().forEach { action(it) }
 }
 
+fun isStatusValid(cacheStatus: CacheStatus,
+                  operation: Operation) = when (operation) {
+    is Operation.Expiring.Cache,
+    is Operation.Expiring.Refresh -> listOf(
+            CacheStatus.FRESH,
+            CacheStatus.CACHED,
+            CacheStatus.STALE,
+            CacheStatus.REFRESHED,
+            CacheStatus.COULD_NOT_REFRESH
+    ).contains(cacheStatus)
+
+    is Operation.Expiring.Offline -> listOf(
+            CacheStatus.FRESH,
+            CacheStatus.STALE,
+            CacheStatus.EMPTY
+    ).contains(cacheStatus)
+
+    Operation.DoNotCache -> cacheStatus == CacheStatus.NOT_CACHED
+
+    Operation.Invalidate,
+    is Operation.Clear -> cacheStatus == CacheStatus.EMPTY
+}
+
+fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {
+    operationSequence { operation ->
+        cacheStatusSequence { cacheStatus ->
+            if (isStatusValid(cacheStatus, operation)) {
+                action(operation to cacheStatus)
+            }
+        }
+    }
+}
+
 fun callAdapterFactory(rxClass: Class<*>,
                        retrofit: Retrofit,
                        constructor: Function3<Type, Array<Annotation>, Retrofit, CallAdapter<Any, Any>>) =

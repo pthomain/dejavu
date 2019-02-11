@@ -11,10 +11,10 @@ import io.reactivex.subjects.PublishSubject
 import org.junit.Before
 import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -22,7 +22,6 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.util.*
-import kotlin.NoSuchElementException
 
 class ResponseInterceptorUnitTest {
 
@@ -31,9 +30,8 @@ class ResponseInterceptorUnitTest {
     private lateinit var mockMetadataSubject: PublishSubject<CacheMetadata<Glitch>>
     private lateinit var mockEmptyException: Glitch
 
-    private val start = 4321L
-    private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
-
+    private val start = 1234L
+    private val mockDateFactory: (Long?) -> Date = { Date(4321L) }
     private var num = 0
 
     @Before
@@ -59,24 +57,23 @@ class ResponseInterceptorUnitTest {
 
     private fun testApply(isSingle: Boolean,
                           isCompletable: Boolean) {
-        operationSequence { operation ->
-            cacheStatusSequence { cacheStatus ->
-                if (isStatusValid(cacheStatus, operation)) {
-                    trueFalseSequence { hasResponse ->
-                        trueFalseSequence { isEmptyObservable ->
-                            trueFalseSequence { allowNonFinalForSingle ->
-                                trueFalseSequence { mergeOnNextOnError ->
-                                    testApplyWithVariants(
-                                            isSingle,
-                                            isCompletable,
-                                            hasResponse,
-                                            isEmptyObservable,
-                                            allowNonFinalForSingle,
-                                            mergeOnNextOnError,
-                                            cacheStatus,
-                                            operation
-                                    )
-                                }
+        operationAndStatusSequence { (operation, cacheStatus) ->
+            trueFalseSequence { hasResponse ->
+                trueFalseSequence { isEmptyObservable ->
+                    trueFalseSequence { allowNonFinalForSingle ->
+                        trueFalseSequence { mergeOnNextOnError ->
+                            sequenceOf(TestResponse::class.java, String::class.java).forEach { responseClass ->
+                                testApplyWithVariants(
+                                        responseClass,
+                                        isSingle,
+                                        isCompletable,
+                                        hasResponse,
+                                        isEmptyObservable,
+                                        allowNonFinalForSingle,
+                                        mergeOnNextOnError,
+                                        cacheStatus,
+                                        operation
+                                )
                             }
                         }
                     }
@@ -85,54 +82,38 @@ class ResponseInterceptorUnitTest {
         }
     }
 
-    private fun isStatusValid(cacheStatus: CacheStatus,
-                              operation: CacheInstruction.Operation) = when (operation) {
-        is Expiring.Cache,
-        is Expiring.Refresh -> listOf(
-                FRESH,
-                CACHED,
-                STALE,
-                REFRESHED,
-                COULD_NOT_REFRESH
-        ).contains(cacheStatus)
+    private fun getExpiringDescription(operation: Expiring) =
+            ",\noperation.filterFinal = ${operation.filterFinal}," +
+                    "\noperation.freshOnly = ${operation.freshOnly}," +
+                    "\noperation.mergeOnNextOnError = ${operation.mergeOnNextOnError},"
 
-        is Expiring.Offline -> listOf(
-                FRESH,
-                STALE,
-                EMPTY
-        ).contains(cacheStatus)
-
-        CacheInstruction.Operation.DoNotCache -> cacheStatus == NOT_CACHED
-
-        CacheInstruction.Operation.Invalidate,
-        is CacheInstruction.Operation.Clear -> cacheStatus == EMPTY
-    }
-
-    private fun testApplyWithVariants(isSingle: Boolean,
+    private fun testApplyWithVariants(responseClass: Class<*>,
+                                      isSingle: Boolean,
                                       isCompletable: Boolean,
                                       hasResponse: Boolean,
                                       isEmptyUpstreamObservable: Boolean,
                                       allowNonFinalForSingle: Boolean,
                                       mergeOnNextOnError: Boolean,
                                       cacheStatus: CacheStatus,
-                                      operation: CacheInstruction.Operation) {
-        val context = "\nOperation = ${operation.type}," +
+                                      operation: Operation) {
+        val context = "Iteration ${num++}" +
+                "\nResponse class = ${responseClass.simpleName}," +
+                "\nOperation = ${operation.type}," +
                 "\nCacheStatus = $cacheStatus," +
                 "\nisSingle = $isSingle," +
                 "\nisCompletable = $isCompletable," +
                 "\nhasResponse = $hasResponse," +
                 "\nisEmptyUpstreamObservable = $isEmptyUpstreamObservable," +
                 "\nallowNonFinalForSingle = $allowNonFinalForSingle," +
-                "\noperation.mergeOnNextOnError = ${(operation as? Expiring)?.mergeOnNextOnError}," +
-                "\nconf.mergeOnNextOnError = $mergeOnNextOnError"
+                "\nconf.mergeOnNextOnError = $mergeOnNextOnError" +
+                (if (operation is Expiring) getExpiringDescription(operation) else "")
 
-        System.out.println(context)
-        System.out.println(++num)
+//        System.out.println(context)
 
         setUp() //reset mocks
 
         val mockInstructionToken = instructionToken(operation)
-        mockEmptyException = Glitch(NoSuchElementException("no response"))
+        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException())
 
         val isValid = if (operation is Expiring) {
             val filterFresh = cacheStatus.isFresh || !operation.freshOnly
@@ -145,27 +126,26 @@ class ResponseInterceptorUnitTest {
             } else false
         } else true
 
-        val expectEmpty = !hasResponse
-                || isEmptyUpstreamObservable
-                || !isValid
+        val isEmptyUpstream = !hasResponse || isEmptyUpstreamObservable
+        val expectEmpty = isEmptyUpstream || !isValid
 
-        val mockMetadata = CacheMetadata(
-                mockInstructionToken.copy(status = if (expectEmpty) EMPTY else cacheStatus),
-                if (expectEmpty) mockEmptyException else null
+        val mockUpstreamMetadata = CacheMetadata(
+                mockInstructionToken.copy(status = if (isEmptyUpstream) EMPTY else cacheStatus),
+                if (isEmptyUpstream) mockEmptyException else null
         )
 
-        val mockResponse = mock<TestResponse>()
+        val mockResponse = if (responseClass == String::class.java) "" else TestResponse()
 
-        val mockWrapper = ResponseWrapper(
-                TestResponse::class.java,
-                if (hasResponse) mockResponse else null,
-                mockMetadata
+        val mockUpstreamWrapper = ResponseWrapper(
+                responseClass,
+                if (isEmptyUpstream) null else mockResponse,
+                mockUpstreamMetadata
         )
 
         val mockUpstreamObservable = if (isEmptyUpstreamObservable)
             Observable.empty<ResponseWrapper<Glitch>>()
         else
-            Observable.just(mockWrapper)
+            Observable.just(mockUpstreamWrapper)
 
         mockConfiguration = CacheConfiguration(
                 mock(),
@@ -197,12 +177,15 @@ class ResponseInterceptorUnitTest {
         )
 
 
-        val mockEmptyResponseWrapper = mockWrapper.copy(
+        val expectedMetadata = mockUpstreamMetadata.copy(
+                cacheToken = mockInstructionToken.copy(status = if (expectEmpty) EMPTY else cacheStatus),
+                exception = if (expectEmpty) mockEmptyException else null,
+                callDuration = CacheMetadata.Duration(0, 0, 4321 - 1234)
+        )
+
+        val mockEmptyResponseWrapper = mockUpstreamWrapper.copy(
                 response = null,
-                metadata = mockMetadata.copy(
-                        cacheToken = mockInstructionToken.copy(status = EMPTY),
-                        exception = mockEmptyException
-                )
+                metadata = expectedMetadata
         )
 
         val expectedMergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
@@ -212,6 +195,18 @@ class ResponseInterceptorUnitTest {
                 eq(mockInstructionToken)
         )).thenReturn(Single.just(mockEmptyResponseWrapper))
 
+        val mockEmptyResponse = if (responseClass == String::class.java) "" else TestResponse()
+
+        whenever(mockEmptyResponseFactory.create(
+                eq(true),
+                eq(responseClass)
+        )).thenReturn(mockEmptyResponse)
+
+        whenever(mockEmptyResponseFactory.create(
+                eq(false),
+                eq(responseClass)
+        )).thenReturn(null)
+
         val testObserver = TestObserver<Any>()
 
         target.apply(mockUpstreamObservable).subscribe(testObserver)
@@ -220,56 +215,93 @@ class ResponseInterceptorUnitTest {
                 mockMetadataSubject,
                 atLeastOnce(),
                 context
-        ).onNext(eq(mockMetadata))
+        ).onNext(eq(expectedMetadata))
 
         if (isValid) {
             if (expectEmpty) {
                 verifyCheckForError(
+                        isCompletable,
+                        responseClass,
                         expectedMergeOnNextOnError,
+                        expectEmpty,
                         testObserver,
                         context
                 )
             } else {
-                verifyAddMetadataIfPossible(expectedMergeOnNextOnError)
+                verifyAddMetadataIfPossible(
+                        responseClass,
+                        isCompletable,
+                        expectedMergeOnNextOnError,
+                        expectEmpty,
+                        expectedMetadata,
+                        testObserver,
+                        context
+                )
             }
         } else {
             verifyCheckForError(
+                    isCompletable,
+                    responseClass,
                     expectedMergeOnNextOnError,
+                    expectEmpty,
                     testObserver,
                     context
             )
         }
     }
 
-    private fun verifyCheckForError(expectedMergeOnNextOnError: Boolean,
+    private fun verifyCheckForError(isCompletable: Boolean,
+                                    responseClass: Class<*>,
+                                    expectedMergeOnNextOnError: Boolean,
+                                    expectedEmpty: Boolean,
                                     testObserver: TestObserver<Any>,
                                     context: String) {
-        if (expectedMergeOnNextOnError) {
-            verifyExpectedException(
-                    CacheException(
-                            CacheException.Type.METADATA,
-                            "Could not add cache metadata to response '${TestResponse::class.java.simpleName}'." +
-                                    " If you want to enable metadata for this class, it needs extend the" +
-                                    " 'CacheMetadata.Holder' interface." +
-                                    " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
-                                    " that do not support cache metadata."
-                    ),
-                    testObserver,
-                    context
-            )
+        val actualMetadata = (testObserver.values().firstOrNull() as? TestResponse)?.metadata
+
+        val expectedCacheException = CacheException(
+                CacheException.Type.METADATA,
+                "Could not add cache metadata to response '${responseClass.simpleName}'." +
+                        " If you want to enable metadata for this class, it needs extend the" +
+                        " 'CacheMetadata.Holder' interface." +
+                        " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
+                        " that do not support cache metadata."
+        )
+
+        if (expectedEmpty && isCompletable) {
+            //nothing to check
         } else {
-            verifyExpectedException(
-                    mockEmptyException,
-                    testObserver,
-                    context
-            )
+            val expectedException = if (expectedEmpty && responseClass == TestResponse::class.java)
+                mockEmptyException
+            else expectedCacheException
+
+            if (expectedMergeOnNextOnError) {
+                verifyExpectedException(
+                        isCompletable,
+                        actualMetadata,
+                        expectedException,
+                        testObserver,
+                        context
+                )
+            } else {
+                verifyExpectedException(
+                        isCompletable,
+                        actualMetadata,
+                        mockEmptyException,
+                        testObserver,
+                        context
+                )
+            }
         }
     }
 
-    private fun verifyExpectedException(expectedException: Exception,
+    private fun verifyExpectedException(isCompletable: Boolean,
+                                        metadata: CacheMetadata<Glitch>?,
+                                        expectedException: Exception,
                                         testObserver: TestObserver<Any>,
                                         context: String) {
-        val actualException = testObserver.errors().firstOrNull()
+        val actualException = if (metadata == null || isCompletable)
+            testObserver.errors().firstOrNull()
+        else metadata.exception
 
         assertNotNullWithContext(
                 actualException,
@@ -292,8 +324,44 @@ class ResponseInterceptorUnitTest {
         )
     }
 
-    private fun verifyAddMetadataIfPossible(expectedMergeOnNextOnError: Boolean) {
-        //TODO
+    private fun verifyAddMetadataIfPossible(responseClass: Class<*>,
+                                            isCompletable: Boolean,
+                                            expectedMergeOnNextOnError: Boolean,
+                                            expectedEmpty: Boolean,
+                                            expectedMetadata: CacheMetadata<Glitch>,
+                                            testObserver: TestObserver<Any>,
+                                            context: String) {
+        if(!isCompletable) {
+            val actualMetadata = (testObserver.values().firstOrNull() as? TestResponse)?.metadata
+
+            if (responseClass == String::class.java) {
+                if (expectedMergeOnNextOnError) {
+                    verifyCheckForError(
+                            isCompletable,
+                            responseClass,
+                            expectedMergeOnNextOnError,
+                            expectedEmpty,
+                            testObserver,
+                            context
+                    )
+                }
+            } else {
+                val result = testObserver.values().first()
+
+                assertNotNullWithContext(
+                        result,
+                        "Returned response was null, should have returned a valid wrapper",
+                        context
+                )
+
+                assertEqualsWithContext(
+                        expectedMetadata,
+                        actualMetadata,
+                        "Returned response metadata didn't match",
+                        context
+                )
+            }
+        }
     }
 
 }
