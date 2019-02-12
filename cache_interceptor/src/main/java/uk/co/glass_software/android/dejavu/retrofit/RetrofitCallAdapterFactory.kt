@@ -33,6 +33,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
@@ -140,7 +141,11 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                                 CacheInstruction(responseClass, DoNotCache),
                                 false,
                                 false,
-                                ""
+                                RequestMetadata.Hashed(
+                                        DEFAULT_URL,
+                                        null,
+                                        INVALID_HASH
+                                )
                         ),
                         dateFactory(null).time,
                         rxType,
@@ -155,4 +160,8 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
         }
     }
 
+    companion object {
+        internal const val DEFAULT_URL = "http://127.0.0.1"
+        internal const val INVALID_HASH = "no_hash"
+    }
 }

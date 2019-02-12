@@ -31,10 +31,7 @@ import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
-import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.configuration.*
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
@@ -150,14 +147,12 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                                        hasher: Hasher,
                                         dateFactory: Function1<Long?, Date>,
                                         serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
                     database,
                     serialisationManager,
                     configuration.logger,
-                    hasher,
                     configuration.compress,
                     configuration.encrypt,
                     configuration.cacheDurationInMillis,
@@ -167,10 +162,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideCacheManager(databaseManager: DatabaseManager<E>,
+    override fun provideCacheManager(serialiser: Serialiser,
+                                     databaseManager: DatabaseManager<E>,
                                      dateFactory: Function1<Long?, Date>,
                                      emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
+                    configuration.errorFactory,
+                    serialiser,
                     databaseManager,
                     emptyResponseFactory,
                     { dateFactory.get(it) },
@@ -232,11 +230,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+    override fun provideDejaVuInterceptorFactory(hasher: Hasher,
+                                                 dateFactory: Function1<Long?, Date>,
                                                  errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                                  cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                                  responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
+                    hasher,
                     { dateFactory.get(it) },
                     { token, start -> errorInterceptorFactory.get(token, start) },
                     { token, start -> cacheInterceptorFactory.get(token, start) },
@@ -246,8 +246,14 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDefaultAdapterFactory() =
-            RxJava2CallAdapterFactory.create()!!
+    override fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()!!
+
+    @Provides
+    @Singleton
+    override fun provideUriParser() =
+            object : Function1<String, Uri> {
+                override fun get(t1: String) = Uri.parse(t1)
+            }
 
     @Provides
     @Singleton

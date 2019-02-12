@@ -12,6 +12,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
@@ -154,8 +155,8 @@ class RetrofitCallAdapterFactoryUnitTest {
             )
 
             assertEqualsWithContext(
-                    "",
-                    token.url,
+                    DEFAULT_URL,
+                    token.requestMetadata.url,
                     "Exception cache token URL should be empty"
             )
         } else {

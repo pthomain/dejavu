@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.dejavu.retrofit
 
-import android.net.Uri
 import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -19,10 +18,13 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuTransformer
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertTrueWithContext
+import uk.co.glass_software.android.dejavu.test.defaultRequestMetadata
 import uk.co.glass_software.android.dejavu.test.instructionToken
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.lang.reflect.Type
@@ -37,6 +39,7 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockRequest: Request
     private lateinit var mockDejaVuTransformer: DejaVuTransformer
     private lateinit var mockTestResponse: TestResponse
+    private lateinit var requestMetadata: RequestMetadata.UnHashed
 
     private val mockMethodDescription = "mockMethodDescription"
     private val mockHeader = "mockHeader"
@@ -53,6 +56,7 @@ class RetrofitCallAdapterUnitTest {
         mockRequest = mock()
         mockDejaVuTransformer = mock()
         mockTestResponse = mock()
+        requestMetadata = defaultRequestMetadata()
     }
 
     private fun getTarget(hasInstruction: Boolean,
@@ -74,7 +78,6 @@ class RetrofitCallAdapterUnitTest {
         return RetrofitCallAdapter(
                 mockDejaVuFactory,
                 mockCacheInstructionSerialiser,
-                { Uri.parse(it) },
                 mockLogger,
                 mockMethodDescription,
                 if (hasInstruction) mockInstruction else null,
@@ -113,7 +116,7 @@ class RetrofitCallAdapterUnitTest {
             if (hasInstruction || (hasHeader && isHeaderDeserialisationSuccess)) {
                 val mockUrl = mock<HttpUrl>()
                 whenever(mockRequest.url()).thenReturn(mockUrl)
-                whenever(mockUrl.toString()).thenReturn("http://test.com")
+                whenever(mockUrl.toString()).thenReturn(DEFAULT_URL)
 
                 val mockBody = mock<RequestBody>()
                 whenever(mockRequest.body()).thenReturn(mockBody)
@@ -122,7 +125,7 @@ class RetrofitCallAdapterUnitTest {
                 if (rxType != null) {
                     whenever(mockDejaVuFactory.create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("http://test.com")
+                            eq(requestMetadata)
                     )).thenReturn(mockDejaVuTransformer)
 
                     when (rxType) {
@@ -153,7 +156,7 @@ class RetrofitCallAdapterUnitTest {
                 if (hasInstruction || isHeaderDeserialisationSuccess) {
                     verify(mockDejaVuFactory).create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("http://test.com")
+                            eq(requestMetadata)
                     )
                 }
 

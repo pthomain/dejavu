@@ -12,6 +12,7 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
@@ -70,11 +71,11 @@ internal interface CacheModule<E>
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
     fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                               hasher: Hasher,
                                dateFactory: Function1<Long?, Date>,
                                serialisationManager: SerialisationManager<E>): DatabaseManager<E>
 
-    fun provideCacheManager(databaseManager: DatabaseManager<E>,
+    fun provideCacheManager(serialiser: Serialiser,
+                            databaseManager: DatabaseManager<E>,
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 
@@ -87,7 +88,8 @@ internal interface CacheModule<E>
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>
 
-    fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+    fun provideDejaVuInterceptorFactory(hasher: Hasher,
+                                        dateFactory: Function1<Long?, Date>,
                                         errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>

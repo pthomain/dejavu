@@ -33,6 +33,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 import uk.co.glass_software.android.dejavu.demo.model.CatFactResponse
 import uk.co.glass_software.android.dejavu.demo.presenter.BaseDemoPresenter
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -65,7 +66,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     responseClass,
                     dejaVu.dejaVuInterceptor.create(
                             CacheInstruction(responseClass, cacheOperation),
-                            URL
+                            RequestMetadata.UnHashed(URL)
                     ),
                     URL
             )
