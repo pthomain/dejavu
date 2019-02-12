@@ -23,40 +23,48 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialis
 
 import android.net.Uri
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
-internal class Hasher(private val messageDigest: MessageDigest?) {
+internal class Hasher(private val messageDigest: MessageDigest?,
+                      private val uriParser: (String) -> Uri) {
 
-    fun getTokenKey(cacheToken: CacheToken): String =
-            getParameters(cacheToken).let { parameters ->
-                try {
-                    parameters?.let { hash("${cacheToken.apiUrl}$$it") }
-                            ?: hash(cacheToken.apiUrl)
-                } catch (e: Exception) {
-                    if (parameters == null)
-                        cacheToken.apiUrl.hashCode().toString()
-                    else
-                        (cacheToken.apiUrl.hashCode() * 31 + parameters.hashCode()).toString()
-                }
-            }
+    fun hash(requestMetadata: RequestMetadata.UnHashed): RequestMetadata.Hashed {
+        val uri = uriParser(requestMetadata.url)
+        val sortedParameters = getSortedParameters(uri)
 
-    fun getParameters(cacheToken: CacheToken) =
-            cacheToken.uniqueParameters?.let { params ->
-                try {
-                    Uri.parse("${cacheToken.apiUrl}?$params").let { uri ->
-                        uri.queryParameterNames
-                                .sorted()
-                                .joinToString(separator = "&") {
-                                    "$it=${uri.getQueryParameter(it)}"
-                                }
+        val sortedUrl = getSortedUrl(
+                uri,
+                sortedParameters
+        )
+
+        val urlAndBody = requestMetadata.requestBody?.let { "$sortedUrl||$it" } ?: sortedUrl
+
+        return try {
+            hash(urlAndBody)
+        } catch (e: Exception) {
+            urlAndBody.hashCode().toString()
+        }.let {
+            RequestMetadata.Hashed(
+                    requestMetadata.url,
+                    requestMetadata.requestBody,
+                    it
+            )
+        }
+    }
+
+    private fun getSortedUrl(url: Uri,
+                             sortedParameters: String) = with(url) {
+        "$scheme:$host$path?$sortedParameters"
+    }
+
+    internal fun getSortedParameters(uri: Uri) =
+            uri.queryParameterNames
+                    .sorted()
+                    .joinToString(separator = "&") {
+                        "$it=${uri.getQueryParameter(it)}"
                     }
-                } catch (e: Exception) {
-                    params
-                }
-            }
 
     @Throws(UnsupportedEncodingException::class)
     private fun hash(text: String): String =
@@ -82,7 +90,8 @@ internal class Hasher(private val messageDigest: MessageDigest?) {
         return String(hexChars)
     }
 
-    class Factory(private val logger: Logger) {
+    class Factory(private val logger: Logger,
+                  private val uriParser: (String) -> Uri) {
 
         fun create(): Hasher {
             var messageDigest = try {
@@ -105,7 +114,7 @@ internal class Hasher(private val messageDigest: MessageDigest?) {
                 }
             }
 
-            return Hasher(messageDigest)
+            return Hasher(messageDigest, uriParser)
         }
     }
 

@@ -36,9 +36,13 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.lang.reflect.ParameterizedType
@@ -228,6 +232,8 @@ fun assertArrayEqualsWithContext(expected: ByteArray?,
     }
 }
 
+fun defaultRequestMetadata() = RequestMetadata.UnHashed(DEFAULT_URL)
+
 fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheToken.fromInstruction(
         CacheInstruction(
                 TestResponse::class.java,
@@ -235,45 +241,91 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         ),
         true,
         true,
-        "/",
-        null
+        RequestMetadata.Hashed(
+                DEFAULT_URL,
+                null,
+                INVALID_HASH
+        )
 )
 
-fun operationSequence() = sequenceOf(
-        Operation.DoNotCache,
-        Invalidate,
-        Clear(),
-        Offline(true, mergeOnNextOnError = null),
-        Offline(false, mergeOnNextOnError = null),
-        Offline(true, mergeOnNextOnError = false),
-        Offline(false, mergeOnNextOnError = false),
-        Offline(true, mergeOnNextOnError = true),
-        Offline(false, mergeOnNextOnError = true),
-        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-        Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-        Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-        Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-        Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
-        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-        Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-        Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-        Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-        Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
-)
+fun operationSequence(action: (Operation) -> Unit) {
+    sequenceOf(
+            Operation.DoNotCache,
+            Invalidate,
+            Clear(),
+            Offline(true, mergeOnNextOnError = null),
+            Offline(false, mergeOnNextOnError = null),
+            Offline(true, mergeOnNextOnError = false),
+            Offline(false, mergeOnNextOnError = false),
+            Offline(true, mergeOnNextOnError = true),
+            Offline(false, mergeOnNextOnError = true),
+            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
+            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
+            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
+            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
+            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
+            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
+            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
+            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
+            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
+            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
+            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
+            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
+            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
+            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
+            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
+            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
+            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
+            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
+            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
+            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
+            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
+            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
+            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
+            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
+    ).forEach(action)
+}
+
+fun trueFalseSequence(action: (Boolean) -> Unit) {
+    sequenceOf(true, false).forEach { action(it) }
+}
+
+fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
+    CacheStatus.values().forEach { action(it) }
+}
+
+fun isStatusValid(cacheStatus: CacheStatus,
+                  operation: Operation) = when (operation) {
+    is Operation.Expiring.Cache,
+    is Operation.Expiring.Refresh -> listOf(
+            CacheStatus.FRESH,
+            CacheStatus.CACHED,
+            CacheStatus.STALE,
+            CacheStatus.REFRESHED,
+            CacheStatus.COULD_NOT_REFRESH
+    ).contains(cacheStatus)
+
+    is Operation.Expiring.Offline -> listOf(
+            CacheStatus.FRESH,
+            CacheStatus.STALE,
+            CacheStatus.EMPTY
+    ).contains(cacheStatus)
+
+    Operation.DoNotCache -> cacheStatus == CacheStatus.NOT_CACHED
+
+    Operation.Invalidate,
+    is Operation.Clear -> cacheStatus == CacheStatus.EMPTY
+}
+
+fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {
+    operationSequence { operation ->
+        cacheStatusSequence { cacheStatus ->
+            if (isStatusValid(cacheStatus, operation)) {
+                action(operation to cacheStatus)
+            }
+        }
+    }
+}
 
 fun callAdapterFactory(rxClass: Class<*>,
                        retrofit: Retrofit,

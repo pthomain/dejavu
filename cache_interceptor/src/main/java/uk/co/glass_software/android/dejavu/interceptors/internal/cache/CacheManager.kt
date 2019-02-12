@@ -29,6 +29,7 @@ import uk.co.glass_software.android.boilerplate.utils.rx.schedule
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
+import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
@@ -37,10 +38,14 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyResponseFactory
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
+import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
+import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 
 
-internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
+internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
+                               private val serialiser: Serialiser,
+                               private val databaseManager: DatabaseManager<E>,
                                private val emptyResponseFactory: EmptyResponseFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val defaultDurationInMillis: Long,
@@ -145,56 +150,107 @@ internal class CacheManager<E>(private val databaseManager: DatabaseManager<E>,
         logger.d(this, "Fetching and caching new $simpleName")
 
         return upstream
-                .doOnNext { responseWrapper ->
-                    logger.d(this, "Finished fetching $simpleName, now delivering")
-                    val metadata = responseWrapper.metadata
-
-                    responseWrapper.metadata =
-                            if (metadata.exception == null) {
-                                val fetchDate = dateFactory(null)
-                                val timeToLiveInMs = cacheOperation.durationInMillis
-                                        ?: defaultDurationInMillis
-                                val expiryDate = dateFactory(fetchDate.time + timeToLiveInMs)
-
-                                val (encryptData, compressData) = databaseManager.wasPreviouslyEncrypted(
-                                        previousCachedResponse,
-                                        cacheOperation
-                                )
-
-                                val cacheToken = CacheToken.caching(
-                                        instructionToken,
-                                        compressData,
-                                        encryptData,
-                                        fetchDate,
-                                        fetchDate,
-                                        expiryDate
-                                )
-
-                                metadata.copy(
-                                        cacheToken = if (isRefreshFreshOnly) cacheToken.copy(status = REFRESHED)
-                                        else cacheToken,
-                                        callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
-                                )
-                            } else {
-                                metadata.copy(
-                                        cacheToken = metadata.cacheToken.copy(status = EMPTY),
-                                        callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
-                                )
+                .map {
+                    updateMetadata(
+                            simpleName,
+                            it,
+                            cacheOperation,
+                            previousCachedResponse,
+                            instructionToken,
+                            isRefreshFreshOnly,
+                            diskDuration
+                    )
+                }
+                .map { Pair(it, deepCopy(it)) }
+                .flatMap { (returned, cached) ->
+                    Observable.just(returned)
+                            .doAfterTerminate {
+                                if (cached.metadata.exception == null) {
+                                    logger.d(this, "$simpleName successfully delivered, now caching")
+                                    databaseManager.cache(
+                                            instructionToken,
+                                            cacheOperation,
+                                            cached,
+                                            previousCachedResponse
+                                    ).subscribeBy(
+                                            onError = { logger.e(this, it, "Could not cache $simpleName") }
+                                    )
+                                }
                             }
                 }
-                .doAfterNext { response ->
-                    if (response.metadata.exception == null) {
-                        logger.d(this, "$simpleName successfully delivered, now caching")
-                        databaseManager.cache(
-                                instructionToken,
-                                cacheOperation,
-                                response,
-                                previousCachedResponse
-                        ).subscribeBy(
-                                onError = { logger.e(this, it, "Could not cache $simpleName") }
+    }
+
+    private fun updateMetadata(simpleName: String,
+                               responseWrapper: ResponseWrapper<E>,
+                               cacheOperation: Expiring,
+                               previousCachedResponse: ResponseWrapper<E>?,
+                               instructionToken: CacheToken,
+                               isRefreshFreshOnly: Boolean,
+                               diskDuration: Int): ResponseWrapper<E> {
+        logger.d(this, "Finished fetching $simpleName, now delivering")
+        val metadata = responseWrapper.metadata
+
+        responseWrapper.metadata = if (metadata.exception == null) {
+            val fetchDate = dateFactory(null)
+            val timeToLiveInMs = cacheOperation.durationInMillis
+                    ?: defaultDurationInMillis
+            val expiryDate = dateFactory(fetchDate.time + timeToLiveInMs)
+
+            val (encryptData, compressData) = databaseManager.wasPreviouslyEncrypted(
+                    previousCachedResponse,
+                    cacheOperation
+            )
+
+            val cacheToken = CacheToken.caching(
+                    instructionToken,
+                    compressData,
+                    encryptData,
+                    fetchDate,
+                    fetchDate,
+                    expiryDate
+            )
+
+            metadata.copy(
+                    cacheToken = if (isRefreshFreshOnly) cacheToken.copy(status = REFRESHED)
+                    else cacheToken,
+                    callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
+            )
+        } else {
+            metadata.copy(
+                    cacheToken = metadata.cacheToken.copy(status = EMPTY),
+                    callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
+            )
+        }
+
+        return responseWrapper
+    }
+
+    private fun deepCopy(responseWrapper: ResponseWrapper<E>): ResponseWrapper<E> {
+        return responseWrapper.response.let { response ->
+            val copy = if (response != null && serialiser.canHandleType(response.javaClass)) {
+                serialiser.deserialise(
+                        serialiser.serialise(response),
+                        response.javaClass
+                )
+            } else null
+
+            if (copy == null) {
+                val message = "Could not make a deep copy of ${responseWrapper.responseClass.simpleName}: provided serialiser does not support the type. This response will not be cached."
+                logger.e(
+                        this,
+                        message
+                )
+                responseWrapper.copy(
+                        response = null,
+                        metadata = responseWrapper.metadata.copy(
+                                exception = errorFactory.getError(CacheException(
+                                        CacheException.Type.SERIALISATION,
+                                        message
+                                ))
                         )
-                    }
-                }
+                )
+            } else responseWrapper.copy(response = copy)
+        }
     }
 
     private fun getRefreshCallDuration(callDuration: CacheMetadata.Duration,

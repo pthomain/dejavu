@@ -48,7 +48,6 @@ import java.util.*
 internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
-                                  private val hasher: Hasher,
                                   private val compressData: Boolean,
                                   private val encryptData: Boolean,
                                   private val durationInMillis: Long,
@@ -93,7 +92,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         val simpleName = instruction.responseClass.simpleName
         logger.d(this, "Checking for cached $simpleName")
 
-        val key = hasher.getTokenKey(instructionToken)
+        val key = instructionToken.requestMetadata.hash
         checkInvalidation(instruction, key)
 
         val projection = arrayOf(
@@ -144,7 +143,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     fun invalidate(instructionToken: CacheToken) {
         checkInvalidation(
                 instructionToken.instruction,
-                hasher.getTokenKey(instructionToken)
+                instructionToken.requestMetadata.hash
         )
     }
 
@@ -230,7 +229,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 encryptData,
                 compressData
         )?.also {
-            val hash = hasher.getTokenKey(instructionToken)
+            val hash = instructionToken.requestMetadata.hash
             val values = HashMap<String, Any>()
             val now = dateFactory(null).time
 

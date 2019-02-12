@@ -41,7 +41,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                                 null,
                                 CacheMetadata(
                                         instructionToken.copy(status = EMPTY),
-                                        errorFactory.getError(NoSuchElementException("Response was empty"))
+                                        errorFactory.getError(EmptyResponseException())
                                 )
                         )
                 )
@@ -65,4 +65,6 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                     null
                 }
             } else null
+
+    class EmptyResponseException : NoSuchElementException("Response was empty")
 }

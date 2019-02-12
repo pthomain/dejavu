@@ -59,4 +59,29 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
         var metadata: CacheMetadata<E>
     }
 
+
+    override fun toString(): String {
+        return "CacheMetadata(cacheToken=$cacheToken, exception=$exception, callDuration=$callDuration)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CacheMetadata<*>
+
+        if (cacheToken != other.cacheToken) return false
+        if (exception != other.exception) return false
+        if (callDuration != other.callDuration) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = cacheToken.hashCode()
+        result = 31 * result + (exception?.hashCode() ?: 0)
+        result = 31 * result + callDuration.hashCode()
+        return result
+    }
+
 }

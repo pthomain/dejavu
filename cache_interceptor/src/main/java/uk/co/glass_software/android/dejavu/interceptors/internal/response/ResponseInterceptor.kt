@@ -27,7 +27,6 @@ import io.reactivex.functions.Predicate
 import io.reactivex.subjects.PublishSubject
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -72,11 +71,15 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         val status = it.metadata.cacheToken.status
         val operation = instructionToken.instruction.operation
 
-        if (operation is Expiring) when {
-            isSingle -> status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
-            operation.filterFinal -> status.isFinal
-            operation.freshOnly -> status.isFresh
-            else -> true
+        if (operation is Expiring) {
+            val filterFresh = status.isFresh || !operation.freshOnly
+            val filterFinal = status.isFinal || !operation.filterFinal
+
+            if (filterFresh && filterFinal) {
+                if (isSingle) {
+                    status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
+                } else true
+            } else false
         } else true
     }
 
@@ -100,21 +103,26 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      */
     private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
         val responseClass = wrapper.responseClass
-        val metadata = wrapper.metadata
-        val operation = metadata.cacheToken.instruction.operation
-
+        val operation = wrapper.metadata.cacheToken.instruction.operation
         val mergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
                 ?: this.mergeOnNextOnError
 
-        val response = wrapper.response
-                ?: emptyResponseFactory.create(mergeOnNextOnError, responseClass)
+        val metadata = wrapper.metadata.copy(
+                callDuration = wrapper.metadata.callDuration.copy(
+                        total = (dateFactory(null).time - start).toInt()
+                )
+        )
+
+        val response = wrapper.response ?: emptyResponseFactory.create(
+                mergeOnNextOnError,
+                responseClass
+        )
 
         metadataSubject.onNext(metadata)
 
         return if (response == null) {
             checkForError(
                     responseClass,
-                    operation,
                     mergeOnNextOnError
             )
                     ?: metadata.exception
@@ -124,7 +132,6 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                     response,
                     responseClass,
                     metadata,
-                    operation,
                     mergeOnNextOnError
             ) ?: response
         }.let {
@@ -134,8 +141,13 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                     Observable.error<Any>(it)
                 }
                 isCompletable && metadata.exception != null -> {
-                    logger.d(this, "Returning exception for Completable: $metadata")
-                    Observable.error<Any>(metadata.exception)
+                    if (metadata.exception.cause is EmptyResponseFactory.EmptyResponseException) {
+                        logger.d(this, "Returning empty response for Completable: $metadata")
+                        Observable.empty<Any>()
+                    } else {
+                        logger.d(this, "Returning exception for Completable: $metadata")
+                        Observable.error<Any>(metadata.exception)
+                    }
                 }
                 else -> {
                     logger.d(this, "Returning response: $metadata")
@@ -153,19 +165,19 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
     private fun addMetadataIfPossible(response: Any,
                                       responseClass: Class<*>,
                                       metadata: CacheMetadata<E>,
-                                      operation: CacheInstruction.Operation?,
                                       mergeOnNextOnError: Boolean): CacheException? {
-        val holder = response as? CacheMetadata.Holder<E>
-        return if (holder == null) {
-            checkForError(responseClass, operation, mergeOnNextOnError)
-        } else {
-            holder.metadata = metadata.copy(
-                    callDuration = metadata.callDuration.copy(
-                            total = (dateFactory(null).time - start).toInt()
-                    )
-            )
-            null
-        }
+        return if (!isCompletable) {
+            val holder = response as? CacheMetadata.Holder<E>
+            if (holder == null) {
+                checkForError(
+                        responseClass,
+                        mergeOnNextOnError
+                )
+            } else {
+                holder.metadata = metadata
+                null
+            }
+        } else null
     }
 
     /**
@@ -173,11 +185,9 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      * response class does not implement CacheMetadata.Holder.
      *
      * @param responseClass the target response class
-     * @param operation the cache operation
      * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An exception is thrown otherwise.
      */
     private fun checkForError(responseClass: Class<*>,
-                              operation: CacheInstruction.Operation?,
                               mergeOnNextOnError: Boolean): CacheException? {
         val message = "Could not add cache metadata to response '${responseClass.simpleName}'." +
                 " If you want to enable metadata for this class, it needs extend the" +
@@ -185,7 +195,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                 " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
                 " that do not support cache metadata."
 
-        return if (operation is Expiring && mergeOnNextOnError)
+        return if (!isCompletable && mergeOnNextOnError)
             CacheException(CacheException.Type.METADATA, message)
         else null
     }

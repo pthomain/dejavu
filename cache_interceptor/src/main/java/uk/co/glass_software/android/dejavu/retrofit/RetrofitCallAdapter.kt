@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
+import android.net.Uri
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -33,6 +34,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import java.lang.reflect.Type
 
 /**
@@ -222,8 +224,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
                                      instruction: CacheInstruction) =
             dejaVuFactory.create(
                     instruction,
-                    call.request().url().toString(),
-                    call.request().body()?.toString()
+                    RequestMetadata.UnHashed(call.request().url().toString())
             )
 
 }
