@@ -1,4 +1,4 @@
-# DéjàVu <img src="https://github.com/pthomain/dejavu/blob/test/app/src/main/res/drawable/logo.svg" width="100"/>
+# DéjàVu <img src="https://github.com/pthomain/dejavu/blob/master/github/logo.svg" width="100"/>
 
 **A simple yet fully-featured RxJava/Retrofit HTTP cache**
 
@@ -53,7 +53,7 @@ allprojects {
  
  ```
  dependencies {
-    compile 'com.github.pthomain:dejavu:2.0.0-alpha6'
+    compile 'com.github.pthomain:dejavu:2.0.0-beta1'
 }
 ```
 
