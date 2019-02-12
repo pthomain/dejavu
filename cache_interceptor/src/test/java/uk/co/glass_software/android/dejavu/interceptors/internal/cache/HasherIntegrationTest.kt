@@ -178,9 +178,9 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
     @Test
     @Throws(Exception::class)
     fun testHash() {
-        val sha1Hasher = Hasher(MessageDigest.getInstance("SHA-1"))
-        val md5Hasher = Hasher(MessageDigest.getInstance("MD5"))
-        val defaultHasher = Hasher(null)
+        val sha1Hasher = Hasher(MessageDigest.getInstance("SHA-1")) { Uri.parse(it) }
+        val md5Hasher = Hasher(MessageDigest.getInstance("MD5")) { Uri.parse(it) }
+        val defaultHasher = Hasher(null) { Uri.parse(it) }
 
         for (i in strings.indices) {
             assertEqualsWithContext(
@@ -210,7 +210,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
                 getParams(url, index)?.forEach { (key, value) ->
                     queryParameterNames.add("$key=$value")
                 }
-            }
+            }.toString()
     ).also {
         checkParamsInOrder(it, index, context)
     }
@@ -235,7 +235,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
     private fun checkParamsInOrder(cacheToken: CacheToken,
                                    index: Int,
                                    context: String) {
-        val params = target.getSortedParameters(cacheToken)
+        val params = target.getSortedParameters(Uri.parse(cacheToken.url))
 
         val keys = StringBuilder().apply {
             Uri.parse("http://test.com?$params").queryParameterNames.forEach {

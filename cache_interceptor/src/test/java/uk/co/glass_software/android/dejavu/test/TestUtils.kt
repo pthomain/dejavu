@@ -22,7 +22,6 @@
 package uk.co.glass_software.android.dejavu.test
 
 
-import android.net.Uri
 import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
@@ -237,7 +236,7 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         ),
         true,
         true,
-        Uri.parse("http://test.com")
+        "http://test.com"
 )
 
 fun operationSequence(action: (Operation) -> Unit) {

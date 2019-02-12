@@ -2,6 +2,7 @@ package uk.co.glass_software.android.dejavu.injection.module
 
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import io.reactivex.Observable
@@ -66,7 +67,7 @@ internal interface CacheModule<E>
 
     fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase
 
-    fun provideHasher(): Hasher
+    fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
     fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                hasher: Hasher,
@@ -93,7 +94,9 @@ internal interface CacheModule<E>
 
     fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory
 
-    fun provideRetrofitCallAdapterInnerFactory(): Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>
+    fun provideUriParser(): Function1<String, Uri>
+
+    fun provideRetrofitCallAdapterInnerFactory(uriParser: Function1<String, Uri>): Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>
 
     fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
                                           innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,

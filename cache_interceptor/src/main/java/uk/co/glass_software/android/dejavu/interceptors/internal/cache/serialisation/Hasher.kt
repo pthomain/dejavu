@@ -28,13 +28,16 @@ import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
-internal class Hasher(private val messageDigest: MessageDigest?) {
+internal class Hasher(private val messageDigest: MessageDigest?,
+                      private val uriParser: (String) -> Uri) {
 
     fun getTokenKey(cacheToken: CacheToken): String =
-            getSortedParameters(cacheToken).let { parameters ->
+            uriParser(cacheToken.url).let {
+                getSortedParameters(it)
+            }.let { parameters ->
                 try {
                     hash(getSortedUrl(
-                            cacheToken.url,
+                            uriParser(cacheToken.url),
                             parameters
                     ))
                 } catch (e: Exception) {
@@ -47,12 +50,11 @@ internal class Hasher(private val messageDigest: MessageDigest?) {
         "$scheme:$host$path?$sortedParameters"
     }
 
-    fun getSortedParameters(cacheToken: CacheToken) =
-            cacheToken.url
-                    .queryParameterNames
+    fun getSortedParameters(uri: Uri) =
+            uri.queryParameterNames
                     .sorted()
                     .joinToString(separator = "&") {
-                        "$it=${cacheToken.url.getQueryParameter(it)}"
+                        "$it=${uri.getQueryParameter(it)}"
                     }
 
     @Throws(UnsupportedEncodingException::class)
@@ -79,7 +81,8 @@ internal class Hasher(private val messageDigest: MessageDigest?) {
         return String(hexChars)
     }
 
-    class Factory(private val logger: Logger) {
+    class Factory(private val logger: Logger,
+                  private val uriParser: (String) -> Uri) {
 
         fun create(): Hasher {
             var messageDigest = try {
@@ -102,7 +105,7 @@ internal class Hasher(private val messageDigest: MessageDigest?) {
                 }
             }
 
-            return Hasher(messageDigest)
+            return Hasher(messageDigest, uriParser)
         }
     }
 

@@ -44,6 +44,7 @@ import java.lang.reflect.Type
  */
 internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                       private val serialiser: CacheInstructionSerialiser,
+                                      private val uriParser: (String) -> Uri,
                                       private val logger: Logger,
                                       private val methodDescription: String,
                                       private val instruction: CacheInstruction?,
@@ -223,7 +224,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuFactory: DejaVuIntercept
                                      instruction: CacheInstruction) =
             dejaVuFactory.create(
                     instruction,
-                    Uri.parse(call.request().url().toString())
+                    call.request().url().toString()
             )
 
 }

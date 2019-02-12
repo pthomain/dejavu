@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.injection.module
 
+import android.net.Uri
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
@@ -140,8 +141,11 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideHasher() =
-            Hasher.Factory(configuration.logger).create()
+    override fun provideHasher(uriParser: Function1<String, Uri>) =
+            Hasher.Factory(
+                    configuration.logger,
+                    uriParser::get
+            ).create()
 
     @Provides
     @Singleton
@@ -247,7 +251,14 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideRetrofitCallAdapterInnerFactory() =
+    override fun provideUriParser() =
+            object : Function1<String, Uri> {
+                override fun get(t1: String) = Uri.parse(t1)
+            }
+
+    @Provides
+    @Singleton
+    override fun provideRetrofitCallAdapterInnerFactory(uriParser: Function1<String, Uri>) =
             object : Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
@@ -258,6 +269,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                 ) = RetrofitCallAdapter(
                         t1,
                         CacheInstructionSerialiser(),
+                        { uriParser.get(it) },
                         t2,
                         t3,
                         t4,

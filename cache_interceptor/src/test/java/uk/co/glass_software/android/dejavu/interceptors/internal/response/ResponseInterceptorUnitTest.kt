@@ -331,7 +331,7 @@ class ResponseInterceptorUnitTest {
                                             expectedMetadata: CacheMetadata<Glitch>,
                                             testObserver: TestObserver<Any>,
                                             context: String) {
-        if(!isCompletable) {
+        if (!isCompletable) {
             val actualMetadata = (testObserver.values().firstOrNull() as? TestResponse)?.metadata
 
             if (responseClass == String::class.java) {

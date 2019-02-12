@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
-import android.net.Uri
 import com.google.gson.internal.`$Gson$Types`.getRawType
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -141,7 +140,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                                 CacheInstruction(responseClass, DoNotCache),
                                 false,
                                 false,
-                                Uri.EMPTY
+                                ""
                         ),
                         dateFactory(null).time,
                         rxType,

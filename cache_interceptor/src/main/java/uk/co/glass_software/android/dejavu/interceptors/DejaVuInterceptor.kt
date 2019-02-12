@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.interceptors
 
-import android.net.Uri
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -40,7 +39,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import java.util.*
 
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
-                                               url: Uri,
+                                               url: String,
                                                configuration: CacheConfiguration<E>,
                                                private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
@@ -85,7 +84,7 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                   E : NetworkErrorProvider {
 
         fun create(instruction: CacheInstruction,
-                   url: Uri) =
+                   url: String) =
                 DejaVuInterceptor(
                         instruction,
                         url,

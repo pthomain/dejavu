@@ -74,6 +74,7 @@ class RetrofitCallAdapterUnitTest {
         return RetrofitCallAdapter(
                 mockDejaVuFactory,
                 mockCacheInstructionSerialiser,
+                { Uri.parse(it) },
                 mockLogger,
                 mockMethodDescription,
                 if (hasInstruction) mockInstruction else null,
@@ -112,7 +113,7 @@ class RetrofitCallAdapterUnitTest {
             if (hasInstruction || (hasHeader && isHeaderDeserialisationSuccess)) {
                 val mockUrl = mock<HttpUrl>()
                 whenever(mockRequest.url()).thenReturn(mockUrl)
-                whenever(mockUrl.toString()).thenReturn("url")
+                whenever(mockUrl.toString()).thenReturn("http://test.com")
 
                 val mockBody = mock<RequestBody>()
                 whenever(mockRequest.body()).thenReturn(mockBody)
@@ -121,7 +122,7 @@ class RetrofitCallAdapterUnitTest {
                 if (rxType != null) {
                     whenever(mockDejaVuFactory.create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq(Uri.parse("http://test.com"))
+                            eq("http://test.com")
                     )).thenReturn(mockDejaVuTransformer)
 
                     when (rxType) {
@@ -152,7 +153,7 @@ class RetrofitCallAdapterUnitTest {
                 if (hasInstruction || isHeaderDeserialisationSuccess) {
                     verify(mockDejaVuFactory).create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq(Uri.parse("http://test.com"))
+                            eq("http://test.com")
                     )
                 }
 

@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.dejavu.interceptors
 
-import android.net.Uri
 import org.junit.Before
 import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
@@ -15,11 +14,10 @@ import java.util.*
 
 class DejaVuInterceptorUnitTest {
 
-
     private val start = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(4321L) }
 
-    private val url = Uri.parse("http://test.com?param1=value1&param2=value2")
+    private val url = "http://test.com?param1=value1&param2=value2"
 
     private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<Glitch>
     private lateinit var mockCacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<Glitch>
