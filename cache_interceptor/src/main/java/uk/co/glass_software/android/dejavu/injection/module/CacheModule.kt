@@ -70,7 +70,6 @@ internal interface CacheModule<E>
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
     fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                               hasher: Hasher,
                                dateFactory: Function1<Long?, Date>,
                                serialisationManager: SerialisationManager<E>): DatabaseManager<E>
 
@@ -87,7 +86,8 @@ internal interface CacheModule<E>
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>
 
-    fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+    fun provideDejaVuInterceptorFactory(hasher: Hasher,
+                                        dateFactory: Function1<Long?, Date>,
                                         errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>

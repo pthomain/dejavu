@@ -36,10 +36,13 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.lang.reflect.ParameterizedType
@@ -236,7 +239,11 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         ),
         true,
         true,
-        "http://test.com"
+        RequestMetadata.Hashed(
+                DEFAULT_URL,
+                null,
+                INVALID_HASH
+        )
 )
 
 fun operationSequence(action: (Operation) -> Unit) {

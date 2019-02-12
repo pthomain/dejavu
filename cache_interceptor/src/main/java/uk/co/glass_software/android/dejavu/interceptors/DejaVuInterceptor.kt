@@ -30,6 +30,8 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorInterceptor
@@ -39,7 +41,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import java.util.*
 
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
-                                               url: String,
+                                               requestMetadata: RequestMetadata.Hashed,
                                                configuration: CacheConfiguration<E>,
                                                private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
@@ -53,7 +55,7 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             (instruction.operation as? Expiring)?.compress ?: configuration.compress,
             (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
-            url
+            requestMetadata
     )
 
     override fun apply(upstream: Observable<Any>) =
@@ -75,7 +77,8 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                         .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
             }!!
 
-    class Factory<E> internal constructor(private val dateFactory: (Long?) -> Date,
+    class Factory<E> internal constructor(private val hasher: Hasher,
+                                          private val dateFactory: (Long?) -> Date,
                                           private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
                                           private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
@@ -84,10 +87,11 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                   E : NetworkErrorProvider {
 
         fun create(instruction: CacheInstruction,
-                   url: String) =
+                   url: String,
+                   requestBody: String? = null) =
                 DejaVuInterceptor(
                         instruction,
-                        url,
+                        hasher.hash(RequestMetadata.UnHashed(url, requestBody)),
                         configuration,
                         dateFactory,
                         responseInterceptorFactory,

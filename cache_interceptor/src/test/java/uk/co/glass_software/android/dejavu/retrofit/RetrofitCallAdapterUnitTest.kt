@@ -20,6 +20,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSeriali
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuTransformer
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertTrueWithContext
@@ -113,7 +114,7 @@ class RetrofitCallAdapterUnitTest {
             if (hasInstruction || (hasHeader && isHeaderDeserialisationSuccess)) {
                 val mockUrl = mock<HttpUrl>()
                 whenever(mockRequest.url()).thenReturn(mockUrl)
-                whenever(mockUrl.toString()).thenReturn("http://test.com")
+                whenever(mockUrl.toString()).thenReturn(DEFAULT_URL)
 
                 val mockBody = mock<RequestBody>()
                 whenever(mockRequest.body()).thenReturn(mockBody)
@@ -122,7 +123,8 @@ class RetrofitCallAdapterUnitTest {
                 if (rxType != null) {
                     whenever(mockDejaVuFactory.create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("http://test.com")
+                            eq(DEFAULT_URL),
+                            isNull()
                     )).thenReturn(mockDejaVuTransformer)
 
                     when (rxType) {
@@ -140,7 +142,8 @@ class RetrofitCallAdapterUnitTest {
             if (rxType == null) {
                 verify(mockDejaVuFactory, never()).create(
                         any(),
-                        any()
+                        any(),
+                        isNull()
                 )
 
                 assertEqualsWithContext(
@@ -153,7 +156,8 @@ class RetrofitCallAdapterUnitTest {
                 if (hasInstruction || isHeaderDeserialisationSuccess) {
                     verify(mockDejaVuFactory).create(
                             eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq("http://test.com")
+                            eq(DEFAULT_URL),
+                            isNull()
                     )
                 }
 

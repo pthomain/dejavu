@@ -150,14 +150,12 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                                        hasher: Hasher,
                                         dateFactory: Function1<Long?, Date>,
                                         serialisationManager: SerialisationManager<E>) =
             DatabaseManager(
                     database,
                     serialisationManager,
                     configuration.logger,
-                    hasher,
                     configuration.compress,
                     configuration.encrypt,
                     configuration.cacheDurationInMillis,
@@ -232,11 +230,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDejaVuInterceptorFactory(dateFactory: Function1<Long?, Date>,
+    override fun provideDejaVuInterceptorFactory(hasher: Hasher,
+                                                 dateFactory: Function1<Long?, Date>,
                                                  errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                                  cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                                  responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
+                    hasher,
                     { dateFactory.get(it) },
                     { token, start -> errorInterceptorFactory.get(token, start) },
                     { token, start -> cacheInterceptorFactory.get(token, start) },

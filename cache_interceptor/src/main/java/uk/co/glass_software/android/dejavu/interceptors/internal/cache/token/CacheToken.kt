@@ -22,6 +22,7 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import java.util.*
 
@@ -29,7 +30,7 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,
                                            val isEncrypted: Boolean,
-                                           val url: String,
+                                           val requestMetadata: RequestMetadata.Hashed,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
                                            val expiryDate: Date? = null) {
@@ -39,12 +40,12 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         internal fun fromInstruction(instruction: CacheInstruction,
                                      isCompressed: Boolean,
                                      isEncrypted: Boolean,
-                                     url: String) = CacheToken(
+                                     requestMetadata: RequestMetadata.Hashed) = CacheToken(
                 instruction,
                 INSTRUCTION,
                 isCompressed,
                 isEncrypted,
-                url
+                requestMetadata
         )
 
         internal fun notCached(instructionToken: CacheToken,
@@ -82,4 +83,35 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
         )
 
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CacheToken
+
+        if (instruction != other.instruction) return false
+        if (status != other.status) return false
+        if (isCompressed != other.isCompressed) return false
+        if (isEncrypted != other.isEncrypted) return false
+        if (requestMetadata != other.requestMetadata) return false
+        if (fetchDate != other.fetchDate) return false
+        if (cacheDate != other.cacheDate) return false
+        if (expiryDate != other.expiryDate) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = instruction.hashCode()
+        result = 31 * result + status.hashCode()
+        result = 31 * result + isCompressed.hashCode()
+        result = 31 * result + isEncrypted.hashCode()
+        result = 31 * result + requestMetadata.hashCode()
+        result = 31 * result + (fetchDate?.hashCode() ?: 0)
+        result = 31 * result + (cacheDate?.hashCode() ?: 0)
+        result = 31 * result + (expiryDate?.hashCode() ?: 0)
+        return result
+    }
+
 }
