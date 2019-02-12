@@ -41,8 +41,9 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import java.util.*
 
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
-                                               requestMetadata: RequestMetadata.Hashed,
+                                               requestMetadata: RequestMetadata.UnHashed,
                                                configuration: CacheConfiguration<E>,
+                                               private val hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
@@ -55,7 +56,7 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
             if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
             (instruction.operation as? Expiring)?.compress ?: configuration.compress,
             (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
-            requestMetadata
+            hasher.hash(requestMetadata)
     )
 
     override fun apply(upstream: Observable<Any>) =
@@ -87,12 +88,12 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                   E : NetworkErrorProvider {
 
         fun create(instruction: CacheInstruction,
-                   url: String,
-                   requestBody: String? = null) =
+                   requestMetadata: RequestMetadata.UnHashed) =
                 DejaVuInterceptor(
                         instruction,
-                        hasher.hash(RequestMetadata.UnHashed(url, requestBody)),
+                        requestMetadata,
                         configuration,
+                        hasher,
                         dateFactory,
                         responseInterceptorFactory,
                         errorInterceptorFactory,

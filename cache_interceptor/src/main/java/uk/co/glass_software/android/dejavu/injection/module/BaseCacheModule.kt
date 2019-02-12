@@ -31,10 +31,7 @@ import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
-import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.configuration.*
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
@@ -165,10 +162,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideCacheManager(databaseManager: DatabaseManager<E>,
+    override fun provideCacheManager(serialiser: Serialiser,
+                                     databaseManager: DatabaseManager<E>,
                                      dateFactory: Function1<Long?, Date>,
                                      emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
+                    configuration.errorFactory,
+                    serialiser,
                     databaseManager,
                     emptyResponseFactory,
                     { dateFactory.get(it) },
@@ -246,8 +246,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDefaultAdapterFactory() =
-            RxJava2CallAdapterFactory.create()!!
+    override fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()!!
 
     @Provides
     @Singleton
@@ -258,7 +257,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideRetrofitCallAdapterInnerFactory(uriParser: Function1<String, Uri>) =
+    override fun provideRetrofitCallAdapterInnerFactory() =
             object : Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
@@ -269,7 +268,6 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                 ) = RetrofitCallAdapter(
                         t1,
                         CacheInstructionSerialiser(),
-                        { uriParser.get(it) },
                         t2,
                         t3,
                         t4,

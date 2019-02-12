@@ -75,7 +75,6 @@ class RetrofitCallAdapterUnitTest {
         return RetrofitCallAdapter(
                 mockDejaVuFactory,
                 mockCacheInstructionSerialiser,
-                { Uri.parse(it) },
                 mockLogger,
                 mockMethodDescription,
                 if (hasInstruction) mockInstruction else null,

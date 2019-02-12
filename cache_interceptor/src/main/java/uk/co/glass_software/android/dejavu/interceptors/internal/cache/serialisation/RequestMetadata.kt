@@ -3,8 +3,8 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialis
 sealed class RequestMetadata(val url: String,
                              val requestBody: String? = null) {
 
-    class UnHashed internal constructor(url: String,
-                                        requestBody: String?) : RequestMetadata(url, requestBody){
+    class UnHashed constructor(url: String,
+                               requestBody: String? = null) : RequestMetadata(url, requestBody) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -18,7 +18,7 @@ sealed class RequestMetadata(val url: String,
 
     class Hashed internal constructor(url: String,
                                       requestBody: String?,
-                                      val hash: String) : RequestMetadata(url, requestBody){
+                                      val hash: String) : RequestMetadata(url, requestBody) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false

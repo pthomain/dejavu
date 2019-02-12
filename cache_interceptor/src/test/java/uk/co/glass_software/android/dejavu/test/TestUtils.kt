@@ -232,6 +232,8 @@ fun assertArrayEqualsWithContext(expected: ByteArray?,
     }
 }
 
+fun defaultRequestMetadata() = RequestMetadata.UnHashed(DEFAULT_URL)
+
 fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheToken.fromInstruction(
         CacheInstruction(
                 TestResponse::class.java,
