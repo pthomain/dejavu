@@ -23,19 +23,18 @@ package uk.co.glass_software.android.dejavu.interceptors
 
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
-import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorInterceptor
-import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
+import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import java.util.*
@@ -43,11 +42,11 @@ import java.util.*
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                                                requestMetadata: RequestMetadata.UnHashed,
                                                configuration: CacheConfiguration<E>,
-                                               private val hasher: Hasher,
+                                               hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
-                                               private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
-                                               private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
-                                               private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>)
+                                               private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
+                                               private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                               private val cacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>)
     : DejaVuTransformer
         where E : Exception,
               E : NetworkErrorProvider {
@@ -80,9 +79,9 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
 
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
-                                          private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
-                                          private val cacheInterceptorFactory: (CacheToken, Long) -> CacheInterceptor<E>,
-                                          private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
+                                          private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                          private val cacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>,
+                                          private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
                                           private val configuration: CacheConfiguration<E>)
             where E : Exception,
                   E : NetworkErrorProvider {
