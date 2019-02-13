@@ -25,6 +25,7 @@ package uk.co.glass_software.android.dejavu.test
 import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
+import org.junit.Assert.assertArrayEquals
 import org.mockito.internal.verification.VerificationModeFactory
 import org.mockito.internal.verification.api.VerificationData
 import org.mockito.verification.VerificationMode
@@ -84,8 +85,15 @@ fun assertFalseWithContext(assumption: Boolean,
 fun <T> assertEqualsWithContext(t1: T,
                                 t2: T,
                                 description: String,
-                                context: String? = null) =
-        assertEquals(withContext(description, context), t1, t2)
+                                context: String? = null) {
+    val withContext = withContext(description, context)
+
+    if (t1 is Array<*> && t2 is Array<*>)
+        assertArrayEquals(withContext, t1, t2)
+    else {
+        assertEquals(withContext, t1, t2)
+    }
+}
 
 fun <T> assertNullWithContext(value: T?,
                               description: String,
@@ -105,7 +113,7 @@ fun failWithContext(description: String,
 fun withContext(description: String,
                 context: String? = null) =
         if (context == null) description
-        else "$context\n=> $description"
+        else "\n$context\n=> $description"
 
 fun assertGlitchWithContext(expectedGlitch: Glitch?,
                             actualGlitch: Any?,

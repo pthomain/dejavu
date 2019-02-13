@@ -196,7 +196,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     ?: defaultDurationInMillis
             val expiryDate = dateFactory(fetchDate.time + timeToLiveInMs)
 
-            val (encryptData, compressData) = databaseManager.wasPreviouslyEncrypted(
+            val (encryptData, compressData) = databaseManager.shouldEncryptOrCompress(
                     previousCachedResponse,
                     cacheOperation
             )

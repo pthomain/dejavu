@@ -35,7 +35,6 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -219,7 +218,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
 
         logger.d(this, "Caching $simpleName")
 
-        val (encryptData, compressData) = wasPreviouslyEncrypted(
+        val (encryptData, compressData) = shouldEncryptOrCompress(
                 previousCachedResponse,
                 cacheOperation
         )
@@ -251,8 +250,8 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         it.onComplete()
     }!!
 
-    internal fun wasPreviouslyEncrypted(previousCachedResponse: ResponseWrapper<E>?,
-                                        cacheOperation: Expiring): Pair<Boolean, Boolean> {
+    internal fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
+                                         cacheOperation: Expiring): Pair<Boolean, Boolean> {
         val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
 
         return if (previousCacheToken != null) {
