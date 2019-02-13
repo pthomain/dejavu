@@ -1,6 +1,5 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.response
 
-import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
@@ -213,7 +212,6 @@ class ResponseInterceptorUnitTest {
 
         verifyWithContext(
                 mockMetadataSubject,
-                atLeastOnce(),
                 context
         ).onNext(eq(expectedMetadata))
 

@@ -23,12 +23,11 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import com.nhaarman.mockitokotlin2.atLeastOnce
+import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
 import org.junit.Assert.assertArrayEquals
 import org.mockito.internal.verification.VerificationModeFactory
-import org.mockito.internal.verification.api.VerificationData
-import org.mockito.verification.VerificationMode
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.http.GET
@@ -195,21 +194,23 @@ internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
 }
 
 internal fun <T> verifyWithContext(target: T,
-                                   mode: VerificationMode = atLeastOnce(),
                                    context: String?) =
         verify(
                 target,
-                object : VerificationMode {
-                    override fun verify(data: VerificationData?) {
-                        mode.verify(data)
-                    }
+                VerificationModeFactory.description(
+                        atLeastOnce(),
+                        "\n$context"
+                )
+        )
 
-                    override fun description(description: String?) =
-                            VerificationModeFactory.description(
-                                    this,
-                                    "$context\n=> $description"
-                            )
-                }
+internal fun <T> verifyNeverWithContext(target: T,
+                                        context: String?) =
+        verify(
+                target,
+                VerificationModeFactory.description(
+                        never(),
+                        "\n$context"
+                )
         )
 
 fun assertArrayEqualsWithContext(expected: ByteArray?,

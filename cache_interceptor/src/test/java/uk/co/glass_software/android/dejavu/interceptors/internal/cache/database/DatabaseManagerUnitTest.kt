@@ -16,11 +16,8 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
-import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
-import uk.co.glass_software.android.dejavu.test.instructionToken
+import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
-import uk.co.glass_software.android.dejavu.test.operationSequence
-import uk.co.glass_software.android.dejavu.test.trueFalseSequence
 import java.util.*
 
 class DatabaseManagerUnitTest {
@@ -93,7 +90,7 @@ class DatabaseManagerUnitTest {
                 mockLogger,
                 true,
                 true,
-                5678,
+                durationInMillis,
                 mockDateFactory,
                 mockContentValuesFactory
         )
@@ -232,59 +229,67 @@ class DatabaseManagerUnitTest {
                 mockPreviousResponse
         ).blockingGet()
 
-        verify(mockDb).insert(
-                eq(TABLE_CACHE),
-                eq(CONFLICT_REPLACE),
-                eq(mockContentValues)
-        )
+        if (isSerialisationSuccess) {
+            verifyWithContext(mockDb, context).insert(
+                    eq(TABLE_CACHE),
+                    eq(CONFLICT_REPLACE),
+                    eq(mockContentValues)
+            )
 
-        val mapCaptor = argumentCaptor<Map<String, *>>()
-        verify(mockContentValuesFactory).invoke(mapCaptor.capture())
+            val mapCaptor = argumentCaptor<Map<String, *>>()
+            verify(mockContentValuesFactory).invoke(mapCaptor.capture())
 
-        val values = mapCaptor.firstValue
+            val values = mapCaptor.firstValue
 
-        assertEqualsWithContext(
-                instructionToken.requestMetadata.hash,
-                values[TOKEN.columnName],
-                "Cache key didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                currentDateTime,
-                values[DATE.columnName],
-                "Cache date didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                currentDateTime + duration,
-                values[EXPIRY_DATE.columnName],
-                "Expiry date didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                mockBlob,
-                values[DATA.columnName],
-                "Cached data didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                TestResponse::class.java.name,
-                values[CLASS.columnName],
-                "Cached data response class didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                if (compressData) 1 else 0,
-                values[IS_COMPRESSED.columnName],
-                "Compress data flag didn't match",
-                context
-        )
-        assertEqualsWithContext(
-                if (encryptData) 1 else 0,
-                values[IS_ENCRYPTED.columnName],
-                "Encrypt data flag didn't match",
-                context
-        )
+            assertEqualsWithContext(
+                    instructionToken.requestMetadata.hash,
+                    values[TOKEN.columnName],
+                    "Cache key didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    currentDateTime,
+                    values[DATE.columnName],
+                    "Cache date didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    currentDateTime + duration,
+                    values[EXPIRY_DATE.columnName],
+                    "Expiry date didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    mockBlob,
+                    values[DATA.columnName],
+                    "Cached data didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    TestResponse::class.java.name,
+                    values[CLASS.columnName],
+                    "Cached data response class didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    if (compressData) 1 else 0,
+                    values[IS_COMPRESSED.columnName],
+                    "Compress data flag didn't match",
+                    context
+            )
+            assertEqualsWithContext(
+                    if (encryptData) 1 else 0,
+                    values[IS_ENCRYPTED.columnName],
+                    "Encrypt data flag didn't match",
+                    context
+            )
+        } else {
+            verifyNeverWithContext(mockDb, context).insert(
+                    any(),
+                    any(),
+                    any()
+            )
+        }
     }
 //
 //    @Test
