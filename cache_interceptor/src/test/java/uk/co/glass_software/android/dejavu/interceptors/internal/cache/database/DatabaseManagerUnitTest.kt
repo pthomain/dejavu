@@ -34,16 +34,16 @@ class DatabaseManagerUnitTest {
     private lateinit var cacheKey: String
     private lateinit var mockBlob: ByteArray
 
-    private val currentDateTime = 239094L
-    private val mockFetchDateTime = 182938L
-    private val mockCacheDateTime = 1234L
-    private val mockExpiryDateTime = 5678L
-    private val durationInMillis = 7890L
+    private val currentDateTime = 10000L
+    private val mockFetchDateTime = 1000L
+    private val mockCacheDateTime = 100L
+    private val mockExpiryDateTime = 10L
+    private val durationInMillis = 5L
 
-    private lateinit var mockCurrentDate: Date
-    private lateinit var mockFetchDate: Date
-    private lateinit var mockCacheDate: Date
-    private lateinit var mockExpiryDate: Date
+    private val mockCurrentDate = Date(currentDateTime)
+    private val mockFetchDate = Date(mockFetchDateTime)
+    private val mockCacheDate = Date(mockCacheDateTime)
+    private val mockExpiryDate = Date(mockExpiryDateTime)
 
     private lateinit var target: DatabaseManager<Glitch>
 
@@ -54,15 +54,6 @@ class DatabaseManagerUnitTest {
         mockObservable = mock()
         mockSerialisationManager = mock()
         mockDateFactory = mock()
-        mockCurrentDate = mock()
-        mockFetchDate = mock()
-        mockCacheDate = mock()
-        mockExpiryDate = mock()
-
-        whenever(mockCurrentDate.time).thenReturn(currentDateTime)
-        whenever(mockFetchDate.time).thenReturn(mockFetchDateTime)
-        whenever(mockCacheDate.time).thenReturn(mockCacheDateTime)
-        whenever(mockExpiryDate.time).thenReturn(mockExpiryDateTime)
 
         whenever(mockDateFactory.invoke(isNull())).thenReturn(mockCurrentDate)
         whenever(mockDateFactory.invoke(eq(mockCacheDateTime))).thenReturn(mockCacheDate)
@@ -167,6 +158,7 @@ class DatabaseManagerUnitTest {
 
     @Test
     fun testCache() {
+        var iteration = 0
         operationSequence { operation ->
             if (operation is Expiring) {
                 trueFalseSequence { encryptData ->
@@ -175,6 +167,7 @@ class DatabaseManagerUnitTest {
                             trueFalseSequence { isSerialisationSuccess ->
                                 setUp()
                                 testCache(
+                                        iteration++,
                                         operation,
                                         encryptData,
                                         compressData,
@@ -189,13 +182,15 @@ class DatabaseManagerUnitTest {
         }
     }
 
-    private fun testCache(operation: Expiring,
+    private fun testCache(iteration: Int,
+                          operation: Expiring,
                           encryptDataGlobally: Boolean,
                           compressDataGlobally: Boolean,
                           hasPreviousResponse: Boolean,
                           isSerialisationSuccess: Boolean) {
 
-        val context = "operation = $operation,\n" +
+        val context = "iteration = $iteration,\n" +
+                "operation = $operation,\n" +
                 "encryptDataGlobally = $encryptDataGlobally,\n" +
                 "compressDataGlobally = $compressDataGlobally,\n" +
                 "hasPreviousResponse = $hasPreviousResponse\n" +
@@ -203,6 +198,7 @@ class DatabaseManagerUnitTest {
 
         val instructionToken = instructionToken(operation)
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
+
         val duration = operation.durationInMillis ?: durationInMillis
 
         val encryptData = mockPreviousResponse?.metadata?.cacheToken?.isEncrypted
@@ -221,6 +217,17 @@ class DatabaseManagerUnitTest {
 
         val mockContentValues = mock<ContentValues>()
         whenever(mockContentValuesFactory.invoke(any())).thenReturn(mockContentValues)
+
+
+        val previousMetadata = CacheMetadata<Glitch>(
+                instructionToken(),
+                null,
+                CacheMetadata.Duration(0, 0, 0)
+        )
+
+        if (mockPreviousResponse != null) {
+            whenever(mockPreviousResponse.metadata).thenReturn(previousMetadata)
+        }
 
         target.cache(
                 instructionToken,
