@@ -87,10 +87,9 @@ fun <T> assertEqualsWithContext(t1: T,
                                 context: String? = null) {
     val withContext = withContext(description, context)
 
-    if (t1 is Array<*> && t2 is Array<*>)
-        assertArrayEquals(withContext, t1, t2)
-    else {
-        assertEquals(withContext, t1, t2)
+    when {
+        t1 is Array<*> && t2 is Array<*> -> assertArrayEquals(withContext, t1, t2)
+        else -> assertEquals(withContext, t1, t2)
     }
 }
 

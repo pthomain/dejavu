@@ -22,7 +22,6 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 
 import android.content.ContentValues
-import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
@@ -47,8 +46,8 @@ import java.util.*
 internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
-                                  private val compressData: Boolean,
-                                  private val encryptData: Boolean,
+                                  private val compressDataGlobally: Boolean,
+                                  private val encryptDataGlobally: Boolean,
                                   private val durationInMillis: Long,
                                   private val dateFactory: (Long?) -> Date,
                                   private val contentValuesFactory: (Map<String, *>) -> ContentValues)
@@ -139,34 +138,6 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         }
     }
 
-    fun invalidate(instructionToken: CacheToken) {
-        checkInvalidation(
-                instructionToken.instruction,
-                instructionToken.requestMetadata.hash
-        )
-    }
-
-    private fun checkInvalidation(instruction: CacheInstruction,
-                                  key: String) {
-        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            val map = HashMap<String, Any>()
-            map[EXPIRY_DATE.columnName] = 0
-
-            val selection = "${TOKEN.columnName} = ?"
-            val selectionArgs = arrayOf(key)
-
-            database.update(
-                    TABLE_CACHE,
-                    CONFLICT_REPLACE,
-                    contentValuesFactory(map),
-                    selection,
-                    selectionArgs
-            ).let {
-                logger.d(this, "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
-            }
-        }
-    }
-
     private fun getCachedResponse(instructionToken: CacheToken,
                                   start: Long,
                                   cacheDate: Date,
@@ -203,8 +174,36 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                         logger.d(this, "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
                     }
 
-    @VisibleForTesting
-    fun getCachedStatus(expiryDate: Date) =
+    fun invalidate(instructionToken: CacheToken) {
+        checkInvalidation(
+                instructionToken.instruction,
+                instructionToken.requestMetadata.hash
+        )
+    }
+
+    private fun checkInvalidation(instruction: CacheInstruction,
+                                  key: String) {
+        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            val map = mapOf(EXPIRY_DATE.columnName to 0)
+            val selection = "${TOKEN.columnName} = ?"
+            val selectionArgs = arrayOf(key)
+
+            database.update(
+                    TABLE_CACHE,
+                    CONFLICT_REPLACE,
+                    contentValuesFactory(map),
+                    selection,
+                    selectionArgs
+            ).let {
+                logger.d(
+                        this,
+                        "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}"
+                )
+            }
+        }
+    }
+
+    private fun getCachedStatus(expiryDate: Date) =
             if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
 
     fun cache(instructionToken: CacheToken,
@@ -261,8 +260,8 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             )
         } else {
             Pair(
-                    cacheOperation.encrypt ?: this.encryptData,
-                    cacheOperation.compress ?: this.compressData
+                    cacheOperation.encrypt ?: this.encryptDataGlobally,
+                    cacheOperation.compress ?: this.compressDataGlobally
             )
         }
     }
