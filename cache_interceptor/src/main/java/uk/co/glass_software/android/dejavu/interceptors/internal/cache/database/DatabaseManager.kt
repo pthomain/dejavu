@@ -26,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
+import uk.co.glass_software.android.boilerplate.utils.lambda.Action.Companion.act
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
@@ -35,7 +36,8 @@ import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -149,30 +151,33 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                     instructionToken,
                     localData,
                     isEncrypted,
-                    isCompressed
-            ) { clearCache(null, false) }
-                    ?.also {
-                        val callDuration = CacheMetadata.Duration(
-                                (dateFactory(null).time - start).toInt(),
-                                0,
-                                0
-                        )
+                    isCompressed,
+                    { clearCache(null, false) }.act()
+            )?.also {
+                val callDuration = CacheMetadata.Duration(
+                        (dateFactory(null).time - start).toInt(),
+                        0,
+                        0
+                )
 
-                        it.metadata = CacheMetadata(
-                                CacheToken.cached(
-                                        instructionToken,
-                                        getCachedStatus(expiryDate),
-                                        isCompressed,
-                                        isEncrypted,
-                                        cacheDate,
-                                        expiryDate
-                                ),
-                                null,
-                                callDuration
-                        )
+                it.metadata = CacheMetadata(
+                        CacheToken.cached(
+                                instructionToken,
+                                getCachedStatus(expiryDate),
+                                isCompressed,
+                                isEncrypted,
+                                cacheDate,
+                                expiryDate
+                        ),
+                        null,
+                        callDuration
+                )
 
-                        logger.d(this, "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
-                    }
+                logger.d(
+                        this,
+                        "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
+                )
+            }
 
     fun invalidate(instructionToken: CacheToken) {
         checkInvalidation(
@@ -204,7 +209,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     }
 
     private fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
+            if (dateFactory(null).time > expiryDate.time) STALE else CACHED
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,

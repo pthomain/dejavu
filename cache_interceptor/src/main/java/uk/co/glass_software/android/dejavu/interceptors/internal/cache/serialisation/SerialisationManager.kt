@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
+import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -65,7 +66,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
                     data: ByteArray,
                     isEncrypted: Boolean,
                     isCompressed: Boolean,
-                    onError: () -> Unit): ResponseWrapper<E>? {
+                    onError: Action): ResponseWrapper<E>? {
         val responseClass = instructionToken.instruction.responseClass
         val simpleName = responseClass.simpleName
 

@@ -7,7 +7,7 @@ import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import org.junit.Test
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
@@ -50,8 +50,6 @@ class DatabaseManagerUnitTest {
 
     private fun setUp(encryptDataGlobally: Boolean,
                       compressDataGlobally: Boolean): DatabaseManager<Glitch> {
-        val mockLogger = mock<Logger>()
-
         mockDatabase = mock()
         mockObservable = mock()
         mockSerialisationManager = mock()
@@ -80,7 +78,7 @@ class DatabaseManagerUnitTest {
         return DatabaseManager(
                 mockDatabase,
                 mockSerialisationManager,
-                mockLogger,
+                mock(),
                 compressDataGlobally,
                 encryptDataGlobally,
                 durationInMillis,
@@ -310,7 +308,8 @@ class DatabaseManagerUnitTest {
         }
     }
 
-    private fun testInvalidate(operation: CacheInstruction.Operation) {
+    private fun testInvalidate(operation: CacheInstruction.Operation,
+                               skipCall: Boolean = false) {
         val context = "operation = $operation"
         val target = setUp(true, true)
 
@@ -326,7 +325,10 @@ class DatabaseManagerUnitTest {
             val selectionArgsCaptor = argumentCaptor<Array<String>>()
 
             val instructionToken = instructionToken(operation)
-            target.invalidate(instructionToken)
+
+            if (!skipCall) {
+                target.invalidate(instructionToken)
+            }
 
             verifyWithContext(mockContentValuesFactory, context).invoke(mapCaptor.capture())
 
@@ -407,6 +409,105 @@ class DatabaseManagerUnitTest {
                 "hasResults = $hasResults,\n" +
                 "isStale = $isStale"
 
+        val start = 1234L
+        val instructionToken = instructionToken(operation)
+        val isDataStale = isStale || operation.type == REFRESH || operation.type == INVALIDATE
+
+        val queryCaptor = argumentCaptor<String>()
+
+        val mockCursor = mock<Cursor>()
+        whenever(mockDatabase.query(any<String>())).thenReturn(mockCursor)
+
+        whenever(mockCursor.moveToNext())
+                .thenReturn(true)
+                .thenReturn(false)
+
+        val cacheDate = 1L
+        val localData = byteArrayOf(1, 2, 3, 4)
+        val isCompressed = 1
+        val isEncrypted = 0
+        val expiryDate = if (isDataStale) currentDateTime - 1L else currentDateTime + 1L
+
+        whenever(mockCursor.getColumnIndex(eq(DATE.columnName))).thenReturn(1)
+        whenever(mockCursor.getColumnIndex(eq(DATA.columnName))).thenReturn(2)
+        whenever(mockCursor.getColumnIndex(eq(IS_COMPRESSED.columnName))).thenReturn(3)
+        whenever(mockCursor.getColumnIndex(eq(IS_ENCRYPTED.columnName))).thenReturn(4)
+        whenever(mockCursor.getColumnIndex(eq(EXPIRY_DATE.columnName))).thenReturn(5)
+
+        whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDate)
+        whenever(mockCursor.getBlob(eq(2))).thenReturn(localData)
+        whenever(mockCursor.getInt(eq(3))).thenReturn(isCompressed)
+        whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
+        whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
+
+        val timeStamp = if (operation is Expiring.Refresh) 0L else expiryDate
+        val expectedExpiryDate = Date(12345L)
+
+        whenever(mockDateFactory.invoke(eq(timeStamp))).thenReturn(expectedExpiryDate)
+
+        val mockResponseWrapper = ResponseWrapper<Glitch>(
+                TestResponse::class.java,
+                null,
+                mock()
+        )
+
+        val onErrorCaptor = argumentCaptor<Action>()
+
+        whenever(mockSerialisationManager.deserialise(
+                eq(instructionToken),
+                eq(localData),
+                eq(isEncrypted == 1),
+                eq(isCompressed == 1),
+                any()
+        )).thenReturn(mockResponseWrapper)
+
+        val target = setUp(true, true)
+
+        val actualResponseWrapper = target.getCachedResponse(
+                instructionToken,
+                start
+        )
+
+        testInvalidate(operation, true)
+
+        verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
+
+        assertEqualsWithContext(
+                """ SELECT cache_date, expiry_date, data, is_compressed, is_encrypted
+                    FROM rx_cache
+                    WHERE token = 'no_hash'
+                    LIMIT 1
+                    """.replace("\\s+", " "),
+                queryCaptor.firstValue.replace("\\s+", " "),
+                "Query didnt' match",
+                context
+        )
+
+        verifyWithContext(
+                mockSerialisationManager.deserialise(
+                        eq(instructionToken),
+                        eq(localData),
+                        eq(isEncrypted == 1),
+                        eq(isCompressed == 1),
+                        onErrorCaptor.capture()
+                ),
+                context
+        )
+
+        val actualMetadata = actualResponseWrapper.metadata
+
+        assertEqualsWithContext(
+                CacheMetadata.Duration(0, 0, 0),
+                actualMetadata.callDuration,
+                "Metadata call duration didn't match",
+                context
+        )
+
+
+
+        val onErrorAction = onErrorCaptor.firstValue
+
 
     }
+
 }
