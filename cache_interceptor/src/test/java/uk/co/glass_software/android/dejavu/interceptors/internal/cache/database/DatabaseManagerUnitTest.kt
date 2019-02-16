@@ -15,6 +15,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
@@ -34,7 +35,6 @@ class DatabaseManagerUnitTest {
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
     private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockMetadata: CacheMetadata<Glitch>
-    private lateinit var cacheKey: String
     private lateinit var mockBlob: ByteArray
 
     private val currentDateTime = 10000L
@@ -65,7 +65,6 @@ class DatabaseManagerUnitTest {
         mockResponseWrapper = mock()
         mockMetadata = mock()
 
-        cacheKey = "someKey"
         mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
 
         whenever(mockCacheToken.fetchDate).thenReturn(mockFetchDate)
@@ -308,8 +307,7 @@ class DatabaseManagerUnitTest {
         }
     }
 
-    private fun testInvalidate(operation: CacheInstruction.Operation,
-                               skipCall: Boolean = false) {
+    private fun testInvalidate(operation: CacheInstruction.Operation) {
         val context = "operation = $operation"
         val target = setUp(true, true)
 
@@ -326,9 +324,7 @@ class DatabaseManagerUnitTest {
 
             val instructionToken = instructionToken(operation)
 
-            if (!skipCall) {
-                target.invalidate(instructionToken)
-            }
+            target.invalidate(instructionToken)
 
             verifyWithContext(mockContentValuesFactory, context).invoke(mapCaptor.capture())
 
@@ -387,11 +383,13 @@ class DatabaseManagerUnitTest {
 
     @Test
     fun testGetCachedResponse() {
+        var iteration = 0
         operationSequence { operation ->
             if (operation is Expiring) {
                 trueFalseSequence { hasResults ->
                     trueFalseSequence { isStale ->
                         testGetCachedResponse(
+                                iteration++,
                                 operation,
                                 hasResults,
                                 isStale
@@ -402,12 +400,16 @@ class DatabaseManagerUnitTest {
         }
     }
 
-    private fun testGetCachedResponse(operation: Expiring,
-                                      hasResults: Boolean,
+    private fun testGetCachedResponse(iteration: Int,
+                                      operation: Expiring,
+                                      hasResponse: Boolean,
                                       isStale: Boolean) {
-        val context = "operation = $operation,\n" +
-                "hasResults = $hasResults,\n" +
+        val context = "iteration = $iteration,\n" +
+                "operation = $operation,\n" +
+                "hasResponse = $hasResponse,\n" +
                 "isStale = $isStale"
+
+        val target = spy(setUp(true, true))
 
         val start = 1234L
         val instructionToken = instructionToken(operation)
@@ -418,11 +420,13 @@ class DatabaseManagerUnitTest {
         val mockCursor = mock<Cursor>()
         whenever(mockDatabase.query(any<String>())).thenReturn(mockCursor)
 
+        whenever(mockCursor.count).thenReturn(1)
+
         whenever(mockCursor.moveToNext())
                 .thenReturn(true)
                 .thenReturn(false)
 
-        val cacheDate = 1L
+        val cacheDateTimeStamp = 98765L
         val localData = byteArrayOf(1, 2, 3, 4)
         val isCompressed = 1
         val isEncrypted = 0
@@ -434,16 +438,17 @@ class DatabaseManagerUnitTest {
         whenever(mockCursor.getColumnIndex(eq(IS_ENCRYPTED.columnName))).thenReturn(4)
         whenever(mockCursor.getColumnIndex(eq(EXPIRY_DATE.columnName))).thenReturn(5)
 
-        whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDate)
+        whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDateTimeStamp)
         whenever(mockCursor.getBlob(eq(2))).thenReturn(localData)
         whenever(mockCursor.getInt(eq(3))).thenReturn(isCompressed)
         whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
 
         val timeStamp = if (operation is Expiring.Refresh) 0L else expiryDate
-        val expectedExpiryDate = Date(12345L)
+        val mockExpiryDate = Date(if (isStale) currentDateTime - 1L else currentDateTime + 1L)
 
-        whenever(mockDateFactory.invoke(eq(timeStamp))).thenReturn(expectedExpiryDate)
+        whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
+        whenever(mockDateFactory.invoke(eq(timeStamp))).thenReturn(mockExpiryDate)
 
         val mockResponseWrapper = ResponseWrapper<Glitch>(
                 TestResponse::class.java,
@@ -459,54 +464,65 @@ class DatabaseManagerUnitTest {
                 eq(isEncrypted == 1),
                 eq(isCompressed == 1),
                 any()
-        )).thenReturn(mockResponseWrapper)
-
-        val target = setUp(true, true)
+        )).thenReturn(if (hasResponse) mockResponseWrapper else null)
 
         val actualResponseWrapper = target.getCachedResponse(
                 instructionToken,
                 start
         )
 
-        testInvalidate(operation, true)
+        verifyWithContext(target, context).checkInvalidation(
+                eq(instructionToken.instruction),
+                eq(instructionToken.requestMetadata.hash)
+        )
 
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 
         assertEqualsWithContext(
-                """ SELECT cache_date, expiry_date, data, is_compressed, is_encrypted
-                    FROM rx_cache
-                    WHERE token = 'no_hash'
-                    LIMIT 1
-                    """.replace("\\s+", " "),
+                "\n" +
+                        "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted\n" +
+                        "            FROM rx_cache\n" +
+                        "            WHERE token = 'no_hash'\n" +
+                        "            LIMIT 1\n" +
+                        "            ",
                 queryCaptor.firstValue.replace("\\s+", " "),
-                "Query didnt' match",
+                "Query didn't match",
                 context
         )
 
-        verifyWithContext(
-                mockSerialisationManager.deserialise(
-                        eq(instructionToken),
-                        eq(localData),
-                        eq(isEncrypted == 1),
-                        eq(isCompressed == 1),
-                        onErrorCaptor.capture()
-                ),
-                context
+        verifyWithContext(mockSerialisationManager, context).deserialise(
+                eq(instructionToken),
+                eq(localData),
+                eq(isEncrypted == 1),
+                eq(isCompressed == 1),
+                onErrorCaptor.capture()
         )
 
-        val actualMetadata = actualResponseWrapper.metadata
+        if (hasResponse) {
+            val actualMetadata = actualResponseWrapper!!.metadata
 
-        assertEqualsWithContext(
-                CacheMetadata.Duration(0, 0, 0),
-                actualMetadata.callDuration,
-                "Metadata call duration didn't match",
-                context
-        )
+            assertEqualsWithContext(
+                    CacheMetadata.Duration((currentDateTime - start).toInt(), 0, 0),
+                    actualMetadata.callDuration,
+                    "Metadata call duration didn't match",
+                    context
+            )
 
-
+            assertEqualsWithContext(
+                    if (isDataStale) CacheStatus.STALE else CacheStatus.CACHED,
+                    actualMetadata.cacheToken.status,
+                    "Cache status should be ${if (isDataStale) "STALE" else "CACHED"}",
+                    context
+            )
+        } else {
+            assertNullWithContext(
+                    actualResponseWrapper,
+                    "Returned response should be null",
+                    context
+            )
+        }
 
         val onErrorAction = onErrorCaptor.firstValue
-
 
     }
 

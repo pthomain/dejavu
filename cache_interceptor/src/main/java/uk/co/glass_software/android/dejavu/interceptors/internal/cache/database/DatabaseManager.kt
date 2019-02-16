@@ -22,10 +22,10 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 
 import android.content.ContentValues
+import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.lambda.Action.Companion.act
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
@@ -39,6 +39,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisa
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.useAndLogError
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.text.DateFormat
@@ -110,7 +111,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             LIMIT 1
             """
 
-        database.query(query).useAndLogError { cursor ->
+        database.query(query).useAndLogError(logger) { cursor ->
             if (cursor.count != 0 && cursor.moveToNext()) {
                 logger.d(this, "Found a cached $simpleName")
 
@@ -186,8 +187,9 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         )
     }
 
-    private fun checkInvalidation(instruction: CacheInstruction,
-                                  key: String) {
+    @VisibleForTesting
+    internal fun checkInvalidation(instruction: CacheInstruction,
+                                   key: String) {
         if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
             val map = mapOf(EXPIRY_DATE.columnName to 0)
             val selection = "${TOKEN.columnName} = ?"
