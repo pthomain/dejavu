@@ -522,8 +522,12 @@ class DatabaseManagerUnitTest {
             )
         }
 
-        val onErrorAction = onErrorCaptor.firstValue
+        onErrorCaptor.firstValue()
 
+        verifyWithContext(target, context).clearCache(
+                isNull(),
+                eq(false)
+        )
     }
 
 }
