@@ -445,7 +445,7 @@ class DatabaseManagerUnitTest {
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
 
         val timeStamp = if (operation is Expiring.Refresh) 0L else expiryDate
-        val mockExpiryDate = Date(if (isStale) currentDateTime - 1L else currentDateTime + 1L)
+        val mockExpiryDate = Date(if (isDataStale) currentDateTime - 1L else currentDateTime + 1L)
 
         whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
         whenever(mockDateFactory.invoke(eq(timeStamp))).thenReturn(mockExpiryDate)
