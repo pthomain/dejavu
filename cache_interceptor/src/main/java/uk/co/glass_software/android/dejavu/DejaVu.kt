@@ -80,9 +80,9 @@ class DejaVu<E> internal constructor(component: CacheComponent<E>)
          */
         fun builder() =
                 CacheConfiguration.builder(
-                        GlitchFactory(),
-                        defaultComponentProvider()
-                )
+                GlitchFactory(),
+                defaultComponentProvider()
+        )
 
     }
 }

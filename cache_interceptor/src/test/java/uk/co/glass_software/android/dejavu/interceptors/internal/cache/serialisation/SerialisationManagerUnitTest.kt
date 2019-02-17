@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.junit.Before
 import org.junit.Test
+import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
@@ -25,7 +26,7 @@ class SerialisationManagerUnitTest {
     private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
     private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
-    private lateinit var mockOnError: () -> Unit
+    private lateinit var mockOnError: Action
     private lateinit var mockInstructionToken: CacheToken
     private lateinit var mockInstruction: CacheInstruction
     private lateinit var mockResponse: TestResponse

@@ -26,7 +26,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
+import uk.co.glass_software.android.boilerplate.utils.lambda.Action.Companion.act
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
@@ -35,10 +35,11 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.useAndLogError
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.text.DateFormat
@@ -48,8 +49,8 @@ import java.util.*
 internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
-                                  private val compressData: Boolean,
-                                  private val encryptData: Boolean,
+                                  private val compressDataGlobally: Boolean,
+                                  private val encryptDataGlobally: Boolean,
                                   private val durationInMillis: Long,
                                   private val dateFactory: (Long?) -> Date,
                                   private val contentValuesFactory: (Map<String, *>) -> ContentValues)
@@ -110,7 +111,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             LIMIT 1
             """
 
-        database.query(query).useAndLogError { cursor ->
+        database.query(query).useAndLogError(logger) { cursor ->
             if (cursor.count != 0 && cursor.moveToNext()) {
                 logger.d(this, "Found a cached $simpleName")
 
@@ -140,34 +141,6 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         }
     }
 
-    fun invalidate(instructionToken: CacheToken) {
-        checkInvalidation(
-                instructionToken.instruction,
-                instructionToken.requestMetadata.hash
-        )
-    }
-
-    private fun checkInvalidation(instruction: CacheInstruction,
-                                  key: String) {
-        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            val map = HashMap<String, Any>()
-            map[EXPIRY_DATE.columnName] = 0
-
-            val selection = "${TOKEN.columnName} = ?"
-            val selectionArgs = arrayOf(key)
-
-            database.update(
-                    TABLE_CACHE,
-                    CONFLICT_REPLACE,
-                    contentValuesFactory(map),
-                    selection,
-                    selectionArgs
-            ).let {
-                logger.d(this, "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}")
-            }
-        }
-    }
-
     private fun getCachedResponse(instructionToken: CacheToken,
                                   start: Long,
                                   cacheDate: Date,
@@ -179,34 +152,66 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                     instructionToken,
                     localData,
                     isEncrypted,
-                    isCompressed
-            ) { clearCache(null, false) }
-                    ?.also {
-                        val callDuration = CacheMetadata.Duration(
-                                (dateFactory(null).time - start).toInt(),
-                                0,
-                                0
-                        )
+                    isCompressed,
+                    { clearCache(null, false) }.act()
+            )?.also {
+                val callDuration = CacheMetadata.Duration(
+                        (dateFactory(null).time - start).toInt(),
+                        0,
+                        0
+                )
 
-                        it.metadata = CacheMetadata(
-                                CacheToken.cached(
-                                        instructionToken,
-                                        getCachedStatus(expiryDate),
-                                        isCompressed,
-                                        isEncrypted,
-                                        cacheDate,
-                                        expiryDate
-                                ),
-                                null,
-                                callDuration
-                        )
+                it.metadata = CacheMetadata(
+                        CacheToken.cached(
+                                instructionToken,
+                                getCachedStatus(expiryDate),
+                                isCompressed,
+                                isEncrypted,
+                                cacheDate,
+                                expiryDate
+                        ),
+                        null,
+                        callDuration
+                )
 
-                        logger.d(this, "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}")
-                    }
+                logger.d(
+                        this,
+                        "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
+                )
+            }
+
+    fun invalidate(instructionToken: CacheToken) {
+        checkInvalidation(
+                instructionToken.instruction,
+                instructionToken.requestMetadata.hash
+        )
+    }
 
     @VisibleForTesting
-    fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time > expiryDate.time) CacheStatus.STALE else CacheStatus.CACHED
+    internal fun checkInvalidation(instruction: CacheInstruction,
+                                   key: String) {
+        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            val map = mapOf(EXPIRY_DATE.columnName to 0)
+            val selection = "${TOKEN.columnName} = ?"
+            val selectionArgs = arrayOf(key)
+
+            database.update(
+                    TABLE_CACHE,
+                    CONFLICT_REPLACE,
+                    contentValuesFactory(map),
+                    selection,
+                    selectionArgs
+            ).let {
+                logger.d(
+                        this,
+                        "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}"
+                )
+            }
+        }
+    }
+
+    private fun getCachedStatus(expiryDate: Date) =
+            if (dateFactory(null).time > expiryDate.time) STALE else CACHED
 
     fun cache(instructionToken: CacheToken,
               cacheOperation: Expiring,
@@ -219,7 +224,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
 
         logger.d(this, "Caching $simpleName")
 
-        val (encryptData, compressData) = wasPreviouslyEncrypted(
+        val (encryptData, compressData) = shouldEncryptOrCompress(
                 previousCachedResponse,
                 cacheOperation
         )
@@ -251,8 +256,8 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         it.onComplete()
     }!!
 
-    internal fun wasPreviouslyEncrypted(previousCachedResponse: ResponseWrapper<E>?,
-                                        cacheOperation: Expiring): Pair<Boolean, Boolean> {
+    internal fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
+                                         cacheOperation: Expiring): Pair<Boolean, Boolean> {
         val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
 
         return if (previousCacheToken != null) {
@@ -262,8 +267,8 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             )
         } else {
             Pair(
-                    cacheOperation.encrypt ?: this.encryptData,
-                    cacheOperation.compress ?: this.compressData
+                    cacheOperation.encrypt ?: this.encryptDataGlobally,
+                    cacheOperation.compress ?: this.compressDataGlobally
             )
         }
     }
