@@ -161,22 +161,21 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                             diskDuration
                     )
                 }
-                .map { Pair(it, deepCopy(it)) }
-                .flatMap { (returned, cached) ->
-                    Observable.just(returned)
-                            .doAfterTerminate {
-                                if (cached.metadata.exception == null) {
-                                    logger.d(this, "$simpleName successfully delivered, now caching")
-                                    databaseManager.cache(
-                                            instructionToken,
-                                            cacheOperation,
-                                            cached,
-                                            previousCachedResponse
-                                    ).subscribeBy(
-                                            onError = { logger.e(this, it, "Could not cache $simpleName") }
-                                    )
-                                }
-                            }
+                .flatMap {
+                    val serialised = serialise(it)
+                    Observable.just(it).doAfterTerminate {
+                        if (serialised.metadata.exception == null) {
+                            logger.d(this, "$simpleName successfully delivered, now caching")
+                            databaseManager.cache(
+                                    instructionToken,
+                                    cacheOperation,
+                                    serialised,
+                                    previousCachedResponse
+                            ).subscribeBy(
+                                    onError = { logger.e(this, it, "Could not cache $simpleName") }
+                            )
+                        }
+                    }
                 }
     }
 
@@ -225,33 +224,32 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         return responseWrapper
     }
 
-    private fun deepCopy(responseWrapper: ResponseWrapper<E>): ResponseWrapper<E> {
-        return responseWrapper.response.let { response ->
-            val copy = if (response != null && serialiser.canHandleType(response.javaClass)) {
-                serialiser.deserialise(
-                        serialiser.serialise(response),
-                        response.javaClass
-                )
-            } else null
+    private fun serialise(responseWrapper: ResponseWrapper<E>) =
+            responseWrapper.response.let { response ->
+                val serialised = if (response != null && serialiser.canHandleType(response.javaClass)) {
+                    serialiser.serialise(response)
+                } else null
 
-            if (copy == null) {
-                val message = "Could not make a deep copy of ${responseWrapper.responseClass.simpleName}: provided serialiser does not support the type. This response will not be cached."
-                logger.e(
-                        this,
-                        message
+                if (serialised == null) {
+                    val message = "Could not make a deep copy of ${responseWrapper.responseClass.simpleName}: provided serialiser does not support the type. This response will not be cached."
+                    logger.e(
+                            this,
+                            message
+                    )
+                    responseWrapper.copy(
+                            response = null,
+                            metadata = responseWrapper.metadata.copy(
+                                    exception = errorFactory.getError(CacheException(
+                                            CacheException.Type.SERIALISATION,
+                                            message
+                                    ))
+                            )
+                    )
+                } else responseWrapper.copy(
+                        response = serialised,
+                        responseClass = String::class.java
                 )
-                responseWrapper.copy(
-                        response = null,
-                        metadata = responseWrapper.metadata.copy(
-                                exception = errorFactory.getError(CacheException(
-                                        CacheException.Type.SERIALISATION,
-                                        message
-                                ))
-                        )
-                )
-            } else responseWrapper.copy(response = copy)
-        }
-    }
+            }
 
     private fun getRefreshCallDuration(callDuration: CacheMetadata.Duration,
                                        diskDuration: Int) =

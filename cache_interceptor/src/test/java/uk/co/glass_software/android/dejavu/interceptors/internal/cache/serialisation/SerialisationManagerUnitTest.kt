@@ -1,20 +1,17 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
-import org.junit.Before
+import com.nhaarman.mockitokotlin2.*
 import org.junit.Test
 import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
-import uk.co.glass_software.android.dejavu.test.assertArrayEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertNullWithContext
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import uk.co.glass_software.android.dejavu.test.trueFalseSequence
+import uk.co.glass_software.android.dejavu.test.verifyNeverWithContext
 import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
 import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 
@@ -31,6 +28,7 @@ class SerialisationManagerUnitTest {
     private lateinit var mockInstruction: CacheInstruction
     private lateinit var mockResponse: TestResponse
 
+    private val mockStringResponse = "mockStringResponse"
     private val mockJson = "mockJson"
     private val mockJsonByteArray = mockJson.toByteArray()
 
@@ -46,8 +44,8 @@ class SerialisationManagerUnitTest {
 
     private lateinit var target: SerialisationManager<Glitch>
 
-    @Before
-    fun setUp() {
+    private fun setUp(useString: Boolean,
+                      hasEncryptionManager: Boolean) {
         mockEncryptionManager = mock()
         mockSerialiser = mock()
         mockCompresser = mock()
@@ -58,77 +56,14 @@ class SerialisationManagerUnitTest {
         mockInstruction = mock()
         mockResponse = mock()
 
+        whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
+        whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
         mockWrapper = ResponseWrapper(
-                TestResponse::class.java,
-                mockResponse,
+                if (useString) String::class.java else TestResponse::class.java,
+                if (useString) mockStringResponse else mockResponse,
                 mock()
         )
 
-        whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
-        whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
-    }
-
-    @Test
-    fun testSerialiseEncryptFalseCompressFalse() {
-        testSerialise(
-                false,
-                false,
-                false,
-                false
-        )
-    }
-
-    @Test
-    fun testSerialiseEncryptTrueEncryptionSuccessTrueCompressFalse() {
-        testSerialise(
-                true,
-                true,
-                true,
-                false
-        )
-    }
-
-    @Test
-    fun testSerialiseEncryptTrueEncryptionSuccessFalseCompressFalse() {
-        testSerialise(
-                true,
-                false,
-                true,
-                false
-        )
-    }
-
-    @Test
-    fun testSerialiseEncryptFalseCompressTrue() {
-        testSerialise(
-                false,
-                false,
-                false,
-                true
-        )
-    }
-
-    @Test
-    fun testSerialiseEncryptTrueEncryptionSuccessTrueCompressTrue() {
-        testSerialise(
-                true,
-                true,
-                true,
-                true
-        )
-    }
-
-    @Test
-    fun testSerialiseEncryptTrueEncryptionSuccessFalseCompressTrue() {
-        testSerialise(
-                true,
-                false,
-                true,
-                true
-        )
-    }
-
-    private fun prepareTarget(hasEncryptionManager: Boolean) {
         target = SerialisationManager(
                 mock(),
                 mockByteToStringConverter,
@@ -139,14 +74,47 @@ class SerialisationManagerUnitTest {
         )
     }
 
+    @Test
+    fun testSerialise() {
+        trueFalseSequence { hasEncryptionManager ->
+            trueFalseSequence { encryptionSucceeds ->
+                trueFalseSequence { useString ->
+                    trueFalseSequence { encryptData ->
+                        trueFalseSequence { compressData ->
+                            testSerialise(
+                                    hasEncryptionManager,
+                                    encryptionSucceeds,
+                                    useString,
+                                    encryptData,
+                                    compressData
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun testSerialise(hasEncryptionManager: Boolean,
                               encryptionSucceeds: Boolean,
+                              useString: Boolean,
                               encryptData: Boolean,
                               compressData: Boolean) {
-        prepareTarget(hasEncryptionManager)
+        val context = "hasEncryptionManager = $hasEncryptionManager,\n" +
+                "encryptionSucceeds = $encryptionSucceeds,\n" +
+                "useString = $useString,\n" +
+                "encryptData = $encryptData,\n" +
+                "compressData = $compressData"
 
-        whenever(mockSerialiser.canHandleType(TestResponse::class.java)).thenReturn(true)
-        whenever(mockSerialiser.serialise(mockResponse)).thenReturn(mockJson)
+        setUp(
+                useString,
+                hasEncryptionManager
+        )
+
+        if (!useString) {
+            whenever(mockSerialiser.canHandleType(TestResponse::class.java)).thenReturn(true)
+            whenever(mockSerialiser.serialise(mockResponse)).thenReturn(mockJson)
+        }
 
         if (encryptData) {
             whenever(mockEncryptionManager.encryptBytes(
@@ -169,6 +137,12 @@ class SerialisationManagerUnitTest {
                 compressData
         )
 
+        if (useString) {
+            val innerContext = "Serialiser should not be called when given a String"
+            verifyNeverWithContext(mockSerialiser, innerContext).canHandleType(any())
+            verifyNeverWithContext(mockSerialiser, innerContext).serialise<Any>(any())
+        }
+
         val expectedOutput = when {
             encryptData -> when {
                 encryptionSucceeds -> if (compressData) mockEncryptedCompressedByteArray else mockEncryptedByteArray
@@ -178,71 +152,40 @@ class SerialisationManagerUnitTest {
             else -> mockJsonByteArray
         }
 
-        assertArrayEqualsWithContext(
+        assertEqualsWithContext(
                 expectedOutput,
                 serialised,
-                "Output byte array didn't match"
+                "Output byte array didn't match",
+                context
         )
     }
 
     @Test
-    fun testDeserialiseIsEncryptedFalseIsCompressedFalse() {
-        testDeserialise(
-                false,
-                false,
-                false
-        )
-    }
-
-    @Test
-    fun testDeserialiseIsEncryptedFalseIsCompressedTrue() {
-        testDeserialise(
-                true,
-                false,
-                false
-        )
-    }
-
-    @Test
-    fun testDeserialiseIsEncryptedTrueDecryptionSuccessFalseIsCompressedTrue() {
-        testDeserialise(
-                true,
-                true,
-                false
-        )
-    }
-
-    @Test
-    fun testDeserialiseIsEncryptedTrueDecryptionSuccessTrueIsCompressedTrue() {
-        testDeserialise(
-                true,
-                true,
-                true
-        )
-    }
-
-    @Test
-    fun testDeserialiseIsEncryptedTrueDecryptionSuccessFalseIsCompressedFalse() {
-        testDeserialise(
-                false,
-                true,
-                false
-        )
-    }
-
-    @Test
-    fun testDeserialiseIsEncryptedTrueDecryptionSuccessTrueIsCompressedFalse() {
-        testDeserialise(
-                false,
-                true,
-                true
-        )
+    fun testDeserialise() {
+        trueFalseSequence { isCompressed ->
+            trueFalseSequence { isEncrypted ->
+                trueFalseSequence { decryptionSucceeds ->
+                    testDeserialise(
+                            isCompressed,
+                            isEncrypted,
+                            decryptionSucceeds
+                    )
+                }
+            }
+        }
     }
 
     private fun testDeserialise(isCompressed: Boolean,
                                 isEncrypted: Boolean,
                                 decryptionSucceeds: Boolean) {
-        prepareTarget(true)
+        val context = "isCompressed = $isCompressed,\n" +
+                "isEncrypted = $isEncrypted,\n" +
+                "decryptionSucceeds = $decryptionSucceeds"
+
+        setUp(
+                false,
+                true
+        )
 
         val mockJsonByteArray = if (isCompressed) {
             whenever(mockUncompresser.invoke(
@@ -295,19 +238,22 @@ class SerialisationManagerUnitTest {
             verify(mockOnError).invoke()
             assertNullWithContext(
                     result,
-                    "Result should be null"
+                    "Result should be null",
+                    context
             )
         } else {
             assertEqualsWithContext(
                     TestResponse::class.java,
                     result!!.responseClass,
-                    "Response class didn't match"
+                    "Response class didn't match",
+                    context
             )
 
             assertEqualsWithContext(
                     mockResponse,
                     result.response,
-                    "Response didn't match"
+                    "Response didn't match",
+                    context
             )
 
             val metadata = result.metadata
@@ -315,12 +261,14 @@ class SerialisationManagerUnitTest {
             assertEqualsWithContext(
                     mockInstructionToken,
                     metadata.cacheToken,
-                    "Metadata cache token didn't match"
+                    "Metadata cache token didn't match",
+                    context
             )
 
             assertNullWithContext(
                     metadata.exception,
-                    "Metadata exception should be null"
+                    "Metadata exception should be null",
+                    context
             )
         }
     }

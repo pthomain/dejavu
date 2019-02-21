@@ -41,26 +41,35 @@ internal class SerialisationManager<E>(private val logger: Logger,
 
     fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,
-                  compressData: Boolean) =
-            if (serialiser.canHandleType(responseWrapper.responseClass)) {
-                serialiser.serialise(responseWrapper.response!!)
-                        .toByteArray()
-                        .let {
-                            if (encryptData && encryptionManager != null)
-                                encryptionManager.encryptBytes(it, DATA_TAG)
-                            else it
+                  compressData: Boolean): ByteArray? {
+        val response = responseWrapper.response!!
+        val responseClass = responseWrapper.responseClass
+
+        val serialised = when {
+            responseClass == String::class.java -> response as String
+            serialiser.canHandleType(responseClass) -> serialiser.serialise(response)
+            else -> null
+        }
+
+        return serialised
+                ?.toByteArray()
+                ?.let { data ->
+                    if (encryptData && encryptionManager != null)
+                        encryptionManager.encryptBytes(data, DATA_TAG)
+                    else data
+                }
+                ?.let { data ->
+                    if (compressData)
+                        compresser(data).also { compressed ->
+                            logCompression(
+                                    compressed,
+                                    responseClass.simpleName,
+                                    data
+                            )
                         }
-                        ?.let {
-                            if (compressData) compresser(it).also { compressed ->
-                                logCompression(
-                                        compressed,
-                                        responseWrapper.responseClass.simpleName,
-                                        it
-                                )
-                            }
-                            else it
-                        }
-            } else null
+                    else data
+                }
+    }
 
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
