@@ -38,6 +38,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -89,6 +90,7 @@ fun <T> assertEqualsWithContext(t1: T,
 
     when {
         t1 is Array<*> && t2 is Array<*> -> assertArrayEquals(withContext, t1, t2)
+        t1 is ByteArray && t2 is ByteArray -> assertByteArrayEqualsWithContext(t1, t2, context)
         else -> assertEquals(withContext, t1, t2)
     }
 }
@@ -212,9 +214,9 @@ internal fun <T> verifyNeverWithContext(target: T,
                 )
         )
 
-fun assertArrayEqualsWithContext(expected: ByteArray?,
-                                 other: ByteArray?,
-                                 context: String? = null) {
+fun assertByteArrayEqualsWithContext(expected: ByteArray?,
+                                     other: ByteArray?,
+                                     context: String? = null) {
     when {
         expected == null -> assertNullWithContext(
                 other,
@@ -256,11 +258,14 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         )
 )
 
-fun operationSequence(action: (Operation) -> Unit) {
+inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(
             Operation.DoNotCache,
             Invalidate,
             Clear(),
+            Clear(null, true),
+            Clear(TestResponse::class.java),
+            Clear(TestResponse::class.java, true),
             Offline(true, mergeOnNextOnError = null),
             Offline(false, mergeOnNextOnError = null),
             Offline(true, mergeOnNextOnError = false),
@@ -294,38 +299,53 @@ fun operationSequence(action: (Operation) -> Unit) {
     ).forEach(action)
 }
 
-fun trueFalseSequence(action: (Boolean) -> Unit) {
-    sequenceOf(true, false).forEach { action(it) }
+inline fun trueFalseSequence(action: (Boolean) -> Unit) {
+    sequenceOf(true, false).forEach(action)
 }
 
-fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
-    CacheStatus.values().forEach { action(it) }
+inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
+    CacheStatus.values().forEach(action)
 }
 
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
-    is Operation.Expiring.Cache,
-    is Operation.Expiring.Refresh -> listOf(
-            CacheStatus.FRESH,
-            CacheStatus.CACHED,
-            CacheStatus.STALE,
-            CacheStatus.REFRESHED,
-            CacheStatus.COULD_NOT_REFRESH
-    ).contains(cacheStatus)
 
-    is Operation.Expiring.Offline -> listOf(
-            CacheStatus.FRESH,
-            CacheStatus.STALE,
-            CacheStatus.EMPTY
-    ).contains(cacheStatus)
+    is Operation.Expiring.Offline -> if (operation.freshOnly) {
+        listOf(
+                FRESH,
+                EMPTY
+        )
+    } else {
+        listOf(
+                FRESH,
+                STALE,
+                EMPTY
+        )
+    }.contains(cacheStatus)
 
-    Operation.DoNotCache -> cacheStatus == CacheStatus.NOT_CACHED
+    is Operation.Expiring -> if (operation.freshOnly) {
+        listOf(
+                FRESH,
+                CACHED,
+                REFRESHED
+        )
+    } else {
+        listOf(
+                FRESH,
+                CACHED,
+                STALE,
+                REFRESHED,
+                COULD_NOT_REFRESH
+        )
+    }.contains(cacheStatus)
+
+    Operation.DoNotCache -> cacheStatus == NOT_CACHED
 
     Operation.Invalidate,
-    is Operation.Clear -> cacheStatus == CacheStatus.EMPTY
+    is Operation.Clear -> cacheStatus == EMPTY
 }
 
-fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {
+inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {
     operationSequence { operation ->
         cacheStatusSequence { cacheStatus ->
             if (isStatusValid(cacheStatus, operation)) {
