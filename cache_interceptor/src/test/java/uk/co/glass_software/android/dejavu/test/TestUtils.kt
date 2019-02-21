@@ -90,6 +90,7 @@ fun <T> assertEqualsWithContext(t1: T,
 
     when {
         t1 is Array<*> && t2 is Array<*> -> assertArrayEquals(withContext, t1, t2)
+        t1 is ByteArray && t2 is ByteArray -> assertByteArrayEqualsWithContext(t1, t2, context)
         else -> assertEquals(withContext, t1, t2)
     }
 }
@@ -212,6 +213,34 @@ internal fun <T> verifyNeverWithContext(target: T,
                         "\n$context"
                 )
         )
+
+fun assertByteArrayEqualsWithContext(expected: ByteArray?,
+                                     other: ByteArray?,
+                                     context: String? = null) {
+    when {
+        expected == null -> assertNullWithContext(
+                other,
+                "Byte array should be null",
+                context
+        )
+        other != null && other.size == expected.size -> {
+            other.forEachIndexed { index, byte ->
+                if (expected[index] != byte) {
+                    assertEqualsWithContext(
+                            expected[index],
+                            byte,
+                            "Byte didn't match at index $index",
+                            context
+                    )
+                }
+            }
+        }
+        else -> failWithContext(
+                "Byte array had the wrong size",
+                context
+        )
+    }
+}
 
 fun defaultRequestMetadata() = RequestMetadata.UnHashed(DEFAULT_URL)
 

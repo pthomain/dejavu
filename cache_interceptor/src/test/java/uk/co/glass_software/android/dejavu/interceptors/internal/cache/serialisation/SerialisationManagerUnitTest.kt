@@ -30,6 +30,7 @@ class SerialisationManagerUnitTest {
 
     private val mockStringResponse = "mockStringResponse"
     private val mockJson = "mockJson"
+    private val mockStringResponseByteArray = mockStringResponse.toByteArray()
     private val mockJsonByteArray = mockJson.toByteArray()
 
     private val mockEncryptedByteArray = "4567".toByteArray()
@@ -76,18 +77,21 @@ class SerialisationManagerUnitTest {
 
     @Test
     fun testSerialise() {
+        var iteration = 0
         trueFalseSequence { hasEncryptionManager ->
             trueFalseSequence { encryptionSucceeds ->
                 trueFalseSequence { useString ->
                     trueFalseSequence { encryptData ->
                         trueFalseSequence { compressData ->
                             testSerialise(
+                                    iteration,
                                     hasEncryptionManager,
-                                    encryptionSucceeds,
+                                    encryptionSucceeds && hasEncryptionManager,
                                     useString,
                                     encryptData,
                                     compressData
                             )
+                            iteration++
                         }
                     }
                 }
@@ -95,12 +99,14 @@ class SerialisationManagerUnitTest {
         }
     }
 
-    private fun testSerialise(hasEncryptionManager: Boolean,
+    private fun testSerialise(iteration: Int,
+                              hasEncryptionManager: Boolean,
                               encryptionSucceeds: Boolean,
                               useString: Boolean,
                               encryptData: Boolean,
                               compressData: Boolean) {
-        val context = "hasEncryptionManager = $hasEncryptionManager,\n" +
+        val context = "iteration = $iteration,\n" +
+                "hasEncryptionManager = $hasEncryptionManager,\n" +
                 "encryptionSucceeds = $encryptionSucceeds,\n" +
                 "useString = $useString,\n" +
                 "encryptData = $encryptData,\n" +
@@ -116,18 +122,21 @@ class SerialisationManagerUnitTest {
             whenever(mockSerialiser.serialise(mockResponse)).thenReturn(mockJson)
         }
 
-        if (encryptData) {
+        val expectedInputMockByteArray = if (useString) mockStringResponseByteArray else mockJsonByteArray
+
+        val shouldEncryptData = encryptData && hasEncryptionManager
+        if (shouldEncryptData) {
             whenever(mockEncryptionManager.encryptBytes(
-                    eq(mockJsonByteArray),
+                    eq(expectedInputMockByteArray),
                     eq("DATA_TAG")
             )).thenReturn(if (encryptionSucceeds) mockEncryptedByteArray else null)
         }
 
         if (compressData) {
             whenever(mockCompresser.invoke(
-                    eq(if (encryptData) mockEncryptedByteArray else mockJsonByteArray)
+                    eq(if (shouldEncryptData) mockEncryptedByteArray else expectedInputMockByteArray)
             )).thenReturn(
-                    if (encryptData) mockEncryptedCompressedByteArray else mockCompressedByteArray
+                    if (shouldEncryptData) mockEncryptedCompressedByteArray else mockCompressedByteArray
             )
         }
 
@@ -144,12 +153,12 @@ class SerialisationManagerUnitTest {
         }
 
         val expectedOutput = when {
-            encryptData -> when {
+            shouldEncryptData -> when {
                 encryptionSucceeds -> if (compressData) mockEncryptedCompressedByteArray else mockEncryptedByteArray
                 else -> null
             }
             compressData -> mockCompressedByteArray
-            else -> mockJsonByteArray
+            else -> expectedInputMockByteArray
         }
 
         assertEqualsWithContext(
@@ -162,23 +171,28 @@ class SerialisationManagerUnitTest {
 
     @Test
     fun testDeserialise() {
+        var iteration = 0
         trueFalseSequence { isCompressed ->
             trueFalseSequence { isEncrypted ->
                 trueFalseSequence { decryptionSucceeds ->
                     testDeserialise(
+                            iteration,
                             isCompressed,
                             isEncrypted,
                             decryptionSucceeds
                     )
+                    iteration++
                 }
             }
         }
     }
 
-    private fun testDeserialise(isCompressed: Boolean,
+    private fun testDeserialise(iteration: Int,
+                                isCompressed: Boolean,
                                 isEncrypted: Boolean,
                                 decryptionSucceeds: Boolean) {
-        val context = "isCompressed = $isCompressed,\n" +
+        val context = "iteration = $iteration,\n" +
+                "isCompressed = $isCompressed,\n" +
                 "isEncrypted = $isEncrypted,\n" +
                 "decryptionSucceeds = $decryptionSucceeds"
 
