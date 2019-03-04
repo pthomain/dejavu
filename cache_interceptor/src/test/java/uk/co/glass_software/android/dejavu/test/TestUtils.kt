@@ -23,6 +23,7 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import com.nhaarman.mockitokotlin2.atLeastOnce
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
@@ -41,6 +42,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
@@ -241,6 +243,13 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
         )
     }
 }
+
+internal fun defaultResponseWrapper(metadata: CacheMetadata<Glitch>,
+                                    response: TestResponse = mock()) = ResponseWrapper(
+        TestResponse::class.java,
+        response,
+        metadata
+)
 
 fun defaultRequestMetadata() = RequestMetadata.UnHashed(DEFAULT_URL)
 

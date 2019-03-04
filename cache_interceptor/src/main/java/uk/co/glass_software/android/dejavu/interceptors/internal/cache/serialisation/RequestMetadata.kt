@@ -14,6 +14,10 @@ sealed class RequestMetadata(val url: String,
         override fun hashCode(): Int {
             return javaClass.hashCode()
         }
+
+        override fun toString(): String {
+            return "UnHashed(url='$url', requestBody=$requestBody)"
+        }
     }
 
     class Hashed internal constructor(url: String,
@@ -32,6 +36,11 @@ sealed class RequestMetadata(val url: String,
 
         override fun hashCode(): Int {
             return hash.hashCode()
+        }
+
+
+        override fun toString(): String {
+            return "Hashed(url='$url', requestBody=$requestBody, hash='$hash')"
         }
     }
 
