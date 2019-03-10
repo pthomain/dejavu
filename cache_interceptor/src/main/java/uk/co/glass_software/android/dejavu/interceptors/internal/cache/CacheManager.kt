@@ -24,13 +24,10 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.subscribeBy
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.On
-import uk.co.glass_software.android.boilerplate.utils.rx.schedule
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.addConnectivityTimeOutIfNeeded
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -127,11 +124,9 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
 
             return if (status === STALE && !cacheOperation.freshOnly) {
                 logger.d(this, "$simpleName is ${cachedResponseToken.status}, attempting to refresh")
-                Observable.just(cachedResponse).mergeWith(
-                        addConnectivityTimeOutIfNeeded(
-                                instructionToken.instruction,
-                                fetchAndCache
-                        ).schedule(On.Io, On.Trampoline)
+                Observable.concat(
+                        Observable.just(cachedResponse),
+                        fetchAndCache
                 )
             } else fetchAndCache
         } else Observable.just(cachedResponse)
@@ -159,20 +154,28 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     )
                 }
                 .flatMap {
-                    val serialised = serialise(it)
-                    Observable.just(it).doAfterNext {
-                        if (serialised.metadata.exception == null) {
-                            logger.d(this, "$simpleName successfully delivered, now caching")
-                            databaseManager.cache(
-                                    instructionToken,
-                                    cacheOperation,
-                                    serialised,
-                                    previousCachedResponse
-                            ).subscribeBy(
-                                    onError = { logger.e(this, it, "Could not cache $simpleName") }
-                            )
+                    if (it.metadata.cacheToken.status.isFresh) {
+                        val serialised = serialise(it)
+
+                        if (serialised.metadata.exception != null) {
+                            Observable.just(it.copy(
+                                    response = null,
+                                    metadata = serialised.metadata
+                            ))
+                        } else {
+                            Observable.just(it).doAfterNext {
+                                logger.d(this, "$simpleName successfully delivered, now caching")
+                                databaseManager.cache(
+                                        instructionToken,
+                                        cacheOperation,
+                                        serialised,
+                                        previousCachedResponse
+                                ).subscribeBy(
+                                        onError = { logger.e(this, it, "Could not cache $simpleName") }
+                                )
+                            }
                         }
-                    }
+                    } else Observable.just(it)
                 }
     }
 
@@ -236,12 +239,23 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     val message = "Could not serialise ${responseWrapper.responseClass.simpleName}: provided serialiser does not support the type. This response will not be cached."
                     logger.e(this, message)
 
+                    val serialisationException = errorFactory.getError(
+                            CacheException(SERIALISATION, message)
+                    )
+
+                    val serialisationCacheToken = responseWrapper.metadata.cacheToken.let {
+                        it.copy(status = when (it.status) {
+                            FRESH -> EMPTY
+                            REFRESHED -> COULD_NOT_REFRESH
+                            else -> it.status
+                        })
+                    }
+
                     responseWrapper.copy(
                             response = null,
                             metadata = responseWrapper.metadata.copy(
-                                    exception = errorFactory.getError(
-                                            CacheException(SERIALISATION, message)
-                                    )
+                                    exception = serialisationException,
+                                    cacheToken = serialisationCacheToken
                             )
                     )
                 } else responseWrapper.copy(
