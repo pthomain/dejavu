@@ -29,4 +29,21 @@ class CacheException(val type: Type,
         METADATA,
         SERIALISATION
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CacheException
+
+        if (type != other.type) return false
+        if (message != other.message) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return type.hashCode() * 31 + message.hashCode()
+    }
+
 }

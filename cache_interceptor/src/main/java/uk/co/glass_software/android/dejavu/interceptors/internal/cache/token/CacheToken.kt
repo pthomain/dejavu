@@ -23,7 +23,8 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.INSTRUCTION
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.NOT_CACHED
 import java.util.*
 
 data class CacheToken internal constructor(val instruction: CacheInstruction,
@@ -52,20 +53,6 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                                fetchDate: Date) = instructionToken.copy(
                 status = NOT_CACHED,
                 fetchDate = fetchDate
-        )
-
-        internal fun caching(instructionToken: CacheToken,
-                             isCompressed: Boolean,
-                             isEncrypted: Boolean,
-                             fetchDate: Date,
-                             cacheDate: Date,
-                             expiryDate: Date) = instructionToken.copy(
-                status = FRESH,
-                isCompressed = isCompressed,
-                isEncrypted = isEncrypted,
-                fetchDate = fetchDate,
-                cacheDate = cacheDate,
-                expiryDate = expiryDate
         )
 
         internal fun cached(instructionToken: CacheToken,

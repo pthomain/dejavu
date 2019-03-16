@@ -25,15 +25,13 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.waitForNetwork
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.interceptors.internal.addConnectivityTimeOutIfNeeded
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
-import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
@@ -64,16 +62,6 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
                     getCallDuration()
             )
     )
-
-    private fun addConnectivityTimeOutIfNeeded(instruction: CacheInstruction,
-                                               upstream: Observable<ResponseWrapper<E>>) =
-            instruction.operation.let {
-                if (it is CacheInstruction.Operation.Expiring
-                        && it.connectivityTimeoutInMillis ?: 0L > 0L) {
-                    upstream.waitForNetwork()
-                            .timeout(it.connectivityTimeoutInMillis!!, MILLISECONDS)
-                } else upstream
-            }
 
     private fun getErrorResponse(throwable: Throwable): ResponseWrapper<E> {
         val apiError = errorFactory.getError(throwable)
