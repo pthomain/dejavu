@@ -23,7 +23,6 @@ package uk.co.glass_software.android.dejavu.test
 
 
 import com.nhaarman.mockitokotlin2.atLeastOnce
-import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import junit.framework.TestCase.*
@@ -245,7 +244,7 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
 }
 
 internal fun defaultResponseWrapper(metadata: CacheMetadata<Glitch>,
-                                    response: TestResponse = mock()) = ResponseWrapper(
+                                    response: TestResponse?) = ResponseWrapper(
         TestResponse::class.java,
         response,
         metadata

@@ -59,7 +59,6 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
         var metadata: CacheMetadata<E>
     }
 
-
     override fun toString(): String {
         return "CacheMetadata(cacheToken=$cacheToken, exception=$exception, callDuration=$callDuration)"
     }
@@ -72,7 +71,6 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
 
         if (cacheToken != other.cacheToken) return false
         if (exception != other.exception) return false
-        if (callDuration != other.callDuration) return false
 
         return true
     }
@@ -80,7 +78,6 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
     override fun hashCode(): Int {
         var result = cacheToken.hashCode()
         result = 31 * result + (exception?.hashCode() ?: 0)
-        result = 31 * result + callDuration.hashCode()
         return result
     }
 

@@ -154,7 +154,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     )
                 }
                 .flatMap {
-                    if (it.metadata.cacheToken.status.isFresh) {
+                    if (!it.metadata.cacheToken.status.hasError) {
                         val serialised = serialise(it)
 
                         if (serialised.metadata.exception != null) {
@@ -163,7 +163,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                                     metadata = serialised.metadata
                             ))
                         } else {
-                            Observable.just(it).doAfterNext {
+                            Observable.just(it).doOnComplete {
                                 logger.d(this, "$simpleName successfully delivered, now caching")
                                 databaseManager.cache(
                                         instructionToken,
@@ -213,20 +213,21 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                 encryptData,
                 instructionToken.requestMetadata,
                 fetchDate,
-                cacheDate,
-                expiryDate
+                if (status == EMPTY || status == COULD_NOT_REFRESH) null else cacheDate,
+                if (status == EMPTY || status == COULD_NOT_REFRESH) null else expiryDate
         )
 
-        responseWrapper.metadata = metadata.copy(
+        val newMetadata = metadata.copy(
                 cacheToken,
                 callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
         )
 
         return if (status == COULD_NOT_REFRESH)
             responseWrapper.copy(
-                    response = previousCachedResponse?.response
+                    metadata = newMetadata,
+                    response = if (cacheOperation.freshOnly) null else previousCachedResponse?.response
             )
-        else responseWrapper
+        else responseWrapper.copy(metadata = newMetadata)
     }
 
     private fun serialise(responseWrapper: ResponseWrapper<E>) =
@@ -244,11 +245,16 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     )
 
                     val serialisationCacheToken = responseWrapper.metadata.cacheToken.let {
-                        it.copy(status = when (it.status) {
+                        val newStatus = when (it.status) {
                             FRESH -> EMPTY
                             REFRESHED -> COULD_NOT_REFRESH
                             else -> it.status
-                        })
+                        }
+                        it.copy(
+                                status = newStatus,
+                                cacheDate = if (newStatus == EMPTY || newStatus == COULD_NOT_REFRESH) null else it.cacheDate,
+                                expiryDate = if (newStatus == EMPTY || newStatus == COULD_NOT_REFRESH) null else it.expiryDate
+                        )
                     }
 
                     responseWrapper.copy(

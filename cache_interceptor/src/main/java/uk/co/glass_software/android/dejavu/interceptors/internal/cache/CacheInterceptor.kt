@@ -66,13 +66,13 @@ internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
 
     private fun doNotCache(instructionToken: CacheToken,
                            upstream: Observable<ResponseWrapper<E>>) =
-            upstream.doOnNext { responseWrapper ->
-                responseWrapper.metadata = responseWrapper.metadata.copy(
+            upstream.map { responseWrapper ->
+                responseWrapper.copy(metadata = responseWrapper.metadata.copy(
                         CacheToken.notCached(
                                 instructionToken,
                                 dateFactory(null)
                         )
-                )
+                ))
             }
 
 }
