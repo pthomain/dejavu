@@ -165,18 +165,20 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                         this,
                         "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
                 )
-                it.copy(metadata = CacheMetadata(
-                        CacheToken.cached(
-                                instructionToken,
-                                getCachedStatus(expiryDate),
-                                isCompressed,
-                                isEncrypted,
-                                cacheDate,
-                                expiryDate
-                        ),
-                        null,
-                        callDuration
-                ))
+                it.apply {
+                    metadata = CacheMetadata(
+                            CacheToken.cached(
+                                    instructionToken,
+                                    getCachedStatus(expiryDate),
+                                    isCompressed,
+                                    isEncrypted,
+                                    cacheDate,
+                                    expiryDate
+                            ),
+                            null,
+                            callDuration
+                    )
+                }
             }
 
     fun invalidate(instructionToken: CacheToken) {

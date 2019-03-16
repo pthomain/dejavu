@@ -227,7 +227,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     metadata = newMetadata,
                     response = if (cacheOperation.freshOnly) null else previousCachedResponse?.response
             )
-        else responseWrapper.copy(metadata = newMetadata)
+        else responseWrapper.also { it.metadata = newMetadata }
     }
 
     private fun serialise(responseWrapper: ResponseWrapper<E>) =

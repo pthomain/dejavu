@@ -71,14 +71,14 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
     )
 
     private val errorObservable = errorInterceptor.apply(Observable.error<Any>(exception))
-            .map {
-                it.copy(metadata = it.metadata.copy(
+            .doOnNext {
+                it.metadata = it.metadata.copy(
                         callDuration = CacheMetadata.Duration(
                                 0,
                                 0,
                                 (dateFactory(null).time - start).toInt()
                         )
-                ))
+                )
             }
             .compose(responseInterceptor)
 
