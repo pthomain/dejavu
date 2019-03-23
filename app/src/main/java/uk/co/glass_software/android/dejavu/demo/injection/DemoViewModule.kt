@@ -59,14 +59,16 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
     fun providerUiLogger() =
             SimpleLogger(
                     true,
+                    demoActivity.packageName,
                     object : Printer {
                         override fun canPrint(className: String) = true
 
                         override fun print(priority: Int,
                                            tag: String?,
+                                           targetClassName: String,
                                            message: String) {
                             clean(message).also {
-                                if (!it.isNullOrBlank())
+                                if (!it.isBlank())
                                     onLogOutput(it)
                             }
                         }
