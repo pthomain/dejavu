@@ -13,6 +13,7 @@ import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
@@ -28,9 +29,7 @@ import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
-import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
-import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
+import uk.co.glass_software.android.mumbo.base.EncryptionManager
 import java.util.*
 
 internal interface CacheModule<E>
@@ -43,9 +42,7 @@ internal interface CacheModule<E>
 
     fun provideSerialiser(): Serialiser
 
-    fun provideStoreEntryFactory(serialiser: Serialiser): StoreEntryFactory
-
-    fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory): EncryptionManager?
+    fun provideEncryptionManager(): EncryptionManager
 
     fun provideDateFactory(): Function1<Long?, Date>
 
@@ -55,7 +52,7 @@ internal interface CacheModule<E>
 
     fun provideByteToStringConverter(): Function1<ByteArray, String>
 
-    fun provideSerialisationManager(encryptionManager: EncryptionManager?,
+    fun provideSerialisationManager(encryptionManager: EncryptionManager,
                                     byteToStringConverter: Function1<ByteArray, String>,
                                     compresser: Function1<ByteArray, ByteArray>,
                                     uncompresser: Function3<ByteArray, Int, Int, ByteArray>): SerialisationManager<E>

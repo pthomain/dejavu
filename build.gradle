@@ -67,7 +67,7 @@ ext {
     rxAndroidVersion = '2.1.0'
 
     boilerplateVersion = '2.1'
-    sharedPrefStoreVersion = '1.2.1'
+    mumboVersion = '1.0'
 
     snappyVersion = '0.4'
     requeryVersion = '3.25.3'
@@ -115,7 +115,7 @@ ext {
             androidAnnotations    : "androidx.annotation:annotation:$androidXversion",
 
             boilerplate           : "com.github.pthomain:boilerplate:$boilerplateVersion",
-            sharedPreferenceStore : "com.github.pthomain:SharedPreferenceStore:$sharedPrefStoreVersion",
+            mumbo                 : "com.github.pthomain:mumbo:$mumboVersion",
 
             retrofit              : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson : "com.squareup.retrofit2:converter-gson:$retrofitVersion",

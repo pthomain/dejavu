@@ -41,6 +41,7 @@ import uk.co.glass_software.android.dejavu.injection.integration.module.Integrat
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.test.network.MockClient
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
+import uk.co.glass_software.android.mumbo.Mumbo
 import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
@@ -58,6 +59,7 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
             mock(),
             GlitchFactory(),
             GsonSerialiser(Gson()),
+            Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
             true,
             true,
             true,

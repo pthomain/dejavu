@@ -31,10 +31,7 @@ import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
-import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.configuration.*
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
@@ -52,9 +49,7 @@ import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
-import uk.co.glass_software.android.shared_preferences.StoreEntryFactory
-import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
+import uk.co.glass_software.android.mumbo.base.EncryptionManager
 import java.util.*
 import javax.inject.Singleton
 
@@ -81,16 +76,8 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideStoreEntryFactory(serialiser: Serialiser) =
-            StoreEntryFactory.builder(configuration.context)
-                    .customSerialiser(serialiser)
-                    .logger(configuration.logger)
-                    .build()
-
-    @Provides
-    @Singleton
-    override fun provideEncryptionManager(storeEntryFactory: StoreEntryFactory) =
-            storeEntryFactory.encryptionManager
+    override fun provideEncryptionManager() =
+            configuration.encryptionManager
 
     @Provides
     @Singleton
@@ -114,7 +101,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideSerialisationManager(encryptionManager: EncryptionManager?,
+    override fun provideSerialisationManager(encryptionManager: EncryptionManager,
                                              byteToStringConverter: Function1<ByteArray, String>,
                                              compresser: Function1<ByteArray, ByteArray>,
                                              uncompresser: Function3<ByteArray, Int, Int, ByteArray>) =

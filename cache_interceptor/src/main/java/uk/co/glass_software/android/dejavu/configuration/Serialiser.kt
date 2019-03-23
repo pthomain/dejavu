@@ -21,18 +21,24 @@
 
 package uk.co.glass_software.android.dejavu.configuration
 
-import com.google.gson.Gson
+interface Serialiser {
 
-class GsonSerialiser(private val gson: Gson) : Serialiser {
+    fun canHandleType(targetClass: Class<*>): Boolean
 
-    override fun canHandleType(targetClass: Class<*>) = true
-    override fun canHandleSerialisedFormat(serialised: String) = true
-
-    @Throws(Serialiser.SerialisationException::class)
-    override fun <O : Any> serialise(deserialised: O) = gson.toJson(deserialised)!!
+    fun canHandleSerialisedFormat(serialised: String): Boolean
 
     @Throws(Serialiser.SerialisationException::class)
-    override fun <O> deserialise(serialised: String,
-                                 targetClass: Class<O>) = gson.fromJson(serialised, targetClass)!!
+    fun <O : Any> serialise(deserialised: O): String
 
+    @Throws(Serialiser.SerialisationException::class)
+    fun <O> deserialise(serialised: String,
+                        targetClass: Class<O>): O
+
+    class SerialisationException : Exception {
+        internal constructor(message: String) : super(message)
+
+        internal constructor(cause: Throwable) {
+            initCause(cause)
+        }
+    }
 }
