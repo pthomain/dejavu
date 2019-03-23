@@ -31,6 +31,7 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
+import io.reactivex.plugins.RxJavaPlugins
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.R
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract.*
@@ -85,6 +86,9 @@ internal class DemoActivity
     override fun onComponentReady(component: DemoViewComponent) {
         this.presenter = component.presenter()
         this.presenterSwitcher = component.presenterSwitcher()
+        RxJavaPlugins.setErrorHandler { error ->
+            component.logger().e(this, error)
+        }
     }
 
     override fun attachBaseContext(base: Context) {

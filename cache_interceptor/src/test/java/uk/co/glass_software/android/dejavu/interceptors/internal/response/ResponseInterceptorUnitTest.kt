@@ -107,8 +107,6 @@ class ResponseInterceptorUnitTest {
                 "\nconf.mergeOnNextOnError = $mergeOnNextOnError" +
                 (if (operation is Expiring) getExpiringDescription(operation) else "")
 
-//        System.out.println(context)
-
         setUp() //reset mocks
 
         val mockInstructionToken = instructionToken(operation)
@@ -147,6 +145,7 @@ class ResponseInterceptorUnitTest {
             Observable.just(mockUpstreamWrapper)
 
         mockConfiguration = CacheConfiguration(
+                mock(),
                 mock(),
                 mock(),
                 mock(),

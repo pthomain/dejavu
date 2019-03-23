@@ -24,10 +24,12 @@ package uk.co.glass_software.android.dejavu.demo
 import dagger.Component
 import uk.co.glass_software.android.boilerplate.ui.mvp.base.MvpContract.*
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
+import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.demo.injection.DemoViewModule
 import uk.co.glass_software.android.dejavu.demo.model.CatFactResponse
 import uk.co.glass_software.android.dejavu.demo.presenter.CompositePresenter.Method
+import javax.inject.Named
 import javax.inject.Singleton
 
 internal class DemoMvpContract {
@@ -63,6 +65,8 @@ internal class DemoMvpContract {
 
         fun presenterSwitcher(): Callback1<Method>
 
+        @Named("boilerplate")
+        fun logger(): Logger
     }
 
 }

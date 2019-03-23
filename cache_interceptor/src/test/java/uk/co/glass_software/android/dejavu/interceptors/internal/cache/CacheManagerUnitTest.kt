@@ -9,6 +9,7 @@ import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -20,7 +21,6 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
 import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
 import java.util.*
 
 class CacheManagerUnitTest {

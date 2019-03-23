@@ -144,13 +144,13 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
-                    .doOnComplete(mvpView::onCallComplete)
+                    .doFinally(mvpView::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 
     private fun subscribe(completable: Completable) =
             completable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
-                    .doOnComplete(mvpView::onCallComplete)
+                    .doFinally(mvpView::onCallComplete)
                     .autoSubscribe()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)

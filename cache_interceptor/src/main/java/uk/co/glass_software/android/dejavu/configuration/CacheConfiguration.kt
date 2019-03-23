@@ -29,12 +29,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
+import uk.co.glass_software.android.mumbo.Mumbo
+import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
 data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val logger: Logger,
                                                       val errorFactory: ErrorFactory<E>,
                                                       val serialiser: Serialiser,
+                                                      val encryptionManager: EncryptionManager,
                                                       val isCacheEnabled: Boolean,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
@@ -65,6 +67,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
 
         private var logger: Logger? = null
         private var serialiser: Serialiser? = null
+        private var encryptionManager: EncryptionManager? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -96,9 +99,14 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         fun logger(logger: Logger) = apply { this.logger = logger }
 
         /**
-         * Sets custom serialiser implementation.
+         * Sets custom Serialiser implementation.
          */
         fun serialiser(serialiser: Serialiser) = apply { this.serialiser = serialiser }
+
+        /**
+         * Sets custom EncryptionManager implementation.
+         */
+        fun encryptionManager(encryptionManager: EncryptionManager) = apply { this.encryptionManager = encryptionManager }
 
         /**
          * Sets network call timeout in seconds globally (default is 15s).
@@ -193,6 +201,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     logger,
                                     errorFactory,
                                     serialiser ?: GsonSerialiser(Gson()),
+                                    encryptionManager ?: Mumbo(context, logger).conceal(),
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,

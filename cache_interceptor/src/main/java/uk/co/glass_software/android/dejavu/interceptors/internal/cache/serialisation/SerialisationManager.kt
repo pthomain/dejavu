@@ -24,15 +24,15 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialis
 import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
-import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
+import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
 internal class SerialisationManager<E>(private val logger: Logger,
                                        private val byteToStringConverter: (ByteArray) -> String,
-                                       private val encryptionManager: EncryptionManager?,
+                                       private val encryptionManager: EncryptionManager,
                                        private val compresser: (ByteArray) -> ByteArray,
                                        private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
                                        private val serialiser: Serialiser)
@@ -54,7 +54,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
         return serialised
                 ?.toByteArray()
                 ?.let { data ->
-                    if (encryptData && encryptionManager != null)
+                    if (encryptData && encryptionManager.isEncryptionSupported)
                         encryptionManager.encryptBytes(data, DATA_TAG)
                     else data
                 }
@@ -87,7 +87,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
             } else {
                 data
             }).let {
-                if (isEncrypted && encryptionManager != null)
+                if (isEncrypted && encryptionManager.isEncryptionSupported)
                     encryptionManager.decryptBytes(it, DATA_TAG)
                             ?: throw IllegalStateException("Could not decrypt data")
                 else it

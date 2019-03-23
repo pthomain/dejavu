@@ -4,6 +4,7 @@ import com.nhaarman.mockitokotlin2.*
 import org.junit.Test
 import uk.co.glass_software.android.boilerplate.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
@@ -12,8 +13,7 @@ import uk.co.glass_software.android.dejavu.test.assertNullWithContext
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.dejavu.test.trueFalseSequence
 import uk.co.glass_software.android.dejavu.test.verifyNeverWithContext
-import uk.co.glass_software.android.shared_preferences.encryption.manager.EncryptionManager
-import uk.co.glass_software.android.shared_preferences.persistence.serialisation.Serialiser
+import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
 class SerialisationManagerUnitTest {
 
@@ -46,7 +46,7 @@ class SerialisationManagerUnitTest {
     private lateinit var target: SerialisationManager<Glitch>
 
     private fun setUp(useString: Boolean,
-                      hasEncryptionManager: Boolean) {
+                      isEncryptionSupported: Boolean) {
         mockEncryptionManager = mock()
         mockSerialiser = mock()
         mockCompresser = mock()
@@ -59,6 +59,8 @@ class SerialisationManagerUnitTest {
 
         whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
         whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
+        whenever(mockEncryptionManager.isEncryptionSupported).thenReturn(isEncryptionSupported)
+
         mockWrapper = ResponseWrapper(
                 if (useString) String::class.java else TestResponse::class.java,
                 if (useString) mockStringResponse else mockResponse,
@@ -68,7 +70,7 @@ class SerialisationManagerUnitTest {
         target = SerialisationManager(
                 mock(),
                 mockByteToStringConverter,
-                if (hasEncryptionManager) mockEncryptionManager else null,
+                mockEncryptionManager,
                 mockCompresser,
                 mockUncompresser,
                 mockSerialiser
