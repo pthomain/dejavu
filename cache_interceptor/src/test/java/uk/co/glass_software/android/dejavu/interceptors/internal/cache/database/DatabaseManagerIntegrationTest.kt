@@ -1,14 +1,13 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 
 import org.junit.Test
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
-import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
-import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertNullWithContext
 import uk.co.glass_software.android.dejavu.test.instructionToken
+import java.util.*
 
 internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseManager<Glitch>>({ it.databaseManager() }) {
 
@@ -37,36 +36,24 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         )
     }
 
-    private fun assertResponse(
-            stubbedResponse: ResponseWrapper<Glitch>,
-            actualResponse: ResponseWrapper<Glitch>?,
-            expectedStatus: CacheStatus
-    ) {
-        assertEqualsWithContext(
-                stubbedResponse.response,
-                actualResponse!!.response,
-                "Response didn't match"
-        )
-
-        assertEqualsWithContext(
-                CacheToken(
-                        stubbedResponse.metadata.cacheToken.instruction,
-                        expectedStatus,
-                        configuration.compress,
-                        configuration.encrypt,
-                        stubbedResponse.metadata.cacheToken.requestMetadata,
-                        NOW,
-                        NOW,
-                        NOW
-                ),
-                actualResponse.metadata.cacheToken,
-                "Cache token didn't match"
-        )
-    }
-
     @Test
     fun `GIVEN that a response has expired THEN it should have a STALE status`() {
+        val stubbedResponse = getStubbedTestResponse(instructionToken(
+                Expiring.Cache(durationInMillis = -1L)
+        ))
 
+        val instructionToken = stubbedResponse.metadata.cacheToken
+
+        target.cache(stubbedResponse, null).blockingAwait()
+
+        val cachedResponse = target.getCachedResponse(instructionToken, 500)
+
+        assertResponse(
+                stubbedResponse,
+                cachedResponse,
+                CacheStatus.STALE,
+                expiryDate = Date(NOW.time - 1L)
+        )
     }
 
     @Test

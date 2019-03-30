@@ -122,11 +122,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                 val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
                                 val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
                                 val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-
-                                val expiryDate = dateFactory(
-                                        if (instruction.operation is Expiring.Refresh) 0L
-                                        else cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName))
-                                )
+                                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
 
                                 return getCachedResponse(
                                         instructionToken,
@@ -217,12 +213,11 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     }
 
     private fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time > expiryDate.time) STALE else CACHED
+            if (dateFactory(null).time >= expiryDate.time) STALE else CACHED
 
     fun cache(response: ResponseWrapper<E>,
               previousCachedResponse: ResponseWrapper<E>?): Completable {
         val instructionToken = response.metadata.cacheToken
-        val cacheOperation = instructionToken.instruction.operation as Expiring
 
         return create {
             val instruction = instructionToken.instruction
@@ -234,7 +229,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
 
             val (encryptData, compressData) = shouldEncryptOrCompress(
                     previousCachedResponse,
-                    cacheOperation
+                    operation
             )
 
             serialisationManager.serialise(

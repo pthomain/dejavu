@@ -463,11 +463,10 @@ class DatabaseManagerUnitTest {
         whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
 
-        val timeStamp = if (operation is Expiring.Refresh) 0L else expiryDate
         val mockExpiryDate = Date(if (isDataStale) currentDateTime - 1L else currentDateTime + 1L)
 
         whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
-        whenever(mockDateFactory.invoke(eq(timeStamp))).thenReturn(mockExpiryDate)
+        whenever(mockDateFactory.invoke(eq(expiryDate))).thenReturn(mockExpiryDate)
 
         val mockResponseWrapper = ResponseWrapper<Glitch>(
                 TestResponse::class.java,

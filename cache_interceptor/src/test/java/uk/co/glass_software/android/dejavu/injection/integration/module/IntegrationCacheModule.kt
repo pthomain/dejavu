@@ -42,7 +42,7 @@ internal class IntegrationCacheModule(configuration: CacheConfiguration<Glitch>)
     @Provides
     @Singleton
     override fun provideDateFactory() = object : CacheModule.Function1<Long?, Date> {
-        override fun get(t1: Long?) = NOW
+        override fun get(t1: Long?) = if (t1 == null) NOW else Date(t1)
     }
 
     @Provides

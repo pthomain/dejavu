@@ -37,7 +37,9 @@ import uk.co.glass_software.android.dejavu.injection.integration.component.Dagge
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.network.MockClient
@@ -123,5 +125,40 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
                         it.metadata
                 )
             }
+
+    protected fun assertResponse(
+            stubbedResponse: ResponseWrapper<Glitch>,
+            actualResponse: ResponseWrapper<Glitch>?,
+            expectedStatus: CacheStatus,
+            fetchDate: Date? = NOW,
+            cacheDate: Date? = NOW,
+            expiryDate: Date? = Date(NOW.time + configuration.cacheDurationInMillis)
+    ) {
+        assertNotNullWithContext(
+                actualResponse,
+                "Actual response should not be null"
+        )
+
+        assertEqualsWithContext(
+                stubbedResponse.response,
+                actualResponse!!.response,
+                "Response didn't match"
+        )
+
+        assertEqualsWithContext(
+                CacheToken(
+                        stubbedResponse.metadata.cacheToken.instruction,
+                        expectedStatus,
+                        configuration.compress,
+                        configuration.encrypt,
+                        stubbedResponse.metadata.cacheToken.requestMetadata,
+                        fetchDate,
+                        cacheDate,
+                        expiryDate
+                ),
+                actualResponse.metadata.cacheToken,
+                "Cache token didn't match"
+        )
+    }
 }
 
