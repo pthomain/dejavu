@@ -1,7 +1,8 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 
 import org.junit.Test
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
@@ -39,7 +40,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
     @Test
     fun `GIVEN that a response has expired THEN it should have a STALE status`() {
         val stubbedResponse = getStubbedTestResponse(instructionToken(
-                Expiring.Cache(durationInMillis = -1L)
+                Cache(durationInMillis = -1L)
         ))
 
         val instructionToken = stubbedResponse.metadata.cacheToken
@@ -58,12 +59,45 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
 
     @Test
     fun `GIVEN that a response has not expired AND the operation is INVALIDATE THEN it should have a STALE status`() {
+        val stubbedResponse = getStubbedTestResponse()
+        val instructionToken = stubbedResponse.metadata.cacheToken
 
+        target.cache(stubbedResponse, null).blockingAwait()
+        target.invalidate(instructionToken)
+
+        val cachedResponse = target.getCachedResponse(instructionToken, 500)
+
+        assertResponse(
+                stubbedResponse,
+                cachedResponse,
+                CacheStatus.STALE,
+                expiryDate = Date(0)
+        )
     }
 
     @Test
     fun `GIVEN that a response has not expired AND the operation is REFRESH THEN it should have a STALE status`() {
+        val stubbedResponse = getStubbedTestResponse()
 
+        target.cache(stubbedResponse, null).blockingAwait()
+
+        val cachedResponse = target.getCachedResponse(instructionToken(), 500)
+
+        assertResponse(
+                stubbedResponse,
+                cachedResponse,
+                CacheStatus.CACHED
+        )
+
+        val refreshToken = instructionToken(Refresh())
+        val refreshResponse = target.getCachedResponse(refreshToken, 500)
+
+        assertResponse(
+                getStubbedTestResponse(refreshToken),
+                refreshResponse,
+                CacheStatus.STALE,
+                expiryDate = Date(0)
+        )
     }
 
     @Test

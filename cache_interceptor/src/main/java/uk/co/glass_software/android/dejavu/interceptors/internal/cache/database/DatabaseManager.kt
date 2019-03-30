@@ -183,8 +183,11 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             }
 
     fun invalidate(instructionToken: CacheToken) {
+        val instruction = instructionToken.instruction.copy(
+                operation = CacheInstruction.Operation.Invalidate
+        )
         checkInvalidation(
-                instructionToken.instruction,
+                instruction,
                 instructionToken.requestMetadata.hash
         )
     }
