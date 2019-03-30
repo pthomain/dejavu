@@ -49,7 +49,8 @@ class DatabaseManagerUnitTest {
     private val mockExpiryDate = Date(mockExpiryDateTime)
 
     private fun setUp(encryptDataGlobally: Boolean,
-                      compressDataGlobally: Boolean): DatabaseManager<Glitch> {
+                      compressDataGlobally: Boolean,
+                      cacheInstruction: CacheInstruction?): DatabaseManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockSerialisationManager = mock()
@@ -73,6 +74,10 @@ class DatabaseManagerUnitTest {
 
         whenever(mockResponseWrapper.metadata).thenReturn(mockMetadata)
         whenever(mockMetadata.cacheToken).thenReturn(mockCacheToken)
+
+        if (cacheInstruction != null) {
+            whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
+        }
 
         return DatabaseManager(
                 mockDatabase,
@@ -104,7 +109,11 @@ class DatabaseManagerUnitTest {
 
         val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
 
-        val target = setUp(true, true)
+        val target = setUp(
+                true,
+                true,
+                null
+        )
 
         target.clearCache(
                 typeToClearClass,
@@ -194,12 +203,15 @@ class DatabaseManagerUnitTest {
                 "hasPreviousResponse = $hasPreviousResponse\n" +
                 "isSerialisationSuccess = $isSerialisationSuccess"
 
+        val instructionToken = instructionToken(operation)
+
         val target = setUp(
                 encryptDataGlobally,
-                compressDataGlobally
+                compressDataGlobally,
+                instructionToken.instruction
         )
 
-        val instructionToken = instructionToken(operation)
+        whenever(mockResponseWrapper.metadata.cacheToken.requestMetadata).thenReturn(instructionToken.requestMetadata)
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
 
         val duration = operation.durationInMillis ?: durationInMillis
@@ -231,8 +243,6 @@ class DatabaseManagerUnitTest {
         whenever(mockContentValuesFactory.invoke(any())).thenReturn(mockContentValues)
 
         target.cache(
-                instructionToken,
-                operation,
                 mockResponseWrapper,
                 mockPreviousResponse
         ).blockingGet()
@@ -309,7 +319,12 @@ class DatabaseManagerUnitTest {
 
     private fun testInvalidate(operation: CacheInstruction.Operation) {
         val context = "operation = $operation"
-        val target = setUp(true, true)
+
+        val target = setUp(
+                true,
+                true,
+                null
+        )
 
         if (operation.type == INVALIDATE || operation.type == REFRESH) {
 
@@ -409,7 +424,11 @@ class DatabaseManagerUnitTest {
                 "hasResponse = $hasResponse,\n" +
                 "isStale = $isStale"
 
-        val target = spy(setUp(true, true))
+        val target = spy(setUp(
+                true,
+                true,
+                instructionToken(operation).instruction
+        ))
 
         val start = 1234L
         val instructionToken = instructionToken(operation)

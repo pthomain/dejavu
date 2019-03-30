@@ -385,8 +385,6 @@ class CacheManagerUnitTest {
         } else {
             whenever(mockDatabaseManager.cache(
                     any(),
-                    eq(operation),
-                    any(),
                     if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
             )).thenReturn(Completable.complete())
         }
@@ -494,7 +492,6 @@ class CacheManagerUnitTest {
                 } else {
                     verifyCachedResponse(
                             context,
-                            operation,
                             instructionToken,
                             expectedResponse,
                             actualResponseWrapper,
@@ -532,7 +529,6 @@ class CacheManagerUnitTest {
             } else {
                 verifyCachedResponse(
                         context,
-                        operation,
                         instructionToken,
                         expectedResponse,
                         actualResponseWrapper,
@@ -552,20 +548,17 @@ class CacheManagerUnitTest {
     }
 
     private fun verifyCachedResponse(context: String,
-                                     operation: Expiring,
                                      instructionToken: CacheToken,
                                      expectedResponse: TestResponse?,
                                      actualResponseWrapper: ResponseWrapper<Glitch>,
                                      mockResponseWrapper: ResponseWrapper<Glitch>,
                                      mockCachedResponseWrapper: ResponseWrapper<Glitch>?,
                                      hasCachedResponse: Boolean): ResponseWrapper<Glitch> {
-        val tokenCaptor = argumentCaptor<CacheToken>()
-        val responseWrapperCaptor = argumentCaptor<ResponseWrapper<Glitch>>()
-
         verify(mockDatabaseManager).cache(
-                tokenCaptor.capture(),
-                eq(operation),
-                responseWrapperCaptor.capture(),
+                eq(actualResponseWrapper.copy(
+                        response = mockSerialisedString,
+                        responseClass = String::class.java
+                )),
                 if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
         )
 
@@ -594,13 +587,6 @@ class CacheManagerUnitTest {
                             ))
             )
         }
-
-        assertEqualsWithContext(
-                instructionToken,
-                tokenCaptor.firstValue,
-                "Instruction token didn't match",
-                context
-        )
 
         assertEqualsWithContext(
                 expectedResponseWrapper.metadata.cacheToken,

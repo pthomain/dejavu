@@ -11,17 +11,14 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
-import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
 import uk.co.glass_software.android.dejavu.test.assertResponseWrapperWithContext
 import uk.co.glass_software.android.dejavu.test.instructionToken
-import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 
 internal class SerialisationManagerIntegrationTest
     : BaseIntegrationTest<SerialisationManager<Glitch>>(IntegrationCacheComponent::serialisationManager) {
 
-    private lateinit var stubbedResponse: TestResponse
     private lateinit var wrapper: ResponseWrapper<Glitch>
     private lateinit var instructionToken: CacheToken
     private lateinit var mockErrorCallback: Action
@@ -32,17 +29,7 @@ internal class SerialisationManagerIntegrationTest
         instructionToken = instructionToken(Cache())
         mockErrorCallback = mock()
 
-        stubbedResponse = assetHelper.observeStubbedResponse(
-                TestResponse.STUB_FILE,
-                TestResponse::class.java,
-                instructionToken
-        ).blockingFirst()
-
-        wrapper = ResponseWrapper(
-                TestResponse::class.java,
-                stubbedResponse,
-                CacheMetadata(instructionToken)
-        )
+        wrapper = getStubbedTestResponse(instructionToken)
     }
 
     @Test

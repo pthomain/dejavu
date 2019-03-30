@@ -166,8 +166,6 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                             Observable.just(it).doOnComplete {
                                 logger.d(this, "$simpleName successfully delivered, now caching")
                                 databaseManager.cache(
-                                        instructionToken,
-                                        cacheOperation,
                                         serialised,
                                         previousCachedResponse
                                 ).subscribeBy(

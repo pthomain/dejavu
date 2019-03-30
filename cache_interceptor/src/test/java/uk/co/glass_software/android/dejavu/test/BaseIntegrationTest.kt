@@ -37,11 +37,15 @@ import uk.co.glass_software.android.dejavu.injection.integration.component.Dagge
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
+import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.network.MockClient
+import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import uk.co.glass_software.android.mumbo.Mumbo
 import java.io.IOException
+import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(packageName = BuildConfig.APPLICATION_ID)
@@ -53,7 +57,9 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
     protected val testClient: TestClient
     protected val assetHelper: AssetHelper
 
-    private val configuration = CacheConfiguration(
+    protected val NOW = Date(1234L)
+
+    protected val configuration = CacheConfiguration(
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
@@ -97,13 +103,25 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
         mockClient.enqueueResponse(response, httpCode)
     }
 
-    fun enqueueRuntimeException(exception: RuntimeException) {
+    protected fun enqueueRuntimeException(exception: RuntimeException) {
         mockClient.enqueueRuntimeException(exception)
     }
 
-    fun enqueueIOException(exception: IOException) {
+    protected fun enqueueIOException(exception: IOException) {
         mockClient.enqueueIOException(exception)
     }
 
+    protected fun getStubbedTestResponse(instructionToken: CacheToken = instructionToken()) =
+            assetHelper.observeStubbedResponse(
+                    TestResponse.STUB_FILE,
+                    TestResponse::class.java,
+                    instructionToken
+            ).blockingFirst().let {
+                ResponseWrapper(
+                        TestResponse::class.java,
+                        it,
+                        it.metadata
+                )
+            }
 }
 
