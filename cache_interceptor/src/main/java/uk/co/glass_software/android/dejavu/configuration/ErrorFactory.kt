@@ -21,6 +21,10 @@
 
 package uk.co.glass_software.android.dejavu.configuration
 
-interface ErrorFactory<E> {
+/**
+ * Converts a given Throwable into a new type extending from Exception and NetworkErrorProvider
+ */
+interface ErrorFactory<E> where E : Exception,
+                                E : NetworkErrorProvider {
     fun getError(throwable: Throwable): E
 }

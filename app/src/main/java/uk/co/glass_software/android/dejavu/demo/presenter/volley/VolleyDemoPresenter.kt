@@ -23,7 +23,6 @@ package uk.co.glass_software.android.dejavu.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import uk.co.glass_software.android.boilerplate.Boilerplate.context
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
@@ -39,7 +38,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
     : BaseDemoPresenter(demoActivity, uiLogger) {
 
-    private val requestQueue: RequestQueue = Volley.newRequestQueue(context)
+    private val requestQueue: RequestQueue = Volley.newRequestQueue(demoActivity)
     private val responseClass = CatFactResponse::class.java
 
     companion object {

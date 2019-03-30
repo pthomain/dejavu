@@ -26,15 +26,25 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
 
-class CacheInstructionSerialiser {
+/**
+ * Class in charge of operating a simple serialisation of CacheInstruction
+ */
+internal class CacheInstructionSerialiser {
 
     private companion object {
         private const val separator = ":"
     }
 
+    /**
+     * Serialises an operation with its associated arguments
+     *
+     * @param type the operation type to serialise
+     * @param arguments all the associated operation's arguments
+     * @return the serialised operation
+     */
     fun serialise(type: Operation.Type?,
-                  vararg properties: Any?) =
-            properties.joinToString(separator = separator) {
+                  vararg arguments: Any?) =
+            arguments.joinToString(separator = separator) {
                 when (it) {
                     is Class<*> -> it.name
                     else -> it.toString()
@@ -44,9 +54,15 @@ class CacheInstructionSerialiser {
                 else type.name + separator + it
             }
 
-    fun deserialise(string: String) =
-            if (string.contains(separator)) {
-                string.split(separator).let { params ->
+    /**
+     * Deserialises an operation with its associated arguments
+     *
+     * @param serialised the serialised operation as output by this class' serialise method
+     * @return the deserialised cache instruction for the given serialised operation
+     */
+    fun deserialise(serialised: String) =
+            if (serialised.contains(separator)) {
+                serialised.split(separator).let { params ->
                     if (params.size >= 3) {
                         try {
                             when (params[1]) {
@@ -70,23 +86,38 @@ class CacheInstructionSerialiser {
                 }
             } else null
 
+    /**
+     * Returns a class for the given name or null, without throwing an exception
+     */
     private fun getClassForName(value: String): Class<*>? = try {
         Class.forName(value)
     } catch (e: Exception) {
         null
     }
 
+    /**
+     * Converts a given serialised input to a nullable Boolean
+     */
     private fun toBoolean(value: String) =
             if (value == "null") null else value == "true"
 
+    /**
+     * Converts a given serialised input to a nullable Long
+     */
     private fun toLong(value: String) =
             if (value == "null") null else value.toLong()
 
+    /**
+     * Returns a Clear operation instance for the given list of parameters
+     */
     private fun getClearOperation(params: List<String>) =
             if (params.size == 4) {
-                Clear(getClassForName(params[2]), params[3].toBoolean())
+                Clear(getClassForName(params[2]), toBoolean(params[3]) ?: false)
             } else null
 
+    /**
+     * Returns an Expiring operation instance for the given list of parameters
+     */
     private fun getExpiringOperation(params: List<String>) =
             if (params.size == 9) {
                 val durationInMillis = toLong(params[2])

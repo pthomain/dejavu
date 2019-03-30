@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.error
 
+import android.content.Context
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
@@ -35,7 +36,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
-internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFactory<E>,
+internal class ErrorInterceptor<E> constructor(private val context: Context,
+                                               private val errorFactory: ErrorFactory<E>,
                                                private val logger: Logger,
                                                private val dateFactory: (Long?) -> Date,
                                                private val instructionToken: CacheToken,
@@ -51,7 +53,14 @@ internal class ErrorInterceptor<E> constructor(private val errorFactory: ErrorFa
             .timeout(timeOutInSeconds.toLong(), SECONDS) //fixing timeout not working in OkHttp
             .defaultIfEmpty(getErrorResponse(NoSuchElementException("Response was empty")))
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })
-            .compose { addConnectivityTimeOutIfNeeded(instructionToken.instruction, it) }!!
+            .compose {
+                addConnectivityTimeOutIfNeeded(
+                        context,
+                        logger,
+                        instructionToken.instruction,
+                        it
+                )
+            }!!
 
     private fun wrap(it: Any) = ResponseWrapper<E>(
             instructionToken.instruction.responseClass,

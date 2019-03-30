@@ -147,19 +147,7 @@ dependencies {
     implementation appDependencies.requery
 
     api appDependencies.retrofit
-    api appDependencies.retrofitConverterGson
     api appDependencies.retrofitAdapterRxJava
-
-    api appDependencies.gson
-
-    compileOnly appDependencies.androidXtestCore
-    compileOnly appDependencies.androidXtestRunner
-    compileOnly appDependencies.androidXtestRules
-    compileOnly appDependencies.androidXjUnit
-
-    compileOnly appDependencies.mockitoCore
-    compileOnly appDependencies.robolectric
-    compileOnly appDependencies.okHttpMock
 
     testImplementation appDependencies.snappy
     testImplementation appDependencies.requery
@@ -167,6 +155,9 @@ dependencies {
 
     testImplementation appDependencies.dagger
     kaptTest appDependencies.daggerCompiler
+
+    testImplementation appDependencies.retrofitConverterGson
+    testImplementation appDependencies.gson
 
     testImplementation appDependencies.androidXtestCore
     testImplementation appDependencies.androidXtestRunner

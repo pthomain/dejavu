@@ -154,7 +154,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     )
                 }
                 .flatMap {
-                    if (!it.metadata.cacheToken.status.hasError) {
+                    if (!it.metadata.cacheToken.status.isError) {
                         val serialised = serialise(it)
 
                         if (serialised.metadata.exception != null) {

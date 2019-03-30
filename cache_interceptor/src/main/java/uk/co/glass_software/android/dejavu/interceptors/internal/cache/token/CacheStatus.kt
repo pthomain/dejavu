@@ -22,22 +22,37 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
 enum class CacheStatus constructor(
+        /**
+         * Whether or not the status is final, meaning that no subsequent response will be emitted.
+         * STALE is the only non-final status, which means another (final) response will be emitted
+         * after it. In the case of RxJava Singles, a single element will be emitted, which means only
+         * responses with a final status can be emitted by Singles unless the global
+         * allowNonFinalForSingle directive is set to true and filterFinal is set to false on
+         * the call's directives.
+         *
+         * @see uk.co.glass_software.android.dejavu.configuration.CacheConfiguration.allowNonFinalForSingle
+         * @see uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.filterFinal
+         */
         isFinal: Boolean,
         /**
-         * Single responses are final and are not preceded or succeeded by another response.
+         * Single responses are final and are not preceded or succeeded by any other response.
+         *
+         * @see isFinal
          */
         val isSingle: Boolean,
         /**
          * Identifies data that is fresh, either because it comes straight from network
          * or because it is in the cache and hasn't expired yet. This data will be the only
          * type returned in calls made with the freshOnly directive.
+         *
+         * @see uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.freshOnly
          */
         val isFresh: Boolean,
         /**
-         * Indicates whether or not the cache metadata contains an error
-         * (for responses implementing the CacheMetadata.Holder interface).
+         * Indicates whether or not this status represents an error and as such should have an
+         * error in the cache metadata (for responses implementing the CacheMetadata.Holder interface).
          */
-        val hasError: Boolean = false
+        val isError: Boolean = false
 ) {
     /**
      * Internal use only, for the request instruction

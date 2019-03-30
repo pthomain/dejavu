@@ -19,12 +19,25 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.dejavu.configuration
+package uk.co.glass_software.android.dejavu.test
+
+import com.google.gson.Gson
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 
 /**
- * Interface indicating whether a Throwable is a network error for the purpose of
- * exponential backoff retries on failed calls
+ * Custom Serialiser implementation wrapping Gson
  */
-interface NetworkErrorProvider {
-    fun isNetworkError(): Boolean
+class GsonSerialiser(private val gson: Gson) : Serialiser {
+
+    override fun canHandleType(targetClass: Class<*>) = true
+    override fun canHandleSerialisedFormat(serialised: String) = true
+
+    override fun <O : Any> serialise(target: O) =
+            gson.toJson(target)!!
+
+    override fun <O> deserialise(
+            serialised: String,
+            targetClass: Class<O>
+    ) = gson.fromJson(serialised, targetClass)!!
+
 }

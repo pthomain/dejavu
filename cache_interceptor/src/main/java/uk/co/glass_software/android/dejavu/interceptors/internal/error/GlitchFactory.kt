@@ -21,8 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.error
 
-import com.google.gson.JsonParseException
-import com.google.gson.stream.MalformedJsonException
 import retrofit2.HttpException
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode.*
@@ -31,12 +29,11 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
-class GlitchFactory : ErrorFactory<Glitch> {
+open class GlitchFactory : ErrorFactory<Glitch> {
 
     override fun getError(throwable: Throwable) =
             when (throwable) {
                 is IOException,
-                is JsonParseException,
                 is TimeoutException -> getIoError(throwable)
 
                 is HttpException -> getHttpError(throwable)
@@ -65,7 +62,7 @@ class GlitchFactory : ErrorFactory<Glitch> {
             Glitch(
                     throwable,
                     NON_HTTP_STATUS,
-                    if (throwable is MalformedJsonException || throwable is JsonParseException) UNEXPECTED_RESPONSE else NETWORK,
+                    NETWORK,
                     throwable.message
             )
 

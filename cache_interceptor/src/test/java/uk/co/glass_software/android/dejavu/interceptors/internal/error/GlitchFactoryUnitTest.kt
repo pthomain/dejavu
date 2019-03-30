@@ -49,9 +49,9 @@ class GlitchFactoryUnitTest {
         assertGlitch(
                 apiError,
                 "malformed",
-                ErrorCode.UNEXPECTED_RESPONSE,
+                ErrorCode.NETWORK,
                 -1,
-                false
+                true
         )
     }
 

@@ -171,6 +171,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>> =
             object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
                 override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
+                        configuration.context,
                         configuration.errorFactory,
                         configuration.logger,
                         { dateFactory.get(it) },

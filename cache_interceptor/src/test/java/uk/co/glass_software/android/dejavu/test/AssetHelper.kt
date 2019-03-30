@@ -50,14 +50,14 @@ class AssetHelper(private val assetsFolder: String,
 
     fun observeFile(fileName: String): Observable<String> =
             File(assetsFolder + fileName).let {
-                FileInputStream(it).useAndLogError {
+                FileInputStream(it).useAndLogError({
                     Observable.just(fileToString(it))
-                }
+                })
             }
 
     @Throws(IOException::class)
     private fun fileToString(inputStream: InputStream) =
-            BufferedReader(InputStreamReader(inputStream, "UTF-8")).useAndLogError { reader ->
+            BufferedReader(InputStreamReader(inputStream, "UTF-8")).useAndLogError({ reader ->
                 val builder = StringBuilder()
                 var line: String?
                 do {
@@ -68,6 +68,6 @@ class AssetHelper(private val assetsFolder: String,
                     }
                 } while (line != null)
                 builder.toString()
-            }
+            })
 
 }
