@@ -32,17 +32,28 @@ import retrofit2.Retrofit
 import uk.co.glass_software.android.dejavu.BuildConfig
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.configuration.GsonSerialiser
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationCacheModule
 import uk.co.glass_software.android.dejavu.injection.integration.module.IntegrationTestModule
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
+import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.GlitchFactory
+import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.network.MockClient
+import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import uk.co.glass_software.android.dejavu.test.network.model.User
 import uk.co.glass_software.android.dejavu.test.network.retrofit.TestClient
 import uk.co.glass_software.android.mumbo.Mumbo
 import java.io.IOException
+import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 @Config(packageName = BuildConfig.APPLICATION_ID)
@@ -54,7 +65,9 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
     protected val testClient: TestClient
     protected val assetHelper: AssetHelper
 
-    private val configuration = CacheConfiguration(
+    protected val NOW = Date(1234L)
+
+    protected val configuration = CacheConfiguration(
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
@@ -98,13 +111,96 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
         mockClient.enqueueResponse(response, httpCode)
     }
 
-    fun enqueueRuntimeException(exception: RuntimeException) {
+    protected fun enqueueRuntimeException(exception: RuntimeException) {
         mockClient.enqueueRuntimeException(exception)
     }
 
-    fun enqueueIOException(exception: IOException) {
+    protected fun enqueueIOException(exception: IOException) {
         mockClient.enqueueIOException(exception)
     }
+
+    protected fun getStubbedTestResponse(instructionToken: CacheToken = instructionToken()) =
+            assetHelper.observeStubbedResponse(
+                    TestResponse.STUB_FILE,
+                    TestResponse::class.java,
+                    instructionToken
+            ).blockingFirst().let {
+                ResponseWrapper(
+                        TestResponse::class.java,
+                        it,
+                        it.metadata
+                )
+            }
+
+    protected fun getStubbedUserResponseWrapper(instructionToken: CacheToken = instructionToken(),
+                                                url: String = "http://test.com/userResponse") =
+            getStubbedTestResponse(instructionToken).let {
+                with(it.metadata) {
+                    ResponseWrapper(
+                            User::class.java,
+                            (it.response as TestResponse).first(),
+                            copy(
+                                    cacheToken = cacheToken.copy(
+                                            cacheToken.instruction.copy(
+                                                    responseClass = User::class.java
+                                            ),
+                                            requestMetadata = cacheComponent.hasher().hash(
+                                                    RequestMetadata.UnHashed(url)
+                                            )
+                                    )
+                            )
+                    )
+                }
+            }
+
+    protected fun assertResponse(
+            stubbedResponse: ResponseWrapper<Glitch>,
+            actualResponse: ResponseWrapper<Glitch>?,
+            expectedStatus: CacheStatus,
+            fetchDate: Date? = NOW,
+            cacheDate: Date? = NOW,
+            expiryDate: Date? = Date(NOW.time + (stubbedResponse.metadata.cacheToken.instruction.operation as Operation.Expiring).durationInMillis!!)
+    ) {
+        assertNotNullWithContext(
+                actualResponse,
+                "Actual response should not be null"
+        )
+
+        assertEqualsWithContext(
+                stubbedResponse.response,
+                actualResponse!!.response,
+                "Response didn't match"
+        )
+
+        assertEqualsWithContext(
+                CacheToken(
+                        stubbedResponse.metadata.cacheToken.instruction,
+                        expectedStatus,
+                        configuration.compress,
+                        configuration.encrypt,
+                        stubbedResponse.metadata.cacheToken.requestMetadata,
+                        fetchDate,
+                        cacheDate,
+                        expiryDate
+                ),
+                actualResponse.metadata.cacheToken,
+                "Cache token didn't match"
+        )
+    }
+
+    protected fun instructionToken(operation: Operation = Cache(durationInMillis = 3600_000),
+                                   responseClass : Class<*> = TestResponse::class.java,
+                                   url: String = "http://test.com/testResponse") = fromInstruction(
+            CacheInstruction(
+                    responseClass,
+                    operation
+            ),
+            true,
+            true,
+            cacheComponent.hasher().hash(
+                    RequestMetadata.UnHashed(url)
+            )
+    )
 
 }
 

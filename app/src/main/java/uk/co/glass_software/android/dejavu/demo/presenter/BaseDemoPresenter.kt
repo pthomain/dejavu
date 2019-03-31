@@ -27,7 +27,6 @@ import com.google.gson.Gson
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
-import uk.co.glass_software.android.boilerplate.Boilerplate.logger
 import uk.co.glass_software.android.boilerplate.ui.mvp.MvpPresenter
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.boilerplate.utils.rx.ioUi
@@ -36,9 +35,10 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
-import uk.co.glass_software.android.dejavu.configuration.GsonSerialiser
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract.*
+import uk.co.glass_software.android.dejavu.demo.gson.GsonGlitchFactory
+import uk.co.glass_software.android.dejavu.demo.gson.GsonSerialiser
 import uk.co.glass_software.android.dejavu.demo.model.CatFactResponse
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 
@@ -73,13 +73,13 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     private fun newDejaVu() =
             DejaVu.builder()
-                    .serialiser(GsonSerialiser(gson))
                     .mergeOnNextOnError(true)
                     .requestTimeOutInSeconds(10)
                     .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
-                    .build(demoActivity)
+                    .errorFactory(GsonGlitchFactory())
+                    .build(demoActivity, GsonSerialiser(gson))
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
@@ -155,7 +155,6 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
-        logger.d(this, "Clearing subscriptions")
         subscriptions.clear()
     }
 

@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
-import com.google.gson.internal.`$Gson$Types`.getRawType
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single

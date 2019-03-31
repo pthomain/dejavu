@@ -23,7 +23,6 @@ package uk.co.glass_software.android.dejavu.configuration
 
 import android.content.Context
 import android.os.Looper
-import com.google.gson.Gson
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
@@ -32,6 +31,20 @@ import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
 import uk.co.glass_software.android.mumbo.Mumbo
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
+/**
+ * Class holding the global cache configuration. Values defined here are used by default
+ * but (for some of them) can be overridden on a per-call basis via the use of arguments
+ * passed to the call's CacheInstruction (and by extension in the Retrofit call's annotation).
+ *
+ * @see CacheInstruction
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.Cache
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.Clear
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.ClearAll
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.DoNotCache
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.Invalidate
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.Offline
+ * @see uk.co.glass_software.android.dejavu.retrofit.annotations.Refresh
+ */
 data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val logger: Logger,
                                                       val errorFactory: ErrorFactory<E>,
@@ -66,8 +79,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
             E : NetworkErrorProvider {
 
         private var logger: Logger? = null
-        private var serialiser: Serialiser? = null
         private var encryptionManager: EncryptionManager? = null
+        private var customErrorFactory: ErrorFactory<E>? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -99,9 +112,9 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         fun logger(logger: Logger) = apply { this.logger = logger }
 
         /**
-         * Sets custom Serialiser implementation.
+         * Sets a custom ErrorFactory implementation.
          */
-        fun serialiser(serialiser: Serialiser) = apply { this.serialiser = serialiser }
+        fun errorFactory(errorFactory: ErrorFactory<E>) = apply { this.customErrorFactory = errorFactory }
 
         /**
          * Sets custom EncryptionManager implementation.
@@ -186,8 +199,12 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
 
         /**
          * Returns an instance of DejaVu.
+         *
+         * @param context the Android context
+         * @param serialiser custom Serialiser implementation
          */
-        fun build(context: Context): DejaVu<E> {
+        fun build(context: Context,
+                  serialiser: Serialiser): DejaVu<E> {
             val logger = logger ?: getSilentLogger()
 
             RxAndroidPlugins.setInitMainThreadSchedulerHandler {
@@ -199,8 +216,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                             CacheConfiguration(
                                     context.applicationContext,
                                     logger,
-                                    errorFactory,
-                                    serialiser ?: GsonSerialiser(Gson()),
+                                    customErrorFactory ?: errorFactory,
+                                    serialiser,
                                     encryptionManager ?: Mumbo(context, logger).conceal(),
                                     isCacheEnabled,
                                     encryptData,

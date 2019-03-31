@@ -31,14 +31,12 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
  * @param operation the cache operation with call-specific directives
  */
 data class CacheInstruction constructor(val responseClass: Class<*>,
-                                        val operation: Operation,
-                                        private val serialiser: CacheInstructionSerialiser = CacheInstructionSerialiser()) {
+                                        val operation: Operation) {
 
     /**
      * Represent a cache operation. Directives defined here take precedence over global config.
      */
-    sealed class Operation(val type: Type,
-                           protected val serialiser: CacheInstructionSerialiser = CacheInstructionSerialiser()) {
+    sealed class Operation(val type: Type) {
 
         /**
          * Expiring instructions contain a durationInMillis indicating the duration of the cached value
@@ -228,3 +226,5 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             toString().hashCode()
 
 }
+
+private val serialiser: CacheInstructionSerialiser = CacheInstructionSerialiser()

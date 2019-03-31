@@ -96,6 +96,9 @@ dependencies {
     implementation appDependencies.okHttpLogging
     implementation appDependencies.volley
 
+    implementation appDependencies.retrofitConverterGson
+    implementation appDependencies.gson
+
     implementation appDependencies.appCompat
     implementation appDependencies.browser
 }

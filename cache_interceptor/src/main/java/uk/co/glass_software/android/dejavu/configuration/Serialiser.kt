@@ -21,24 +21,45 @@
 
 package uk.co.glass_software.android.dejavu.configuration
 
+/**
+ * Interface for custom serialisation
+ */
 interface Serialiser {
 
+    /**
+     * Whether the implementation can serialise objects of the given type.
+     *
+     * @param targetClass the given type to handle
+     * @return whether or not this type is supported
+     */
     fun canHandleType(targetClass: Class<*>): Boolean
 
+    /**
+     * Whether the implementation can deserialise the given string
+     * (used for serialisers expecting a certain format, e.g a specific header)
+     *
+     * @param serialised the given string to deserialise
+     * @return whether or not this string is supported
+     */
     fun canHandleSerialisedFormat(serialised: String): Boolean
 
-    @Throws(Serialiser.SerialisationException::class)
-    fun <O : Any> serialise(deserialised: O): String
+    /**
+     * Serialises the given object, called only if canHandleType() returns true
+     * for this object's class.
+     *
+     * @param target the object to serialise
+     * @return the serialised object
+     */
+    fun <O : Any> serialise(target: O): String
 
-    @Throws(Serialiser.SerialisationException::class)
+    /**
+     * Deserialises the given String into an object of the given type, called only if
+     * canHandleSerialisedFormat() returns true for this given String.
+     *
+     * @param serialised the serialised String to deserialise
+     * @param targetClass the type of the object represented by the serialised input
+     */
     fun <O> deserialise(serialised: String,
                         targetClass: Class<O>): O
 
-    class SerialisationException : Exception {
-        internal constructor(message: String) : super(message)
-
-        internal constructor(cause: Throwable) {
-            initCause(cause)
-        }
-    }
 }

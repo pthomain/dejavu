@@ -23,12 +23,8 @@ package uk.co.glass_software.android.dejavu.demo.injection
 
 import dagger.Module
 import dagger.Provides
-import uk.co.glass_software.android.boilerplate.Boilerplate
 import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
-import uk.co.glass_software.android.boilerplate.utils.log.CompositeLogger
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.log.Printer
-import uk.co.glass_software.android.boilerplate.utils.log.SimpleLogger
+import uk.co.glass_software.android.boilerplate.utils.log.*
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract
 import uk.co.glass_software.android.dejavu.demo.presenter.CompositePresenter
@@ -46,12 +42,10 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
     @Provides
     @Singleton
     @Named("boilerplate")
-    fun providerBoilerplateLogger() =
-            Boilerplate.init(
-                    demoActivity,
-                    true,
-                    "DejaVuLog"
-            ).let { Boilerplate.logger }
+    fun providerBoilerplateLogger(): Logger = demoActivity.simpleLogger(
+            true,
+            "DejaVuLog"
+    )
 
     @Provides
     @Singleton

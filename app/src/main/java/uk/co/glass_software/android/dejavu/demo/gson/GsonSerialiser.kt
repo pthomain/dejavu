@@ -19,20 +19,25 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.dejavu.configuration
+package uk.co.glass_software.android.dejavu.demo.gson
 
 import com.google.gson.Gson
+import uk.co.glass_software.android.dejavu.configuration.Serialiser
 
+/**
+ * Custom Serialiser implementation wrapping Gson
+ */
 class GsonSerialiser(private val gson: Gson) : Serialiser {
 
     override fun canHandleType(targetClass: Class<*>) = true
     override fun canHandleSerialisedFormat(serialised: String) = true
 
-    @Throws(Serialiser.SerialisationException::class)
-    override fun <O : Any> serialise(deserialised: O) = gson.toJson(deserialised)!!
+    override fun <O : Any> serialise(target: O) =
+            gson.toJson(target)!!
 
-    @Throws(Serialiser.SerialisationException::class)
-    override fun <O> deserialise(serialised: String,
-                                 targetClass: Class<O>) = gson.fromJson(serialised, targetClass)!!
+    override fun <O> deserialise(
+            serialised: String,
+            targetClass: Class<O>
+    ) = gson.fromJson(serialised, targetClass)!!
 
 }

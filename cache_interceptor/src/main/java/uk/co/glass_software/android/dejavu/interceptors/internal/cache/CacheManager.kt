@@ -154,7 +154,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     )
                 }
                 .flatMap {
-                    if (!it.metadata.cacheToken.status.hasError) {
+                    if (!it.metadata.cacheToken.status.isError) {
                         val serialised = serialise(it)
 
                         if (serialised.metadata.exception != null) {
@@ -166,8 +166,6 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                             Observable.just(it).doOnComplete {
                                 logger.d(this, "$simpleName successfully delivered, now caching")
                                 databaseManager.cache(
-                                        instructionToken,
-                                        cacheOperation,
                                         serialised,
                                         previousCachedResponse
                                 ).subscribeBy(

@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.retrofit
 
-import android.net.Uri
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single

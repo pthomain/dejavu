@@ -24,8 +24,10 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 import android.content.ContentValues
 import androidx.annotation.VisibleForTesting
 import androidx.sqlite.db.SupportSQLiteDatabase
+import io.reactivex.Completable
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.utils.lambda.Action.Companion.act
 import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
@@ -39,7 +41,6 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisa
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.useAndLogError
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.text.DateFormat
@@ -111,34 +112,34 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             LIMIT 1
             """
 
-        database.query(query).useAndLogError(logger) { cursor ->
-            if (cursor.count != 0 && cursor.moveToNext()) {
-                logger.d(this, "Found a cached $simpleName")
+        database.query(query)
+                .useAndLogError(
+                        { cursor ->
+                            if (cursor.count != 0 && cursor.moveToNext()) {
+                                logger.d(this, "Found a cached $simpleName")
 
-                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
-                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
-                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
-                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+                                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
+                                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
+                                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+                                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
 
-                val expiryDate = dateFactory(
-                        if (instruction.operation is Expiring.Refresh) 0L
-                        else cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName))
+                                return getCachedResponse(
+                                        instructionToken,
+                                        start,
+                                        cacheDate,
+                                        expiryDate,
+                                        isCompressed,
+                                        isEncrypted,
+                                        localData
+                                )
+                            } else {
+                                logger.d(this, "Found no cached $simpleName")
+                                return null
+                            }
+                        },
+                        logger
                 )
-
-                return getCachedResponse(
-                        instructionToken,
-                        start,
-                        cacheDate,
-                        expiryDate,
-                        isCompressed,
-                        isEncrypted,
-                        localData
-                )
-            } else {
-                logger.d(this, "Found no cached $simpleName")
-                return null
-            }
-        }
     }
 
     private fun getCachedResponse(instructionToken: CacheToken,
@@ -182,8 +183,11 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
             }
 
     fun invalidate(instructionToken: CacheToken) {
+        val instruction = instructionToken.instruction.copy(
+                operation = CacheInstruction.Operation.Invalidate
+        )
         checkInvalidation(
-                instructionToken.instruction,
+                instruction,
                 instructionToken.requestMetadata.hash
         )
     }
@@ -212,50 +216,52 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     }
 
     private fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time > expiryDate.time) STALE else CACHED
+            if (dateFactory(null).time >= expiryDate.time) STALE else CACHED
 
-    fun cache(instructionToken: CacheToken,
-              cacheOperation: Expiring,
-              response: ResponseWrapper<E>,
-              previousCachedResponse: ResponseWrapper<E>?) = create {
-        val instruction = instructionToken.instruction
-        val operation = instruction.operation as Expiring
-        val simpleName = instruction.responseClass.simpleName
-        val durationInMillis = operation.durationInMillis ?: durationInMillis
+    fun cache(response: ResponseWrapper<E>,
+              previousCachedResponse: ResponseWrapper<E>?): Completable {
+        val instructionToken = response.metadata.cacheToken
 
-        logger.d(this, "Caching $simpleName")
+        return create {
+            val instruction = instructionToken.instruction
+            val operation = instruction.operation as Expiring
+            val simpleName = instruction.responseClass.simpleName
+            val durationInMillis = operation.durationInMillis ?: durationInMillis
 
-        val (encryptData, compressData) = shouldEncryptOrCompress(
-                previousCachedResponse,
-                cacheOperation
-        )
+            logger.d(this, "Caching $simpleName")
 
-        serialisationManager.serialise(
-                response,
-                encryptData,
-                compressData
-        )?.also {
-            val hash = instructionToken.requestMetadata.hash
-            val values = HashMap<String, Any>()
-            val now = dateFactory(null).time
-
-            values[TOKEN.columnName] = hash
-            values[DATE.columnName] = now
-            values[EXPIRY_DATE.columnName] = now + durationInMillis
-            values[DATA.columnName] = it
-            values[CLASS.columnName] = instruction.responseClass.name
-            values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
-            values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
-
-            database.insert(
-                    TABLE_CACHE,
-                    CONFLICT_REPLACE,
-                    contentValuesFactory(values)
+            val (encryptData, compressData) = shouldEncryptOrCompress(
+                    previousCachedResponse,
+                    operation
             )
-        } ?: logger.e(this, "Could not serialise and store data for $simpleName")
 
-        it.onComplete()
-    }!!
+            serialisationManager.serialise(
+                    response,
+                    encryptData,
+                    compressData
+            )?.also {
+                val hash = instructionToken.requestMetadata.hash
+                val values = HashMap<String, Any>()
+                val now = dateFactory(null).time
+
+                values[TOKEN.columnName] = hash
+                values[DATE.columnName] = now
+                values[EXPIRY_DATE.columnName] = now + durationInMillis
+                values[DATA.columnName] = it
+                values[CLASS.columnName] = instruction.responseClass.name
+                values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
+                values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
+
+                database.insert(
+                        TABLE_CACHE,
+                        CONFLICT_REPLACE,
+                        contentValuesFactory(values)
+                )
+            } ?: logger.e(this, "Could not serialise and store data for $simpleName")
+
+            it.onComplete()
+        }!!
+    }
 
     internal fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
                                          cacheOperation: Expiring): Pair<Boolean, Boolean> {
