@@ -7,7 +7,7 @@ import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import org.junit.Test
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE

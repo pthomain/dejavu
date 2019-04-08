@@ -21,8 +21,8 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -54,7 +54,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
         return serialised
                 ?.toByteArray()
                 ?.let { data ->
-                    if (encryptData && encryptionManager.isEncryptionSupported)
+                    if (encryptData && encryptionManager.isEncryptionAvailable)
                         encryptionManager.encryptBytes(data, DATA_TAG)
                     else data
                 }
@@ -87,7 +87,7 @@ internal class SerialisationManager<E>(private val logger: Logger,
             } else {
                 data
             }).let {
-                if (isEncrypted && encryptionManager.isEncryptionSupported)
+                if (isEncrypted && encryptionManager.isEncryptionAvailable)
                     encryptionManager.decryptBytes(it, DATA_TAG)
                             ?: throw IllegalStateException("Could not decrypt data")
                 else it

@@ -23,7 +23,7 @@ package uk.co.glass_software.android.dejavu.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear

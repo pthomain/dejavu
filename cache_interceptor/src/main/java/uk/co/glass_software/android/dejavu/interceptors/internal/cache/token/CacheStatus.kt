@@ -121,7 +121,7 @@ enum class CacheStatus constructor(
      *
      * OR
      *
-     * - the cached data is stale and the freshOnly directive is set to true, which means that there
+     * - the cached data is STALE and the freshOnly directive is set to true, which means that there
      * is nothing to deliver. If this is the case, the metadata will hold the cause exception at the
      * same condition that the response implements CacheMetadata.Holder (see above)
      *
@@ -129,7 +129,13 @@ enum class CacheStatus constructor(
      * implement CacheMetadata.Holder, the exception will be delivered using the default
      * RxJava error mechanism.
      */
-    EMPTY(true, false, true, true);
+    EMPTY(true, false, true, true),
+
+    /**
+     * Returned for instructions that do not return any data (e.g. INVALIDATE or CLEAR).
+     * This status indicates that the instruction was properly processed.
+     */
+    DONE(true, true, true, false);
 
     /**
      * This field indicates a response that won't be succeeded by another one.

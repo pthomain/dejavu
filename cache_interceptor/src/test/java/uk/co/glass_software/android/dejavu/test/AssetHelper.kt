@@ -23,7 +23,7 @@ package uk.co.glass_software.android.dejavu.test
 
 import com.google.gson.Gson
 import io.reactivex.Observable
-import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
+import uk.co.glass_software.android.boilerplate.core.utils.io.useAndLogError
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata

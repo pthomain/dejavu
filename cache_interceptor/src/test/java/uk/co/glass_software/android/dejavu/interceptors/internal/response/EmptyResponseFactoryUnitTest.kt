@@ -15,6 +15,8 @@ class EmptyResponseFactoryUnitTest {
 
     private lateinit var target: EmptyResponseFactory<Glitch>
 
+    //TODO update test for DONE and EMPTY
+
     @Before
     fun setUp() {
         mockErrorFactory = mock()

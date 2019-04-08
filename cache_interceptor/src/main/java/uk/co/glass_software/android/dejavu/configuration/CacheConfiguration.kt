@@ -25,7 +25,7 @@ import android.content.Context
 import android.os.Looper
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
 import uk.co.glass_software.android.mumbo.Mumbo

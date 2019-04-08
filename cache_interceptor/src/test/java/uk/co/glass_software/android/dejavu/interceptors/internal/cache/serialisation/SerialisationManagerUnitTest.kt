@@ -2,7 +2,7 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialis
 
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Test
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -59,7 +59,7 @@ class SerialisationManagerUnitTest {
 
         whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
         whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
-        whenever(mockEncryptionManager.isEncryptionSupported).thenReturn(isEncryptionSupported)
+        whenever(mockEncryptionManager.isEncryptionAvailable).thenReturn(isEncryptionSupported)
 
         mockWrapper = ResponseWrapper(
                 if (useString) String::class.java else TestResponse::class.java,
@@ -130,7 +130,8 @@ class SerialisationManagerUnitTest {
         if (shouldEncryptData) {
             whenever(mockEncryptionManager.encryptBytes(
                     eq(expectedInputMockByteArray),
-                    eq("DATA_TAG")
+                    eq("DATA_TAG"),
+                    isNull()
             )).thenReturn(if (encryptionSucceeds) mockEncryptedByteArray else null)
         }
 
@@ -224,7 +225,8 @@ class SerialisationManagerUnitTest {
             if (isEncrypted) {
                 whenever(mockEncryptionManager.decryptBytes(
                         eq(expectedInput),
-                        eq("DATA_TAG")
+                        eq("DATA_TAG"),
+                        isNull()
                 )).thenReturn(decrypted)
             }
 

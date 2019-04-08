@@ -1,7 +1,7 @@
 package uk.co.glass_software.android.dejavu.interceptors
 
-import org.junit.Assert.*
-
-class DejaVuInterceptorIntegrationTest{
-    //TODO
-}
+//internal class DejaVuInterceptorIntegrationTest : BaseIntegrationTest<DejaVuInterceptor.Factory<Glitch>>(
+//        { it.dejaVuInterceptorFactory() }
+//) {
+//    //TODO
+//}

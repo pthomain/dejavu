@@ -22,7 +22,7 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
 import android.net.Uri
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException

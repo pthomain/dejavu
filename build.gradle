@@ -66,8 +66,8 @@ ext {
     rxKotlinVersion = '2.3.0'
     rxAndroidVersion = '2.1.0'
 
-    boilerplateVersion = '2.5'
-    mumboVersion = '1.0'
+    boilerplateVersion = '2.6'
+    mumboVersion = '1.1'
 
     snappyVersion = '0.4'
     requeryVersion = '3.25.3'
@@ -114,7 +114,7 @@ ext {
             jsr250                : "javax.annotation:jsr250-api:$jsr250Version",
             androidAnnotations    : "androidx.annotation:annotation:$androidXversion",
 
-            boilerplate           : "com.github.pthomain:boilerplate:$boilerplateVersion",
+            boilerplate           : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
             mumbo                 : "com.github.pthomain:mumbo:$mumboVersion",
 
             retrofit              : "com.squareup.retrofit2:retrofit:$retrofitVersion",

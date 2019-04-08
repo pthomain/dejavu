@@ -30,7 +30,7 @@ import io.reactivex.subjects.PublishSubject
 import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.*
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
@@ -190,7 +190,6 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                         cacheManager,
                         { dateFactory.get(it) },
                         configuration.isCacheEnabled,
-                        configuration.logger,
                         t1,
                         t2
                 )

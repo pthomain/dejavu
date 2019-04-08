@@ -53,7 +53,6 @@ class CacheInterceptorUnitTest {
                 mockCacheManager,
                 mockDateFactory,
                 isCacheEnabled,
-                mock(),
                 mockInstructionToken,
                 mockStart
         )

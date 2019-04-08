@@ -23,7 +23,7 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.subscribeBy
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory

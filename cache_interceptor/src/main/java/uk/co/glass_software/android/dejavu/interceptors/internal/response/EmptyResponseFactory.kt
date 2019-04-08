@@ -22,30 +22,57 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.response
 
 import io.reactivex.Single
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Clear
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.DONE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 
+/**
+ * Provides empty responses for operations that do not return data (e.g. INVALIDATE or CLEAR), for
+ * calls that could return data but had none (OFFLINE) or for network calls that failed.
+ *
+ * @param errorFactory the custom error factory used to wrap the exception
+ */
 internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>)
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Returns a Single emitting a ResponseWrapper with no response and a status of
+     * either DONE or EMPTY.
+     *
+     * @param instructionToken the instruction token for this call
+     * @return an empty ResponseWrapper emitting Single
+     */
     fun emptyResponseWrapperSingle(instructionToken: CacheToken) =
-            Single.create<ResponseWrapper<E>> {
-                it.onSuccess(
-                        ResponseWrapper(
-                                instructionToken.instruction.responseClass,
-                                null,
-                                CacheMetadata(
-                                        instructionToken.copy(status = EMPTY),
-                                        errorFactory.getError(EmptyResponseException())
+            isOperationCompletable(instructionToken.instruction.operation).let { isDone ->
+                Single.just(ResponseWrapper(
+                        instructionToken.instruction.responseClass,
+                        null,
+                        CacheMetadata(
+                                instructionToken.copy(status = if (isDone) DONE else EMPTY),
+                                errorFactory.getError(
+                                        if (isDone) DoneException(instructionToken.instruction.operation)
+                                        else EmptyResponseException
                                 )
                         )
-                )
+                ))
             }!!
+
+    /**
+     * Determines whether a given operation is completable, i.e. does not return data.
+     *
+     * @param operation the given operation to assess
+     * @return whether or not this operation returns data
+     */
+    private fun isOperationCompletable(operation: CacheInstruction.Operation) =
+            operation is Invalidate || operation is Clear
 
     /**
      * Creates an empty response to be returned in lieu of an exception if the mergeOnNextOnError
@@ -66,5 +93,6 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                 }
             } else null
 
-    class EmptyResponseException : NoSuchElementException("Response was empty")
+    object EmptyResponseException : NoSuchElementException("The response was empty")
+    class DoneException(operation: CacheInstruction.Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
 }

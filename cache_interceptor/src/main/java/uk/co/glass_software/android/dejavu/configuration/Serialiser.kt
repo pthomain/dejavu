@@ -63,3 +63,8 @@ interface Serialiser {
                         targetClass: Class<O>): O
 
 }
+
+abstract class SimpleSerialiser : Serialiser {
+    final override fun canHandleType(targetClass: Class<*>) = true
+    final override fun canHandleSerialisedFormat(serialised: String) = true
+}

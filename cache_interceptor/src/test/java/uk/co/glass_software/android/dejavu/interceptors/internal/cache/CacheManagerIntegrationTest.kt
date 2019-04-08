@@ -1,7 +1,7 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
-import org.junit.Assert.*
-
-class CacheManagerIntegrationTest{
-    //TODO
-}
+//internal class CacheManagerIntegrationTest : BaseIntegrationTest<CacheManager<Glitch>>(
+//        { it.cacheManager() }
+//) {
+//    //TODO
+//}

@@ -27,9 +27,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import io.reactivex.Completable
 import io.reactivex.Completable.create
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import uk.co.glass_software.android.boilerplate.utils.io.useAndLogError
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action.Companion.act
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.io.useAndLogError
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action.Companion.act
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
@@ -186,7 +186,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         val instruction = instructionToken.instruction.copy(
                 operation = CacheInstruction.Operation.Invalidate
         )
-        checkInvalidation(
+        val foundIt = checkInvalidation(
                 instruction,
                 instructionToken.requestMetadata.hash
         )
@@ -194,26 +194,27 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
 
     @VisibleForTesting
     internal fun checkInvalidation(instruction: CacheInstruction,
-                                   key: String) {
-        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            val map = mapOf(EXPIRY_DATE.columnName to 0)
-            val selection = "${TOKEN.columnName} = ?"
-            val selectionArgs = arrayOf(key)
+                                   key: String) =
+            if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+                val map = mapOf(EXPIRY_DATE.columnName to 0)
+                val selection = "${TOKEN.columnName} = ?"
+                val selectionArgs = arrayOf(key)
 
-            database.update(
-                    TABLE_CACHE,
-                    CONFLICT_REPLACE,
-                    contentValuesFactory(map),
-                    selection,
-                    selectionArgs
-            ).let {
-                logger.d(
-                        this,
-                        "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (it > 0) "done" else "nothing found"}"
-                )
-            }
-        }
-    }
+                database.update(
+                        TABLE_CACHE,
+                        CONFLICT_REPLACE,
+                        contentValuesFactory(map),
+                        selection,
+                        selectionArgs
+                ).let {
+                    val foundIt = it > 0
+                    logger.d(
+                            this,
+                            "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
+                    )
+                    foundIt
+                }
+            } else false
 
     private fun getCachedStatus(expiryDate: Date) =
             if (dateFactory(null).time >= expiryDate.time) STALE else CACHED
