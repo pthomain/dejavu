@@ -6,7 +6,7 @@ import com.nhaarman.mockitokotlin2.verify
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import uk.co.glass_software.android.boilerplate.utils.lambda.Action
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -14,7 +14,6 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.test.BaseIntegrationTest
 import uk.co.glass_software.android.dejavu.test.assertResponseWrapperWithContext
-import uk.co.glass_software.android.dejavu.test.instructionToken
 
 internal class SerialisationManagerIntegrationTest
     : BaseIntegrationTest<SerialisationManager<Glitch>>(IntegrationCacheComponent::serialisationManager) {
@@ -25,7 +24,8 @@ internal class SerialisationManagerIntegrationTest
 
     @Before
     @Throws(Exception::class)
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         instructionToken = instructionToken(Cache())
         mockErrorCallback = mock()
 

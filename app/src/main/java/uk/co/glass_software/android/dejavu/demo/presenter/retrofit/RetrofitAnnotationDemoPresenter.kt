@@ -21,7 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.demo.presenter.retrofit
 
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 
 internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,

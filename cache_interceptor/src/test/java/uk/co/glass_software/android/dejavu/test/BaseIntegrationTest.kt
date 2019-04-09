@@ -21,10 +21,12 @@
 
 package uk.co.glass_software.android.dejavu.test
 
+import androidx.annotation.CallSuper
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.mock
 import okhttp3.OkHttpClient
+import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -56,18 +58,26 @@ import java.io.IOException
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-@Config(packageName = BuildConfig.APPLICATION_ID)
-internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCacheComponent) -> T) {
-
-    protected val okHttpClient: OkHttpClient
-    protected val retrofit: Retrofit
-    protected val mockClient: MockClient
-    protected val testClient: TestClient
-    protected val assetHelper: AssetHelper
+@Config(packageName = BuildConfig.LIBRARY_PACKAGE_NAME)
+internal abstract class BaseIntegrationTest<T : Any>(
+        private val targetExtractor: (IntegrationCacheComponent) -> T,
+        private val useDefaultConfiguration: Boolean = true
+) {
 
     protected val NOW = Date(1234L)
 
-    protected val configuration = CacheConfiguration(
+    protected lateinit var okHttpClient: OkHttpClient
+    protected lateinit var retrofit: Retrofit
+    protected lateinit var mockClient: MockClient
+    protected lateinit var testClient: TestClient
+    protected lateinit var assetHelper: AssetHelper
+
+    protected lateinit var cacheComponent: IntegrationCacheComponent
+    protected lateinit var target: T
+
+    private lateinit var dejaVu: DejaVu<Glitch>
+
+    protected open val configuration = CacheConfiguration(
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
@@ -84,15 +94,21 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
             false
     )
 
-    protected val cacheComponent: IntegrationCacheComponent = DaggerIntegrationCacheComponent.builder()
-            .integrationCacheModule(IntegrationCacheModule(configuration))
-            .build()
+    @Before
+    @CallSuper
+    open fun setUp() {
+        if (useDefaultConfiguration) {
+            setUpWithConfiguration(configuration)
+        }
+    }
 
-    private val dejaVu = DejaVu(cacheComponent)
+    protected fun setUpWithConfiguration(configuration: CacheConfiguration<Glitch>) {
+        cacheComponent = DaggerIntegrationCacheComponent.builder()
+                .integrationCacheModule(IntegrationCacheModule(configuration))
+                .build()
 
-    protected val target: T
+        dejaVu = DejaVu(cacheComponent)
 
-    init {
         val testComponent = DaggerIntegrationTestComponent.builder()
                 .integrationTestModule(IntegrationTestModule(dejaVu))
                 .build()
@@ -189,7 +205,7 @@ internal abstract class BaseIntegrationTest<T>(targetExtractor: (IntegrationCach
     }
 
     protected fun instructionToken(operation: Operation = Cache(durationInMillis = 3600_000),
-                                   responseClass : Class<*> = TestResponse::class.java,
+                                   responseClass: Class<*> = TestResponse::class.java,
                                    url: String = "http://test.com/testResponse") = fromInstruction(
             CacheInstruction(
                     responseClass,

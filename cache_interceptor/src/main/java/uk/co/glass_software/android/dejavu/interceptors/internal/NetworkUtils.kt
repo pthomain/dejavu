@@ -2,8 +2,8 @@ package uk.co.glass_software.android.dejavu.interceptors.internal
 
 import android.content.Context
 import io.reactivex.Observable
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
-import uk.co.glass_software.android.boilerplate.utils.rx.waitForNetwork
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.rx.waitForNetwork
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper

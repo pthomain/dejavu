@@ -22,15 +22,12 @@
 package uk.co.glass_software.android.dejavu.test
 
 import com.google.gson.Gson
-import uk.co.glass_software.android.dejavu.configuration.Serialiser
+import uk.co.glass_software.android.dejavu.configuration.SimpleSerialiser
 
 /**
  * Custom Serialiser implementation wrapping Gson
  */
-class GsonSerialiser(private val gson: Gson) : Serialiser {
-
-    override fun canHandleType(targetClass: Class<*>) = true
-    override fun canHandleSerialisedFormat(serialised: String) = true
+class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
 
     override fun <O : Any> serialise(target: O) =
             gson.toJson(target)!!

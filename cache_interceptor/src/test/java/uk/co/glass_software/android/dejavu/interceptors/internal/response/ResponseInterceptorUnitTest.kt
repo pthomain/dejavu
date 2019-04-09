@@ -110,7 +110,7 @@ class ResponseInterceptorUnitTest {
         setUp() //reset mocks
 
         val mockInstructionToken = instructionToken(operation)
-        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException())
+        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException)
 
         val isValid = if (operation is Expiring) {
             val filterFresh = cacheStatus.isFresh || !operation.freshOnly

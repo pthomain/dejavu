@@ -1,7 +1,9 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.response
 
-import org.junit.Assert.*
 
-class ResponseInterceptorIntegrationTest{
-    //TODO
-}
+//internal class ResponseInterceptorIntegrationTest
+//    : BaseIntegrationTest<Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>>(
+//        { it.responseInterceptorFactory() }
+//) {
+//    //TODO
+//}

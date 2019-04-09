@@ -16,7 +16,8 @@ internal class ErrorInterceptorIntegrationTest
     private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
 
     @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         targetErrorInterceptor = target.get(
                 instructionToken(Cache()),
                 1234L

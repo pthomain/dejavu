@@ -26,7 +26,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.Call
 import retrofit2.CallAdapter
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.DejaVu.Companion.DejaVuHeader
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction

@@ -22,10 +22,10 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.error
 
 import com.google.gson.stream.MalformedJsonException
+import com.nhaarman.mockitokotlin2.whenever
 import junit.framework.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import retrofit2.HttpException
 import java.io.IOException
@@ -73,8 +73,8 @@ class GlitchFactoryUnitTest {
     @Test
     fun testParseHttpExceptionUnauthorised() {
         val exception = mock(HttpException::class.java)
-        `when`(exception.code()).thenReturn(401)
-        `when`(exception.message()).thenReturn("not authorised")
+        whenever(exception.code()).thenReturn(401)
+        whenever(exception.message()).thenReturn("not authorised")
 
         val apiError = target.getError(exception)
 
@@ -90,8 +90,8 @@ class GlitchFactoryUnitTest {
     @Test
     fun testParseHttpExceptionServerError() {
         val exception = mock(HttpException::class.java)
-        `when`(exception.code()).thenReturn(500)
-        `when`(exception.message()).thenReturn("server error")
+        whenever(exception.code()).thenReturn(500)
+        whenever(exception.message()).thenReturn("server error")
 
         val apiError = target.getError(exception)
 
@@ -107,8 +107,8 @@ class GlitchFactoryUnitTest {
     @Test
     fun testParseHttpExceptionUnknown() {
         val exception = mock(HttpException::class.java)
-        `when`(exception.code()).thenReturn(1)
-        `when`(exception.message()).thenReturn("unknown")
+        whenever(exception.code()).thenReturn(1)
+        whenever(exception.message()).thenReturn("unknown")
 
         val apiError = target.getError(exception)
 

@@ -74,7 +74,7 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun cacheInterceptorFactory(): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>
 
-    fun responseInterceptor(): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
+    fun responseInterceptorFactory(): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
 
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
 

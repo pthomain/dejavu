@@ -23,23 +23,39 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import uk.co.glass_software.android.boilerplate.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
 
+/**
+ * Class handling the interception of the network request observable with the purpose of decorating
+ * it based on the cache operation defined in the associated instruction token.
+ *
+ * This class delegates cache operations to the CacheManager if needed or update the response wrapper
+ * with a NOT_CACHED token otherwise.
+ *
+ * @param cacheManager an instance of the CacheManager to handle cache operations if needed
+ * @param dateFactory provides the current time and converts timestamps
+ * @param isCacheEnabled whether or not the global configuration sets the cache as being enabled
+ * @param instructionToken the call specific cache instruction token
+ * @param start the timestamp indicating when the call started
+ */
 internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
                                    private val dateFactory: (Long?) -> Date,
                                    private val isCacheEnabled: Boolean,
-                                   private val logger: Logger,
                                    private val instructionToken: CacheToken,
                                    private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorProvider {
 
+    /**
+     * Composes the given input observable and returns a decorated instance of the same type.
+     * @param upstream the upstream Observable instance
+     * @return the transformed ObservableSource instance
+     */
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             instructionToken.instruction.let { instruction ->
                 if (isCacheEnabled) {
@@ -59,13 +75,19 @@ internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
 
                         is Invalidate -> cacheManager.invalidate(instructionToken)
 
-                        else -> doNotCache(instructionToken, upstream)
+                        else -> doNotCache(upstream)
                     }
-                } else doNotCache(instructionToken, upstream)
+                } else doNotCache(upstream)
             }!!
 
-    private fun doNotCache(instructionToken: CacheToken,
-                           upstream: Observable<ResponseWrapper<E>>) =
+    /**
+     * Indicates that the call has not been cached, either by instruction or because the cache
+     * is globally disabled.
+     *
+     * @param upstream the upstream Observable instance
+     * @return the upstream Observable updating the response with the NOT_CACHED status
+     */
+    private fun doNotCache(upstream: Observable<ResponseWrapper<E>>) =
             upstream.doOnNext { responseWrapper ->
                 responseWrapper.metadata = responseWrapper.metadata.copy(
                         CacheToken.notCached(
