@@ -29,7 +29,6 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 
 /**
@@ -57,30 +56,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
     fun process(annotations: Array<Annotation>,
                 rxType: RxType,
                 responseClass: Class<*>): CacheInstruction? {
-        if (annotations.isEmpty()
-                && rxType != COMPLETABLE
-                && cacheConfiguration.cacheAllByDefault) {
-
-            logger.d(
-                    this,
-                    "No annotation for call returning ${rxType.getTypedName(responseClass)} but cacheAllByDefault directive is set to true"
-            )
-
-            return CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Cache(
-                            cacheConfiguration.cacheDurationInMillis,
-                            cacheConfiguration.connectivityTimeoutInMillis,
-                            false,
-                            cacheConfiguration.mergeOnNextOnError,
-                            cacheConfiguration.encrypt,
-                            cacheConfiguration.compress,
-                            false
-                    )
-            )
-        }
-
         var instruction: CacheInstruction? = null
+
         annotations.forEach { annotation ->
             when (annotation) {
                 is Cache -> CACHE

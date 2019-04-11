@@ -28,6 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.mumbo.Mumbo
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
@@ -58,7 +59,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val requestTimeOutInSeconds: Int,
                                                       val connectivityTimeoutInMillis: Long,
                                                       val cacheDurationInMillis: Long,
-                                                      val cacheAllByDefault: Boolean)
+                                                      val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
               E : NetworkErrorProvider {
 
@@ -91,7 +92,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
         private var allowNonFinalForSingle: Boolean = false
-        private var cacheAllByDefault: Boolean = true
+        private var cachePredicate: (Class<*>, RequestMetadata) -> Boolean = { _, _ -> false }
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -191,11 +192,24 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) = apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
 
         /**
-         * Sets data caching globally (used by default for all calls with no annotation) using
-         * the default global values set here. As for any global directive, it is overridden by
-         * call-specific values.
+         * Sets data caching globally (used by default for all calls with no cache instruction) using
+         * the default global values set in this configuration object. The default value is to false.
+         * Overrides the value set in the cachePredicate() method.
+         * @see cachePredicate
          */
-        fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cacheAllByDefault = cacheAllByDefault }
+        fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cachePredicate = { _, _ -> cacheAllByDefault } }
+
+        /**
+         * Sets a predicate for ad-hoc response caching. This predicate will be called for any
+         * request that does not have an associated cache instruction. It will be called
+         * with the target response class and associated request metadata before the call is made in
+         * order to establish whether or not the response should be cached. Returning false means the
+         * response won't be cached. Otherwise, it will be cached using the global values defined
+         * in this configuration object. The default behaviour is to return false.
+         * Overrides the value set in the cacheAllByDefault() method.
+         * @see cacheAllByDefault
+         */
+        fun cachePredicate(predicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean) = apply { this.cachePredicate = predicate }
 
         /**
          * Returns an instance of DejaVu.
@@ -227,7 +241,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     requestTimeOutInSeconds,
                                     connectivityTimeoutInMillis,
                                     cacheDurationInMillis,
-                                    cacheAllByDefault
+                                    cachePredicate
                             ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                     )
             )

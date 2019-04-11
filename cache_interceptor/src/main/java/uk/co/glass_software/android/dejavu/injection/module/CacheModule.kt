@@ -94,10 +94,10 @@ internal interface CacheModule<E>
 
     fun provideUriParser(): Function1<String, Uri>
 
-    fun provideRetrofitCallAdapterInnerFactory(): Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>
+    fun provideRetrofitCallAdapterInnerFactory(): Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>
 
     fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                          innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
                                           dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
@@ -149,7 +149,7 @@ internal interface CacheModule<E>
         fun get(t1: T1, t2: T2, t3: T3, t4: T4): R
     }
 
-    interface Function5<T1, T2, T3, T4, T5, R> {
-        fun get(t1: T1, t2: T2, t3: T3, t4: T4, t5: T5): R
+    interface Function6<T1, T2, T3, T4, T5, T6, R> {
+        fun get(t1: T1, t2: T2, t3: T3, t4: T4, t5: T5, t6: T6): R
     }
 }

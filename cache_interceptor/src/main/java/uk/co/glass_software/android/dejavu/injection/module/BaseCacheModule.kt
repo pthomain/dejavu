@@ -248,34 +248,37 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideRetrofitCallAdapterInnerFactory() =
-            object : Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
+            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
                         t2: Logger,
                         t3: String,
-                        t4: CacheInstruction?,
-                        t5: CallAdapter<Any, Any>
+                        t4: Class<*>,
+                        t5: CacheInstruction?,
+                        t6: CallAdapter<Any, Any>
                 ) = RetrofitCallAdapter(
+                        configuration,
+                        t4,
                         t1,
                         CacheInstructionSerialiser(),
                         t2,
                         t3,
-                        t4,
-                        t5
+                        t5,
+                        t6
                 )
             }
 
     @Provides
     @Singleton
     override fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                                   innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                                   innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
                                                    defaultAdapterFactory: RxJava2CallAdapterFactory,
                                                    dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                                    processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                                    annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     defaultAdapterFactory,
-                    { t1, t2, t3, t4, t5 -> innerFactory.get(t1, t2, t3, t4, t5) },
+                    { t1, t2, t3, t4, t5, t6 -> innerFactory.get(t1, t2, t3, t4, t5, t6) },
                     { dateFactory.get(it) },
                     dejaVuInterceptorFactory,
                     annotationProcessor,
