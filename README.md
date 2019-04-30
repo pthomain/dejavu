@@ -2,7 +2,7 @@
 
 **A simple yet fully-featured RxJava/Retrofit HTTP cache**
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu) [![Known Vulnerabilities](https://snyk.io/test/github/pthomain/dejavu/badge.svg)](https://snyk.io/test/github/pthomain/dejavu)
 
 TL;DR
 -----
