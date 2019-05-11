@@ -1,7 +1,6 @@
 package uk.co.glass_software.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import org.junit.Before
 import org.junit.Test
@@ -29,7 +28,7 @@ class AnnotationProcessorUnitTest {
         configuration = mock()
 
         whenever(configuration.logger).thenReturn(mock())
-        whenever(configuration.cacheAllByDefault).thenReturn(false)
+        whenever(configuration.cachePredicate).thenReturn({ _, _ -> false })
         whenever(configuration.cacheDurationInMillis).thenReturn(defaultCacheDuration)
         whenever(configuration.connectivityTimeoutInMillis).thenReturn(defaultNetworkTimeOut)
         whenever(configuration.mergeOnNextOnError).thenReturn(true)
@@ -50,7 +49,7 @@ class AnnotationProcessorUnitTest {
     }
 
     private fun testProcessWithNoAnnotations(cacheAllByDefault: Boolean) {
-        whenever(configuration.cacheAllByDefault).thenReturn(cacheAllByDefault)
+        whenever(configuration.cachePredicate).thenReturn({ _, _ -> cacheAllByDefault })
 
         val instruction = target.process(
                 arrayOf(),
@@ -58,33 +57,10 @@ class AnnotationProcessorUnitTest {
                 responseClass
         )
 
-        if (cacheAllByDefault) {
-            assertInstruction(
-                    CacheInstruction.Operation.Expiring.Cache(
-                            defaultCacheDuration,
-                            defaultNetworkTimeOut,
-                            false,
-                            true,
-                            true,
-                            true,
-                            false
-                    ),
-                    instruction,
-                    "Instruction invalid when no annotations are present and cacheAllByDefault is true"
-            )
-
-            verify(configuration).cacheAllByDefault
-            verify(configuration).cacheDurationInMillis
-            verify(configuration).connectivityTimeoutInMillis
-            verify(configuration).mergeOnNextOnError
-            verify(configuration).encrypt
-            verify(configuration).compress
-        } else {
-            assertNullWithContext(
-                    instruction,
-                    "Instruction should be null when no annotations are present and cacheAllByDefault is false"
-            )
-        }
+        assertNullWithContext(
+                instruction,
+                "Instruction should be null when no annotations are present"
+        )
     }
 
     @Test

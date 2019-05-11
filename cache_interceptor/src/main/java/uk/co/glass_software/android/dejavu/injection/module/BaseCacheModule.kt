@@ -46,6 +46,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyR
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
+import uk.co.glass_software.android.dejavu.retrofit.RequestBodyConverter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -261,6 +262,7 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                         t4,
                         t1,
                         CacheInstructionSerialiser(),
+                        RequestBodyConverter(),
                         t2,
                         t3,
                         t5,

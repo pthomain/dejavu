@@ -24,6 +24,7 @@ package uk.co.glass_software.android.dejavu.retrofit
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import okhttp3.Request
 import retrofit2.Call
 import retrofit2.CallAdapter
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
@@ -47,6 +48,7 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
                                       private val responseClass: Class<*>,
                                       private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                       private val serialiser: CacheInstructionSerialiser,
+                                      private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
                                       private val instruction: CacheInstruction?,
@@ -97,7 +99,7 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
             adaptedByDefault(call) ?: adaptedByDefaultRxJavaAdapter(call)
 
     private fun adaptedByDefault(call: Call<Any>): Any? {
-        val metadata = RequestMetadata.UnHashed(call.request().url().toString())
+        val metadata = getRequestMetadata(call)
         return if (cacheConfiguration.cachePredicate(responseClass, metadata)) {
             CacheInstruction(
                     responseClass,
@@ -255,6 +257,20 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
                                      instruction: CacheInstruction) =
             dejaVuFactory.create(
                     instruction,
-                    RequestMetadata.UnHashed(call.request().url().toString())
+                    getRequestMetadata(call)
             )
+
+    /**
+     * Provides metadata for the request, based on the URL and request's body to ensure
+     * that calls with the same parameters are considered unique.
+     *
+     * @param call the call for which to return request metadata
+     * @return the request metadata
+     */
+    private fun getRequestMetadata(call: Call<Any>) =
+            RequestMetadata.UnHashed(
+                    call.request().url().toString(),
+                    requestBodyConverter(call.request())
+            )
+
 }

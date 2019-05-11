@@ -51,7 +51,7 @@ internal class ErrorInterceptor<E> constructor(private val context: Context,
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242
             .map { wrap(it) }
             .timeout(timeOutInSeconds.toLong(), SECONDS) //fixing timeout not working in OkHttp
-            .defaultIfEmpty(getErrorResponse(NoSuchElementException("Response was empty")))
+            .switchIfEmpty { getErrorResponse(NoSuchElementException("Response was empty")) }
             .onErrorResumeNext(Function { Observable.just(getErrorResponse(it)) })
             .compose {
                 addConnectivityTimeOutIfNeeded(
