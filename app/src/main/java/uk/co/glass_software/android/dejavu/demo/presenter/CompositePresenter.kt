@@ -22,7 +22,7 @@
 package uk.co.glass_software.android.dejavu.demo.presenter
 
 import io.reactivex.disposables.CompositeDisposable
-import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Callback1
 import uk.co.glass_software.android.dejavu.demo.DemoActivity
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract.DemoPresenter
 import uk.co.glass_software.android.dejavu.demo.presenter.CompositePresenter.Method

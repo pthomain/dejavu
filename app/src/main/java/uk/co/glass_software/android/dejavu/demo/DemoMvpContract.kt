@@ -22,6 +22,8 @@
 package uk.co.glass_software.android.dejavu.demo
 
 import dagger.Component
+import uk.co.glass_software.android.boilerplate.core.mvp.base.MvpContract.*
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Callback1
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.demo.injection.DemoViewModule

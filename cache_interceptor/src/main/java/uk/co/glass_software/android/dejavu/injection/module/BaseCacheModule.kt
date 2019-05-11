@@ -52,6 +52,7 @@ import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 import java.util.*
+import java.util.concurrent.Semaphore
 import javax.inject.Singleton
 
 @Module
@@ -60,8 +61,18 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
         where E : Exception,
               E : NetworkErrorProvider {
 
-    val DATABASE_NAME = "dejavu.db"
-    val DATABASE_VERSION = 1
+    companion object {
+        const val DATABASE_NAME = "dejavu.db"
+        const val DATABASE_VERSION = 1
+
+        @JvmStatic
+        private val databaseLock = Semaphore(1)
+
+        @JvmStatic
+        private var database: SupportSQLiteDatabase? = null
+            @Synchronized get
+            @Synchronized private set
+    }
 
     @Provides
     @Singleton
@@ -124,8 +135,18 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper) =
-            sqlOpenHelper.writableDatabase!!
+    @Synchronized
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase {
+        try {
+            databaseLock.acquire()
+            if (database == null) {
+                database = sqlOpenHelper.writableDatabase!!
+            }
+        } finally {
+            databaseLock.release()
+        }
+        return database!!
+    }
 
     @Provides
     @Singleton
@@ -237,7 +258,8 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()!!
+    override fun provideDefaultAdapterFactory() =
+            RxJava2CallAdapterFactory.create()!!
 
     @Provides
     @Singleton

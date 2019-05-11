@@ -92,6 +92,8 @@ dependencies {
     implementation appDependencies.dagger
     kapt appDependencies.daggerCompiler
 
+    implementation appDependencies.boilerplate_ui
+
     implementation appDependencies.okHttp
     implementation appDependencies.okHttpLogging
     implementation appDependencies.volley
