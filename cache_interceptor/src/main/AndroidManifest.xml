@@ -20,8 +20,10 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="uk.co.glass_software.android.dejavu">
 
+    <uses-sdk tools:overrideLibrary="androidx.security" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>

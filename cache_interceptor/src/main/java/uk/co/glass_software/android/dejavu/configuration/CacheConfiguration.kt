@@ -80,8 +80,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
             E : NetworkErrorProvider {
 
         private var logger: Logger? = null
-        private var encryptionManager: EncryptionManager? = null
         private var customErrorFactory: ErrorFactory<E>? = null
+        private var mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -116,11 +116,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Sets a custom ErrorFactory implementation.
          */
         fun errorFactory(errorFactory: ErrorFactory<E>) = apply { this.customErrorFactory = errorFactory }
-
-        /**
-         * Sets custom EncryptionManager implementation.
-         */
-        fun encryptionManager(encryptionManager: EncryptionManager) = apply { this.encryptionManager = encryptionManager }
 
         /**
          * Sets network call timeout in seconds globally (default is 15s).
@@ -158,8 +153,19 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         /**
          * Sets the data encryption globally (used by default for all calls with no specific directive,
          * see @Cache::encrypt for call-specific directive).
+         *
+         * @param mumboPicker picker for the chosen encryption implementation, with the choice of:
+         * - Facebook's Conceal for API levels < 23 (see https://facebook.github.io/conceal)
+         * - AndroidX's Security (Tink) implementation for API level >= 23 only (see https://developer.android.com/jetpack/androidx/releases/security)
+         * - custom implementation using the EncryptionManager interface
+         * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
+         * However if your API level target is less than 23, using Tink will trigger a runtime exception.
          */
-        fun encryptData(encryptData: Boolean) = apply { this.encryptData = encryptData }
+        fun encryptData(encryptData: Boolean,
+                        mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal) = apply {
+            this.encryptData = encryptData
+            this.mumboPicker = mumboPicker
+        }
 
         /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
@@ -232,7 +238,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     logger,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
-                                    encryptionManager ?: Mumbo(context, logger).conceal(),
+                                    mumboPicker(Mumbo(context, logger)),
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,

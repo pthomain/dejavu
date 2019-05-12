@@ -68,7 +68,7 @@ ext {
     rxAndroidVersion = '2.1.0'
 
     boilerplateVersion = '2.9'
-    mumboVersion = '1.1'
+    mumboVersion = '1.3'
 
     snappyVersion = '0.4'
     requeryVersion = '3.25.3'
