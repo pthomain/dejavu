@@ -14,6 +14,8 @@ import retrofit2.CallAdapter
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu.Companion.DejaVuHeader
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.dejavu.configuration.CacheInstructionSerialiser
@@ -27,13 +29,13 @@ import uk.co.glass_software.android.dejavu.test.assertEqualsWithContext
 import uk.co.glass_software.android.dejavu.test.assertTrueWithContext
 import uk.co.glass_software.android.dejavu.test.instructionToken
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
+import uk.co.glass_software.android.dejavu.test.verifyWithContext
 import java.lang.reflect.Type
 
 class RetrofitCallAdapterUnitTest {
 
     private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<Glitch>
     private lateinit var mockLogger: Logger
-    private lateinit var mockConfiguration: CacheConfiguration<Glitch>
     private lateinit var mockRxCallAdapter: CallAdapter<Any, Any>
     private lateinit var mockCall: Call<Any>
     private lateinit var mockCacheInstructionSerialiser: CacheInstructionSerialiser
@@ -42,7 +44,9 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockTestResponse: TestResponse
     private lateinit var requestMetadata: RequestMetadata.UnHashed
     private lateinit var mockRequestBodyConverter: (Request) -> String?
+    private lateinit var configuration: CacheConfiguration<Glitch>
 
+    private val responseClass = TestResponse::class.java
     private val mockMethodDescription = "mockMethodDescription"
     private val mockHeader = "mockHeader"
     private val mockInstruction = instructionToken(Cache()).instruction
@@ -58,9 +62,9 @@ class RetrofitCallAdapterUnitTest {
         mockRequest = mock()
         mockDejaVuTransformer = mock()
         mockTestResponse = mock()
-        mockConfiguration = mock()
         mockRequestBodyConverter = mock()
     }
+
 
     private fun getTarget(hasInstruction: Boolean,
                           hasHeader: Boolean,
@@ -79,11 +83,26 @@ class RetrofitCallAdapterUnitTest {
             }
         }
 
-        whenever(mockConfiguration.cachePredicate).thenReturn(cachePredicate)
+        configuration = CacheConfiguration(
+                mock(),
+                mock(),
+                mock(),
+                mock(),
+                mock(),
+                true,
+                true,
+                true,
+                true,
+                true,
+                1234,
+                2345,
+                3456,
+                cachePredicate
+        )
 
         return RetrofitCallAdapter(
-                mockConfiguration,
-                String::class.java,
+                configuration,
+                responseClass,
                 mockDejaVuFactory,
                 mockCacheInstructionSerialiser,
                 mockRequestBodyConverter,
@@ -136,7 +155,8 @@ class RetrofitCallAdapterUnitTest {
             whenever(mockRequestBodyConverter.invoke(eq(mockRequest))).thenReturn(mockBodyString)
 
             requestMetadata = RequestMetadata.UnHashed(DEFAULT_URL, mockBodyString)
-            val hasDefaultAdaptation = cachePredicate(String::class.java, requestMetadata)
+            val hasDefaultAdaptation = cachePredicate(responseClass, requestMetadata)
+            val usesDefaultAdaptation = hasDefaultAdaptation && !hasHeader && !hasInstruction
 
             if (rxType != null
                     && (hasInstruction
@@ -144,14 +164,14 @@ class RetrofitCallAdapterUnitTest {
                             || hasDefaultAdaptation)) {
 
                 whenever(mockDejaVuFactory.create(
-                        eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
+                        any(),
                         eq(requestMetadata)
                 )).thenReturn(mockDejaVuTransformer)
 
                 when (rxType) {
-                    OBSERVABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Observable<Any>))).thenReturn(rxCall)
-                    SINGLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Single<Any>))).thenReturn(rxCall)
-                    COMPLETABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Completable))).thenReturn(rxCall)
+                    OBSERVABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Observable<Any>))).thenReturn(rxCall.map { it })
+                    SINGLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Single<Any>))).thenReturn(rxCall.map { it })
+                    COMPLETABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Completable))).thenReturn(rxCall.andThen(Completable.complete()))
                 }
             }
 
@@ -171,11 +191,88 @@ class RetrofitCallAdapterUnitTest {
                         "Adapted value should be the mocked TestResponse",
                         context
                 )
-            } else {
-                if (hasInstruction || isHeaderDeserialisationSuccess || hasDefaultAdaptation) {
-                    verify(mockDejaVuFactory).create(
-                            eq(if (hasHeader && isHeaderDeserialisationSuccess) mockHeaderInstruction else mockInstruction),
-                            eq(requestMetadata)
+            } else if ((hasHeader && isHeaderDeserialisationSuccess) || hasInstruction || usesDefaultAdaptation) {
+                val argumentCaptor = argumentCaptor<CacheInstruction>()
+                verifyWithContext(
+                        mockDejaVuFactory,
+                        "$context: DejaVuFactory should have been called with the default CacheInstruction, using the cache predicate"
+                ).create(
+                        argumentCaptor.capture(),
+                        eq(requestMetadata)
+                )
+
+                val capturedInstruction = argumentCaptor.firstValue//TODO
+                val subContext = "$context: Returned cache predicate CacheInstruction was incorrect"
+
+                assertEqualsWithContext(
+                        responseClass,
+                        capturedInstruction.responseClass,
+                        "Response class didn't match",
+                        subContext
+                )
+
+                if (usesDefaultAdaptation) {
+                    val capturedOperation = capturedInstruction.operation as Expiring
+
+                    assertEqualsWithContext(
+                            configuration.cacheDurationInMillis,
+                            capturedOperation.durationInMillis,
+                            "durationInMillis didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            configuration.connectivityTimeoutInMillis,
+                            capturedOperation.connectivityTimeoutInMillis,
+                            "connectivityTimeoutInMillis didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            false,
+                            capturedOperation.freshOnly,
+                            "freshOnly didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            configuration.mergeOnNextOnError,
+                            capturedOperation.mergeOnNextOnError,
+                            "mergeOnNextOnError didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            configuration.encrypt,
+                            capturedOperation.encrypt,
+                            "encrypt didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            configuration.compress,
+                            capturedOperation.compress,
+                            "compress didn't match",
+                            subContext
+                    )
+
+                    assertEqualsWithContext(
+                            false,
+                            capturedOperation.filterFinal,
+                            "filterFinal didn't match",
+                            subContext
+                    )
+                } else {
+                    val expectedInstruction = when {
+                        hasHeader && isHeaderDeserialisationSuccess -> mockHeaderInstruction
+                        hasInstruction -> mockInstruction
+                        else -> null
+                    }
+
+                    assertEqualsWithContext(
+                            expectedInstruction,
+                            capturedInstruction,
+                            subContext
                     )
                 }
 
@@ -198,6 +295,13 @@ class RetrofitCallAdapterUnitTest {
                             context
                     )
                 }
+            } else {
+                assertEqualsWithContext(
+                        rxCall,
+                        actualAdapted,
+                        "The given call should not have been adapted",
+                        context
+                )
             }
         }
     }

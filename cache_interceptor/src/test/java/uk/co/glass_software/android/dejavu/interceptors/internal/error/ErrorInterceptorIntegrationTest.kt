@@ -1,5 +1,6 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.error
 
+import android.content.Context
 import io.reactivex.Observable
 import org.junit.Before
 import org.junit.Test
@@ -11,7 +12,7 @@ import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 
 internal class ErrorInterceptorIntegrationTest
-    : BaseIntegrationTest<CacheModule.Function2<CacheToken, Long, ErrorInterceptor<Glitch>>>(IntegrationCacheComponent::errorInterceptorFactory) {
+    : BaseIntegrationTest<CacheModule.Function3<Context, CacheToken, Long, ErrorInterceptor<Glitch>>>(IntegrationCacheComponent::errorInterceptorFactory) {
 
     private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
 
@@ -19,6 +20,7 @@ internal class ErrorInterceptorIntegrationTest
     override fun setUp() {
         super.setUp()
         targetErrorInterceptor = target.get(
+                configuration.context,
                 instructionToken(Cache()),
                 1234L
         )

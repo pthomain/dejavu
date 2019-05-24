@@ -75,7 +75,7 @@ internal interface CacheModule<E>
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 
-    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>>
+    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function3<Context, CacheToken, Long, ErrorInterceptor<E>>
 
     fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
                                        cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
@@ -86,7 +86,7 @@ internal interface CacheModule<E>
 
     fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                         dateFactory: Function1<Long?, Date>,
-                                        errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                        errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>
 
@@ -103,7 +103,7 @@ internal interface CacheModule<E>
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                           annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
 
-    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
                                              dateFactory: Function1<Long?, Date>,
                                              responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): ProcessingErrorAdapter.Factory<E>
 
