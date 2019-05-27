@@ -158,7 +158,7 @@ class ResponseInterceptorUnitTest {
                 5,
                 5,
                 5,
-                false
+                {_,_-> false }
         )
 
         val target = ResponseInterceptor(

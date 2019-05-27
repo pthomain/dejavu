@@ -126,7 +126,8 @@ internal class ExpandableListAdapter(context: Context)
 
     private fun getOrigin(status: CacheStatus) =
             when (status) {
-                INSTRUCTION -> "instruction"
+                INSTRUCTION,
+                DONE -> "instruction"
                 NOT_CACHED,
                 FRESH,
                 REFRESHED -> "network"

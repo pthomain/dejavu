@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.injection.module
 
+import android.content.Context
 import android.net.Uri
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
@@ -46,6 +47,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyR
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.ResponseInterceptor
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.ProcessingErrorAdapter
+import uk.co.glass_software.android.dejavu.retrofit.RequestBodyConverter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapter
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -59,8 +61,15 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
         where E : Exception,
               E : NetworkErrorProvider {
 
-    val DATABASE_NAME = "dejavu.db"
-    val DATABASE_VERSION = 1
+    companion object {
+        const val DATABASE_NAME = "dejavu.db"
+        const val DATABASE_VERSION = 1
+
+        @JvmStatic
+        private var database: SupportSQLiteDatabase? = null
+            @Synchronized get
+            @Synchronized private set
+    }
 
     @Provides
     @Singleton
@@ -123,8 +132,10 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper) =
-            sqlOpenHelper.writableDatabase!!
+    @Synchronized
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase {
+        return sqlOpenHelper.writableDatabase!!
+    }
 
     @Provides
     @Singleton
@@ -168,15 +179,15 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>> =
-            object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
-                override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
-                        configuration.context,
+    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function3<Context, CacheToken, Long, ErrorInterceptor<E>> =
+            object : Function3<Context, CacheToken, Long, ErrorInterceptor<E>> {
+                override fun get(t1: Context, t2: CacheToken, t3: Long) = ErrorInterceptor(
+                        t1,
                         configuration.errorFactory,
                         configuration.logger,
                         { dateFactory.get(it) },
-                        t1,
                         t2,
+                        t3,
                         configuration.requestTimeOutInSeconds
                 )
             }
@@ -222,13 +233,13 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Singleton
     override fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                                  dateFactory: Function1<Long?, Date>,
-                                                 errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+                                                 errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
                                                  cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                                  responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     { dateFactory.get(it) },
-                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, start -> errorInterceptorFactory.get(configuration.context, token, start) },
                     { token, start -> cacheInterceptorFactory.get(token, start) },
                     { token, isSingle, isCompletable, start -> responseInterceptor.get(token, isSingle, isCompletable, start) },
                     configuration
@@ -236,7 +247,8 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDefaultAdapterFactory() = RxJava2CallAdapterFactory.create()!!
+    override fun provideDefaultAdapterFactory() =
+            RxJava2CallAdapterFactory.create()!!
 
     @Provides
     @Singleton
@@ -248,34 +260,38 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Provides
     @Singleton
     override fun provideRetrofitCallAdapterInnerFactory() =
-            object : Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
+            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
                         t2: Logger,
                         t3: String,
-                        t4: CacheInstruction?,
-                        t5: CallAdapter<Any, Any>
+                        t4: Class<*>,
+                        t5: CacheInstruction?,
+                        t6: CallAdapter<Any, Any>
                 ) = RetrofitCallAdapter(
+                        configuration,
+                        t4,
                         t1,
                         CacheInstructionSerialiser(),
+                        RequestBodyConverter(),
                         t2,
                         t3,
-                        t4,
-                        t5
+                        t5,
+                        t6
                 )
             }
 
     @Provides
     @Singleton
     override fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                                   innerFactory: Function5<DejaVuInterceptor.Factory<E>, Logger, String, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                                   innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
                                                    defaultAdapterFactory: RxJava2CallAdapterFactory,
                                                    dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                                    processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                                    annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     defaultAdapterFactory,
-                    { t1, t2, t3, t4, t5 -> innerFactory.get(t1, t2, t3, t4, t5) },
+                    { t1, t2, t3, t4, t5, t6 -> innerFactory.get(t1, t2, t3, t4, t5, t6) },
                     { dateFactory.get(it) },
                     dejaVuInterceptorFactory,
                     annotationProcessor,
@@ -285,11 +301,11 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
-                    { token, start -> errorInterceptorFactory.get(token, start) },
+                    { token, start -> errorInterceptorFactory.get(configuration.context, token, start) },
                     { token, isSingle, isCompletable, start -> responseInterceptorFactory.get(token, isSingle, isCompletable, start) },
                     { dateFactory.get(it) }
             )

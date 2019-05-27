@@ -91,7 +91,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             15,
             15,
             60000,
-            false
+            { _, _ -> false }
     )
 
     @Before

@@ -28,6 +28,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.mumbo.Mumbo
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
@@ -58,7 +59,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val requestTimeOutInSeconds: Int,
                                                       val connectivityTimeoutInMillis: Long,
                                                       val cacheDurationInMillis: Long,
-                                                      val cacheAllByDefault: Boolean)
+                                                      val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
               E : NetworkErrorProvider {
 
@@ -79,8 +80,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
             E : NetworkErrorProvider {
 
         private var logger: Logger? = null
-        private var encryptionManager: EncryptionManager? = null
         private var customErrorFactory: ErrorFactory<E>? = null
+        private var mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -91,7 +92,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
         private var allowNonFinalForSingle: Boolean = false
-        private var cacheAllByDefault: Boolean = true
+        private var cachePredicate: (Class<*>, RequestMetadata) -> Boolean = { _, _ -> false }
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -115,11 +116,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Sets a custom ErrorFactory implementation.
          */
         fun errorFactory(errorFactory: ErrorFactory<E>) = apply { this.customErrorFactory = errorFactory }
-
-        /**
-         * Sets custom EncryptionManager implementation.
-         */
-        fun encryptionManager(encryptionManager: EncryptionManager) = apply { this.encryptionManager = encryptionManager }
 
         /**
          * Sets network call timeout in seconds globally (default is 15s).
@@ -157,8 +153,19 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         /**
          * Sets the data encryption globally (used by default for all calls with no specific directive,
          * see @Cache::encrypt for call-specific directive).
+         *
+         * @param mumboPicker picker for the chosen encryption implementation, with the choice of:
+         * - Facebook's Conceal for API levels < 23 (see https://facebook.github.io/conceal)
+         * - AndroidX's Security (Tink) implementation for API level >= 23 only (see https://developer.android.com/jetpack/androidx/releases/security)
+         * - custom implementation using the EncryptionManager interface
+         * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
+         * However if your API level target is less than 23, using Tink will trigger a runtime exception.
          */
-        fun encryptData(encryptData: Boolean) = apply { this.encryptData = encryptData }
+        fun encryptData(encryptData: Boolean,
+                        mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal) = apply {
+            this.encryptData = encryptData
+            this.mumboPicker = mumboPicker
+        }
 
         /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
@@ -191,11 +198,24 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) = apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
 
         /**
-         * Sets data caching globally (used by default for all calls with no annotation) using
-         * the default global values set here. As for any global directive, it is overridden by
-         * call-specific values.
+         * Sets data caching globally (used by default for all calls with no cache instruction) using
+         * the default global values set in this configuration object. The default value is to false.
+         * Overrides the value set in the cachePredicate() method.
+         * @see cachePredicate
          */
-        fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cacheAllByDefault = cacheAllByDefault }
+        fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cachePredicate = { _, _ -> cacheAllByDefault } }
+
+        /**
+         * Sets a predicate for ad-hoc response caching. This predicate will be called for any
+         * request that does not have an associated cache instruction. It will be called
+         * with the target response class and associated request metadata before the call is made in
+         * order to establish whether or not the response should be cached. Returning false means the
+         * response won't be cached. Otherwise, it will be cached using the global values defined
+         * in this configuration object. The default behaviour is to return false.
+         * Overrides the value set in the cacheAllByDefault() method.
+         * @see cacheAllByDefault
+         */
+        fun cachePredicate(predicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean) = apply { this.cachePredicate = predicate }
 
         /**
          * Returns an instance of DejaVu.
@@ -218,7 +238,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     logger,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
-                                    encryptionManager ?: Mumbo(context, logger).conceal(),
+                                    mumboPicker(Mumbo(context, logger)),
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,
@@ -227,7 +247,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     requestTimeOutInSeconds,
                                     connectivityTimeoutInMillis,
                                     cacheDurationInMillis,
-                                    cacheAllByDefault
+                                    cachePredicate
                             ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                     )
             )

@@ -32,7 +32,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import io.reactivex.plugins.RxJavaPlugins
-import uk.co.glass_software.android.boilerplate.utils.lambda.Callback1
+import uk.co.glass_software.android.boilerplate.core.utils.lambda.Callback1
 import uk.co.glass_software.android.cache_interceptor.demo.R
 import uk.co.glass_software.android.dejavu.demo.DemoMvpContract.*
 import uk.co.glass_software.android.dejavu.demo.injection.DemoViewModule
@@ -171,5 +171,7 @@ internal class DemoActivity
         val customTabsIntent = builder.build()
         customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/dejavu"))
     }
+
+    override fun context() = this
 
 }

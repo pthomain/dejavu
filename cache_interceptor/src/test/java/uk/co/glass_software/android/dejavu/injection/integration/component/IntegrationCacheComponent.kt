@@ -20,6 +20,7 @@
 
 package uk.co.glass_software.android.dejavu.injection.integration.component
 
+import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
@@ -70,7 +71,7 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun cacheManager(): CacheManager<Glitch>
 
-    fun errorInterceptorFactory(): CacheModule.Function2<CacheToken, Long, ErrorInterceptor<Glitch>>
+    fun errorInterceptorFactory(): CacheModule.Function3<Context, CacheToken, Long, ErrorInterceptor<Glitch>>
 
     fun cacheInterceptorFactory(): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>
 
