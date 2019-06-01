@@ -35,7 +35,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
@@ -66,9 +66,8 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     val timeOut = it.connectivityTimeoutInMillis ?: 0L
                     if (timeOut > 0L)
                         upstream.waitForNetwork(context, logger)
-                                .timeout(timeOut, TimeUnit.MILLISECONDS)
-                    else
-                        upstream
+                                .timeout(timeOut, MILLISECONDS)
+                    else upstream
                 } else upstream
             }
 
@@ -82,26 +81,16 @@ internal class ErrorInterceptor<E>(private val context: Context,
             )
     )
 
-    private fun getErrorResponse(throwable: Throwable): ResponseWrapper<E> {
-        val apiError = errorFactory.getError(throwable)
-        val responseClass = instructionToken.instruction.responseClass
-
-        logger.e(
-                this,
-                apiError,
-                "An error occurred during the network request for $responseClass"
-        )
-
-        return ResponseWrapper(
-                responseClass,
-                null,
-                CacheMetadata(
-                        instructionToken,
-                        apiError,
-                        getCallDuration()
-                )
-        )
-    }
+    private fun getErrorResponse(throwable: Throwable) =
+            ResponseWrapper(
+                    instructionToken.instruction.responseClass,
+                    null,
+                    CacheMetadata(
+                            instructionToken,
+                            errorFactory.getError(throwable),
+                            getCallDuration()
+                    )
+            )
 
     private fun getCallDuration() =
             CacheMetadata.Duration(

@@ -38,6 +38,7 @@ import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseStatisticsCompiler
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -64,11 +65,6 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     companion object {
         const val DATABASE_NAME = "dejavu.db"
         const val DATABASE_VERSION = 1
-
-        @JvmStatic
-        private var database: SupportSQLiteDatabase? = null
-            @Synchronized get
-            @Synchronized private set
     }
 
     @Provides
@@ -159,6 +155,17 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
                     configuration.cacheDurationInMillis,
                     { dateFactory.get(it) },
                     this::mapToContentValues
+            )
+
+    @Provides
+    @Singleton
+    override fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase,
+                                                   dateFactory: Function1<Long?, Date>) =
+            DatabaseStatisticsCompiler(
+                    configuration,
+                    configuration.logger,
+                    { dateFactory.get(it) },
+                    database
             )
 
     @Provides

@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.demo.presenter
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.gson.Gson
@@ -41,13 +42,15 @@ import uk.co.glass_software.android.dejavu.demo.gson.GsonGlitchFactory
 import uk.co.glass_software.android.dejavu.demo.gson.GsonSerialiser
 import uk.co.glass_software.android.dejavu.demo.model.CatFactResponse
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
+import uk.co.glass_software.android.mumbo.Mumbo
 
-internal abstract class BaseDemoPresenter protected constructor(private val demoActivity: DemoActivity,
-                                                                protected val uiLogger: Logger
+internal abstract class BaseDemoPresenter protected constructor(
+        private val demoActivity: DemoActivity,
+        protected val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
-    private var instructionType: CacheInstruction.Operation.Type = CACHE
+    private var instructionType: Type = CACHE
 
     final override var useSingle: Boolean = false
     final override var allowNonFinalForSingle: Boolean = false
@@ -76,8 +79,11 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
                     .mergeOnNextOnError(true)
                     .requestTimeOutInSeconds(10)
                     .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L)
+                    .cacheDurationInMillis(30000)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
+                    //replace with .encryption { CustomEncryptionManager() } to use your own implementation
+                    .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
                     .errorFactory(GsonGlitchFactory())
                     .build(demoActivity, GsonSerialiser(gson))
 
@@ -144,18 +150,26 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
-                    .doFinally(mvpView::onCallComplete)
+                    .doFinally(::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 
     private fun subscribe(completable: Completable) =
             completable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
-                    .doFinally(mvpView::onCallComplete)
+                    .doFinally(::onCallComplete)
                     .autoSubscribe()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
         subscriptions.clear()
+    }
+
+    private fun onCallComplete() {
+        mvpView.onCallComplete()
+        dejaVu.statistics().ioUi()
+                .doOnSuccess { uiLogger.d(CACHE_STATS, it.toString()) }
+                .doOnError { uiLogger.e(CACHE_STATS, it, "Could not show stats") }
+                .autoSubscribe()
     }
 
     protected abstract fun getResponseObservable(isRefresh: Boolean,
@@ -171,6 +185,7 @@ internal abstract class BaseDemoPresenter protected constructor(private val demo
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"
         internal const val ENDPOINT = "fact"
+        internal const val CACHE_STATS = "CACHE_STATS"
     }
 
 }

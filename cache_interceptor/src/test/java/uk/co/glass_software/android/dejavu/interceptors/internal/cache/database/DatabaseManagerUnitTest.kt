@@ -527,9 +527,9 @@ class DatabaseManagerUnitTest {
             )
 
             assertEqualsWithContext(
-                    if (isDataStale) CacheStatus.STALE else CacheStatus.CACHED,
+                    if (isDataStale) CacheStatus.STALE else CacheStatus.FRESH,
                     actualMetadata.cacheToken.status,
-                    "Cache status should be ${if (isDataStale) "STALE" else "CACHED"}",
+                    "Cache status should be ${if (isDataStale) "STALE" else "FRESH"}",
                     context
             )
         } else {

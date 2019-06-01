@@ -320,12 +320,12 @@ fun isStatusValid(cacheStatus: CacheStatus,
 
     is Operation.Expiring.Offline -> if (operation.freshOnly) {
         listOf(
-                FRESH,
+                NETWORK,
                 EMPTY
         )
     } else {
         listOf(
-                FRESH,
+                NETWORK,
                 STALE,
                 EMPTY
         )
@@ -333,14 +333,14 @@ fun isStatusValid(cacheStatus: CacheStatus,
 
     is Operation.Expiring -> if (operation.freshOnly) {
         listOf(
+                NETWORK,
                 FRESH,
-                CACHED,
                 REFRESHED
         )
     } else {
         listOf(
+                NETWORK,
                 FRESH,
-                CACHED,
                 STALE,
                 REFRESHED,
                 COULD_NOT_REFRESH

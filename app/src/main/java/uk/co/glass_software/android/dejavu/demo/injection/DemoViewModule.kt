@@ -39,8 +39,8 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
-internal class DemoViewModule constructor(private val demoActivity: DemoActivity,
-                                          private val onLogOutput: (String) -> Unit) {
+internal class DemoViewModule(private val demoActivity: DemoActivity,
+                              private val onLogOutput: (String) -> Unit) {
 
     @Provides
     @Singleton
@@ -58,15 +58,15 @@ internal class DemoViewModule constructor(private val demoActivity: DemoActivity
                     true,
                     demoActivity.packageName,
                     object : Printer {
-                        override fun canPrint(className: String) = true
+                        override fun canPrint(className: String) =
+                                !className.contains(SimpleLogger::class.java.`package`!!.name)
 
                         override fun print(priority: Int,
                                            tag: String?,
                                            targetClassName: String,
                                            message: String) {
                             clean(message).also {
-                                if (!it.isBlank())
-                                    onLogOutput(it)
+                                if (!it.isBlank()) onLogOutput(it)
                             }
                         }
 

@@ -194,7 +194,7 @@ class CacheManagerUnitTest {
 
         val isResponseStaleOverall = isResponseStale || operation is Expiring.Refresh
         whenever(mockCachedResponseWrapper.metadata).thenReturn(
-                mockCacheMetadata.copy(instructionToken.copy(status = if (isResponseStaleOverall) STALE else FRESH))
+                mockCacheMetadata.copy(instructionToken.copy(status = if (isResponseStaleOverall) STALE else NETWORK))
         )
 
         whenever(mockDatabaseManager.getCachedResponse(
@@ -580,7 +580,7 @@ class CacheManagerUnitTest {
                     metadata = mockCacheMetadata.copy(
                             exception = null,
                             cacheToken = instructionToken.copy(
-                                    status = FRESH,
+                                    status = NETWORK,
                                     fetchDate = now,
                                     cacheDate = now,
                                     expiryDate = expectedExpiryDate

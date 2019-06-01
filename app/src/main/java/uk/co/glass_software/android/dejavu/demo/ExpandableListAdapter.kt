@@ -129,9 +129,9 @@ internal class ExpandableListAdapter(context: Context)
                 INSTRUCTION,
                 DONE -> "instruction"
                 NOT_CACHED,
-                FRESH,
+                NETWORK,
                 REFRESHED -> "network"
-                CACHED,
+                FRESH,
                 STALE,
                 COULD_NOT_REFRESH -> "disk"
                 EMPTY -> "network or disk"

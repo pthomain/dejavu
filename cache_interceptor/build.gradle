@@ -149,6 +149,8 @@ dependencies {
     api appDependencies.retrofit
     api appDependencies.retrofitAdapterRxJava
 
+    implementation 'com.jakewharton.fliptables:fliptables:1.0.2'
+
     testImplementation appDependencies.snappy
     testImplementation appDependencies.requery
     testImplementation appDependencies.androidXsqlite

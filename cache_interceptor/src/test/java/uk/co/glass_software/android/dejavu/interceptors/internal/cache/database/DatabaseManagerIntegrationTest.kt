@@ -4,7 +4,7 @@ import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
@@ -40,7 +40,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 stubbedResponse,
                 cachedResponse,
-                CACHED
+                FRESH
         )
     }
 
@@ -93,7 +93,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 stubbedResponse,
                 cachedResponse,
-                CACHED
+                FRESH
         )
 
         val refreshToken = instructionToken(Refresh())
@@ -118,7 +118,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 stubbedResponse,
                 cachedResponse,
-                CACHED
+                FRESH
         )
     }
 
@@ -142,7 +142,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 userResponse,
                 cachedUserResponseAfterClear,
-                CACHED
+                FRESH
         )
     }
 
@@ -212,8 +212,8 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
     private fun cacheTwoResponses(
             firstResponse: ResponseWrapper<Glitch>,
             secondResponse: ResponseWrapper<Glitch>,
-            firstResponseExpectedStatus: CacheStatus = CACHED,
-            secondResponseExpectedStatus: CacheStatus = CACHED
+            firstResponseExpectedStatus: CacheStatus = FRESH,
+            secondResponseExpectedStatus: CacheStatus = FRESH
     ): Pair<CacheToken, CacheToken> {
         val firstResponseToken = firstResponse.metadata.cacheToken
         val secondResponseToken = secondResponse.metadata.cacheToken
@@ -273,7 +273,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 freshStubbedResponse,
                 freshTestResponseAfterClear,
-                CACHED
+                FRESH
         )
     }
 
@@ -317,13 +317,13 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 testResponse,
                 cachedTestResponse,
-                CACHED
+                FRESH
         )
 
         assertResponse(
                 userResponse,
                 cachedUserResponse,
-                CACHED
+                FRESH
         )
 
         assertResponse(
@@ -356,13 +356,13 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         assertResponse(
                 testResponse,
                 cachedTestResponseAfterClear,
-                CACHED
+                FRESH
         )
 
         assertResponse(
                 userResponse,
                 cachedUserResponseAfterClear,
-                CACHED
+                FRESH
         )
 
         assertNullWithContext(

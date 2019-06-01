@@ -202,7 +202,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         val status = if (hasError)
             if (hasCachedResponse) COULD_NOT_REFRESH else EMPTY
         else
-            if (hasCachedResponse) REFRESHED else FRESH
+            if (hasCachedResponse) REFRESHED else NETWORK
 
         val cacheToken = CacheToken(
                 instructionToken.instruction,
@@ -244,7 +244,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
 
                     val serialisationCacheToken = responseWrapper.metadata.cacheToken.let {
                         val newStatus = when (it.status) {
-                            FRESH -> EMPTY
+                            NETWORK -> EMPTY
                             REFRESHED -> COULD_NOT_REFRESH
                             else -> it.status
                         }

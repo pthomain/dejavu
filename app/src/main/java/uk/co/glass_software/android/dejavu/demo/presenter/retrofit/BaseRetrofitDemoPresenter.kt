@@ -36,7 +36,7 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
 
     private fun retrofit() =
             Retrofit.Builder()
-                    .baseUrl(BaseDemoPresenter.BASE_URL)
+                    .baseUrl(BASE_URL)
                     .client(getOkHttpClient(uiLogger))
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory)

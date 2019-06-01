@@ -38,7 +38,7 @@ import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
@@ -170,7 +170,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                     metadata = CacheMetadata(
                             CacheToken.cached(
                                     instructionToken,
-                                    getCachedStatus(expiryDate),
+                                    getCachedStatus(expiryDate, dateFactory),
                                     isCompressed,
                                     isEncrypted,
                                     cacheDate,
@@ -215,9 +215,6 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                     foundIt
                 }
             } else false
-
-    private fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time >= expiryDate.time) STALE else CACHED
 
     fun cache(response: ResponseWrapper<E>,
               previousCachedResponse: ResponseWrapper<E>?): Completable {
@@ -282,3 +279,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     }
 
 }
+
+internal fun getCachedStatus(expiryDate: Date,
+                             dateFactory: (Long?) -> Date) =
+        if (dateFactory(null).time >= expiryDate.time) STALE else FRESH
