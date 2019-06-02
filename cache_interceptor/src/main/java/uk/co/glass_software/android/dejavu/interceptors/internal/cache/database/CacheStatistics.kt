@@ -3,11 +3,11 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
 import android.annotation.SuppressLint
 import com.jakewharton.fliptables.FlipTable
 import uk.co.glass_software.android.boilerplate.core.utils.kotlin.ifElse
+import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 data class CacheStatistics(
         val configuration: CacheConfiguration<*>,
@@ -38,6 +38,20 @@ data class CacheStatistics(
         }
 
         return "\n" + formattedEntries
+    }
+
+    /**
+     * Use this method with a logger to prevent the table from being truncated by the max
+     * logcat line limit. It outputs each line as a new log.
+     *
+     * @param logger a Logger instance to output the table
+     * @param caller the caller or tag to use for the log
+     */
+    fun log(logger: Logger,
+            caller: Any? = null) {
+        toString().split("\n").forEach {
+            logger.d(caller ?: this, it)
+        }
     }
 }
 
@@ -72,6 +86,20 @@ data class CacheEntrySummary(
                 dateFormat.format(latestEntry),
                 formattedEntries
         ).filterNotNull().toTypedArray()
+    }
+
+    /**
+     * Use this method with a logger to prevent the table from being truncated by the max
+     * logcat line limit. It outputs each line as a new log.
+     *
+     * @param logger a Logger instance to output the table
+     * @param caller the caller or tag to use for the log
+     */
+    fun log(logger: Logger,
+            caller: Any? = null) {
+        toString().split("\n").forEach {
+            logger.d(caller ?: this, it)
+        }
     }
 }
 
@@ -109,6 +137,19 @@ data class CacheEntry(
                     dateFormat.format(expiryDate)
             ).filterNotNull().toTypedArray()
 
+    /**
+     * Use this method with a logger to prevent the table from being truncated by the max
+     * logcat line limit. It outputs each line as a new log.
+     *
+     * @param logger a Logger instance to output the table
+     * @param caller the caller or tag to use for the log
+     */
+    fun log(logger: Logger,
+            caller: Any? = null) {
+        toString().split("\n").forEach {
+            logger.d(caller ?: this, it)
+        }
+    }
 }
 
 private fun getCacheEntryColumnNames(showClass: Boolean = false) =

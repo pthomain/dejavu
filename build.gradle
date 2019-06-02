@@ -69,6 +69,7 @@ ext {
 
     boilerplateVersion = '3.0'
     mumboVersion = '1.3'
+    fliptablesVersion = '1.0.2'
 
     snappyVersion = '0.4'
     requeryVersion = '3.25.3'
@@ -118,6 +119,7 @@ ext {
             boilerplate           : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
             boilerplate_ui        : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
             mumbo                 : "com.github.pthomain:mumbo:$mumboVersion",
+            fliptables            : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
 
             retrofit              : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson : "com.squareup.retrofit2:converter-gson:$retrofitVersion",

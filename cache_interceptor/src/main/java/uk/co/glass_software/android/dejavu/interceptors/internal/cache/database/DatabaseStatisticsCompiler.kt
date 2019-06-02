@@ -7,6 +7,7 @@ import uk.co.glass_software.android.boilerplate.core.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import java.util.*
 
@@ -17,27 +18,27 @@ internal class DatabaseStatisticsCompiler(
         private val database: SupportSQLiteDatabase
 ) {
 
-    fun getStatistics() = Single.fromCallable<CacheStatistics> {
-        val projection = arrayOf(
-                CLASS.columnName,
-                IS_ENCRYPTED.columnName,
-                IS_COMPRESSED.columnName,
-                DATE.columnName,
-                EXPIRY_DATE.columnName
-        )
+    private val projection = arrayOf(
+            CLASS.columnName,
+            IS_ENCRYPTED.columnName,
+            IS_COMPRESSED.columnName,
+            DATE.columnName,
+            EXPIRY_DATE.columnName
+    )
 
-        val query = """
+    private val query = """
                     SELECT ${projection.joinToString(", ")}
-                    FROM ${SqlOpenHelperCallback.TABLE_CACHE}
+                    FROM $TABLE_CACHE
                     ORDER BY ${CLASS.columnName} ASC
                 """
 
+    fun getStatistics() = Single.fromCallable<CacheStatistics> {
         database.query(query)
                 .useAndLogError(
                         ::compileStatistics,
                         logger
                 )
-    }
+    }!!
 
     private fun compileStatistics(cursor: Cursor): CacheStatistics {
         val entries = mutableMapOf<Class<*>, MutableList<CacheEntry>>()

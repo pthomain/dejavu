@@ -167,7 +167,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     private fun onCallComplete() {
         mvpView.onCallComplete()
         dejaVu.statistics().ioUi()
-                .doOnSuccess { uiLogger.d(CACHE_STATS, it.toString()) }
+                .doOnSuccess { it.log(uiLogger, CACHE_STATS) }
                 .doOnError { uiLogger.e(CACHE_STATS, it, "Could not show stats") }
                 .autoSubscribe()
     }
