@@ -1,15 +1,15 @@
 # DéjàVu <img src="https://github.com/pthomain/dejavu/blob/master/github/logo.svg" width="100"/>
 
-**A simple yet fully-featured RxJava/Retrofit HTTP cache**
+**Annotation-driven, encrypted and customisable Retrofit/RxJava HTTP cache**
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu) [![Known Vulnerabilities](https://snyk.io/test/github/pthomain/dejavu/badge.svg)](https://snyk.io/test/github/pthomain/dejavu)
 
 TL;DR
 -----
 
-Cache your HTTP responses via Retrofit transparently with just an annotation and (almost) zero setup.
-All responses are automatically cached to disk and refreshed once they expire. 
-Snappy compression (https://github.com/google/snappy) and AES encryption are supported and optional.
+Cache any HTTP call using an annotation on the Retrofit method. All responses are automatically cached to disk and refreshed once they expire. 
+
+Optional support for customisable encryption (choice of JetPack Security on 23+, Facebook Conceal on 16+ or any preferred custom implementation) and Snappy compression (https://github.com/google/snappy).
 
 <a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
 
@@ -53,7 +53,7 @@ allprojects {
  
  ```
  dependencies {
-    compile 'com.github.pthomain:dejavu:2.0.0-beta2'
+    compile 'com.github.pthomain:dejavu:2.0.0-beta4'
 }
 ```
 
