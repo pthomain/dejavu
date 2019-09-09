@@ -125,7 +125,7 @@ class CacheInterceptorUnitTest {
         whenever(mockCacheManager.clearCache(
                 eq(mockInstructionToken),
                 eq(operation.typeToClear),
-                eq(operation.clearOldEntriesOnly)
+                eq(operation.clearStaleEntriesOnly)
         )).thenReturn(mockReturnedObservable)
     }
 

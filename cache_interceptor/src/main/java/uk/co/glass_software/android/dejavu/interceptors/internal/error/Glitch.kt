@@ -24,6 +24,7 @@ package uk.co.glass_software.android.dejavu.interceptors.internal.error
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.ErrorCode.UNKNOWN
 
+//TODO JavaDoc
 data class Glitch constructor(override val cause: Throwable,
                               val httpStatus: Int = NON_HTTP_STATUS,
                               val errorCode: ErrorCode = UNKNOWN,

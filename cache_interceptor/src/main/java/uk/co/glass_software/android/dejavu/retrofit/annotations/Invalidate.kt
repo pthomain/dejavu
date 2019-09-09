@@ -23,6 +23,7 @@ package uk.co.glass_software.android.dejavu.retrofit.annotations
 
 import kotlin.reflect.KClass
 
+//TODO JavaDoc
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Invalidate(val typeToInvalidate: KClass<*>)

@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.retrofit.annotations
 
+//TODO JavaDoc
 class CacheException(val type: Type,
                      message: String) : Exception(message) {
 

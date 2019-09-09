@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
+//TODO JavaDoc
 internal class ErrorInterceptor<E>(private val context: Context,
                                    private val errorFactory: ErrorFactory<E>,
                                    private val logger: Logger,

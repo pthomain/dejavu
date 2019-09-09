@@ -70,7 +70,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             start
     )
 
-    private val errorObservable = errorInterceptor.apply(Observable.error<Any>(exception))
+    private val errorObservable = errorInterceptor.apply(Observable.error(exception))
             .doOnNext {
                 it.metadata = it.metadata.copy(
                         callDuration = CacheMetadata.Duration(

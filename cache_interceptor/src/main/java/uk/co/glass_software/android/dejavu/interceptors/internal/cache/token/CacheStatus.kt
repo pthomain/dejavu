@@ -21,7 +21,10 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
-enum class CacheStatus constructor(
+/**
+ * Class representing the cache status of a response
+ */
+enum class CacheStatus(
         /**
          * Whether or not the status is final, meaning that no subsequent response will be emitted.
          * STALE is the only non-final status, which means another (final) response will be emitted

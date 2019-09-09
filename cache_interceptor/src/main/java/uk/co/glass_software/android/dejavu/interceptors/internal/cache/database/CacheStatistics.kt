@@ -9,6 +9,12 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Holds cache statistics
+ *
+ * @param configuration the cache configuration
+ * @param entries compiled list of CacheEntrySummary
+ */
 data class CacheStatistics(
         val configuration: CacheConfiguration<*>,
         val entries: List<CacheEntrySummary>
@@ -55,6 +61,9 @@ data class CacheStatistics(
     }
 }
 
+/**
+ * Class holding statistics for a single type of response class
+ */
 data class CacheEntrySummary(
         val responseClass: Class<*>,
         val fresh: Int,
@@ -113,6 +122,9 @@ private fun getCacheEntrySummaryColumnNames(showClass: Boolean = false) =
                 "Entries"
         ).filterNotNull().toTypedArray()
 
+/**
+ * Class holding statistics about a single cache entry (unique by URL and params)
+ */
 data class CacheEntry(
         val responseClass: Class<*>,
         val status: CacheStatus,

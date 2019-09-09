@@ -21,7 +21,6 @@
 
 package uk.co.glass_software.android.dejavu.configuration
 
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.*
@@ -42,7 +41,7 @@ internal class CacheInstructionSerialiser {
      * @param arguments all the associated operation's arguments
      * @return the serialised operation
      */
-    fun serialise(type: Operation.Type?,
+    fun serialise(type: Type?,
                   vararg arguments: Any?) =
             arguments.joinToString(separator = separator) {
                 when (it) {

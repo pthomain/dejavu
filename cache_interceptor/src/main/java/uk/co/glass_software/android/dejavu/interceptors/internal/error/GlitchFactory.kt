@@ -29,6 +29,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
+//TODO JavaDoc
 open class GlitchFactory : ErrorFactory<Glitch> {
 
     override fun getError(throwable: Throwable) =

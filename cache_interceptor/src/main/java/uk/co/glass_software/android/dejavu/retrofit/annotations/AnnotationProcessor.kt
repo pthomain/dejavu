@@ -156,7 +156,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                         annotation.typeToClear.java,
                         Operation.Clear(
                                 annotation.typeToClear.java,
-                                annotation.clearOldEntriesOnly
+                                annotation.clearStaleEntriesOnly
                         )
                 )
             }
@@ -166,7 +166,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                         responseClass,
                         Operation.Clear(
                                 null,
-                                annotation.clearOldEntriesOnly
+                                annotation.clearStaleEntriesOnly
                         )
                 )
             }
@@ -180,6 +180,9 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         }
     }
 
+    /**
+     * Represents a RxJava type
+     */
     enum class RxType(val rxClass: Class<*>) {
         OBSERVABLE(Observable::class.java),
         SINGLE(Single::class.java),

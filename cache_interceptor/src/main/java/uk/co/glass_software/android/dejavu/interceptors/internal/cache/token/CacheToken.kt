@@ -27,6 +27,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.Cac
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.NOT_CACHED
 import java.util.*
 
+//TODO JavaDoc
 data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,

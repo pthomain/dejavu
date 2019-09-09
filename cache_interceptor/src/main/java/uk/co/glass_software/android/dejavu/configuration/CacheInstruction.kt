@@ -180,15 +180,15 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
          * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
          *
          * @param typeToClear the response type to clear. When provided, only cached responses of the given type will be cleared. If left null, the entire cache will be cleared.
-         * @param clearOldEntriesOnly whether or not to clear the STALE data only. When set to true, only expired data is cleared, otherwise STALE and FRESH data is cleared.
+         * @param clearStaleEntriesOnly whether or not to clear the STALE data only. When set to true, only expired data is cleared, otherwise STALE and FRESH data is cleared.
          */
         data class Clear(val typeToClear: Class<*>? = null,
-                         val clearOldEntriesOnly: Boolean = false) : Operation(CLEAR) {
+                         val clearStaleEntriesOnly: Boolean = false) : Operation(CLEAR) {
 
             override fun toString() = serialiser.serialise(
                     type,
                     typeToClear,
-                    clearOldEntriesOnly
+                    clearStaleEntriesOnly
             )
         }
 

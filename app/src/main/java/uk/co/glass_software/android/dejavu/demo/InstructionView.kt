@@ -107,7 +107,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
 
                             CLEAR,
                             CLEAR_ALL -> arrayOf(
-                                    "clearOldEntriesOnly = ${(operation as Operation.Clear).clearOldEntriesOnly}"
+                                    "clearStaleEntriesOnly = ${(operation as Operation.Clear).clearStaleEntriesOnly}"
                             )
 
                             INVALIDATE,

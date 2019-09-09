@@ -69,11 +69,11 @@ class CacheManagerUnitTest {
     fun testClearCache() {
         var iteration = 0
         trueFalseSequence { hasTypeToClear ->
-            trueFalseSequence { clearOlderEntriesOnly ->
+            trueFalseSequence { clearStaleEntriesOnly ->
                 testClearCache(
                         iteration++,
                         if (hasTypeToClear) TestResponse::class.java else null,
-                        clearOlderEntriesOnly
+                        clearStaleEntriesOnly
                 )
             }
         }
@@ -81,11 +81,11 @@ class CacheManagerUnitTest {
 
     private fun testClearCache(iteration: Int,
                                typeToClear: Class<*>?,
-                               clearOlderEntriesOnly: Boolean) {
+                               clearStaleEntriesOnly: Boolean) {
         setUp()
         val context = "iteration = $iteration\n" +
                 "typeToClear = $typeToClear,\n" +
-                "clearOlderEntriesOnly = $clearOlderEntriesOnly"
+                "clearStaleEntriesOnly = $clearStaleEntriesOnly"
 
         val instructionToken = instructionToken()
         val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
@@ -97,12 +97,12 @@ class CacheManagerUnitTest {
         val actualResponseWrapper = target.clearCache(
                 instructionToken,
                 typeToClear,
-                clearOlderEntriesOnly
+                clearStaleEntriesOnly
         ).blockingFirst()
 
         verifyWithContext(mockDatabaseManager, context).clearCache(
                 typeToClear,
-                clearOlderEntriesOnly
+                clearStaleEntriesOnly
         )
 
         assertEqualsWithContext(

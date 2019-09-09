@@ -11,6 +11,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import java.util.*
 
+//TODO JavaDoc
 internal class DatabaseStatisticsCompiler(
         private val configuration: CacheConfiguration<*>,
         private val logger: Logger,
@@ -93,7 +94,7 @@ internal class DatabaseStatisticsCompiler(
         val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
         val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
 
-        val status = getCachedStatus(expiryDate, dateFactory)
+        val status = getCacheStatus(expiryDate, dateFactory)
 
         return CacheEntry(
                 Class.forName(responseClassName),

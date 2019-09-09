@@ -81,7 +81,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
 
         private var logger: Logger? = null
         private var customErrorFactory: ErrorFactory<E>? = null
-        private var mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal
+        private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -171,8 +171,21 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
          * However if your API level target is less than 23, using Tink will trigger a runtime exception.
          */
-        fun encryption(mumboPicker: (Mumbo) -> EncryptionManager = Mumbo::conceal) = apply {
+        fun encryption(mumboPicker: (Mumbo) -> EncryptionManager) = apply {
             this.mumboPicker = mumboPicker
+        }
+
+        private fun defaultEncryptionManager(
+                mumbo: Mumbo,
+                context: Context
+        ) = with(mumbo) {
+            context.packageManager.getApplicationInfo(
+                    context.packageName,
+                    0
+            )?.let {
+                if (it.targetSdkVersion >= 23) tink()
+                else conceal()
+            } ?: conceal()
         }
 
         /**
@@ -239,6 +252,10 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                 AndroidSchedulers.from(Looper.getMainLooper(), true)
             }
 
+            val mumbo = Mumbo(context, logger)
+            val encryptionManager = mumboPicker?.invoke(mumbo)
+                    ?: defaultEncryptionManager(mumbo, context)
+
             return DejaVu(
                     componentProvider(
                             CacheConfiguration(
@@ -246,7 +263,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     logger,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
-                                    mumboPicker(Mumbo(context, logger)),
+                                    encryptionManager,
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,

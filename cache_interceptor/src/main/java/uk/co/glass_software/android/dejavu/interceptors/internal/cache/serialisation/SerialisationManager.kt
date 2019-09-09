@@ -30,6 +30,7 @@ import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
+//TODO JavaDoc
 internal class SerialisationManager<E>(private val logger: Logger,
                                        private val byteToStringConverter: (ByteArray) -> String,
                                        private val encryptionManager: EncryptionManager,

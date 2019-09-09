@@ -131,9 +131,9 @@ private fun assertClear(expectedOperation: Clear,
                         actualOperation: Clear,
                         context: String? = null) {
     assertEqualsWithContext(
-            expectedOperation.clearOldEntriesOnly,
-            actualOperation.clearOldEntriesOnly,
-            "clearOldEntriesOnly didn't match",
+            expectedOperation.clearStaleEntriesOnly,
+            actualOperation.clearStaleEntriesOnly,
+            "clearStaleEntriesOnly didn't match",
             context
     )
 
