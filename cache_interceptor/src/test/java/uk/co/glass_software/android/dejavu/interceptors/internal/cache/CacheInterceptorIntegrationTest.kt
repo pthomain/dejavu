@@ -42,13 +42,13 @@ internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<Function2<C
     }
 
     @Test
-    fun `GIVEN that the instruction is CLEAR_TARGET AND the cache contains 2 responses of different types AND with the same expiry date THEN the resulting status is DONE AND the target type response is null AND the other response is not null`() {
+    fun `GIVEN instruction CLEAR_TARGET AND cache contains 2 responses of different types with the same expiry date THEN status is DONE AND the target type response is null AND the other response is not null`() {
         setUpConfiguration()
 
     }
 
     @Test
-    fun `GIVEN that the instruction is CLEAR_TARGET AND the cache contains 2 responses of different types AND with different expiry dates THEN the resulting status is DONE AND the target type response is null AND the other response is not null`() {
+    fun `GIVEN instruction CLEAR_TARGET AND cache contains 2 responses of different types with different expiry dates THEN status is DONE AND the target type response is null AND the other response is not null`() {
         setUpConfiguration()
 
     }
