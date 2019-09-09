@@ -32,13 +32,14 @@ import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action.Compani
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.CACHED
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
@@ -47,6 +48,18 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Handles database operations
+ *
+ * @param database the opened database
+ * @param serialisationManager used for the serialisation/deserialisation of the cache entries
+ * @param logger an Logger instance
+ * @param compressDataGlobally whether or not the data should be compressed by default if no entry-specific directive exists (as defined in CacheConfiguration)
+ * @param encryptDataGlobally whether or not the data should be encrypted by default if no entry-specific directive exists (as defined in CacheConfiguration)
+ * @param durationInMillis interval during which the cached data should be considered fresh from the time when it is saved
+ * @param dateFactory class providing the time, for the purpose of testing
+ * @param contentValuesFactory converter from Map to ContentValues for testing purpose
+ */
 internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                   private val serialisationManager: SerialisationManager<E>,
                                   private val logger: Logger,
@@ -64,13 +77,20 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
     }
 
+    /**
+     * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
+     * Both parameters work in conjunction to form an intersection of entries to be cleared.
+     *
+     * @param typeToClear type of entries to clear (or all the entries if this parameter is null)
+     * @param clearStaleEntriesOnly only clear STALE entries if set to true (or all otherwise)
+     */
     fun clearCache(typeToClear: Class<*>?,
-                   clearOlderEntriesOnly: Boolean) {
-        val olderEntriesClause = if (clearOlderEntriesOnly) "${EXPIRY_DATE.columnName} < ?" else null
+                   clearStaleEntriesOnly: Boolean) {
+        val olderEntriesClause = if (clearStaleEntriesOnly) "${EXPIRY_DATE.columnName} < ?" else null
         val typeClause = typeToClear?.let { "${CLASS.columnName} = ?" }
 
         val args = arrayListOf<String>().apply {
-            if (clearOlderEntriesOnly) add(dateFactory(null).time.toString())
+            if (clearStaleEntriesOnly) add(dateFactory(null).time.toString())
             if (typeToClear != null) add(typeToClear.name)
         }
 
@@ -80,7 +100,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 args.toArray()
         ).let { deleted ->
             val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
-            if (clearOlderEntriesOnly) {
+            if (clearStaleEntriesOnly) {
                 logger.d(this, "Deleted old$entryType entries from cache: $deleted found")
             } else {
                 logger.d(this, "Deleted all existing$entryType entries from cache: $deleted found")
@@ -88,6 +108,14 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         }
     }
 
+    /**
+     * Returns a cached entry if available
+     *
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param start the time at which the operation started in order to calculate the time the operation took.
+     *
+     * @return a cached entry if available, or null otherwise
+     */
     fun getCachedResponse(instructionToken: CacheToken,
                           start: Long): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
@@ -124,7 +152,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                                 val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
 
-                                return getCachedResponse(
+                                return deserialise(
                                         instructionToken,
                                         start,
                                         cacheDate,
@@ -142,13 +170,26 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 )
     }
 
-    private fun getCachedResponse(instructionToken: CacheToken,
-                                  start: Long,
-                                  cacheDate: Date,
-                                  expiryDate: Date,
-                                  isCompressed: Boolean,
-                                  isEncrypted: Boolean,
-                                  localData: ByteArray) =
+    /**
+     * Deserialises the cached data
+     *
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param start the time at which the operation started in order to calculate the time the operation took.
+     * @param cacheDate the Date at which the data was cached
+     * @param expiryDate the Date at which the data would become STALE
+     * @param isCompressed whether or not the cached data was saved compressed
+     * @param isEncrypted whether or not the cached data was saved encrypted
+     * @param localData the cached data
+     *
+     * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
+     */
+    private fun deserialise(instructionToken: CacheToken,
+                            start: Long,
+                            cacheDate: Date,
+                            expiryDate: Date,
+                            isCompressed: Boolean,
+                            isEncrypted: Boolean,
+                            localData: ByteArray) =
             serialisationManager.deserialise(
                     instructionToken,
                     localData,
@@ -170,7 +211,7 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                     metadata = CacheMetadata(
                             CacheToken.cached(
                                     instructionToken,
-                                    getCachedStatus(expiryDate),
+                                    getCacheStatus(expiryDate, dateFactory),
                                     isCompressed,
                                     isEncrypted,
                                     cacheDate,
@@ -182,19 +223,34 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 }
             }
 
-    fun invalidate(instructionToken: CacheToken) {
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     *
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
+    fun invalidate(instructionToken: CacheToken): Boolean {
         val instruction = instructionToken.instruction.copy(
-                operation = CacheInstruction.Operation.Invalidate
+                operation = Invalidate
         )
-        val foundIt = checkInvalidation(
+        return checkInvalidation(
                 instruction,
                 instructionToken.requestMetadata.hash
         )
     }
 
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     *
+     * @param instruction the INVALIDATE instruction for the desired entry.
+     * @param key the key of the entry to invalidate
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
     @VisibleForTesting
-    internal fun checkInvalidation(instruction: CacheInstruction,
-                                   key: String) =
+    fun checkInvalidation(instruction: CacheInstruction,
+                          key: String) =
             if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"
@@ -216,9 +272,12 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
                 }
             } else false
 
-    private fun getCachedStatus(expiryDate: Date) =
-            if (dateFactory(null).time >= expiryDate.time) STALE else CACHED
-
+    /**
+     * Caches a given response.
+     *
+     * @param response the response to cache
+     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
+     */
     fun cache(response: ResponseWrapper<E>,
               previousCachedResponse: ResponseWrapper<E>?): Completable {
         val instructionToken = response.metadata.cacheToken
@@ -264,6 +323,17 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
         }!!
     }
 
+    /**
+     * Indicates whether or not the entry should be compressed or encrypted based primarily
+     * on the settings of the previous cached entry if available. If there was no previous entry,
+     * then the cache settings are defined by the operation or, if undefined in the operation,
+     * by the values defined globally in CacheConfiguration.
+     *
+     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
+     * @param cacheOperation the cache operation for the entry being saved
+     *
+     * @return a pair of Boolean indicating in order whether the data was encrypted or compressed
+     */
     internal fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
                                          cacheOperation: Expiring): Pair<Boolean, Boolean> {
         val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
@@ -282,3 +352,15 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
     }
 
 }
+
+/**
+ * Calculates the cache status of a given expiry date.
+ *
+ * @param expiryDate the date at which the data should expire (become STALE)
+ * @param dateFactory class providing the time, for the purpose of testing
+ *
+ * @return whether the data is FRESH or STALE
+ */
+internal fun getCacheStatus(expiryDate: Date,
+                            dateFactory: (Long?) -> Date) =
+        if (dateFactory(null).time >= expiryDate.time) STALE else FRESH

@@ -23,8 +23,9 @@ package uk.co.glass_software.android.dejavu.retrofit.annotations
 
 import kotlin.reflect.KClass
 
+//TODO JavaDoc
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Clear(val typeToClear: KClass<*>,
-                       val clearOldEntriesOnly: Boolean = false)
+                       val clearStaleEntriesOnly: Boolean = false)
 

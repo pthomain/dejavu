@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.error
 
+//TODO JavaDoc
 enum class ErrorCode constructor(val canRetry: Boolean) {
     CONFIG(false),
     NETWORK(true),

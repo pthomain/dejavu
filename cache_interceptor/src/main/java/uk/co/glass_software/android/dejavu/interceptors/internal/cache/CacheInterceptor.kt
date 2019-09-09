@@ -70,7 +70,7 @@ internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
                         is Clear -> cacheManager.clearCache(
                                 instructionToken,
                                 instruction.operation.typeToClear,
-                                instruction.operation.clearOldEntriesOnly
+                                instruction.operation.clearStaleEntriesOnly
                         )
 
                         is Invalidate -> cacheManager.invalidate(instructionToken)

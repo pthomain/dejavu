@@ -26,5 +26,10 @@ package uk.co.glass_software.android.dejavu.configuration
  */
 interface ErrorFactory<E> where E : Exception,
                                 E : NetworkErrorProvider {
+
+    /**
+     * @param throwable the throwable to evaluate
+     * @return the custom Exception type for the given throwable
+     */
     fun getError(throwable: Throwable): E
 }

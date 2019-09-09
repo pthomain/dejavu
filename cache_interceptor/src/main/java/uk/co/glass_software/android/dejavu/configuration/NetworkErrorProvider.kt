@@ -26,5 +26,9 @@ package uk.co.glass_software.android.dejavu.configuration
  * exponential backoff retries on failed calls
  */
 interface NetworkErrorProvider {
+
+    /**
+     * @return whether or not the class implementing this interface represents a network error
+     */
     fun isNetworkError(): Boolean
 }

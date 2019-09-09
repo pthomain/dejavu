@@ -39,6 +39,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProces
 import uk.co.glass_software.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import java.util.*
 
+//TODO JavaDoc
 class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                                                requestMetadata: RequestMetadata.UnHashed,
                                                configuration: CacheConfiguration<E>,

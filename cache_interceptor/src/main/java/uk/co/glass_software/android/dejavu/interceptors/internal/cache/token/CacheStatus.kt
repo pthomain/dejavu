@@ -21,7 +21,10 @@
 
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.token
 
-enum class CacheStatus constructor(
+/**
+ * Class representing the cache status of a response
+ */
+enum class CacheStatus(
         /**
          * Whether or not the status is final, meaning that no subsequent response will be emitted.
          * STALE is the only non-final status, which means another (final) response will be emitted
@@ -68,13 +71,13 @@ enum class CacheStatus constructor(
     /**
      * Returned with responses coming straight from the network for which no cached data exists.
      */
-    FRESH(true, true, true),
+    NETWORK(true, true, true),
 
     /**
      * Returned with responses coming straight from the cache within their expiry date,
      * no further network call is made (hence isSingle = true).
      */
-    CACHED(true, true, true),
+    FRESH(true, true, true),
 
     /**
      * Returned with responses coming straight from the cache after their expiry date.
@@ -90,7 +93,7 @@ enum class CacheStatus constructor(
     STALE(false, false, false),
 
     /**
-     * Returned after a STALE response with FRESH data from a successful network call or
+     * Returned after a STALE response with NETWORK data from a successful network call or
      * alternatively as a single response if the freshOnly directive is set or the response
      * is returned via a Single rather than an Observable.
      */

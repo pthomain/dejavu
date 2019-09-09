@@ -18,6 +18,7 @@ import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseStatisticsCompiler
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -69,6 +70,9 @@ internal interface CacheModule<E>
     fun provideDatabaseManager(database: SupportSQLiteDatabase,
                                dateFactory: Function1<Long?, Date>,
                                serialisationManager: SerialisationManager<E>): DatabaseManager<E>
+
+    fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase,
+                                          dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler
 
     fun provideCacheManager(serialiser: Serialiser,
                             databaseManager: DatabaseManager<E>,

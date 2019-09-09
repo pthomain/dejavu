@@ -21,6 +21,7 @@
 
 package uk.co.glass_software.android.dejavu.retrofit.annotations
 
+//TODO JavaDoc
 enum class OptionalBoolean(val value: Boolean?) {
     TRUE(true),
     FALSE(false),

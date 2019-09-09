@@ -94,18 +94,18 @@ class DatabaseManagerUnitTest {
     @Test
     fun testClearCache() {
         trueFalseSequence { useTypeToClear ->
-            trueFalseSequence { clearOlderEntriesOnly ->
+            trueFalseSequence { clearStaleEntriesOnly ->
                 testClearCache(
                         useTypeToClear,
-                        clearOlderEntriesOnly
+                        clearStaleEntriesOnly
                 )
             }
         }
     }
 
     private fun testClearCache(useTypeToClear: Boolean,
-                               clearOlderEntriesOnly: Boolean) {
-        val context = "useTypeToClear = $useTypeToClear\nclearOlderEntriesOnly = $clearOlderEntriesOnly"
+                               clearStaleEntriesOnly: Boolean) {
+        val context = "useTypeToClear = $useTypeToClear\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
 
         val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
 
@@ -117,7 +117,7 @@ class DatabaseManagerUnitTest {
 
         target.clearCache(
                 typeToClearClass,
-                clearOlderEntriesOnly
+                clearStaleEntriesOnly
         )
 
         val tableCaptor = argumentCaptor<String>()
@@ -131,19 +131,19 @@ class DatabaseManagerUnitTest {
         )
 
         val expectedClause = when {
-            useTypeToClear -> if (clearOlderEntriesOnly) "expiry_date < ? AND class = ?" else "class = ?"
-            else -> if (clearOlderEntriesOnly) "expiry_date < ?" else ""
+            useTypeToClear -> if (clearStaleEntriesOnly) "expiry_date < ? AND class = ?" else "class = ?"
+            else -> if (clearStaleEntriesOnly) "expiry_date < ?" else ""
         }
 
         val responseType = TestResponse::class.java.name
 
         val expectedValue = when {
-            useTypeToClear -> if (clearOlderEntriesOnly) arrayOf(mockCurrentDate.time.toString(), responseType) else arrayOf(responseType)
-            else -> if (clearOlderEntriesOnly) arrayOf(mockCurrentDate.time.toString()) else emptyArray()
+            useTypeToClear -> if (clearStaleEntriesOnly) arrayOf(mockCurrentDate.time.toString(), responseType) else arrayOf(responseType)
+            else -> if (clearStaleEntriesOnly) arrayOf(mockCurrentDate.time.toString()) else emptyArray()
         }
 
         assertEqualsWithContext(
-                SqlOpenHelperCallback.TABLE_CACHE,
+                TABLE_CACHE,
                 tableCaptor.firstValue,
                 "Clear cache target table didn't match",
                 context
@@ -527,9 +527,9 @@ class DatabaseManagerUnitTest {
             )
 
             assertEqualsWithContext(
-                    if (isDataStale) CacheStatus.STALE else CacheStatus.CACHED,
+                    if (isDataStale) CacheStatus.STALE else CacheStatus.FRESH,
                     actualMetadata.cacheToken.status,
-                    "Cache status should be ${if (isDataStale) "STALE" else "CACHED"}",
+                    "Cache status should be ${if (isDataStale) "STALE" else "FRESH"}",
                     context
             )
         } else {

@@ -21,7 +21,8 @@
 
 package uk.co.glass_software.android.dejavu.retrofit.annotations
 
+//TODO JavaDoc
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class ClearAll(val clearOldEntriesOnly: Boolean = false)
+annotation class ClearAll(val clearStaleEntriesOnly: Boolean = false)
 

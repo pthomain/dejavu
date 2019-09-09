@@ -39,7 +39,7 @@ import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
 import java.util.*
 
-
+//TODO JavaDoc
 internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                                private val serialiser: Serialiser,
                                private val databaseManager: DatabaseManager<E>,
@@ -52,8 +52,8 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
 
     fun clearCache(instructionToken: CacheToken,
                    typeToClear: Class<*>?,
-                   clearOlderEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
-        databaseManager.clearCache(typeToClear, clearOlderEntriesOnly)
+                   clearStaleEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
+        databaseManager.clearCache(typeToClear, clearStaleEntriesOnly)
     }
 
     fun invalidate(instructionToken: CacheToken) = emptyResponseObservable(instructionToken) {
@@ -202,7 +202,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         val status = if (hasError)
             if (hasCachedResponse) COULD_NOT_REFRESH else EMPTY
         else
-            if (hasCachedResponse) REFRESHED else FRESH
+            if (hasCachedResponse) REFRESHED else NETWORK
 
         val cacheToken = CacheToken(
                 instructionToken.instruction,
@@ -244,7 +244,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
 
                     val serialisationCacheToken = responseWrapper.metadata.cacheToken.let {
                         val newStatus = when (it.status) {
-                            FRESH -> EMPTY
+                            NETWORK -> EMPTY
                             REFRESHED -> COULD_NOT_REFRESH
                             else -> it.status
                         }

@@ -36,7 +36,7 @@ import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
  */
-class DejaVu<E> internal constructor(component: CacheComponent<E>)
+class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
         where E : Exception,
               E : NetworkErrorProvider {
 
@@ -60,6 +60,11 @@ class DejaVu<E> internal constructor(component: CacheComponent<E>)
      * as an alternative to implementing the CacheMetadata.Holder interface on responses.
      */
     val cacheMetadataObservable: Observable<CacheMetadata<E>> = component.cacheMetadataObservable()
+
+    /**
+     * Returns a Single emitting current cache statistics
+     */
+    fun statistics() = component.databaseStatisticsCompiler().getStatistics()
 
     companion object {
 

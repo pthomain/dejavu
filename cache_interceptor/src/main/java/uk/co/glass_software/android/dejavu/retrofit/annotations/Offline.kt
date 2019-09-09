@@ -23,6 +23,7 @@ package uk.co.glass_software.android.dejavu.retrofit.annotations
 
 import uk.co.glass_software.android.dejavu.retrofit.annotations.OptionalBoolean.DEFAULT
 
+//TODO JavaDoc
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Offline(val freshOnly: Boolean = false,

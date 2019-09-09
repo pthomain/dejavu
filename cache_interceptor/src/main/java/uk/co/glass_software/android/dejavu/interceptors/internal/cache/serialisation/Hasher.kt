@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
+//TODO JavaDoc
 internal class Hasher(private val messageDigest: MessageDigest?,
                       private val uriParser: (String) -> Uri) {
 

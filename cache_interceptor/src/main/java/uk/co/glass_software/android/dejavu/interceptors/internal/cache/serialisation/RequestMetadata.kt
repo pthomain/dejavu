@@ -1,5 +1,6 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation
 
+//TODO JavaDoc
 sealed class RequestMetadata(val url: String,
                              val requestBody: String? = null) {
 
