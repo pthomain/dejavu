@@ -145,5 +145,5 @@
 -dontwarn org.junit.**
 -dontwarn org.robolectric.**
 
-
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod,Synthetic,LocalVariableTable,LocalVariableTypeTable,RuntimeVisibleAnnotations
+-keep class uk.co.glass_software.android.** { *; }
