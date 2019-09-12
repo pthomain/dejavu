@@ -145,5 +145,5 @@
 -dontwarn org.junit.**
 -dontwarn org.robolectric.**
 
--renamesourcefileattribute SourceFile
--keepattributes SourceFile,LineNumberTable
+
+-keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod,Synthetic,LocalVariableTable,LocalVariableTypeTable,RuntimeVisibleAnnotations
