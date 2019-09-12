@@ -144,3 +144,6 @@
 # Tests
 -dontwarn org.junit.**
 -dontwarn org.robolectric.**
+
+-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
