@@ -30,6 +30,8 @@ import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
+import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyResponseFactory.DoneException
+import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyResponseFactory.EmptyResponseException
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.dejavu.retrofit.annotations.CacheException
@@ -136,18 +138,18 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             ) ?: response
         }.let {
             when {
-                it is Throwable -> {
-                    logger.d(this, "Returning error: $it")
-                    Observable.error<Any>(it)
-                }
                 isCompletable && metadata.exception != null -> {
-                    if (metadata.exception.cause is EmptyResponseFactory.EmptyResponseException) {
+                    if (metadata.exception.cause.let { it is EmptyResponseException || it is DoneException }) {
                         logger.d(this, "Returning empty response for Completable: $metadata")
                         Observable.empty<Any>()
                     } else {
                         logger.d(this, "Returning exception for Completable: $metadata")
                         Observable.error<Any>(metadata.exception)
                     }
+                }
+                it is Throwable -> {
+                    logger.d(this, "Returning error: $it")
+                    Observable.error<Any>(it)
                 }
                 else -> {
                     logger.d(this, "Returning response: $metadata")
