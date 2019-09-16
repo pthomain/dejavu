@@ -153,27 +153,23 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                             diskDuration
                     )
                 }
-                .flatMap {
+                .map {
                     if (!it.metadata.cacheToken.status.isError) {
                         val serialised = serialise(it)
 
                         if (serialised.metadata.exception != null) {
-                            Observable.just(it.copy(
+                            it.copy(
                                     response = null,
                                     metadata = serialised.metadata
-                            ))
+                            )
                         } else {
-                            Observable.just(it).doOnComplete {
-                                logger.d(this, "$simpleName successfully delivered, now caching")
-                                databaseManager.cache(
-                                        serialised,
-                                        previousCachedResponse
-                                ).subscribeBy(
-                                        onError = { logger.e(this, it, "Could not cache $simpleName") }
-                                )
-                            }
+                            databaseManager.cache(
+                                    serialised,
+                                    previousCachedResponse
+                            )
+                            it
                         }
-                    } else Observable.just(it)
+                    } else it
                 }
     }
 
@@ -225,7 +221,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                     metadata = newMetadata,
                     response = if (cacheOperation.freshOnly) null else previousCachedResponse?.response
             )
-        else responseWrapper.also { it.metadata = newMetadata }
+        else responseWrapper.copy(metadata = newMetadata)
     }
 
     private fun serialise(responseWrapper: ResponseWrapper<E>) =

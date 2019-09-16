@@ -78,7 +78,7 @@ internal abstract class BaseDemoPresenter protected constructor(
             DejaVu.builder()
                     .mergeOnNextOnError(true)
                     .requestTimeOutInSeconds(10)
-                    .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L)
+//                    .connectivityTimeoutInMillis(if (connectivityTimeoutOn) 30000L else 0L) //FIXME
                     .cacheDurationInMillis(30000)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
