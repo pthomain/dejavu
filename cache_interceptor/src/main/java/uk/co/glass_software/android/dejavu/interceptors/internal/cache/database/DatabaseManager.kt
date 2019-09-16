@@ -279,48 +279,43 @@ internal class DatabaseManager<E>(private val database: SupportSQLiteDatabase,
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      */
     fun cache(response: ResponseWrapper<E>,
-              previousCachedResponse: ResponseWrapper<E>?): Completable {
+              previousCachedResponse: ResponseWrapper<E>?) {
         val instructionToken = response.metadata.cacheToken
+        val instruction = instructionToken.instruction
+        val operation = instruction.operation as Expiring
+        val simpleName = instruction.responseClass.simpleName
+        val durationInMillis = operation.durationInMillis ?: durationInMillis
 
-        return create {
-            val instruction = instructionToken.instruction
-            val operation = instruction.operation as Expiring
-            val simpleName = instruction.responseClass.simpleName
-            val durationInMillis = operation.durationInMillis ?: durationInMillis
+        logger.d(this, "Caching $simpleName")
 
-            logger.d(this, "Caching $simpleName")
+        val (encryptData, compressData) = shouldEncryptOrCompress(
+                previousCachedResponse,
+                operation
+        )
 
-            val (encryptData, compressData) = shouldEncryptOrCompress(
-                    previousCachedResponse,
-                    operation
+        serialisationManager.serialise(
+                response,
+                encryptData,
+                compressData
+        )?.also {
+            val hash = instructionToken.requestMetadata.hash
+            val values = HashMap<String, Any>()
+            val now = dateFactory(null).time
+
+            values[TOKEN.columnName] = hash
+            values[DATE.columnName] = now
+            values[EXPIRY_DATE.columnName] = now + durationInMillis
+            values[DATA.columnName] = it
+            values[CLASS.columnName] = instruction.responseClass.name
+            values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
+            values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
+
+            database.insert(
+                    TABLE_CACHE,
+                    CONFLICT_REPLACE,
+                    contentValuesFactory(values)
             )
-
-            serialisationManager.serialise(
-                    response,
-                    encryptData,
-                    compressData
-            )?.also {
-                val hash = instructionToken.requestMetadata.hash
-                val values = HashMap<String, Any>()
-                val now = dateFactory(null).time
-
-                values[TOKEN.columnName] = hash
-                values[DATE.columnName] = now
-                values[EXPIRY_DATE.columnName] = now + durationInMillis
-                values[DATA.columnName] = it
-                values[CLASS.columnName] = instruction.responseClass.name
-                values[IS_COMPRESSED.columnName] = if (compressData) 1 else 0
-                values[IS_ENCRYPTED.columnName] = if (encryptData) 1 else 0
-
-                database.insert(
-                        TABLE_CACHE,
-                        CONFLICT_REPLACE,
-                        contentValuesFactory(values)
-                )
-            } ?: logger.e(this, "Could not serialise and store data for $simpleName")
-
-            it.onComplete()
-        }!!
+        } ?: logger.e(this, "Could not serialise and store data for $simpleName")
     }
 
     /**
