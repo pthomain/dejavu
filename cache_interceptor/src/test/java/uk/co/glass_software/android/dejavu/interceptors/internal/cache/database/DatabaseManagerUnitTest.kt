@@ -245,7 +245,7 @@ class DatabaseManagerUnitTest {
         target.cache(
                 mockResponseWrapper,
                 mockPreviousResponse
-        ).blockingGet()
+        )
 
         if (isSerialisationSuccess) {
             verifyWithContext(mockDatabase, context).insert(

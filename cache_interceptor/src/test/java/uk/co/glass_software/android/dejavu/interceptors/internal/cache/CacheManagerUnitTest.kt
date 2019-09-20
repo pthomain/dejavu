@@ -1,7 +1,6 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
 import com.nhaarman.mockitokotlin2.*
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.observers.TestObserver
@@ -337,11 +336,8 @@ class CacheManagerUnitTest {
         )
 
         prepareSerialise(
-                operation,
                 serialisationFails,
-                hasCachedResponse,
-                mockResponse,
-                mockCachedResponseWrapper
+                mockResponse
         )
     }
 
@@ -364,11 +360,8 @@ class CacheManagerUnitTest {
         )).thenReturn(Pair(true, true))
     }
 
-    private fun prepareSerialise(operation: Expiring,
-                                 serialisationFails: Boolean,
-                                 hasCachedResponse: Boolean,
-                                 response: TestResponse,
-                                 mockCachedResponseWrapper: ResponseWrapper<Glitch>?) {
+    private fun prepareSerialise(serialisationFails: Boolean,
+                                 response: TestResponse) {
         whenever(mockSerialiser.canHandleType(
                 eq(TestResponse::class.java)
         )).thenReturn(true)
@@ -382,11 +375,6 @@ class CacheManagerUnitTest {
                             SERIALISATION,
                             "Could not serialise ${TestResponse::class.java.simpleName}: provided serialiser does not support the type. This response will not be cached."
                     )))).thenReturn(mockSerialisationGlitch)
-        } else {
-            whenever(mockDatabaseManager.cache(
-                    any(),
-                    if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
-            )).thenReturn(Completable.complete())
         }
     }
 
@@ -537,6 +525,13 @@ class CacheManagerUnitTest {
                         hasCachedResponse
                 )
             }
+        }
+
+        if (serialisationFails) {
+            verify(mockDatabaseManager).cache(
+                    any(),
+                    if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
+            )
         }
 
         assertEqualsWithContext(
