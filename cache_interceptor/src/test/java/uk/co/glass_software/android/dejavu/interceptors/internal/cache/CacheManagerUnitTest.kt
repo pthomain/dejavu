@@ -527,13 +527,6 @@ class CacheManagerUnitTest {
             }
         }
 
-        if (serialisationFails) {
-            verify(mockDatabaseManager).cache(
-                    any(),
-                    if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
-            )
-        }
-
         assertEqualsWithContext(
                 expectedResponseWrapper,
                 actualResponseWrapper,
