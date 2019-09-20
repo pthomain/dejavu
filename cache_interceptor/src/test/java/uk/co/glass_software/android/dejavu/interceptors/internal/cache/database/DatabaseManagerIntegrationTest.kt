@@ -33,7 +33,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
     fun `GIVEN that a response is cached THEN it should be returned`() {
         val stubbedResponse = getStubbedTestResponse()
 
-        target.cache(stubbedResponse, null).blockingAwait()
+        target.cache(stubbedResponse, null)
 
         val cachedResponse = target.getCachedResponse(instructionToken(), 500)
 
@@ -52,7 +52,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
 
         val instructionToken = stubbedResponse.metadata.cacheToken
 
-        target.cache(stubbedResponse, null).blockingAwait()
+        target.cache(stubbedResponse, null)
 
         val cachedResponse = target.getCachedResponse(instructionToken, 500)
 
@@ -69,7 +69,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         val stubbedResponse = getStubbedTestResponse()
         val instructionToken = stubbedResponse.metadata.cacheToken
 
-        target.cache(stubbedResponse, null).blockingAwait()
+        target.cache(stubbedResponse, null)
         target.invalidate(instructionToken)
 
         val cachedResponse = target.getCachedResponse(instructionToken, 500)
@@ -86,7 +86,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
     fun `GIVEN that a response has not expired AND the operation is REFRESH THEN it should have a STALE status`() {
         val stubbedResponse = getStubbedTestResponse()
 
-        target.cache(stubbedResponse, null).blockingAwait()
+        target.cache(stubbedResponse, null)
 
         val cachedResponse = target.getCachedResponse(instructionToken(), 500)
 
@@ -111,7 +111,7 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
     fun `GIVEN that a response has not expired AND the operation is not REFRESH or INVALIDATE THEN it should have a CACHED status`() {
         val stubbedResponse = getStubbedTestResponse()
 
-        target.cache(stubbedResponse, null).blockingAwait()
+        target.cache(stubbedResponse, null)
 
         val cachedResponse = target.getCachedResponse(instructionToken(), 500)
 
@@ -218,8 +218,8 @@ internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseMana
         val firstResponseToken = firstResponse.metadata.cacheToken
         val secondResponseToken = secondResponse.metadata.cacheToken
 
-        target.cache(firstResponse, null).blockingAwait()
-        target.cache(secondResponse, null).blockingAwait()
+        target.cache(firstResponse, null)
+        target.cache(secondResponse, null)
 
         val cachedFirstResponse = target.getCachedResponse(firstResponseToken, 500)
         val cachedSecondResponse = target.getCachedResponse(secondResponseToken, 500)

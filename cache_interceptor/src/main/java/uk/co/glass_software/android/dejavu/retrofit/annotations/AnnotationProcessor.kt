@@ -136,7 +136,7 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             is Refresh -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Refresh(
-                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it },
+                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
                             annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
