@@ -22,7 +22,6 @@
 package uk.co.glass_software.android.dejavu.interceptors.internal.cache
 
 import io.reactivex.Observable
-import io.reactivex.rxkotlin.subscribeBy
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
@@ -184,11 +183,12 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         val error = responseWrapper.metadata.exception
         val hasError = error != null
         val hasCachedResponse = previousCachedResponse != null
+        val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
 
         val fetchDate = dateFactory(null)
-        val cacheDate = if (hasError) null else fetchDate
+        val cacheDate = if (hasError) previousCacheToken?.cacheDate else fetchDate
         val timeToLiveInMs = cacheOperation.durationInMillis ?: defaultDurationInMillis
-        val expiryDate = if (hasError) null else dateFactory(fetchDate.time + timeToLiveInMs)
+        val expiryDate = if (hasError) previousCacheToken?.expiryDate else dateFactory(fetchDate.time + timeToLiveInMs)
 
         val (encryptData, compressData) = databaseManager.shouldEncryptOrCompress(
                 previousCachedResponse,
@@ -207,8 +207,8 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                 encryptData,
                 instructionToken.requestMetadata,
                 fetchDate,
-                if (status == EMPTY || status == COULD_NOT_REFRESH) null else cacheDate,
-                if (status == EMPTY || status == COULD_NOT_REFRESH) null else expiryDate
+                if (status == EMPTY) null else cacheDate,
+                if (status == EMPTY) null else expiryDate
         )
 
         val newMetadata = metadata.copy(
