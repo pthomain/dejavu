@@ -48,11 +48,11 @@ internal class IntegrationCacheModule(configuration: CacheConfiguration<Glitch>)
     @Provides
     @Singleton
     override fun provideSqlOpenHelper(context: Context,
-                                      callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper =
+                                      callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
             FrameworkSQLiteOpenHelperFactory().create(
                     SupportSQLiteOpenHelper.Configuration.builder(context)
                             .name(DATABASE_NAME)
-                            .callback(callback)
+                            .callback(callback!!)
                             .build()
             )
 

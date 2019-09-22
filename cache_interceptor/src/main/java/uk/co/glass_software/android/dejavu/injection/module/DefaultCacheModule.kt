@@ -26,6 +26,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import uk.co.glass_software.android.boilerplate.core.utils.kotlin.ifElse
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
 import java.util.*
@@ -45,12 +46,16 @@ internal class DefaultCacheModule(configuration: CacheConfiguration<Glitch>)
     @Provides
     @Singleton
     override fun provideSqlOpenHelper(context: Context,
-                                      callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper =
-            RequerySQLiteOpenHelperFactory().create(
-                    SupportSQLiteOpenHelper.Configuration.builder(context)
-                            .name(DATABASE_NAME)
-                            .callback(callback)
-                            .build()
+                                      callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
+            ifElse(
+                    usesDatabaseCacheManager(),
+                    RequerySQLiteOpenHelperFactory().create(
+                            SupportSQLiteOpenHelper.Configuration.builder(context)
+                                    .name(DATABASE_NAME)
+                                    .callback(callback!!)
+                                    .build()
+                    ),
+                    null
             )
 
 }

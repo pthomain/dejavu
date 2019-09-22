@@ -150,6 +150,8 @@ class ResponseInterceptorUnitTest {
                 mock(),
                 mock(),
                 mock(),
+                mock(),
+                mock(),
                 true,
                 true,
                 true,
@@ -158,7 +160,7 @@ class ResponseInterceptorUnitTest {
                 5,
                 5,
                 5,
-                {_,_-> false }
+                { _, _ -> false }
         )
 
         val target = ResponseInterceptor(

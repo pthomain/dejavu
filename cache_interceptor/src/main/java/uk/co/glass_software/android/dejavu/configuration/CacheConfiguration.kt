@@ -28,9 +28,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.mumbo.Mumbo
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
+import java.io.File
 
 /**
  * Class holding the global cache configuration. Values defined here are used by default
@@ -51,6 +53,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val errorFactory: ErrorFactory<E>,
                                                       val serialiser: Serialiser,
                                                       val encryptionManager: EncryptionManager,
+                                                      val persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)?,
+                                                      val cacheDirectory: File?,
                                                       val isCacheEnabled: Boolean,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
@@ -82,6 +86,9 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var logger: Logger? = null
         private var customErrorFactory: ErrorFactory<E>? = null
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
+
+        private var persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)? = null
+        private var cacheDirectory: File? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -189,6 +196,24 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         }
 
         /**
+         * Provide a different PersistenceManager to handle the persistence of the cached requests.
+         * The default implementation is DatabasePersistenceManager which saves the responses to
+         * an SQLite database (using requery). This takes precedence over useFileCaching().
+         *
+         * @param persistenceManagerPicker a factory providing this configuration and returning the PersistenceManager implementation to use instead of the default provided one
+         */
+        fun persistenceManager(persistenceManagerPicker: (CacheConfiguration<E>) -> PersistenceManager<E>) = apply { this.persistenceManagerPicker = persistenceManagerPicker }
+
+        /**
+         * Uses an implementation of PersistenceManager serialising the responses to the given directory.
+         * Special care needs to be taken with public directories for which encryption should be enabled
+         * by default (see encryptByDefault()). This is overridden by persistenceManager().
+         *
+         * @param cacheDirectory the file directory to use for caching
+         */
+        fun useFileCaching(cacheDirectory: File) = apply { this.cacheDirectory = cacheDirectory }
+
+        /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
          * see @Cache::mergeOnNextOnError for call-specific directive).
          *
@@ -264,6 +289,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
                                     encryptionManager,
+                                    persistenceManagerPicker,
+                                    cacheDirectory,
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,

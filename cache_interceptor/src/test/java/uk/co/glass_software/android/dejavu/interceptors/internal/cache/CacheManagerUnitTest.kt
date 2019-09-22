@@ -9,7 +9,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.Serialiser
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.error.Glitch
@@ -26,7 +26,7 @@ class CacheManagerUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
     private lateinit var mockSerialiser: Serialiser
-    private lateinit var mockDatabaseManager: DatabaseManager<Glitch>
+    private lateinit var mockPersistenceManager: PersistenceManager<Glitch>
     private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
     private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockNetworkGlitch: Glitch
@@ -47,7 +47,7 @@ class CacheManagerUnitTest {
     private fun setUp() {
         mockErrorFactory = mock()
         mockSerialiser = mock()
-        mockDatabaseManager = mock()
+        mockPersistenceManager = mock()
         mockEmptyResponseFactory = mock()
         mockDateFactory = mock()
         mockNetworkGlitch = mock()
@@ -56,7 +56,7 @@ class CacheManagerUnitTest {
         target = CacheManager(
                 mockErrorFactory,
                 mockSerialiser,
-                mockDatabaseManager,
+                mockPersistenceManager,
                 mockEmptyResponseFactory,
                 mockDateFactory,
                 defaultDurationInMillis,
@@ -99,7 +99,7 @@ class CacheManagerUnitTest {
                 clearStaleEntriesOnly
         ).blockingFirst()
 
-        verifyWithContext(mockDatabaseManager, context).clearCache(
+        verifyWithContext(mockPersistenceManager, context).clearCache(
                 typeToClear,
                 clearStaleEntriesOnly
         )
@@ -124,7 +124,7 @@ class CacheManagerUnitTest {
 
         val actualResponseWrapper = target.invalidate(instructionToken).blockingFirst()
 
-        verify(mockDatabaseManager).invalidate(eq(instructionToken))
+        verify(mockPersistenceManager).invalidate(eq(instructionToken))
 
         assertEqualsWithContext(
                 mockResponseWrapper,
@@ -196,7 +196,7 @@ class CacheManagerUnitTest {
                 mockCacheMetadata.copy(instructionToken.copy(status = if (isResponseStaleOverall) STALE else NETWORK))
         )
 
-        whenever(mockDatabaseManager.getCachedResponse(
+        whenever(mockPersistenceManager.getCachedResponse(
                 eq(instructionToken),
                 eq(start)
         )).thenReturn(if (hasCachedResponse) mockCachedResponseWrapper else null)
@@ -354,7 +354,7 @@ class CacheManagerUnitTest {
                     .thenReturn(expectedExpiryDate)
         }
 
-        whenever(mockDatabaseManager.shouldEncryptOrCompress(
+        whenever(mockPersistenceManager.shouldEncryptOrCompress(
                 if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull(),
                 eq(operation)
         )).thenReturn(Pair(true, true))
@@ -542,7 +542,7 @@ class CacheManagerUnitTest {
                                      mockResponseWrapper: ResponseWrapper<Glitch>,
                                      mockCachedResponseWrapper: ResponseWrapper<Glitch>?,
                                      hasCachedResponse: Boolean): ResponseWrapper<Glitch> {
-        verify(mockDatabaseManager).cache(
+        verify(mockPersistenceManager).cache(
                 eq(actualResponseWrapper.copy(
                         response = mockSerialisedString,
                         responseClass = String::class.java

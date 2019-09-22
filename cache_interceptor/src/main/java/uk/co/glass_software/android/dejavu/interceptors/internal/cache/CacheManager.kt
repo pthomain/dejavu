@@ -28,7 +28,7 @@ import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operat
 import uk.co.glass_software.android.dejavu.configuration.ErrorFactory
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.configuration.Serialiser
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.interceptors.internal.response.EmptyResponseFactory
@@ -41,7 +41,7 @@ import java.util.*
 //TODO JavaDoc
 internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                                private val serialiser: Serialiser,
-                               private val databaseManager: DatabaseManager<E>,
+                               private val persistenceManager: PersistenceManager<E>,
                                private val emptyResponseFactory: EmptyResponseFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val defaultDurationInMillis: Long,
@@ -52,11 +52,11 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
     fun clearCache(instructionToken: CacheToken,
                    typeToClear: Class<*>?,
                    clearStaleEntriesOnly: Boolean) = emptyResponseObservable(instructionToken) {
-        databaseManager.clearCache(typeToClear, clearStaleEntriesOnly)
+        persistenceManager.clearCache(typeToClear, clearStaleEntriesOnly)
     }
 
     fun invalidate(instructionToken: CacheToken) = emptyResponseObservable(instructionToken) {
-        databaseManager.invalidate(instructionToken)
+        persistenceManager.invalidate(instructionToken)
     }
 
     private fun emptyResponseObservable(instructionToken: CacheToken,
@@ -75,7 +75,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         val simpleName = instruction.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
-        val cachedResponse = databaseManager.getCachedResponse(instructionToken, start)
+        val cachedResponse = persistenceManager.getCachedResponse(instructionToken, start)
 
         val diskDuration = cachedResponse
                 ?.metadata
@@ -162,7 +162,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
                                     metadata = serialised.metadata
                             )
                         } else {
-                            databaseManager.cache(
+                            persistenceManager.cache(
                                     serialised,
                                     previousCachedResponse
                             )
@@ -190,7 +190,7 @@ internal class CacheManager<E>(private val errorFactory: ErrorFactory<E>,
         val timeToLiveInMs = cacheOperation.durationInMillis ?: defaultDurationInMillis
         val expiryDate = if (hasError) previousCacheToken?.expiryDate else dateFactory(fetchDate.time + timeToLiveInMs)
 
-        val (encryptData, compressData) = databaseManager.shouldEncryptOrCompress(
+        val (encryptData, compressData) = persistenceManager.shouldEncryptOrCompress(
                 previousCachedResponse,
                 cacheOperation
         )

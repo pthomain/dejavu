@@ -22,6 +22,7 @@
 package uk.co.glass_software.android.dejavu
 
 import io.reactivex.Observable
+import io.reactivex.Single
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
@@ -64,7 +65,8 @@ class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
     /**
      * Returns a Single emitting current cache statistics
      */
-    fun statistics() = component.databaseStatisticsCompiler().getStatistics()
+    fun statistics() = component.databaseStatisticsCompiler()?.getStatistics()
+            ?: Single.error(IllegalStateException("The cache is not using a database to persist its data"))
 
     companion object {
 

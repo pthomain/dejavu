@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import android.annotation.SuppressLint
 import com.jakewharton.fliptables.FlipTable

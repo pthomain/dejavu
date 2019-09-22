@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import android.content.ContentValues
 import android.database.Cursor
@@ -8,12 +8,13 @@ import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import org.junit.Test
 import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
+import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -24,7 +25,7 @@ import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.util.*
 
-class DatabaseManagerUnitTest {
+class DatabasePersistenceManagerUnitTest {
 
     private lateinit var mockDatabase: SupportSQLiteDatabase
     private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
@@ -50,7 +51,7 @@ class DatabaseManagerUnitTest {
 
     private fun setUp(encryptDataGlobally: Boolean,
                       compressDataGlobally: Boolean,
-                      cacheInstruction: CacheInstruction?): DatabaseManager<Glitch> {
+                      cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockSerialisationManager = mock()
@@ -79,13 +80,16 @@ class DatabaseManagerUnitTest {
             whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
         }
 
-        return DatabaseManager(
+        val mockConfiguration = mock<CacheConfiguration<Glitch>>()
+        whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
+        whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
+        whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
+        whenever(mockConfiguration.logger).thenReturn(mock())
+
+        return DatabasePersistenceManager(
                 mockDatabase,
                 mockSerialisationManager,
-                mock(),
-                compressDataGlobally,
-                encryptDataGlobally,
-                durationInMillis,
+                mockConfiguration,
                 mockDateFactory,
                 mockContentValuesFactory
         )

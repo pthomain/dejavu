@@ -30,9 +30,9 @@ import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
  * @param response the call's response if available
  * @param metadata the call's metadata
  */
-internal data class ResponseWrapper<E>(val responseClass: Class<*>,
-                                       val response: Any?,
-                                       @Transient override var metadata: CacheMetadata<E>)
+data class ResponseWrapper<E>(val responseClass: Class<*>,
+                              val response: Any?,
+                              @Transient override var metadata: CacheMetadata<E>)
     : CacheMetadata.Holder<E>
         where E : Exception,
               E : NetworkErrorProvider

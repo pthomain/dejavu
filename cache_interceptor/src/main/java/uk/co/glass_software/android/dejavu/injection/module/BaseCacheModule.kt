@@ -31,15 +31,18 @@ import io.reactivex.subjects.PublishSubject
 import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import uk.co.glass_software.android.boilerplate.core.utils.kotlin.ifElse
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.*
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule.*
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseStatisticsCompiler
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -57,8 +60,9 @@ import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration<E>)
-    : CacheModule<E>
+internal abstract class BaseCacheModule<E>(
+        protected val configuration: CacheConfiguration<E>
+) : CacheModule<E>
         where E : Exception,
               E : NetworkErrorProvider {
 
@@ -83,6 +87,16 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     @Singleton
     override fun provideEncryptionManager() =
             configuration.encryptionManager
+
+    @Provides
+    @Singleton
+    override fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
+                                                      dateFactory: Function1<Long?, Date>
+    ) =
+            FilePersistenceManager.Factory(
+                    configuration,
+                    serialisationManager
+            ) { dateFactory.get(it) }
 
     @Provides
     @Singleton
@@ -121,16 +135,18 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback =
-            SqlOpenHelperCallback(
-                    DATABASE_VERSION
+    override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback? =
+            ifElse(
+                    usesDatabaseCacheManager(),
+                    SqlOpenHelperCallback(DATABASE_VERSION),
+                    null
             )
 
     @Provides
     @Singleton
     @Synchronized
-    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase {
-        return sqlOpenHelper.writableDatabase!!
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?): SupportSQLiteDatabase? {
+        return sqlOpenHelper?.writableDatabase
     }
 
     @Provides
@@ -143,41 +159,50 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
 
     @Provides
     @Singleton
-    override fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                                        dateFactory: Function1<Long?, Date>,
-                                        serialisationManager: SerialisationManager<E>) =
-            DatabaseManager(
-                    database,
-                    serialisationManager,
-                    configuration.logger,
-                    configuration.compress,
-                    configuration.encrypt,
-                    configuration.cacheDurationInMillis,
-                    { dateFactory.get(it) },
-                    this::mapToContentValues
-            )
+    override fun providePersistenceManager(databasePersistenceManager: DatabasePersistenceManager<E>?,
+                                           filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E> =
+            configuration.persistenceManagerPicker?.invoke(configuration)
+                    ?: configuration.cacheDirectory?.let { filePersistenceManagerFactory.create(it) }
+                    ?: databasePersistenceManager!!
 
     @Provides
     @Singleton
-    override fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase,
+    override fun provideDatabasePersistenceManager(database: SupportSQLiteDatabase?,
+                                                   dateFactory: Function1<Long?, Date>,
+                                                   serialisationManager: SerialisationManager<E>) =
+            database?.let {
+                DatabasePersistenceManager(
+                        database,
+                        serialisationManager,
+                        configuration,
+                        { dateFactory.get(it) },
+                        this::mapToContentValues
+                )
+            }
+
+    @Provides
+    @Singleton
+    override fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
                                                    dateFactory: Function1<Long?, Date>) =
-            DatabaseStatisticsCompiler(
-                    configuration,
-                    configuration.logger,
-                    { dateFactory.get(it) },
-                    database
-            )
+            database?.let {
+                DatabaseStatisticsCompiler(
+                        configuration,
+                        configuration.logger,
+                        { dateFactory.get(it) },
+                        it
+                )
+            }
 
     @Provides
     @Singleton
     override fun provideCacheManager(serialiser: Serialiser,
-                                     databaseManager: DatabaseManager<E>,
+                                     persistenceManager: PersistenceManager<E>,
                                      dateFactory: Function1<Long?, Date>,
                                      emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
                     configuration.errorFactory,
                     serialiser,
-                    databaseManager,
+                    persistenceManager,
                     emptyResponseFactory,
                     { dateFactory.get(it) },
                     configuration.cacheDurationInMillis,
@@ -337,4 +362,6 @@ internal abstract class BaseCacheModule<E>(val configuration: CacheConfiguration
     override fun provideEmptyResponseFactory() =
             EmptyResponseFactory(configuration.errorFactory)
 
+    protected fun usesDatabaseCacheManager() =
+            configuration.persistenceManagerPicker == null && configuration.cacheDirectory == null
 }
