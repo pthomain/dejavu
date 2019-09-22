@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Provides a skeleton implementation of PersistenceManager
+ * Provides a skeletal implementation of PersistenceManager
  *
  * @param cacheConfiguration the global cache configuration
  */
