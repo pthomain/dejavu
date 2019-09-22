@@ -1,8 +1,9 @@
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import org.junit.Test
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
@@ -17,7 +18,8 @@ import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import uk.co.glass_software.android.dejavu.test.network.model.User
 import java.util.*
 
-internal class DatabaseManagerIntegrationTest : BaseIntegrationTest<DatabaseManager<Glitch>>({ it.databaseManager() }) {
+internal class DatabasePersistenceManagerIntegrationTest
+    : BaseIntegrationTest<PersistenceManager<Glitch>>({ it.persistenceManager() }) {
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {

@@ -17,8 +17,11 @@ import uk.co.glass_software.android.dejavu.configuration.Serialiser
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseStatisticsCompiler
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -45,6 +48,12 @@ internal interface CacheModule<E>
 
     fun provideEncryptionManager(): EncryptionManager
 
+    fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>): FileNameSerialiser
+
+    fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
+                                             dateFactory: Function1<Long?, Date>,
+                                             fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
+
     fun provideDateFactory(): Function1<Long?, Date>
 
     fun provideCompresser(): Function1<ByteArray, ByteArray>
@@ -58,24 +67,27 @@ internal interface CacheModule<E>
                                     compresser: Function1<ByteArray, ByteArray>,
                                     uncompresser: Function3<ByteArray, Int, Int, ByteArray>): SerialisationManager<E>
 
-    fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback
+    fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
 
     fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper
+                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper?
 
-    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper): SupportSQLiteDatabase
+    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?): SupportSQLiteDatabase?
 
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
-    fun provideDatabaseManager(database: SupportSQLiteDatabase,
-                               dateFactory: Function1<Long?, Date>,
-                               serialisationManager: SerialisationManager<E>): DatabaseManager<E>
+    fun providePersistenceManager(databasePersistenceManager: DatabasePersistenceManager<E>?,
+                                  filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E>
 
-    fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase,
-                                          dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler
+    fun provideDatabasePersistenceManager(database: SupportSQLiteDatabase?,
+                                          dateFactory: Function1<Long?, Date>,
+                                          serialisationManager: SerialisationManager<E>): DatabasePersistenceManager<E>?
+
+    fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
+                                          dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler?
 
     fun provideCacheManager(serialiser: Serialiser,
-                            databaseManager: DatabaseManager<E>,
+                            persistenceManager: PersistenceManager<E>,
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 

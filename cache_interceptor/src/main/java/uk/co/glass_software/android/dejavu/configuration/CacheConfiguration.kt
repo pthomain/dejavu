@@ -28,9 +28,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.DejaVu
 import uk.co.glass_software.android.dejavu.injection.component.CacheComponent
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import uk.co.glass_software.android.mumbo.Mumbo
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
+import java.io.File
 
 /**
  * Class holding the global cache configuration. Values defined here are used by default
@@ -51,6 +53,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val errorFactory: ErrorFactory<E>,
                                                       val serialiser: Serialiser,
                                                       val encryptionManager: EncryptionManager,
+                                                      val persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)?,
+                                                      val cacheDirectory: File?,
                                                       val isCacheEnabled: Boolean,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
@@ -83,6 +87,9 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var customErrorFactory: ErrorFactory<E>? = null
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
 
+        private var persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)? = null
+        private var cacheDirectoryProvider: ((Context) -> File)? = null
+
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
         private var cacheDurationInMillis: Long = 60 * 60 * 1000 //1h
@@ -110,28 +117,33 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         /**
          * Sets custom logger.
          */
-        fun logger(logger: Logger) = apply { this.logger = logger }
+        fun logger(logger: Logger) =
+                apply { this.logger = logger }
 
         /**
          * Sets a custom ErrorFactory implementation.
          */
-        fun errorFactory(errorFactory: ErrorFactory<E>) = apply { this.customErrorFactory = errorFactory }
+        fun errorFactory(errorFactory: ErrorFactory<E>) =
+                apply { this.customErrorFactory = errorFactory }
 
         /**
          * Sets network call timeout in seconds globally (default is 15s).
          */
-        fun requestTimeOutInSeconds(requestTimeOutInSeconds: Int) = apply { this.requestTimeOutInSeconds = requestTimeOutInSeconds }
+        fun requestTimeOutInSeconds(requestTimeOutInSeconds: Int) =
+                apply { this.requestTimeOutInSeconds = requestTimeOutInSeconds }
 
         /**
          *  Sets the maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
          */
-        fun connectivityTimeoutInMillis(connectivityTimeoutInMillis: Long) = apply { this.connectivityTimeoutInMillis = connectivityTimeoutInMillis }
+        fun connectivityTimeoutInMillis(connectivityTimeoutInMillis: Long) =
+                apply { this.connectivityTimeoutInMillis = connectivityTimeoutInMillis }
 
         /**
          * Sets the global cache duration in milliseconds (used by default for all calls with no specific directive,
          * see @Cache::durationInMillis for call-specific directive).
          */
-        fun cacheDurationInMillis(cacheDurationInMillis: Long) = apply { this.cacheDurationInMillis = cacheDurationInMillis }
+        fun cacheDurationInMillis(cacheDurationInMillis: Long) =
+                apply { this.cacheDurationInMillis = cacheDurationInMillis }
 
         /**
          * Enables or disables cache globally, regardless of individual call setup.
@@ -142,21 +154,22 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          *
          * - using the default RxJava error mechanism otherwise.
          */
-        fun cacheEnabled(isCacheEnabled: Boolean) = apply { this.isCacheEnabled = isCacheEnabled }
+        fun cacheEnabled(isCacheEnabled: Boolean) =
+                apply { this.isCacheEnabled = isCacheEnabled }
 
         /**
          * Sets the data compression globally (used by default for all calls with no specific directive,
          * see @Cache::compress for call-specific directive).
          */
-        fun compressByDefault(compressData: Boolean) = apply { this.compressData = compressData }
+        fun compressByDefault(compressData: Boolean) =
+                apply { this.compressData = compressData }
 
         /**
          * Sets the data encryption globally (used by default for all calls with no specific directive,
          * see @Cache::encrypt for call-specific directive).
          */
-        fun encryptByDefault(encryptData: Boolean = false) = apply {
-            this.encryptData = encryptData
-        }
+        fun encryptByDefault(encryptData: Boolean = false) =
+                apply { this.encryptData = encryptData }
 
         /**
          * Sets the EncryptionManager implementation. Can be used to provide a custom implementation
@@ -171,9 +184,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
          * However if your API level target is less than 23, using Tink will trigger a runtime exception.
          */
-        fun encryption(mumboPicker: (Mumbo) -> EncryptionManager) = apply {
-            this.mumboPicker = mumboPicker
-        }
+        fun encryption(mumboPicker: (Mumbo) -> EncryptionManager) =
+                apply { this.mumboPicker = mumboPicker }
 
         private fun defaultEncryptionManager(
                 mumbo: Mumbo,
@@ -187,6 +199,26 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                 else conceal()
             } ?: conceal()
         }
+
+        /**
+         * Provide a different PersistenceManager to handle the persistence of the cached requests.
+         * The default implementation is DatabasePersistenceManager which saves the responses to
+         * an SQLite database (using requery). This takes precedence over useFileCaching().
+         *
+         * @param persistenceManagerPicker a factory providing this configuration and returning the PersistenceManager implementation to use instead of the default provided one
+         */
+        fun persistenceManager(persistenceManagerPicker: (CacheConfiguration<E>) -> PersistenceManager<E>) =
+                apply { this.persistenceManagerPicker = persistenceManagerPicker }
+
+        /**
+         * Uses an implementation of PersistenceManager serialising the responses to the given directory.
+         * Special care needs to be taken with public directories for which encryption should be enabled
+         * by default (see encryptByDefault()). This is overridden by persistenceManager().
+         *
+         * @param cacheDirectoryProvider the factory providing the file directory to use for caching
+         */
+        fun useFileCaching(cacheDirectoryProvider: (Context) -> File = Context::getCacheDir) =
+                apply { this.cacheDirectoryProvider = cacheDirectoryProvider }
 
         /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
@@ -204,7 +236,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * default RxJava mechanism which may cause a crash if no uncaught error handler
          * is set and the onError(t:Throwable) callback is not provided.
          */
-        fun mergeOnNextOnError(mergeOnNextOnError: Boolean) = apply { this.mergeOnNextOnError = mergeOnNextOnError }
+        fun mergeOnNextOnError(mergeOnNextOnError: Boolean) =
+                apply { this.mergeOnNextOnError = mergeOnNextOnError }
 
         /**
          * Allows Singles to return non-final responses. This means the call terminates earlier with
@@ -216,7 +249,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * @see uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
          * @see uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring.filterFinal
          */
-        fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) = apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
+        fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) =
+                apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
 
         /**
          * Sets data caching globally (used by default for all calls with no cache instruction) using
@@ -224,7 +258,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Overrides the value set in the cachePredicate() method.
          * @see cachePredicate
          */
-        fun cacheAllByDefault(cacheAllByDefault: Boolean) = apply { this.cachePredicate = { _, _ -> cacheAllByDefault } }
+        fun cacheAllByDefault(cacheAllByDefault: Boolean) =
+                apply { this.cachePredicate = { _, _ -> cacheAllByDefault } }
 
         /**
          * Sets a predicate for ad-hoc response caching. This predicate will be called for any
@@ -236,7 +271,9 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Overrides the value set in the cacheAllByDefault() method.
          * @see cacheAllByDefault
          */
-        fun cachePredicate(predicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean) = apply { this.cachePredicate = predicate }
+        fun cachePredicate(predicate: (responseClass: Class<*>,
+                                       metadata: RequestMetadata) -> Boolean) =
+                apply { this.cachePredicate = predicate }
 
         /**
          * Returns an instance of DejaVu.
@@ -264,6 +301,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
                                     encryptionManager,
+                                    persistenceManagerPicker,
+                                    cacheDirectoryProvider?.invoke(context),
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,

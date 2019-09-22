@@ -19,11 +19,11 @@
  * under the License.
  */
 
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 
 /**
  * Callback handling the lifecycle of the database.

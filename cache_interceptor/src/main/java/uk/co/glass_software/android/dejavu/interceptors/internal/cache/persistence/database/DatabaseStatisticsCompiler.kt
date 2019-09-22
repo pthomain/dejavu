@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -6,8 +6,9 @@ import io.reactivex.Single
 import uk.co.glass_software.android.boilerplate.core.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.core.utils.log.Logger
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import java.util.*
 

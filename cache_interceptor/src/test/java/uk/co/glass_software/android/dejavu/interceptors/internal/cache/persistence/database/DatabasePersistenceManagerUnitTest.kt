@@ -1,4 +1,4 @@
-package uk.co.glass_software.android.dejavu.interceptors.internal.cache.database
+package uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database
 
 import android.content.ContentValues
 import android.database.Cursor
@@ -8,12 +8,13 @@ import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import org.junit.Test
 import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action
+import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -24,7 +25,7 @@ import uk.co.glass_software.android.dejavu.test.*
 import uk.co.glass_software.android.dejavu.test.network.model.TestResponse
 import java.util.*
 
-class DatabaseManagerUnitTest {
+class DatabasePersistenceManagerUnitTest {
 
     private lateinit var mockDatabase: SupportSQLiteDatabase
     private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
@@ -50,7 +51,7 @@ class DatabaseManagerUnitTest {
 
     private fun setUp(encryptDataGlobally: Boolean,
                       compressDataGlobally: Boolean,
-                      cacheInstruction: CacheInstruction?): DatabaseManager<Glitch> {
+                      cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockSerialisationManager = mock()
@@ -79,13 +80,16 @@ class DatabaseManagerUnitTest {
             whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
         }
 
-        return DatabaseManager(
+        val mockConfiguration = mock<CacheConfiguration<Glitch>>()
+        whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
+        whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
+        whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
+        whenever(mockConfiguration.logger).thenReturn(mock())
+
+        return DatabasePersistenceManager(
                 mockDatabase,
                 mockSerialisationManager,
-                mock(),
-                compressDataGlobally,
-                encryptDataGlobally,
-                durationInMillis,
+                mockConfiguration,
                 mockDateFactory,
                 mockContentValuesFactory
         )
@@ -456,12 +460,14 @@ class DatabaseManagerUnitTest {
         whenever(mockCursor.getColumnIndex(eq(IS_COMPRESSED.columnName))).thenReturn(3)
         whenever(mockCursor.getColumnIndex(eq(IS_ENCRYPTED.columnName))).thenReturn(4)
         whenever(mockCursor.getColumnIndex(eq(EXPIRY_DATE.columnName))).thenReturn(5)
+        whenever(mockCursor.getColumnIndex(eq(CLASS.columnName))).thenReturn(6)
 
         whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDateTimeStamp)
         whenever(mockCursor.getBlob(eq(2))).thenReturn(localData)
         whenever(mockCursor.getInt(eq(3))).thenReturn(isCompressed)
         whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
+        whenever(mockCursor.getString(eq(6))).thenReturn(TestResponse::class.java.name)
 
         val mockExpiryDate = Date(if (isDataStale) currentDateTime - 1L else currentDateTime + 1L)
 
@@ -498,7 +504,7 @@ class DatabaseManagerUnitTest {
 
         assertEqualsWithContext(
                 "\n" +
-                        "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted\n" +
+                        "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted, class\n" +
                         "            FROM rx_cache\n" +
                         "            WHERE token = 'no_hash'\n" +
                         "            LIMIT 1\n" +

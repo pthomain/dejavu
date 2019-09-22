@@ -31,12 +31,12 @@ import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import uk.co.glass_software.android.mumbo.base.EncryptionManager
 
 //TODO JavaDoc
-internal class SerialisationManager<E>(private val logger: Logger,
-                                       private val byteToStringConverter: (ByteArray) -> String,
-                                       private val encryptionManager: EncryptionManager,
-                                       private val compresser: (ByteArray) -> ByteArray,
-                                       private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
-                                       private val serialiser: Serialiser)
+class SerialisationManager<E>(private val logger: Logger,
+                              private val byteToStringConverter: (ByteArray) -> String,
+                              private val encryptionManager: EncryptionManager,
+                              private val compresser: (ByteArray) -> ByteArray,
+                              private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
+                              private val serialiser: Serialiser)
         where E : Exception,
               E : NetworkErrorProvider {
 

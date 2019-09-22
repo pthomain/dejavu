@@ -32,7 +32,7 @@ import uk.co.glass_software.android.dejavu.injection.integration.module.Integrat
 import uk.co.glass_software.android.dejavu.injection.module.CacheModule
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseManager
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -59,15 +59,15 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun serialisationManager(): SerialisationManager<Glitch>
 
-    fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback
+    fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
 
-    fun sqlOpenHelper(): SupportSQLiteOpenHelper
+    fun sqlOpenHelper(): SupportSQLiteOpenHelper?
 
-    fun database(): SupportSQLiteDatabase
+    fun database(): SupportSQLiteDatabase?
 
     fun hasher(): Hasher
 
-    fun databaseManager(): DatabaseManager<Glitch>
+    fun persistenceManager(): PersistenceManager<Glitch>
 
     fun cacheManager(): CacheManager<Glitch>
 
@@ -87,6 +87,6 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun emptyResponseFactory(): EmptyResponseFactory<Glitch>
 
-    fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper
+    fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
 
 }

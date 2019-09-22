@@ -25,7 +25,7 @@ import io.reactivex.Observable
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.DejaVuInterceptor
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.database.DatabaseStatisticsCompiler
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
 import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.retrofit.RetrofitCallAdapterFactory
 
@@ -37,6 +37,6 @@ internal interface CacheComponent<E>
     fun dejaVuInterceptorFactory(): DejaVuInterceptor.Factory<E>
     fun retrofitCacheAdapterFactory(): RetrofitCallAdapterFactory<E>
     fun cacheMetadataObservable(): Observable<CacheMetadata<E>>
-    fun databaseStatisticsCompiler(): DatabaseStatisticsCompiler
+    fun databaseStatisticsCompiler(): DatabaseStatisticsCompiler?
 
 }
