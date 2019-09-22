@@ -20,6 +20,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.CacheMana
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -47,8 +48,11 @@ internal interface CacheModule<E>
 
     fun provideEncryptionManager(): EncryptionManager
 
+    fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>): FileNameSerialiser
+
     fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
-                                             dateFactory: Function1<Long?, Date>): FilePersistenceManager.Factory<E>
+                                             dateFactory: Function1<Long?, Date>,
+                                             fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
 
     fun provideDateFactory(): Function1<Long?, Date>
 

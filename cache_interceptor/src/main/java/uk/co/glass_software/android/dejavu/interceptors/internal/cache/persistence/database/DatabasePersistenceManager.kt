@@ -26,20 +26,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import uk.co.glass_software.android.boilerplate.core.utils.io.useAndLogError
 import uk.co.glass_software.android.boilerplate.core.utils.kotlin.ifElse
-import uk.co.glass_software.android.boilerplate.core.utils.lambda.Action.Companion.act
 import uk.co.glass_software.android.dejavu.configuration.CacheConfiguration
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
-import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
-import uk.co.glass_software.android.dejavu.response.CacheMetadata
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
 
@@ -96,22 +93,20 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
     }
 
     /**
-     * Returns a cached entry if available
+     * Returns the cached data as a CacheDataHolder object.
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param hash the hash value to use as a unique key for the cached entry
      * @param start the time at which the operation started in order to calculate the time the operation took.
      *
-     * @return a cached entry if available, or null otherwise
+     * @return the cached data as a CacheDataHolder
      */
-    override fun getCachedResponse(instructionToken: CacheToken,
-                                   start: Long): ResponseWrapper<E>? {
-        val instruction = instructionToken.instruction
-        val simpleName = instruction.responseClass.simpleName
-        logger.d(this, "Checking for cached $simpleName")
-
-        val key = instructionToken.requestMetadata.hash
-        checkInvalidation(instruction, key)
-
+    override fun getCacheDataHolder(
+            instructionToken: CacheToken,
+            hash: String,
+            start: Long
+    ): CacheDataHolder? {
+        val simpleName = instructionToken.instruction.responseClass.simpleName
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
@@ -123,7 +118,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         val query = """
             SELECT ${projection.joinToString(", ")}
             FROM $TABLE_CACHE
-            WHERE ${TOKEN.columnName} = '$key'
+            WHERE ${TOKEN.columnName} = '$hash'
             LIMIT 1
             """
 
@@ -138,15 +133,16 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                                 val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
                                 val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
+                                val className = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
 
-                                return deserialise(
-                                        instructionToken,
-                                        start,
-                                        cacheDate,
-                                        expiryDate,
+                                return CacheDataHolder(
+                                        hash,
+                                        cacheDate.time,
+                                        expiryDate.time,
+                                        localData,
+                                        className,
                                         isCompressed,
-                                        isEncrypted,
-                                        localData
+                                        isEncrypted
                                 )
                             } else {
                                 logger.d(this, "Found no cached $simpleName")
@@ -155,76 +151,6 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                         },
                         logger
                 )
-    }
-
-    /**
-     * Deserialises the cached data
-     *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param start the time at which the operation started in order to calculate the time the operation took.
-     * @param cacheDate the Date at which the data was cached
-     * @param expiryDate the Date at which the data would become STALE
-     * @param isCompressed whether or not the cached data was saved compressed
-     * @param isEncrypted whether or not the cached data was saved encrypted
-     * @param localData the cached data
-     *
-     * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
-     */
-    private fun deserialise(instructionToken: CacheToken,
-                            start: Long,
-                            cacheDate: Date,
-                            expiryDate: Date,
-                            isCompressed: Boolean,
-                            isEncrypted: Boolean,
-                            localData: ByteArray) =
-            serialisationManager.deserialise(
-                    instructionToken,
-                    localData,
-                    isEncrypted,
-                    isCompressed,
-                    { clearCache(null, false) }.act()
-            )?.let {
-                val callDuration = CacheMetadata.Duration(
-                        (dateFactory(null).time - start).toInt(),
-                        0,
-                        0
-                )
-
-                logger.d(
-                        this,
-                        "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
-                )
-                it.apply {
-                    metadata = CacheMetadata(
-                            CacheToken.cached(
-                                    instructionToken,
-                                    getCacheStatus(expiryDate, dateFactory),
-                                    isCompressed,
-                                    isEncrypted,
-                                    cacheDate,
-                                    expiryDate
-                            ),
-                            null,
-                            callDuration
-                    )
-                }
-            }
-
-    /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     */
-    override fun invalidate(instructionToken: CacheToken): Boolean {
-        val instruction = instructionToken.instruction.copy(
-                operation = Invalidate
-        )
-        return checkInvalidation(
-                instruction,
-                instructionToken.requestMetadata.hash
-        )
     }
 
     /**
@@ -270,7 +196,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
             if (this != null) {
                 val values = HashMap<String, Any>()
                 values[TOKEN.columnName] = hash
-                values[DATE.columnName] = now
+                values[DATE.columnName] = cacheDate
                 values[EXPIRY_DATE.columnName] = expiryDate
                 values[DATA.columnName] = data
                 values[CLASS.columnName] = responseClassName

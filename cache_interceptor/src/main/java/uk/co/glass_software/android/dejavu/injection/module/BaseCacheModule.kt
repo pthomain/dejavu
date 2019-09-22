@@ -42,6 +42,7 @@ import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persisten
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -90,13 +91,20 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
+    override fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>) =
+            FileNameSerialiser { dateFactory.get(it) }
+
+    @Provides
+    @Singleton
     override fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
-                                                      dateFactory: Function1<Long?, Date>
-    ) =
+                                                      dateFactory: Function1<Long?, Date>,
+                                                      fileNameSerialiser: FileNameSerialiser) =
             FilePersistenceManager.Factory(
                     configuration,
-                    serialisationManager
-            ) { dateFactory.get(it) }
+                    serialisationManager,
+                    { dateFactory.get(it) },
+                    fileNameSerialiser
+            )
 
     @Provides
     @Singleton

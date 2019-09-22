@@ -4,7 +4,8 @@ import uk.co.glass_software.android.boilerplate.core.utils.kotlin.ifElse
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction
 import uk.co.glass_software.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import uk.co.glass_software.android.dejavu.configuration.NetworkErrorProvider
-import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
+import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import uk.co.glass_software.android.dejavu.interceptors.internal.cache.token.CacheToken
 import uk.co.glass_software.android.dejavu.response.ResponseWrapper
 import java.util.*
@@ -90,8 +91,8 @@ interface PersistenceManager<E>
         ) =
                 ifElse(
                         dateFactory(null).time >= expiryDate.time,
-                        CacheStatus.STALE,
-                        CacheStatus.FRESH
+                        STALE,
+                        FRESH
                 )
     }
 }
