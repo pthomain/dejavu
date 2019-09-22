@@ -110,8 +110,7 @@ abstract class BasePersistenceManager<E>(
     final override fun getCachedResponse(instructionToken: CacheToken,
                                          start: Long): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
-        val simpleName = instruction.responseClass.simpleName
-        logger.d(this, "Checking for cached $simpleName")
+        logger.d(this, "Checking for cached ${instruction.responseClass.simpleName}")
 
         val hash = instructionToken.requestMetadata.hash
         checkInvalidation(instruction, hash)

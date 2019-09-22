@@ -460,12 +460,14 @@ class DatabasePersistenceManagerUnitTest {
         whenever(mockCursor.getColumnIndex(eq(IS_COMPRESSED.columnName))).thenReturn(3)
         whenever(mockCursor.getColumnIndex(eq(IS_ENCRYPTED.columnName))).thenReturn(4)
         whenever(mockCursor.getColumnIndex(eq(EXPIRY_DATE.columnName))).thenReturn(5)
+        whenever(mockCursor.getColumnIndex(eq(CLASS.columnName))).thenReturn(6)
 
         whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDateTimeStamp)
         whenever(mockCursor.getBlob(eq(2))).thenReturn(localData)
         whenever(mockCursor.getInt(eq(3))).thenReturn(isCompressed)
         whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
+        whenever(mockCursor.getString(eq(6))).thenReturn(TestResponse::class.java.name)
 
         val mockExpiryDate = Date(if (isDataStale) currentDateTime - 1L else currentDateTime + 1L)
 
@@ -502,7 +504,7 @@ class DatabasePersistenceManagerUnitTest {
 
         assertEqualsWithContext(
                 "\n" +
-                        "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted\n" +
+                        "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted, class\n" +
                         "            FROM rx_cache\n" +
                         "            WHERE token = 'no_hash'\n" +
                         "            LIMIT 1\n" +

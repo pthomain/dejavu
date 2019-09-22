@@ -106,13 +106,13 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
             hash: String,
             start: Long
     ): CacheDataHolder? {
-        val simpleName = instructionToken.instruction.responseClass.simpleName
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
                 DATA.columnName,
                 IS_COMPRESSED.columnName,
-                IS_ENCRYPTED.columnName
+                IS_ENCRYPTED.columnName,
+                CLASS.columnName
         )
 
         val query = """
@@ -125,6 +125,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         database.query(query)
                 .useAndLogError(
                         { cursor ->
+                            val simpleName = instructionToken.instruction.responseClass.simpleName
                             if (cursor.count != 0 && cursor.moveToNext()) {
                                 logger.d(this, "Found a cached $simpleName")
 
