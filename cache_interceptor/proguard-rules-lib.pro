@@ -97,8 +97,8 @@
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
 -dontwarn okio.**
 
--keep class uk.co.glass_software.** { *; }
--keep interface uk.co.glass_software.** { *; }
+-keep class dev.pthomain.** { *; }
+-keep interface dev.pthomain.** { *; }
 
 ## GSON 2.2.4 specific rules ##
 
@@ -146,4 +146,4 @@
 -dontwarn org.robolectric.**
 
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,*Annotation*,EnclosingMethod,Synthetic,LocalVariableTable,LocalVariableTypeTable,RuntimeVisibleAnnotations
--keep class uk.co.glass_software.android.** { *; }
+-keep class dev.pthomain.android.** { *; }
