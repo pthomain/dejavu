@@ -131,14 +131,14 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
     override fun clearCache(typeToClear: Class<*>?,
                             clearStaleEntriesOnly: Boolean) {
         val now = dateFactory(null).time
+        val classHash = typeToClear?.let { hasher.hash(it.name) }
 
         cacheDirectory.list()
                 .map { it to fileNameSerialiser.deserialise(null, it) }
                 .filter {
                     val cacheDataHolder = it.second
                     if (cacheDataHolder != null) {
-                        val classHash = typeToClear?.let { hasher.hash(it.name) }
-                        val isRightType = typeToClear == null || cacheDataHolder.responseClassName == classHash
+                        val isRightType = typeToClear == null || cacheDataHolder.responseClassHash == classHash
                         val isRightExpiry = !clearStaleEntriesOnly || cacheDataHolder.expiryDate <= now
                         isRightType && isRightExpiry
                     } else false

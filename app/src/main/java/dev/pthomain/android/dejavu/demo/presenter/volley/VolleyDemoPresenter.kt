@@ -67,7 +67,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     responseClass,
                     dejaVu.dejaVuInterceptor.create(
                             CacheInstruction(responseClass, cacheOperation),
-                            RequestMetadata.UnHashed(URL)
+                            RequestMetadata.UnHashed(responseClass, URL)
                     ),
                     URL
             )

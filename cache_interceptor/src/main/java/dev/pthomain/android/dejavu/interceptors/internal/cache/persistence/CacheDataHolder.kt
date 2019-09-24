@@ -30,7 +30,7 @@ data class CacheDataHolder(
         val cacheDate: Long,
         val expiryDate: Long,
         val data: ByteArray,
-        val responseClassName: String,
+        val responseClassHash: String,
         val isCompressed: Boolean,
         val isEncrypted: Boolean
 ) {
@@ -44,7 +44,7 @@ data class CacheDataHolder(
         if (cacheDate != other.cacheDate) return false
         if (expiryDate != other.expiryDate) return false
         if (!data.contentEquals(other.data)) return false
-        if (responseClassName != other.responseClassName) return false
+        if (responseClassHash != other.responseClassHash) return false
         if (isCompressed != other.isCompressed) return false
         if (isEncrypted != other.isEncrypted) return false
 
@@ -56,7 +56,7 @@ data class CacheDataHolder(
         result = 31 * result + cacheDate.hashCode()
         result = 31 * result + expiryDate.hashCode()
         result = 31 * result + data.contentHashCode()
-        result = 31 * result + responseClassName.hashCode()
+        result = 31 * result + responseClassHash.hashCode()
         result = 31 * result + isCompressed.hashCode()
         result = 31 * result + isEncrypted.hashCode()
         return result

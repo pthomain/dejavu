@@ -113,7 +113,7 @@ abstract class BasePersistenceManager<E>(
                     now,
                     now + durationInMillis,
                     serialised,
-                    instruction.responseClass.name,
+                    instructionToken.requestMetadata.classHash,
                     compressData,
                     encryptData
             )

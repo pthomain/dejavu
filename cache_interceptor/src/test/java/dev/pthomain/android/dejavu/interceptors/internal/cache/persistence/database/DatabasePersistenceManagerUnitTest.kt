@@ -29,17 +29,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
@@ -49,57 +45,26 @@ import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
 
-class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
+internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<DatabasePersistenceManager<Glitch>>() {
 
     private lateinit var mockDatabase: SupportSQLiteDatabase
-    private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
     private lateinit var mockObservable: Observable<TestResponse>
-    private lateinit var mockCacheToken: CacheToken
     private lateinit var mockCursor: Cursor
-    private lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
-    private lateinit var mockDateFactory: (Long?) -> Date
-    private lateinit var mockMetadata: CacheMetadata<Glitch>
-    private lateinit var mockBlob: ByteArray
-    private lateinit var mockHasher: Hasher
 
-    private fun setUp(encryptDataGlobally: Boolean,
-                      compressDataGlobally: Boolean,
-                      cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
+    override fun setUp(encryptDataGlobally: Boolean,
+                       compressDataGlobally: Boolean,
+                       cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
-        mockSerialisationManager = mock()
-        mockDateFactory = mock()
-
-        whenever(mockDateFactory.invoke(isNull())).thenReturn(mockCurrentDate)
-        whenever(mockDateFactory.invoke(eq(mockCacheDateTime))).thenReturn(mockCacheDate)
-        whenever(mockDateFactory.invoke(eq(mockExpiryDateTime))).thenReturn(mockExpiryDate)
-
         mockContentValuesFactory = mock()
-        mockCacheToken = mock()
         mockCursor = mock()
-        mockResponseWrapper = mock()
-        mockMetadata = mock()
-        mockHasher = mock()
 
-        mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
-
-        whenever(mockCacheToken.fetchDate).thenReturn(mockFetchDate)
-        whenever(mockCacheToken.cacheDate).thenReturn(mockCacheDate)
-        whenever(mockCacheToken.expiryDate).thenReturn(mockExpiryDate)
-
-        whenever(mockResponseWrapper.metadata).thenReturn(mockMetadata)
-        whenever(mockMetadata.cacheToken).thenReturn(mockCacheToken)
-
-        if (cacheInstruction != null) {
-            whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
-        }
-
-        val mockConfiguration = mock<CacheConfiguration<Glitch>>()
-        whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
-        whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
-        whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
-        whenever(mockConfiguration.logger).thenReturn(mock())
+        val mockConfiguration = setUpConfiguration(
+                encryptDataGlobally,
+                compressDataGlobally,
+                cacheInstruction
+        )
 
         return DatabasePersistenceManager(
                 mockDatabase,
@@ -111,30 +76,10 @@ class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
         )
     }
 
-
-    override fun testClearCache(useTypeToClear: Boolean,
-                                clearStaleEntriesOnly: Boolean) {
-        val context = "useTypeToClear = $useTypeToClear\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
-
-        val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
-
-        val target = setUp(
-                true,
-                true,
-                null
-        )
-
-        val mockClassHash = "mockHash"
-
-        if (typeToClearClass != null) {
-            whenever(mockHasher.hash(eq(typeToClearClass.name))).thenReturn(mockClassHash)
-        }
-
-        target.clearCache(
-                typeToClearClass,
-                clearStaleEntriesOnly
-        )
-
+    override fun verifyClearCache(context: String,
+                                  useTypeToClear: Boolean,
+                                  clearStaleEntriesOnly: Boolean,
+                                  mockClassHash: String) {
         val tableCaptor = argumentCaptor<String>()
         val clauseCaptor = argumentCaptor<String>()
         val valueCaptor = argumentCaptor<Array<Any>>()
@@ -187,11 +132,11 @@ class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
     }
 
     override fun testCache(iteration: Int,
-                          operation: Expiring,
-                          encryptDataGlobally: Boolean,
-                          compressDataGlobally: Boolean,
-                          hasPreviousResponse: Boolean,
-                          isSerialisationSuccess: Boolean) {
+                           operation: Expiring,
+                           encryptDataGlobally: Boolean,
+                           compressDataGlobally: Boolean,
+                           hasPreviousResponse: Boolean,
+                           isSerialisationSuccess: Boolean) {
 
         val context = "iteration = $iteration,\n" +
                 "operation = $operation,\n" +
@@ -387,9 +332,9 @@ class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
     }
 
     override fun testGetCachedResponse(iteration: Int,
-                                      operation: Expiring,
-                                      hasResponse: Boolean,
-                                      isStale: Boolean) {
+                                       operation: Expiring,
+                                       hasResponse: Boolean,
+                                       isStale: Boolean) {
         val context = "iteration = $iteration,\n" +
                 "operation = $operation,\n" +
                 "hasResponse = $hasResponse,\n" +

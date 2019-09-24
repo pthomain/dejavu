@@ -27,43 +27,31 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.BasePersistenceManagerUnitTest
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import org.junit.Before
 import java.io.File
-import java.util.*
 
 //TODO
-class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
+internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<FilePersistenceManager<Glitch>>() {
 
-    private lateinit var mockHasher: Hasher
-    private lateinit var mockCacheConfiguration: CacheConfiguration<Glitch>
-    private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
-    private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockFileNameSerialiser: FileNameSerialiser
     private lateinit var mockCacheDirectory: File
 
-    private lateinit var target: FilePersistenceManager<Glitch>
-
-    @Before
-    fun setUp() {
-        mockHasher = mock()
-        mockCacheConfiguration = mock()
-        mockSerialisationManager = mock()
-        mockDateFactory = mock()
+    override fun setUp(encryptDataGlobally: Boolean,
+                       compressDataGlobally: Boolean,
+                       cacheInstruction: CacheInstruction?): FilePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
         mockCacheDirectory = mock()
 
+        val mockCacheConfiguration = setUpConfiguration(
+                encryptDataGlobally,
+                compressDataGlobally,
+                cacheInstruction
+        )
 
-        whenever(mockDateFactory.invoke(isNull())).thenReturn(mockCurrentDate)
-        whenever(mockDateFactory.invoke(eq(mockCacheDateTime))).thenReturn(mockCacheDate)
-        whenever(mockDateFactory.invoke(eq(mockExpiryDateTime))).thenReturn(mockExpiryDate)
-
-        target = FilePersistenceManager(
+        return FilePersistenceManager(
                 mockHasher,
                 mockCacheConfiguration,
                 mockSerialisationManager,
@@ -73,8 +61,24 @@ class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
         )
     }
 
-    override fun testClearCache(useTypeToClear: Boolean,
-                                clearStaleEntriesOnly: Boolean) {
+    override fun prepareClearCache(context: String,
+                                   useTypeToClear: Boolean,
+                                   clearStaleEntriesOnly: Boolean,
+                                   mockClassHash: String) {
+        val file1 = "file1"
+        val fileList = arrayOf(file1)
+        val mockCacheDataHolder = mock<CacheDataHolder>()
+
+        whenever(mockCacheDirectory.list()).thenReturn(fileList)
+        whenever(mockFileNameSerialiser.deserialise(isNull(), eq(file1))).thenReturn(mockCacheDataHolder)
+
+    }
+
+    override fun verifyClearCache(context: String,
+                                  useTypeToClear: Boolean,
+                                  clearStaleEntriesOnly: Boolean,
+                                  mockClassHash: String) {
+
 
     }
 

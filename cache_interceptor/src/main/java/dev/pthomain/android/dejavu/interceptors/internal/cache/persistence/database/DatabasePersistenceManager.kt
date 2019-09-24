@@ -147,14 +147,14 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                                 val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
                                 val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
-                                val className = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
+                                val responseClassHash = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
 
                                 return CacheDataHolder(
                                         requestMetadata,
                                         cacheDate.time,
                                         expiryDate.time,
                                         localData,
-                                        className,
+                                        responseClassHash,
                                         isCompressed,
                                         isEncrypted
                                 )

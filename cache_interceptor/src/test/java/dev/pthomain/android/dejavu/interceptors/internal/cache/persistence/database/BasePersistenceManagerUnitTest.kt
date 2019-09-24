@@ -23,13 +23,35 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
 
+import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.response.CacheMetadata
+import dev.pthomain.android.dejavu.response.ResponseWrapper
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
 import org.junit.Test
 import java.util.*
 
-abstract class BasePersistenceManagerUnitTest {
+internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Glitch>> {
+
+    protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
+    protected lateinit var mockDateFactory: (Long?) -> Date
+    protected lateinit var mockHasher: Hasher
+    protected lateinit var mockCacheToken: CacheToken
+    protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
+    protected lateinit var mockMetadata: CacheMetadata<Glitch>
+
+    protected val mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
 
     protected val currentDateTime = 10000L
     protected val mockFetchDateTime = 1000L
@@ -40,6 +62,44 @@ abstract class BasePersistenceManagerUnitTest {
     protected val mockFetchDate = Date(mockFetchDateTime)
     protected val mockCacheDate = Date(mockCacheDateTime)
     protected val mockExpiryDate = Date(mockExpiryDateTime)
+
+    protected fun setUpConfiguration(encryptDataGlobally: Boolean,
+                                     compressDataGlobally: Boolean,
+                                     cacheInstruction: CacheInstruction?): CacheConfiguration<Glitch> {
+        mockSerialisationManager = mock()
+        mockDateFactory = mock()
+        mockHasher = mock()
+        mockCacheToken = mock()
+        mockResponseWrapper = mock()
+        mockMetadata = mock()
+
+        whenever(mockDateFactory.invoke(isNull())).thenReturn(mockCurrentDate)
+        whenever(mockDateFactory.invoke(eq(mockCacheDateTime))).thenReturn(mockCacheDate)
+        whenever(mockDateFactory.invoke(eq(mockExpiryDateTime))).thenReturn(mockExpiryDate)
+
+        whenever(mockCacheToken.fetchDate).thenReturn(mockFetchDate)
+        whenever(mockCacheToken.cacheDate).thenReturn(mockCacheDate)
+        whenever(mockCacheToken.expiryDate).thenReturn(mockExpiryDate)
+
+        whenever(mockResponseWrapper.metadata).thenReturn(mockMetadata)
+        whenever(mockMetadata.cacheToken).thenReturn(mockCacheToken)
+
+        if (cacheInstruction != null) {
+            whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
+        }
+
+        val mockConfiguration = mock<CacheConfiguration<Glitch>>()
+        whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
+        whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
+        whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
+        whenever(mockConfiguration.logger).thenReturn(mock())
+
+        return mockConfiguration
+    }
+
+    protected abstract fun setUp(encryptDataGlobally: Boolean,
+                                 compressDataGlobally: Boolean,
+                                 cacheInstruction: CacheInstruction?): T
 
     @Test
     fun testClearCache() {
@@ -53,8 +113,51 @@ abstract class BasePersistenceManagerUnitTest {
         }
     }
 
-    protected abstract fun testClearCache(useTypeToClear: Boolean,
-                                          clearStaleEntriesOnly: Boolean)
+    private fun testClearCache(useTypeToClear: Boolean,
+                               clearStaleEntriesOnly: Boolean) {
+        val context = "useTypeToClear = $useTypeToClear\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
+        val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
+        val mockClassHash = "mockHash"
+
+        val target = setUp(
+                true,
+                true,
+                null
+        )
+
+        if (typeToClearClass != null) {
+            whenever(mockHasher.hash(eq(typeToClearClass.name))).thenReturn(mockClassHash)
+        }
+
+        prepareClearCache(
+                context,
+                useTypeToClear,
+                clearStaleEntriesOnly,
+                mockClassHash
+        )
+
+        target.clearCache(
+                typeToClearClass,
+                clearStaleEntriesOnly
+        )
+
+        verifyClearCache(
+                context,
+                useTypeToClear,
+                clearStaleEntriesOnly,
+                mockClassHash
+        )
+    }
+
+    protected open fun prepareClearCache(context: String,
+                                         useTypeToClear: Boolean,
+                                         clearStaleEntriesOnly: Boolean,
+                                         mockClassHash: String) = Unit
+
+    protected abstract fun verifyClearCache(context: String,
+                                            useTypeToClear: Boolean,
+                                            clearStaleEntriesOnly: Boolean,
+                                            mockClassHash: String)
 
     @Test
     fun testCache() {
