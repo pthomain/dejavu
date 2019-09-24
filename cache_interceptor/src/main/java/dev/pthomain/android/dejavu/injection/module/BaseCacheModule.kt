@@ -98,10 +98,12 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
+    override fun provideFilePersistenceManagerFactory(hasher: Hasher,
+                                                      serialisationManager: SerialisationManager<E>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       fileNameSerialiser: FileNameSerialiser) =
             FilePersistenceManager.Factory(
+                    hasher,
                     configuration,
                     serialisationManager,
                     { dateFactory.get(it) },

@@ -73,7 +73,8 @@ internal interface CacheModule<E>
 
     fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>): FileNameSerialiser
 
-    fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
+    fun provideFilePersistenceManagerFactory(hasher: Hasher,
+                                             serialisationManager: SerialisationManager<E>,
                                              dateFactory: Function1<Long?, Date>,
                                              fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
 
