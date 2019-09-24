@@ -50,6 +50,7 @@ import java.util.*
  * @param cacheDirectory which directory to use to persist the response (use cache dir by default)
  */
 class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
+                                                     private val fileFactory: (File, String) -> File,
                                                      cacheConfiguration: CacheConfiguration<E>,
                                                      serialisationManager: SerialisationManager<E>,
                                                      dateFactory: (Long?) -> Date,
@@ -77,7 +78,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
         with(serialise(response, previousCachedResponse)) {
             if (this != null) {
                 val name = fileNameSerialiser.serialise(this)
-                val file = File(cacheDirectory, name)
+                val file = fileFactory(cacheDirectory, name)
 
                 BufferedOutputStream(FileOutputStream(file)).useAndLogError(
                         {
@@ -103,7 +104,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                                     requestMetadata: RequestMetadata.Hashed,
                                     start: Long) =
             findFileByHash(requestMetadata.urlHash)?.let {
-                val file = File(cacheDirectory, it)
+                val file = fileFactory(cacheDirectory, it)
 
                 val data = BufferedInputStream(FileInputStream(file)).useAndLogError(
                         { it.readBytes() },
@@ -143,7 +144,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                         isRightType && isRightExpiry
                     } else false
                 }
-                .map { File(cacheDirectory, it.first) }
+                .map { fileFactory(cacheDirectory, it.first) }
                 .forEach { it.delete() }
     }
 
@@ -166,7 +167,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                         )
                         ?.also { invalidatedHolder ->
                             val newName = fileNameSerialiser.serialise(invalidatedHolder)
-                            File(cacheDirectory, oldName).renameTo(File(cacheDirectory, newName))
+                            fileFactory(cacheDirectory, oldName).renameTo(fileFactory(cacheDirectory, newName))
                             return true
                         }
             }
@@ -185,6 +186,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
         fun create(cacheDirectory: File = cacheConfiguration.context.cacheDir) =
                 FilePersistenceManager(
                         hasher,
+                        ::File,
                         cacheConfiguration,
                         serialisationManager,
                         dateFactory,
