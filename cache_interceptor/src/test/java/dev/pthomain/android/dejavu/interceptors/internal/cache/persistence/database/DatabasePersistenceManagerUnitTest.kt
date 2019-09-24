@@ -47,10 +47,9 @@ import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import org.junit.Test
 import java.util.*
 
-class DatabasePersistenceManagerUnitTest {
+class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
 
     private lateinit var mockDatabase: SupportSQLiteDatabase
     private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
@@ -63,17 +62,6 @@ class DatabasePersistenceManagerUnitTest {
     private lateinit var mockMetadata: CacheMetadata<Glitch>
     private lateinit var mockBlob: ByteArray
     private lateinit var mockHasher: Hasher
-
-    private val currentDateTime = 10000L
-    private val mockFetchDateTime = 1000L
-    private val mockCacheDateTime = 100L
-    private val mockExpiryDateTime = 10L
-    private val durationInMillis = 5L
-
-    private val mockCurrentDate = Date(currentDateTime)
-    private val mockFetchDate = Date(mockFetchDateTime)
-    private val mockCacheDate = Date(mockCacheDateTime)
-    private val mockExpiryDate = Date(mockExpiryDateTime)
 
     private fun setUp(encryptDataGlobally: Boolean,
                       compressDataGlobally: Boolean,
@@ -123,20 +111,9 @@ class DatabasePersistenceManagerUnitTest {
         )
     }
 
-    @Test
-    fun testClearCache() {
-        trueFalseSequence { useTypeToClear ->
-            trueFalseSequence { clearStaleEntriesOnly ->
-                testClearCache(
-                        useTypeToClear,
-                        clearStaleEntriesOnly
-                )
-            }
-        }
-    }
 
-    private fun testClearCache(useTypeToClear: Boolean,
-                               clearStaleEntriesOnly: Boolean) {
+    override fun testClearCache(useTypeToClear: Boolean,
+                                clearStaleEntriesOnly: Boolean) {
         val context = "useTypeToClear = $useTypeToClear\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
 
         val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
@@ -209,32 +186,7 @@ class DatabasePersistenceManagerUnitTest {
         )
     }
 
-    @Test
-    fun testCache() {
-        var iteration = 0
-        operationSequence { operation ->
-            if (operation is Expiring) {
-                trueFalseSequence { encryptDataGlobally ->
-                    trueFalseSequence { compressDataGlobally ->
-                        trueFalseSequence { hasPreviousResponse ->
-                            trueFalseSequence { isSerialisationSuccess ->
-                                testCache(
-                                        iteration++,
-                                        operation,
-                                        encryptDataGlobally,
-                                        compressDataGlobally,
-                                        hasPreviousResponse,
-                                        isSerialisationSuccess
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun testCache(iteration: Int,
+    override fun testCache(iteration: Int,
                           operation: Expiring,
                           encryptDataGlobally: Boolean,
                           compressDataGlobally: Boolean,
@@ -355,14 +307,7 @@ class DatabasePersistenceManagerUnitTest {
         }
     }
 
-    @Test
-    fun testInvalidate() {
-        operationSequence { operation ->
-            testInvalidate(operation)
-        }
-    }
-
-    private fun testInvalidate(operation: CacheInstruction.Operation) {
+    override fun testInvalidate(operation: CacheInstruction.Operation) {
         val context = "operation = $operation"
 
         val target = setUp(
@@ -441,26 +386,7 @@ class DatabasePersistenceManagerUnitTest {
         }
     }
 
-    @Test
-    fun testGetCachedResponse() {
-        var iteration = 0
-        operationSequence { operation ->
-            if (operation is Expiring) {
-                trueFalseSequence { hasResults ->
-                    trueFalseSequence { isStale ->
-                        testGetCachedResponse(
-                                iteration++,
-                                operation,
-                                hasResults,
-                                isStale
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun testGetCachedResponse(iteration: Int,
+    override fun testGetCachedResponse(iteration: Int,
                                       operation: Expiring,
                                       hasResponse: Boolean,
                                       isStale: Boolean) {

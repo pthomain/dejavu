@@ -23,24 +23,77 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
-import org.junit.Test
+import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.isNull
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.BasePersistenceManagerUnitTest
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import org.junit.Before
+import java.io.File
+import java.util.*
 
 //TODO
-class FilePersistenceManagerUnitTest {
+class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest() {
 
-    @Test
-    fun cache() {
+    private lateinit var mockHasher: Hasher
+    private lateinit var mockCacheConfiguration: CacheConfiguration<Glitch>
+    private lateinit var mockSerialisationManager: SerialisationManager<Glitch>
+    private lateinit var mockDateFactory: (Long?) -> Date
+    private lateinit var mockFileNameSerialiser: FileNameSerialiser
+    private lateinit var mockCacheDirectory: File
+
+    private lateinit var target: FilePersistenceManager<Glitch>
+
+    @Before
+    fun setUp() {
+        mockHasher = mock()
+        mockCacheConfiguration = mock()
+        mockSerialisationManager = mock()
+        mockDateFactory = mock()
+        mockFileNameSerialiser = mock()
+        mockCacheDirectory = mock()
+
+
+        whenever(mockDateFactory.invoke(isNull())).thenReturn(mockCurrentDate)
+        whenever(mockDateFactory.invoke(eq(mockCacheDateTime))).thenReturn(mockCacheDate)
+        whenever(mockDateFactory.invoke(eq(mockExpiryDateTime))).thenReturn(mockExpiryDate)
+
+        target = FilePersistenceManager(
+                mockHasher,
+                mockCacheConfiguration,
+                mockSerialisationManager,
+                mockDateFactory,
+                mockFileNameSerialiser,
+                mockCacheDirectory
+        )
     }
 
-    @Test
-    fun getCacheDataHolder() {
+    override fun testClearCache(useTypeToClear: Boolean,
+                                clearStaleEntriesOnly: Boolean) {
+
     }
 
-    @Test
-    fun clearCache() {
+    override fun testCache(iteration: Int,
+                           operation: CacheInstruction.Operation.Expiring,
+                           encryptDataGlobally: Boolean,
+                           compressDataGlobally: Boolean,
+                           hasPreviousResponse: Boolean,
+                           isSerialisationSuccess: Boolean) {
+
     }
 
-    @Test
-    fun checkInvalidation() {
+    override fun testInvalidate(operation: CacheInstruction.Operation) {
+
+    }
+
+    override fun testGetCachedResponse(iteration: Int,
+                                       operation: CacheInstruction.Operation.Expiring,
+                                       hasResponse: Boolean,
+                                       isStale: Boolean) {
     }
 }

@@ -49,13 +49,12 @@ import java.util.*
  * @param context the application context
  * @param cacheDirectory which directory to use to persist the response (use cache dir by default)
  */
-//TODO test
-class FilePersistenceManager<E> private constructor(private val hasher: Hasher,
-                                                    cacheConfiguration: CacheConfiguration<E>,
-                                                    serialisationManager: SerialisationManager<E>,
-                                                    dateFactory: (Long?) -> Date,
-                                                    private val fileNameSerialiser: FileNameSerialiser,
-                                                    private val cacheDirectory: File)
+class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
+                                                     cacheConfiguration: CacheConfiguration<E>,
+                                                     serialisationManager: SerialisationManager<E>,
+                                                     dateFactory: (Long?) -> Date,
+                                                     private val fileNameSerialiser: FileNameSerialiser,
+                                                     private val cacheDirectory: File)
     : BasePersistenceManager<E>(
         cacheConfiguration,
         serialisationManager,
