@@ -24,47 +24,79 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 //TODO JavaDoc
-sealed class RequestMetadata(val url: String,
+sealed class RequestMetadata(val responseClass: Class<*>,
+                             val url: String,
                              val requestBody: String? = null) {
 
-     class UnHashed(url: String,
-                   requestBody: String? = null) : RequestMetadata(url, requestBody) {
+    class UnHashed(responseClass: Class<*>,
+                   url: String,
+                   requestBody: String? = null)
+        : RequestMetadata(
+            responseClass,
+            url,
+            requestBody
+    ) {
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
+
+            other as RequestMetadata
+
+            if (responseClass != other.responseClass) return false
+            if (url != other.url) return false
+            if (requestBody != other.requestBody) return false
+
             return true
         }
 
         override fun hashCode(): Int {
-            return javaClass.hashCode()
+            var result = responseClass.hashCode()
+            result = 31 * result + url.hashCode()
+            result = 31 * result + (requestBody?.hashCode() ?: 0)
+            return result
         }
 
-        override fun toString(): String {
-            return "UnHashed(url='$url', requestBody=$requestBody)"
-        }
+        override fun toString() =
+                "UnHashed(responseClass='${responseClass.name}', url='$url', requestBody=$requestBody)"
     }
 
-    class Hashed internal constructor(url: String,
+    class Hashed internal constructor(responseClass: Class<*>,
+                                      url: String,
                                       requestBody: String?,
-                                      val hash: String) : RequestMetadata(url, requestBody) {
+                                      val urlHash: String,
+                                      val classHash: String)
+        : RequestMetadata(
+            responseClass,
+            url,
+            requestBody
+    ) {
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
             other as Hashed
 
-            if (hash != other.hash) return false
+            if (responseClass != other.responseClass) return false
+            if (url != other.url) return false
+            if (requestBody != other.requestBody) return false
+            if (urlHash != other.urlHash) return false
+            if (classHash != other.classHash) return false
 
             return true
         }
 
         override fun hashCode(): Int {
-            return hash.hashCode()
+            var result = responseClass.hashCode()
+            result = 31 * result + url.hashCode()
+            result = 31 * result + (requestBody?.hashCode() ?: 0)
+            result = 31 * result + urlHash.hashCode()
+            result = 31 * result + classHash.hashCode()
+            return result
         }
 
-        override fun toString(): String {
-            return "Hashed(url='$url', requestBody=$requestBody, hash='$hash')"
-        }
+        override fun toString() =
+                "Hashed(responseClass='${responseClass.name}', url='$url', requestBody=$requestBody, urlHash=$urlHash, classHash=$classHash)"
     }
-
 }

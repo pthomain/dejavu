@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
@@ -69,13 +68,11 @@ interface PersistenceManager<E>
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
      *
-     * @param instruction the INVALIDATE instruction for the desired entry.
-     * @param key the key of the entry to invalidate
+     * @param instructionToken the INVALIDATE instruction token for the desired entry.
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun checkInvalidation(instruction: CacheInstruction,
-                          key: String): Boolean
+    fun checkInvalidation(instructionToken: CacheToken): Boolean
 
     /**
      * Caches a given response.

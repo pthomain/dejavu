@@ -25,12 +25,12 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
@@ -94,15 +94,15 @@ class FilePersistenceManager<E> private constructor(
      * Returns the cached data as a CacheDataHolder object.
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param hash the hash value to use as a unique key for the cached entry
+     * @param requestMetadata the associated request metadata
      * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    hash: String,
+                                    requestMetadata: RequestMetadata.Hashed,
                                     start: Long) =
-            findFileByHash(hash)?.let {
+            findFileByHash(requestMetadata.urlHash)?.let {
                 val file = File(cacheDirectory, it)
 
                 val data = BufferedInputStream(FileInputStream(file)).useAndLogError(
@@ -146,15 +146,14 @@ class FilePersistenceManager<E> private constructor(
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
      *
-     * @param instruction the INVALIDATE instruction for the desired entry.
+     * @param instructionToken the INVALIDATE instruction token for the desired entry.
      * @param key the key of the entry to invalidate
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun checkInvalidation(instruction: CacheInstruction,
-                                   key: String): Boolean {
-        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            findFileByHash(key)?.also { oldName ->
+    override fun checkInvalidation(instructionToken: CacheToken): Boolean {
+        if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            findFileByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
                 fileNameSerialiser
                         .deserialise(oldName)
                         ?.copy(expiryDate = 0L)

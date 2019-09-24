@@ -28,7 +28,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
@@ -36,6 +35,8 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BaseP
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
@@ -52,6 +53,7 @@ import java.util.*
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
 internal class DatabasePersistenceManager<E>(private val database: SupportSQLiteDatabase,
+                                             private val hasher: Hasher,
                                              serialisationManager: SerialisationManager<E>,
                                              cacheConfiguration: CacheConfiguration<E>,
                                              dateFactory: (Long?) -> Date,
@@ -72,12 +74,21 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      */
     override fun clearCache(typeToClear: Class<*>?,
                             clearStaleEntriesOnly: Boolean) {
-        val olderEntriesClause = if (clearStaleEntriesOnly) "${EXPIRY_DATE.columnName} < ?" else null
+        val olderEntriesClause = ifElse(
+                clearStaleEntriesOnly,
+                "${EXPIRY_DATE.columnName} < ?",
+                null
+        )
+
         val typeClause = typeToClear?.let { "${CLASS.columnName} = ?" }
 
         val args = arrayListOf<String>().apply {
             if (clearStaleEntriesOnly) add(dateFactory(null).time.toString())
-            if (typeToClear != null) add(typeToClear.name)
+
+            if (typeToClear != null) {
+                val classHash = hasher.hash(typeToClear.name)
+                add(classHash)
+            }
         }
 
         database.delete(
@@ -98,14 +109,14 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      * Returns the cached data as a CacheDataHolder object.
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param hash the hash value to use as a unique key for the cached entry
+     * @param requestMetadata the associated request metadata
      * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(
             instructionToken: CacheToken,
-            hash: String,
+            requestMetadata: RequestMetadata.Hashed,
             start: Long
     ): CacheDataHolder? {
         val projection = arrayOf(
@@ -120,7 +131,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         val query = """
             SELECT ${projection.joinToString(", ")}
             FROM $TABLE_CACHE
-            WHERE ${TOKEN.columnName} = '$hash'
+            WHERE ${TOKEN.columnName} = '${requestMetadata.urlHash}'
             LIMIT 1
             """
 
@@ -139,7 +150,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                                 val className = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
 
                                 return CacheDataHolder(
-                                        hash,
+                                        requestMetadata,
                                         cacheDate.time,
                                         expiryDate.time,
                                         localData,
@@ -159,17 +170,16 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
      *
-     * @param instruction the INVALIDATE instruction for the desired entry.
+     * @param instructionToken the INVALIDATE instruction token for the desired entry.
      * @param key the key of the entry to invalidate
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun checkInvalidation(instruction: CacheInstruction,
-                                   key: String) =
-            if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+    override fun checkInvalidation(instructionToken: CacheToken) =
+            if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"
-                val selectionArgs = arrayOf(key)
+                val selectionArgs = arrayOf(instructionToken.requestMetadata.urlHash)
 
                 database.update(
                         TABLE_CACHE,
@@ -181,7 +191,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                     val foundIt = it > 0
                     logger.d(
                             this,
-                            "Invalidating cache for ${instruction.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
+                            "Invalidating cache for ${instructionToken.instruction.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
                     )
                     foundIt
                 }
@@ -198,11 +208,11 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         with(serialise(response, previousCachedResponse)) {
             if (this != null) {
                 val values = HashMap<String, Any>()
-                values[TOKEN.columnName] = hash
+                values[TOKEN.columnName] = requestMetadata!!.urlHash
                 values[DATE.columnName] = cacheDate
                 values[EXPIRY_DATE.columnName] = expiryDate
                 values[DATA.columnName] = data
-                values[CLASS.columnName] = responseClassName
+                values[CLASS.columnName] = requestMetadata.classHash
                 values[IS_COMPRESSED.columnName] = ifElse(isCompressed, 1, 0)
                 values[IS_ENCRYPTED.columnName] = ifElse(isEncrypted, 1, 0)
 

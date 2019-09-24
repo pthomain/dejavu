@@ -33,7 +33,8 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationCache
 import dev.pthomain.android.dejavu.injection.module.CacheModule
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -55,41 +56,24 @@ import javax.inject.Singleton
 internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
     fun dateFactory(): CacheModule.Function1<Long?, Date>
-
     fun serialiser(): Serialiser
-
     fun encryptionManager(): EncryptionManager
-
     fun serialisationManager(): SerialisationManager<Glitch>
-
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
-
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
-
     fun database(): SupportSQLiteDatabase?
-
     fun hasher(): Hasher
-
-    fun persistenceManager(): PersistenceManager<Glitch>
-
+    fun databasePersistenceManager(): DatabasePersistenceManager<Glitch>?
+    fun filePersistenceManagerFactory(): FilePersistenceManager.Factory<Glitch>
     fun cacheManager(): CacheManager<Glitch>
-
     fun errorInterceptorFactory(): CacheModule.Function3<Context, CacheToken, Long, ErrorInterceptor<Glitch>>
-
     fun cacheInterceptorFactory(): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>
-
     fun responseInterceptorFactory(): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
-
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
-
     fun processingErrorAdapterFactory(): ProcessingErrorAdapter.Factory<Glitch>
-
     fun cacheMetadataSubject(): PublishSubject<CacheMetadata<Glitch>>
-
     fun annotationProcessor(): AnnotationProcessor<Glitch>
-
     fun emptyResponseFactory(): EmptyResponseFactory<Glitch>
-
     fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
 
 }

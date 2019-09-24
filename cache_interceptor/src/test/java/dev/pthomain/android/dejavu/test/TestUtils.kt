@@ -252,9 +252,12 @@ internal fun defaultResponseWrapper(metadata: CacheMetadata<Glitch>,
         metadata
 )
 
-fun defaultRequestMetadata() = RequestMetadata.UnHashed(DEFAULT_URL)
+fun defaultRequestMetadata() = RequestMetadata.UnHashed(
+        TestResponse::class.java,
+        DEFAULT_URL
+)
 
-fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheToken.fromInstruction(
+fun instructionToken(operation: Operation = Cache()) = CacheToken.fromInstruction(
         CacheInstruction(
                 TestResponse::class.java,
                 operation
@@ -262,8 +265,10 @@ fun instructionToken(operation: CacheInstruction.Operation = Cache()) = CacheTok
         true,
         true,
         RequestMetadata.Hashed(
+                TestResponse::class.java,
                 DEFAULT_URL,
                 null,
+                INVALID_HASH,
                 INVALID_HASH
         )
 )

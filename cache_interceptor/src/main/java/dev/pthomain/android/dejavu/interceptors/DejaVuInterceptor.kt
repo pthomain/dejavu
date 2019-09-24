@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
@@ -33,6 +34,7 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Req
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import dev.pthomain.android.dejavu.response.ResponseWrapper
+import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import io.reactivex.Completable
@@ -42,10 +44,10 @@ import io.reactivex.Single
 import java.util.*
 
 //TODO JavaDoc
-class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
-                                               requestMetadata: RequestMetadata.UnHashed,
-                                               configuration: CacheConfiguration<E>,
-                                               hasher: Hasher,
+class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction,
+                                               private val requestMetadata: RequestMetadata.UnHashed,
+                                               private val configuration: CacheConfiguration<E>,
+                                               private val hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
                                                private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
                                                private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
@@ -54,12 +56,6 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
         where E : Exception,
               E : NetworkErrorProvider {
 
-    private val instructionToken = fromInstruction(
-            if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
-            (instruction.operation as? Expiring)?.compress ?: configuration.compress,
-            (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
-            hasher.hash(requestMetadata)
-    )
 
     override fun apply(upstream: Observable<Any>) =
             composeInternal(upstream, OBSERVABLE)
@@ -73,12 +69,36 @@ class DejaVuInterceptor<E> private constructor(instruction: CacheInstruction,
                     .ignoreElements()!!
 
     private fun composeInternal(upstream: Observable<Any>,
-                                rxType: AnnotationProcessor.RxType) =
-            dateFactory(null).time.let { start ->
-                upstream.compose(errorInterceptorFactory(instructionToken, start))
-                        .compose(cacheInterceptorFactory(instructionToken, start))
-                        .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
-            }!!
+                                rxType: AnnotationProcessor.RxType): Observable<Any> {
+        val (hashedRequestMetadata, isHashed) = hasher.hash(requestMetadata).let {
+            ifElse(it == null,
+                    RequestMetadata.Hashed(
+                            requestMetadata.responseClass,
+                            requestMetadata.url,
+                            requestMetadata.requestBody,
+                            INVALID_HASH,
+                            INVALID_HASH
+                    ) to false,
+                    it!! to true
+            )
+        }
+
+        val instructionToken = fromInstruction(
+                if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+                (instruction.operation as? Expiring)?.compress ?: configuration.compress,
+                (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
+                hashedRequestMetadata
+        )
+
+        val start = dateFactory(null).time
+
+        val observable = if (isHashed) upstream
+        else Observable.error<Any>(IllegalStateException("The request could not be hashed"))
+
+        return observable.compose(errorInterceptorFactory(instructionToken, start))
+                .compose(cacheInterceptorFactory(instructionToken, start))
+                .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
+    }
 
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,

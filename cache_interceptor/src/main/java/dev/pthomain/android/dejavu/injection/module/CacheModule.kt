@@ -102,7 +102,8 @@ internal interface CacheModule<E>
     fun providePersistenceManager(databasePersistenceManager: DatabasePersistenceManager<E>?,
                                   filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E>
 
-    fun provideDatabasePersistenceManager(database: SupportSQLiteDatabase?,
+    fun provideDatabasePersistenceManager(hasher: Hasher,
+                                          database: SupportSQLiteDatabase?,
                                           dateFactory: Function1<Long?, Date>,
                                           serialisationManager: SerialisationManager<E>): DatabasePersistenceManager<E>?
 

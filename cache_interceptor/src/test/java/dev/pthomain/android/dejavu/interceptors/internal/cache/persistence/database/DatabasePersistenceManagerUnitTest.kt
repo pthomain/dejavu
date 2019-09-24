@@ -27,6 +27,7 @@ import android.content.ContentValues
 import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
@@ -35,6 +36,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -60,6 +62,7 @@ class DatabasePersistenceManagerUnitTest {
     private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockMetadata: CacheMetadata<Glitch>
     private lateinit var mockBlob: ByteArray
+    private lateinit var mockHasher: Hasher
 
     private val currentDateTime = 10000L
     private val mockFetchDateTime = 1000L
@@ -89,6 +92,7 @@ class DatabasePersistenceManagerUnitTest {
         mockCursor = mock()
         mockResponseWrapper = mock()
         mockMetadata = mock()
+        mockHasher = mock()
 
         mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
 
@@ -111,6 +115,7 @@ class DatabasePersistenceManagerUnitTest {
 
         return DatabasePersistenceManager(
                 mockDatabase,
+                mockHasher,
                 mockSerialisationManager,
                 mockConfiguration,
                 mockDateFactory,
@@ -142,6 +147,12 @@ class DatabasePersistenceManagerUnitTest {
                 null
         )
 
+        val mockClassHash = "mockHash"
+
+        if (typeToClearClass != null) {
+            whenever(mockHasher.hash(eq(typeToClearClass.name))).thenReturn(mockClassHash)
+        }
+
         target.clearCache(
                 typeToClearClass,
                 clearStaleEntriesOnly
@@ -162,11 +173,18 @@ class DatabasePersistenceManagerUnitTest {
             else -> if (clearStaleEntriesOnly) "expiry_date < ?" else ""
         }
 
-        val responseType = TestResponse::class.java.name
-
         val expectedValue = when {
-            useTypeToClear -> if (clearStaleEntriesOnly) arrayOf(mockCurrentDate.time.toString(), responseType) else arrayOf(responseType)
-            else -> if (clearStaleEntriesOnly) arrayOf(mockCurrentDate.time.toString()) else emptyArray()
+            useTypeToClear -> ifElse(
+                    clearStaleEntriesOnly,
+                    arrayOf(mockCurrentDate.time.toString(), mockClassHash),
+                    arrayOf(mockClassHash)
+            )
+
+            else -> ifElse(
+                    clearStaleEntriesOnly,
+                    arrayOf(mockCurrentDate.time.toString()),
+                    emptyArray()
+            )
         }
 
         assertEqualsWithContext(
@@ -287,7 +305,7 @@ class DatabasePersistenceManagerUnitTest {
             val values = mapCaptor.firstValue
 
             assertEqualsWithContext(
-                    instructionToken.requestMetadata.hash,
+                    instructionToken.requestMetadata.urlHash,
                     values[TOKEN.columnName],
                     "Cache key didn't match",
                     context
@@ -311,7 +329,7 @@ class DatabasePersistenceManagerUnitTest {
                     context
             )
             assertEqualsWithContext(
-                    TestResponse::class.java.name,
+                    instructionToken.requestMetadata.classHash,
                     values[CLASS.columnName],
                     "Cached data response class didn't match",
                     context
@@ -400,7 +418,7 @@ class DatabasePersistenceManagerUnitTest {
             )
 
             assertEqualsWithContext(
-                    arrayOf(instructionToken.requestMetadata.hash),
+                    arrayOf(instructionToken.requestMetadata.urlHash),
                     selectionArgsCaptor.firstValue,
                     "Selection args didn't match",
                     context
@@ -518,10 +536,8 @@ class DatabasePersistenceManagerUnitTest {
                 start
         )
 
-        verifyWithContext(target, context).checkInvalidation(
-                eq(instructionToken.instruction),
-                eq(instructionToken.requestMetadata.hash)
-        )
+        verifyWithContext(target, context)
+                .checkInvalidation(eq(instructionToken))
 
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 

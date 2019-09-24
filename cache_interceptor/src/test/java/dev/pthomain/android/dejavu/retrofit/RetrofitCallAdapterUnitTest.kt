@@ -179,7 +179,12 @@ class RetrofitCallAdapterUnitTest {
 
             whenever(mockRequestBodyConverter.invoke(eq(mockRequest))).thenReturn(mockBodyString)
 
-            requestMetadata = RequestMetadata.UnHashed(DEFAULT_URL, mockBodyString)
+            requestMetadata = RequestMetadata.UnHashed(
+                    responseClass,
+                    DEFAULT_URL,
+                    mockBodyString
+            )
+
             val hasDefaultAdaptation = cachePredicate(responseClass, requestMetadata)
             val usesDefaultAdaptation = hasDefaultAdaptation && !hasHeader && !hasInstruction
 

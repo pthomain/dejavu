@@ -144,8 +144,10 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                                 false,
                                 false,
                                 RequestMetadata.Hashed(
+                                        responseClass,
                                         DEFAULT_URL,
                                         null,
+                                        INVALID_HASH,
                                         INVALID_HASH
                                 )
                         ),

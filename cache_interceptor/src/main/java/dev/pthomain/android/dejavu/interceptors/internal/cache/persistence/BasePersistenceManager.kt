@@ -25,9 +25,10 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action.Companion.act
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.CacheMetadata
@@ -108,7 +109,7 @@ abstract class BasePersistenceManager<E>(
             val now = dateFactory(null).time
 
             CacheDataHolder(
-                    instructionToken.requestMetadata.hash,
+                    instructionToken.requestMetadata,
                     now,
                     now + durationInMillis,
                     serialised,
@@ -135,12 +136,11 @@ abstract class BasePersistenceManager<E>(
         val instruction = instructionToken.instruction
         logger.d(this, "Checking for cached ${instruction.responseClass.simpleName}")
 
-        val hash = instructionToken.requestMetadata.hash
-        checkInvalidation(instruction, hash)
+        checkInvalidation(instructionToken)
 
         val serialised = getCacheDataHolder(
                 instructionToken,
-                hash,
+                instructionToken.requestMetadata,
                 start
         )
 
@@ -162,13 +162,13 @@ abstract class BasePersistenceManager<E>(
      * Returns the cached data as a CacheDataHolder object.
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param hash the hash value to use as a unique key for the cached entry
+     * @param requestMetadata the associated request metadata
      * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     protected abstract fun getCacheDataHolder(instructionToken: CacheToken,
-                                              hash: String,
+                                              requestMetadata: RequestMetadata.Hashed,
                                               start: Long): CacheDataHolder?
 
     /**
@@ -231,14 +231,10 @@ abstract class BasePersistenceManager<E>(
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    final override fun invalidate(instructionToken: CacheToken): Boolean {
-        val instruction = instructionToken.instruction.copy(
-                operation = CacheInstruction.Operation.Invalidate
-        )
-        return checkInvalidation(
-                instruction,
-                instructionToken.requestMetadata.hash
-        )
-    }
-
+    final override fun invalidate(instructionToken: CacheToken) =
+            checkInvalidation(
+                    instructionToken.copy(
+                            instruction = instructionToken.instruction.copy(operation = Invalidate)
+                    )
+            )
 }

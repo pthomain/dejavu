@@ -35,9 +35,9 @@ internal class FileNameSerialiser(
     fun serialise(cacheDataHolder: CacheDataHolder) =
             with(cacheDataHolder) {
                 listOf(
-                        hash,
+                        requestMetadata!!.urlHash,
                         expiryDate.toString(),
-                        responseClassName,
+                        requestMetadata!!.classHash,
                         ifElse(isCompressed, "1", "0"),
                         ifElse(isEncrypted, "1", "0")
                 ).joinToString(SEPARATOR)
@@ -47,7 +47,7 @@ internal class FileNameSerialiser(
             with(fileName.split(SEPARATOR)) {
                 if (size != 5) null
                 else CacheDataHolder(
-                        get(0),
+                        null,
                         dateFactory(null).time,
                         get(1).toLong(),
                         ByteArray(0),
