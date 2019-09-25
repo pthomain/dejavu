@@ -98,10 +98,12 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideFilePersistenceManagerFactory(serialisationManager: SerialisationManager<E>,
+    override fun provideFilePersistenceManagerFactory(hasher: Hasher,
+                                                      serialisationManager: SerialisationManager<E>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       fileNameSerialiser: FileNameSerialiser) =
             FilePersistenceManager.Factory(
+                    hasher,
                     configuration,
                     serialisationManager,
                     { dateFactory.get(it) },
@@ -177,12 +179,14 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideDatabasePersistenceManager(database: SupportSQLiteDatabase?,
+    override fun provideDatabasePersistenceManager(hasher: Hasher,
+                                                   database: SupportSQLiteDatabase?,
                                                    dateFactory: Function1<Long?, Date>,
                                                    serialisationManager: SerialisationManager<E>) =
             database?.let {
                 DatabasePersistenceManager(
                         database,
+                        hasher,
                         serialisationManager,
                         configuration,
                         { dateFactory.get(it) },

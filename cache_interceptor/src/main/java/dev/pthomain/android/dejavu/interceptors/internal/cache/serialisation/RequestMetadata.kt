@@ -24,47 +24,27 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 //TODO JavaDoc
-sealed class RequestMetadata(val url: String,
-                             val requestBody: String? = null) {
+sealed class RequestMetadata(open val responseClass: Class<*>,
+                             open val url: String,
+                             open val requestBody: String? = null) {
 
-     class UnHashed(url: String,
-                   requestBody: String? = null) : RequestMetadata(url, requestBody) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-            return true
-        }
+    data class UnHashed(override val responseClass: Class<*>,
+                        override val url: String,
+                        override val requestBody: String? = null)
+        : RequestMetadata(
+            responseClass,
+            url,
+            requestBody
+    )
 
-        override fun hashCode(): Int {
-            return javaClass.hashCode()
-        }
-
-        override fun toString(): String {
-            return "UnHashed(url='$url', requestBody=$requestBody)"
-        }
-    }
-
-    class Hashed internal constructor(url: String,
-                                      requestBody: String?,
-                                      val hash: String) : RequestMetadata(url, requestBody) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Hashed
-
-            if (hash != other.hash) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return hash.hashCode()
-        }
-
-        override fun toString(): String {
-            return "Hashed(url='$url', requestBody=$requestBody, hash='$hash')"
-        }
-    }
-
+    data class Hashed internal constructor(override val responseClass: Class<*>,
+                                           override val url: String,
+                                           override val requestBody: String?,
+                                           val urlHash: String,
+                                           val classHash: String)
+        : RequestMetadata(
+            responseClass,
+            url,
+            requestBody
+    )
 }

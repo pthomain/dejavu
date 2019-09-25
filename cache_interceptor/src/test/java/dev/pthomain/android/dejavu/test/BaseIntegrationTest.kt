@@ -152,21 +152,24 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 )
             }
 
-    protected fun getStubbedUserResponseWrapper(instructionToken: CacheToken = instructionToken(),
+    protected fun getStubbedUserResponseWrapper(instructionToken: CacheToken = instructionToken(responseClass = User::class.java),
                                                 url: String = "http://test.com/userResponse") =
             getStubbedTestResponse(instructionToken).let {
                 with(it.metadata) {
                     ResponseWrapper(
-                            User::class.java,
+                            instructionToken.requestMetadata.responseClass,
                             (it.response as TestResponse).first(),
                             copy(
                                     cacheToken = cacheToken.copy(
                                             cacheToken.instruction.copy(
-                                                    responseClass = User::class.java
+                                                    responseClass = instructionToken.requestMetadata.responseClass
                                             ),
                                             requestMetadata = cacheComponent.hasher().hash(
-                                                    RequestMetadata.UnHashed(url)
-                                            )
+                                                    RequestMetadata.UnHashed(
+                                                            instructionToken.requestMetadata.responseClass,
+                                                            url
+                                                    )
+                                            )!!
                                     )
                             )
                     )
@@ -218,8 +221,11 @@ internal abstract class BaseIntegrationTest<T : Any>(
             true,
             true,
             cacheComponent.hasher().hash(
-                    RequestMetadata.UnHashed(url)
-            )
+                    RequestMetadata.UnHashed(
+                            responseClass,
+                            url
+                    )
+            )!!
     )
 
 }

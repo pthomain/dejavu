@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.data
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
@@ -41,8 +42,9 @@ import dev.pthomain.android.dejavu.test.network.model.User
 import org.junit.Test
 import java.util.*
 
-internal class DatabasePersistenceManagerIntegrationTest
-    : BaseIntegrationTest<PersistenceManager<Glitch>>({ it.persistenceManager() }) {
+internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceManager<Glitch>>(
+        targetExtractor: (IntegrationCacheComponent) -> T
+) : BaseIntegrationTest<PersistenceManager<Glitch>>(targetExtractor) {
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {
@@ -270,7 +272,7 @@ internal class DatabasePersistenceManagerIntegrationTest
                 url = "http://test.com/testResponse1"
         ))
 
-        val expiredExceptionStubbedResponse = freshStubbedResponse.copy(
+        val expiredStubbedResponse = freshStubbedResponse.copy(
                 metadata = freshStubbedResponse.metadata.copy(
                         cacheToken = instructionToken(
                                 Cache(durationInMillis = -1L),
@@ -281,7 +283,7 @@ internal class DatabasePersistenceManagerIntegrationTest
 
         val (freshResponseToken, expiredResponseToken) = cacheTwoResponses(
                 freshStubbedResponse,
-                expiredExceptionStubbedResponse,
+                expiredStubbedResponse,
                 secondResponseExpectedStatus = STALE
         )
 
@@ -309,7 +311,8 @@ internal class DatabasePersistenceManagerIntegrationTest
         ))
 
         val userResponse = getStubbedUserResponseWrapper(
-                url = "http://test.com/userResponse1"
+                url = "http://test.com/userResponse1",
+                instructionToken = instructionToken(responseClass = User::class.java)
         )
 
         val expiredTestResponse = getStubbedTestResponse(instructionToken(
@@ -320,7 +323,8 @@ internal class DatabasePersistenceManagerIntegrationTest
         val expiredUserResponse = getStubbedUserResponseWrapper(
                 instructionToken(
                         Cache(durationInMillis = -1),
-                        url = "http://test.com/userResponse2"
+                        url = "http://test.com/userResponse2",
+                        responseClass = User::class.java
                 ),
                 url = "http://test.com/userResponse2"
         )

@@ -25,12 +25,13 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
@@ -48,14 +49,17 @@ import java.util.*
  * @param context the application context
  * @param cacheDirectory which directory to use to persist the response (use cache dir by default)
  */
-//TODO test
-class FilePersistenceManager<E> private constructor(
-        cacheConfiguration: CacheConfiguration<E>,
-        serialisationManager: SerialisationManager<E>,
-        dateFactory: (Long?) -> Date,
-        private val fileNameSerialiser: FileNameSerialiser,
-        private val cacheDirectory: File
-) : BasePersistenceManager<E>(
+class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
+                                                     private val fileFactory: (File, String) -> File,
+                                                     private val fileInputStreamFactory: (File) -> InputStream,
+                                                     private val fileOutputStreamFactory: (File) -> OutputStream,
+                                                     private val fileReader: (InputStream) -> ByteArray,
+                                                     cacheConfiguration: CacheConfiguration<E>,
+                                                     serialisationManager: SerialisationManager<E>,
+                                                     dateFactory: (Long?) -> Date,
+                                                     private val fileNameSerialiser: FileNameSerialiser,
+                                                     private val cacheDirectory: File)
+    : BasePersistenceManager<E>(
         cacheConfiguration,
         serialisationManager,
         dateFactory
@@ -77,9 +81,9 @@ class FilePersistenceManager<E> private constructor(
         with(serialise(response, previousCachedResponse)) {
             if (this != null) {
                 val name = fileNameSerialiser.serialise(this)
-                val file = File(cacheDirectory, name)
+                val file = fileFactory(cacheDirectory, name)
 
-                BufferedOutputStream(FileOutputStream(file)).useAndLogError(
+                fileOutputStreamFactory(file).useAndLogError(
                         {
                             it.write(data)
                             it.flush()
@@ -94,29 +98,32 @@ class FilePersistenceManager<E> private constructor(
      * Returns the cached data as a CacheDataHolder object.
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param hash the hash value to use as a unique key for the cached entry
+     * @param requestMetadata the associated request metadata
      * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    hash: String,
+                                    requestMetadata: RequestMetadata.Hashed,
                                     start: Long) =
-            findFileByHash(hash)?.let {
-                val file = File(cacheDirectory, it)
+            findFileByHash(requestMetadata.urlHash)?.let {
+                val file = fileFactory(cacheDirectory, it)
 
-                val data = BufferedInputStream(FileInputStream(file)).useAndLogError(
-                        { it.readBytes() },
+                val data = fileInputStreamFactory(file).useAndLogError(
+                        fileReader::invoke,
                         logger
                 )
 
-                fileNameSerialiser.deserialise(it)?.copy(data = data)
+                fileNameSerialiser.deserialise(
+                        instructionToken.requestMetadata,
+                        it
+                )?.copy(data = data)
             }
 
     private fun findFileByHash(hash: String) =
-            cacheDirectory.list { _, name ->
+            cacheDirectory.list().firstOrNull { name ->
                 name.startsWith(hash + SEPARATOR)
-            }.firstOrNull()
+            }
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -128,39 +135,42 @@ class FilePersistenceManager<E> private constructor(
     override fun clearCache(typeToClear: Class<*>?,
                             clearStaleEntriesOnly: Boolean) {
         val now = dateFactory(null).time
+        val classHash = typeToClear?.let { hasher.hash(it.name) }
 
         cacheDirectory.list()
-                .map { it to fileNameSerialiser.deserialise(it) }
+                .map { it to fileNameSerialiser.deserialise(null, it) }
                 .filter {
                     val cacheDataHolder = it.second
                     if (cacheDataHolder != null) {
-                        val isRightType = typeToClear == null || cacheDataHolder.responseClassName == typeToClear.name
+                        val isRightType = typeToClear == null || cacheDataHolder.responseClassHash == classHash
                         val isRightExpiry = !clearStaleEntriesOnly || cacheDataHolder.expiryDate <= now
                         isRightType && isRightExpiry
                     } else false
                 }
-                .map { File(cacheDirectory, it.first) }
+                .map { fileFactory(cacheDirectory, it.first) }
                 .forEach { it.delete() }
     }
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
      *
-     * @param instruction the INVALIDATE instruction for the desired entry.
+     * @param instructionToken the INVALIDATE instruction token for the desired entry.
      * @param key the key of the entry to invalidate
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun checkInvalidation(instruction: CacheInstruction,
-                                   key: String): Boolean {
-        if (instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            findFileByHash(key)?.also { oldName ->
+    override fun invalidatesIfNeeded(instructionToken: CacheToken): Boolean {
+        if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            findFileByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
                 fileNameSerialiser
-                        .deserialise(oldName)
-                        ?.copy(expiryDate = 0L)
+                        .deserialise(instructionToken.requestMetadata, oldName)
+                        ?.copy(
+                                expiryDate = 0L,
+                                requestMetadata = instructionToken.requestMetadata
+                        )
                         ?.also { invalidatedHolder ->
                             val newName = fileNameSerialiser.serialise(invalidatedHolder)
-                            File(cacheDirectory, oldName).renameTo(File(cacheDirectory, newName))
+                            fileFactory(cacheDirectory, oldName).renameTo(fileFactory(cacheDirectory, newName))
                             return true
                         }
             }
@@ -168,16 +178,21 @@ class FilePersistenceManager<E> private constructor(
         return false
     }
 
-    class Factory<E> internal constructor(
-            private val cacheConfiguration: CacheConfiguration<E>,
-            private val serialisationManager: SerialisationManager<E>,
-            private val dateFactory: (Long?) -> Date,
-            private val fileNameSerialiser: FileNameSerialiser
+    class Factory<E> internal constructor(private val hasher: Hasher,
+                                          private val cacheConfiguration: CacheConfiguration<E>,
+                                          private val serialisationManager: SerialisationManager<E>,
+                                          private val dateFactory: (Long?) -> Date,
+                                          private val fileNameSerialiser: FileNameSerialiser
     ) where E : Exception,
             E : NetworkErrorProvider {
 
         fun create(cacheDirectory: File = cacheConfiguration.context.cacheDir) =
                 FilePersistenceManager(
+                        hasher,
+                        ::File,
+                        { BufferedInputStream(FileInputStream(it)) },
+                        { BufferedOutputStream(FileOutputStream(it)) },
+                        { it.readBytes() },
                         cacheConfiguration,
                         serialisationManager,
                         dateFactory,

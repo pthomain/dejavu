@@ -30,10 +30,11 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 
 //TODO JavaDoc
-internal class Hasher(private val messageDigest: MessageDigest?,
+internal class Hasher(private val logger: Logger,
+                      private val messageDigest: MessageDigest?,
                       private val uriParser: (String) -> Uri) {
 
-    fun hash(requestMetadata: RequestMetadata.UnHashed): RequestMetadata.Hashed {
+    fun hash(requestMetadata: RequestMetadata.UnHashed): RequestMetadata.Hashed? {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 
@@ -44,17 +45,27 @@ internal class Hasher(private val messageDigest: MessageDigest?,
 
         val urlAndBody = requestMetadata.requestBody?.let { "$sortedUrl||$it" } ?: sortedUrl
 
-        return try {
+        val urlHash = try {
             hash(urlAndBody)
         } catch (e: Exception) {
-            urlAndBody.hashCode().toString()
-        }.let {
-            RequestMetadata.Hashed(
-                    requestMetadata.url,
-                    requestMetadata.requestBody,
-                    it
-            )
+            logger.e(this, e, "Could not hash URL and body")
+            return null
         }
+
+        val classHash = try {
+            hash(requestMetadata.responseClass.name)
+        } catch (e: Exception) {
+            logger.e(this, e, "Could not hash response class")
+            return null
+        }
+
+        return RequestMetadata.Hashed(
+                requestMetadata.responseClass,
+                requestMetadata.url,
+                requestMetadata.requestBody,
+                urlHash,
+                classHash
+        )
     }
 
     private fun getSortedUrl(url: Uri,
@@ -70,11 +81,11 @@ internal class Hasher(private val messageDigest: MessageDigest?,
                     }
 
     @Throws(UnsupportedEncodingException::class)
-    private fun hash(text: String): String =
+    fun hash(text: String) =
             if (messageDigest == null) {
                 var hash: Long = 7
-                for (i in 0 until text.length) {
-                    hash = hash * 31 + text[i].toLong()
+                for (element in text) {
+                    hash = hash * 31 + element.toLong()
                 }
                 hash.toString()
             } else {
@@ -117,7 +128,11 @@ internal class Hasher(private val messageDigest: MessageDigest?,
                 }
             }
 
-            return Hasher(messageDigest, uriParser)
+            return Hasher(
+                    logger,
+                    messageDigest,
+                    uriParser
+            )
         }
     }
 

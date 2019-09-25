@@ -23,12 +23,14 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+
 data class CacheDataHolder(
-        val hash: String,
+        val requestMetadata: RequestMetadata.Hashed?,
         val cacheDate: Long,
         val expiryDate: Long,
         val data: ByteArray,
-        val responseClassName: String,
+        val responseClassHash: String,
         val isCompressed: Boolean,
         val isEncrypted: Boolean
 ) {
@@ -38,11 +40,11 @@ data class CacheDataHolder(
 
         other as CacheDataHolder
 
-        if (hash != other.hash) return false
+        if (requestMetadata != other.requestMetadata) return false
         if (cacheDate != other.cacheDate) return false
         if (expiryDate != other.expiryDate) return false
         if (!data.contentEquals(other.data)) return false
-        if (responseClassName != other.responseClassName) return false
+        if (responseClassHash != other.responseClassHash) return false
         if (isCompressed != other.isCompressed) return false
         if (isEncrypted != other.isEncrypted) return false
 
@@ -50,11 +52,11 @@ data class CacheDataHolder(
     }
 
     override fun hashCode(): Int {
-        var result = hash.hashCode()
+        var result = requestMetadata.hashCode()
         result = 31 * result + cacheDate.hashCode()
         result = 31 * result + expiryDate.hashCode()
         result = 31 * result + data.contentHashCode()
-        result = 31 * result + responseClassName.hashCode()
+        result = 31 * result + responseClassHash.hashCode()
         result = 31 * result + isCompressed.hashCode()
         result = 31 * result + isEncrypted.hashCode()
         return result

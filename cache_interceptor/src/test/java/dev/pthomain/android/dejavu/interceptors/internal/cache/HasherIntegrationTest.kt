@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 
 import android.net.Uri
+import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
@@ -177,26 +178,26 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
     @Test
     @Throws(Exception::class)
     fun testHash() {
-        val sha1Hasher = Hasher(MessageDigest.getInstance("SHA-1")) { Uri.parse(it) }
-        val md5Hasher = Hasher(MessageDigest.getInstance("MD5")) { Uri.parse(it) }
-        val defaultHasher = Hasher(null) { Uri.parse(it) }
+        val sha1Hasher = Hasher(mock(), MessageDigest.getInstance("SHA-1")) { Uri.parse(it) }
+        val md5Hasher = Hasher(mock(), MessageDigest.getInstance("MD5")) { Uri.parse(it) }
+        val defaultHasher = Hasher(mock(), null) { Uri.parse(it) }
 
         for (i in strings.indices) {
             assertEqualsWithContext(
                     sha1Hashes[i],
-                    sha1Hasher.hash(getRequestMetadata(strings[i], i, "SHA-1 hashing failed")).hash,
+                    sha1Hasher.hash(getRequestMetadata(strings[i], i, "SHA-1 hashing failed"))!!.urlHash,
                     "SHA-1 hash failed at position $i"
             )
 
             assertEqualsWithContext(
                     md5Hashes[i],
-                    md5Hasher.hash(getRequestMetadata(strings[i], i, "MD5 hashing failed")).hash,
+                    md5Hasher.hash(getRequestMetadata(strings[i], i, "MD5 hashing failed"))!!.urlHash,
                     "MD5 hash failed at position $i"
             )
 
             assertEqualsWithContext(
                     defaultHashes[i],
-                    defaultHasher.hash(getRequestMetadata(strings[i], i, "Default hashing failed")).hash,
+                    defaultHasher.hash(getRequestMetadata(strings[i], i, "Default hashing failed"))!!.urlHash,
                     "Default hash failed at position $i"
             )
         }
@@ -211,6 +212,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCa
         checkParamsInOrder(urlAndParams, index, context)
 
         return RequestMetadata.UnHashed(
+                String::class.java,
                 urlAndParams,
                 null//TODO body
         )

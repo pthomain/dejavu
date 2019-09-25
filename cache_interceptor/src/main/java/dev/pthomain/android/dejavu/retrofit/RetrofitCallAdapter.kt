@@ -271,6 +271,7 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
      */
     private fun getRequestMetadata(call: Call<Any>) =
             RequestMetadata.UnHashed(
+                    responseClass,
                     call.request().url().toString(),
                     requestBodyConverter(call.request())
             )

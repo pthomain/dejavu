@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import java.util.*
 
 //TODO test
@@ -35,25 +36,27 @@ internal class FileNameSerialiser(
     fun serialise(cacheDataHolder: CacheDataHolder) =
             with(cacheDataHolder) {
                 listOf(
-                        hash,
+                        requestMetadata!!.urlHash,
+                        cacheDate.toString(),
                         expiryDate.toString(),
-                        responseClassName,
+                        requestMetadata.classHash,
                         ifElse(isCompressed, "1", "0"),
                         ifElse(isEncrypted, "1", "0")
                 ).joinToString(SEPARATOR)
             }
 
-    fun deserialise(fileName: String) =
+    fun deserialise(requestMetadata: RequestMetadata.Hashed?,
+                    fileName: String) =
             with(fileName.split(SEPARATOR)) {
-                if (size != 5) null
+                if (size != 6) null
                 else CacheDataHolder(
-                        get(0),
-                        dateFactory(null).time,
+                        requestMetadata,
                         get(1).toLong(),
+                        get(2).toLong(),
                         ByteArray(0),
-                        get(2),
-                        get(3) == "1",
-                        get(4) == "1"
+                        get(3),
+                        get(4) == "1",
+                        get(5) == "1"
                 )
             }
 
