@@ -51,7 +51,9 @@ import java.util.*
  */
 class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                                                      private val fileFactory: (File, String) -> File,
+                                                     private val fileInputStreamFactory: (File) -> InputStream,
                                                      private val fileOutputStreamFactory: (File) -> OutputStream,
+                                                     private val fileReader: (InputStream) -> ByteArray,
                                                      cacheConfiguration: CacheConfiguration<E>,
                                                      serialisationManager: SerialisationManager<E>,
                                                      dateFactory: (Long?) -> Date,
@@ -107,8 +109,8 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
             findFileByHash(requestMetadata.urlHash)?.let {
                 val file = fileFactory(cacheDirectory, it)
 
-                val data = BufferedInputStream(FileInputStream(file)).useAndLogError(
-                        { it.readBytes() },
+                val data = fileInputStreamFactory(file).useAndLogError(
+                        fileReader::invoke,
                         logger
                 )
 
@@ -157,7 +159,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun checkInvalidation(instructionToken: CacheToken): Boolean {
+    override fun invalidatesIfNeeded(instructionToken: CacheToken): Boolean {
         if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
             findFileByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
                 fileNameSerialiser
@@ -188,7 +190,9 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                 FilePersistenceManager(
                         hasher,
                         ::File,
+                        { BufferedInputStream(FileInputStream(it)) },
                         { BufferedOutputStream(FileOutputStream(it)) },
+                        { it.readBytes() },
                         cacheConfiguration,
                         serialisationManager,
                         dateFactory,

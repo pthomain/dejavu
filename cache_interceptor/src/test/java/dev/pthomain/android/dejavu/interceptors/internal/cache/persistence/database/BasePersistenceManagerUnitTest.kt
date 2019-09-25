@@ -24,23 +24,26 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
 
 import com.nhaarman.mockitokotlin2.*
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.dejavu.test.instructionToken
+import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.operationSequence
-import dev.pthomain.android.dejavu.test.trueFalseSequence
-import dev.pthomain.android.dejavu.test.verifyWithContext
 import org.junit.Test
 import java.util.*
 
@@ -200,7 +203,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 "hasPreviousResponse = $hasPreviousResponse\n" +
                 "isSerialisationSuccess = $isSerialisationSuccess"
 
-        val instructionToken = instructionToken(operation)
+        val instructionToken = instructionTokenWithHash(operation)
 
         val target = setUp(
                 encryptDataGlobally,
@@ -301,7 +304,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             verifyWithContext(
                     target,
                     context
-            ).checkInvalidation(eq(instructionToken.copy(
+            ).invalidatesIfNeeded(eq(instructionToken.copy(
                     instruction = instructionToken.instruction.copy(operation = Invalidate)
             )))
         }
@@ -317,10 +320,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 null
         ))
 
-        val defaultToken = instructionToken(operation)
-        val instructionToken = defaultToken.copy(
-                requestMetadata = defaultToken.requestMetadata.copy(urlHash = mockHash)
-        )
+        val instructionToken = instructionTokenWithHash(operation)
 
         andThen(context, instructionToken, target)
     }
@@ -345,7 +345,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                     instructionToken
             )
 
-            target.checkInvalidation(instructionToken)
+            target.invalidatesIfNeeded(instructionToken)
 
             verifyCheckInvalidation(
                     context,
@@ -382,9 +382,155 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    protected abstract fun testGetCachedResponse(iteration: Int,
-                                                 operation: Expiring,
-                                                 hasResponse: Boolean,
-                                                 isStale: Boolean)
+    private fun instructionTokenWithHash(operation: Operation): CacheToken {
+        val defaultToken = instructionToken(operation)
+        return defaultToken.copy(
+                requestMetadata = defaultToken.requestMetadata.copy(urlHash = mockHash)
+        )
+    }
+
+    private fun testGetCachedResponse(iteration: Int,
+                                      operation: Expiring,
+                                      hasResponse: Boolean,
+                                      isStale: Boolean) {
+        val context = "iteration = $iteration,\n" +
+                "operation = $operation,\n" +
+                "hasResponse = $hasResponse,\n" +
+                "isStale = $isStale"
+
+        val start = 1234L
+
+        val instructionToken = instructionTokenWithHash(operation)
+
+        val isCompressed = 1
+        val isEncrypted = 1
+
+        val target = spy(setUp(
+                true,
+                true,
+                instructionToken.instruction
+        ))
+
+        val isDataStale = isStale || operation.type == REFRESH || operation.type == INVALIDATE
+        val cacheDateTimeStamp = 98765L
+
+        val expiryDateTime = ifElse(
+                isDataStale,
+                currentDateTime - 1L,
+                currentDateTime + 1L
+        )
+
+        val mockExpiryDate = Date(ifElse(
+                isDataStale,
+                currentDateTime - 1L,
+                currentDateTime + 1L
+        ))
+
+        whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
+        whenever(mockDateFactory.invoke(eq(expiryDateTime))).thenReturn(mockExpiryDate)
+
+        val mockResponseWrapper = ResponseWrapper<Glitch>(
+                TestResponse::class.java,
+                null,
+                mock()
+        )
+
+        whenever(mockSerialisationManager.deserialise(
+                eq(instructionToken),
+                eq(mockBlob),
+                eq(isEncrypted == 1),
+                eq(isCompressed == 1),
+                any()
+        )).thenReturn(if (hasResponse) mockResponseWrapper else null)
+
+        prepareGetCachedResponse(
+                context,
+                operation,
+                instructionToken,
+                hasResponse,
+                isDataStale,
+                isCompressed,
+                isEncrypted,
+                cacheDateTimeStamp,
+                expiryDateTime
+        )
+
+        val cachedResponse = target.getCachedResponse(
+                instructionToken,
+                start
+        )
+
+        verifyWithContext(target, context)
+                .invalidatesIfNeeded(eq(instructionToken))
+
+        verifyGetCachedResponse(
+                context,
+                operation,
+                instructionToken,
+                start,
+                hasResponse,
+                isDataStale,
+                cachedResponse
+        )
+
+        if (hasResponse) {
+            val actualMetadata = cachedResponse!!.metadata
+
+            assertEqualsWithContext(
+                    CacheMetadata.Duration((currentDateTime - start).toInt(), 0, 0),
+                    actualMetadata.callDuration,
+                    "Metadata call duration didn't match",
+                    context
+            )
+
+            assertEqualsWithContext(
+                    ifElse(isDataStale, STALE, FRESH),
+                    actualMetadata.cacheToken.status,
+                    "Cache status should be ${ifElse(isDataStale, "STALE", "FRESH")}",
+                    context
+            )
+        } else {
+            assertNullWithContext(
+                    cachedResponse,
+                    "Returned response should be null",
+                    context
+            )
+        }
+
+        val onErrorCaptor = argumentCaptor<Action>()
+
+        verifyWithContext(mockSerialisationManager, context).deserialise(
+                eq(instructionToken),
+                eq(mockBlob),
+                eq(isEncrypted == 1),
+                eq(isCompressed == 1),
+                onErrorCaptor.capture()
+        )
+
+        onErrorCaptor.firstValue()
+
+        verifyWithContext(target, context).clearCache(
+                isNull(),
+                eq(false)
+        )
+    }
+
+    protected open fun prepareGetCachedResponse(context: String,
+                                                operation: Expiring,
+                                                instructionToken: CacheToken,
+                                                hasResponse: Boolean,
+                                                isStale: Boolean,
+                                                isCompressed: Int,
+                                                isEncrypted: Int,
+                                                cacheDateTimeStamp: Long,
+                                                expiryDate: Long) = Unit
+
+    protected abstract fun verifyGetCachedResponse(context: String,
+                                                   operation: Expiring,
+                                                   instructionToken: CacheToken,
+                                                   start: Long,
+                                                   hasResponse: Boolean,
+                                                   isStale: Boolean,
+                                                   cachedResponse: ResponseWrapper<Glitch>?)
 
 }

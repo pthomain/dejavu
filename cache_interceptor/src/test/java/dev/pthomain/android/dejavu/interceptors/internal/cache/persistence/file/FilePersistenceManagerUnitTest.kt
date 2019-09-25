@@ -34,12 +34,14 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.datab
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
 
 internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<FilePersistenceManager<Glitch>>() {
@@ -52,8 +54,11 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private lateinit var mockFileOfWrongType2: File
     private lateinit var mockValidFile: File
     private lateinit var mockInvalidatedFile: File
+    private lateinit var mockFileInputStreamFactory: (File) -> InputStream
     private lateinit var mockFileOutputStreamFactory: (File) -> OutputStream
+    private lateinit var mockFileReader: (InputStream) -> ByteArray
     private lateinit var mockOutputStream: OutputStream
+    private lateinit var mockInputStream: InputStream
     private lateinit var mockCacheDataHolder: CacheDataHolder
 
     private val mockFileWithValidHash = mockHash + SEPARATOR + "abcd"
@@ -72,7 +77,10 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         mockFileOfRightType = mock()
         mockFileOfWrongType1 = mock()
         mockFileOfWrongType2 = mock()
+        mockFileInputStreamFactory = mock()
         mockFileOutputStreamFactory = mock()
+        mockFileReader = mock()
+        mockInputStream = mock()
         mockOutputStream = mock()
         mockValidFile = mock()
         mockInvalidatedFile = mock()
@@ -96,7 +104,9 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         return FilePersistenceManager(
                 mockHasher,
                 mockFileFactory,
+                mockFileInputStreamFactory,
                 mockFileOutputStreamFactory,
+                mockFileReader,
                 mockCacheConfiguration,
                 mockSerialisationManager,
                 mockDateFactory,
@@ -226,7 +236,6 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                                    operation: Operation,
                                    instructionToken: CacheToken) {
         val fileList = arrayOf(mockFileWithValidHash)
-
         whenever(mockCacheDirectory.list()).thenReturn(fileList)
 
         whenever(mockFileNameSerialiser.deserialise(
@@ -279,10 +288,48 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         }
     }
 
-    override fun testGetCachedResponse(iteration: Int,
-                                       operation: Expiring,
-                                       hasResponse: Boolean,
-                                       isStale: Boolean) {
-        //TODO
+    override fun prepareGetCachedResponse(context: String,
+                                          operation: Expiring,
+                                          instructionToken: CacheToken,
+                                          hasResponse: Boolean,
+                                          isStale: Boolean,
+                                          isCompressed: Int,
+                                          isEncrypted: Int,
+                                          cacheDateTimeStamp: Long,
+                                          expiryDate: Long) {
+        val fileList = arrayOf(mockFileWithValidHash)
+        whenever(mockCacheDirectory.list()).thenReturn(fileList)
+
+        whenever(mockFileFactory.invoke(eq(mockCacheDirectory), eq(mockFileWithValidHash)))
+                .thenReturn(mockValidFile)
+
+        whenever(mockFileInputStreamFactory.invoke(eq(mockValidFile)))
+                .thenReturn(mockInputStream)
+
+        whenever(mockFileReader.invoke(eq(mockInputStream))).thenReturn(mockBlob)
+
+        whenever(mockFileNameSerialiser.deserialise(
+                eq(instructionToken.requestMetadata),
+                eq(mockFileWithValidHash)
+        )).thenReturn(mockCacheDataHolder.copy(
+                cacheDate = cacheDateTimeStamp,
+                expiryDate = expiryDate,
+                isCompressed = isCompressed == 1,
+                isEncrypted = isEncrypted == 1
+        ))
+    }
+
+    override fun verifyGetCachedResponse(context: String,
+                                         operation: Expiring,
+                                         instructionToken: CacheToken,
+                                         start: Long,
+                                         hasResponse: Boolean,
+                                         isStale: Boolean,
+                                         cachedResponse: ResponseWrapper<Glitch>?) {
+        assertEqualsWithContext(
+                mockBlob,
+                mockCacheDataHolder.data,
+                context
+        )
     }
 }

@@ -28,7 +28,6 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
@@ -36,16 +35,15 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.test.verifyNeverWithContext
+import dev.pthomain.android.dejavu.test.verifyWithContext
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import java.util.*
 
 internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<DatabasePersistenceManager<Glitch>>() {
 
@@ -299,27 +297,15 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         }
     }
 
-    override fun testGetCachedResponse(iteration: Int,
-                                       operation: Expiring,
-                                       hasResponse: Boolean,
-                                       isStale: Boolean) {
-        val context = "iteration = $iteration,\n" +
-                "operation = $operation,\n" +
-                "hasResponse = $hasResponse,\n" +
-                "isStale = $isStale"
-
-        val target = spy(setUp(
-                true,
-                true,
-                instructionToken(operation).instruction
-        ))
-
-        val start = 1234L
-        val instructionToken = instructionToken(operation)
-        val isDataStale = isStale || operation.type == REFRESH || operation.type == INVALIDATE
-
-        val queryCaptor = argumentCaptor<String>()
-
+    override fun prepareGetCachedResponse(context: String,
+                                          operation: Expiring,
+                                          instructionToken: CacheToken,
+                                          hasResponse: Boolean,
+                                          isStale: Boolean,
+                                          isCompressed: Int,
+                                          isEncrypted: Int,
+                                          cacheDateTimeStamp: Long,
+                                          expiryDate: Long) {
         val mockCursor = mock<Cursor>()
         whenever(mockDatabase.query(any<String>())).thenReturn(mockCursor)
 
@@ -329,12 +315,6 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                 .thenReturn(true)
                 .thenReturn(false)
 
-        val cacheDateTimeStamp = 98765L
-        val localData = byteArrayOf(1, 2, 3, 4)
-        val isCompressed = 1
-        val isEncrypted = 0
-        val expiryDate = if (isDataStale) currentDateTime - 1L else currentDateTime + 1L
-
         whenever(mockCursor.getColumnIndex(eq(DATE.columnName))).thenReturn(1)
         whenever(mockCursor.getColumnIndex(eq(DATA.columnName))).thenReturn(2)
         whenever(mockCursor.getColumnIndex(eq(IS_COMPRESSED.columnName))).thenReturn(3)
@@ -343,92 +323,33 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         whenever(mockCursor.getColumnIndex(eq(CLASS.columnName))).thenReturn(6)
 
         whenever(mockCursor.getLong(eq(1))).thenReturn(cacheDateTimeStamp)
-        whenever(mockCursor.getBlob(eq(2))).thenReturn(localData)
+        whenever(mockCursor.getBlob(eq(2))).thenReturn(mockBlob)
         whenever(mockCursor.getInt(eq(3))).thenReturn(isCompressed)
         whenever(mockCursor.getInt(eq(4))).thenReturn(isEncrypted)
         whenever(mockCursor.getLong(eq(5))).thenReturn(expiryDate)
         whenever(mockCursor.getString(eq(6))).thenReturn(TestResponse::class.java.name)
+    }
 
-        val mockExpiryDate = Date(if (isDataStale) currentDateTime - 1L else currentDateTime + 1L)
-
-        whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
-        whenever(mockDateFactory.invoke(eq(expiryDate))).thenReturn(mockExpiryDate)
-
-        val mockResponseWrapper = ResponseWrapper<Glitch>(
-                TestResponse::class.java,
-                null,
-                mock()
-        )
-
-        val onErrorCaptor = argumentCaptor<Action>()
-
-        whenever(mockSerialisationManager.deserialise(
-                eq(instructionToken),
-                eq(localData),
-                eq(isEncrypted == 1),
-                eq(isCompressed == 1),
-                any()
-        )).thenReturn(if (hasResponse) mockResponseWrapper else null)
-
-        val actualResponseWrapper = target.getCachedResponse(
-                instructionToken,
-                start
-        )
-
-        verifyWithContext(target, context)
-                .checkInvalidation(eq(instructionToken))
-
+    override fun verifyGetCachedResponse(context: String,
+                                         operation: Expiring,
+                                         instructionToken: CacheToken,
+                                         start: Long,
+                                         hasResponse: Boolean,
+                                         isStale: Boolean,
+                                         cachedResponse: ResponseWrapper<Glitch>?) {
+        val queryCaptor = argumentCaptor<String>()
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 
         assertEqualsWithContext(
                 "\n" +
                         "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted, class\n" +
                         "            FROM rx_cache\n" +
-                        "            WHERE token = 'no_hash'\n" +
+                        "            WHERE token = '$mockHash'\n" +
                         "            LIMIT 1\n" +
                         "            ",
                 queryCaptor.firstValue.replace("\\s+", " "),
                 "Query didn't match",
                 context
-        )
-
-        verifyWithContext(mockSerialisationManager, context).deserialise(
-                eq(instructionToken),
-                eq(localData),
-                eq(isEncrypted == 1),
-                eq(isCompressed == 1),
-                onErrorCaptor.capture()
-        )
-
-        if (hasResponse) {
-            val actualMetadata = actualResponseWrapper!!.metadata
-
-            assertEqualsWithContext(
-                    CacheMetadata.Duration((currentDateTime - start).toInt(), 0, 0),
-                    actualMetadata.callDuration,
-                    "Metadata call duration didn't match",
-                    context
-            )
-
-            assertEqualsWithContext(
-                    if (isDataStale) CacheStatus.STALE else CacheStatus.FRESH,
-                    actualMetadata.cacheToken.status,
-                    "Cache status should be ${if (isDataStale) "STALE" else "FRESH"}",
-                    context
-            )
-        } else {
-            assertNullWithContext(
-                    actualResponseWrapper,
-                    "Returned response should be null",
-                    context
-            )
-        }
-
-        onErrorCaptor.firstValue()
-
-        verifyWithContext(target, context).clearCache(
-                isNull(),
-                eq(false)
         )
     }
 
