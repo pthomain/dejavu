@@ -29,6 +29,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -36,6 +38,7 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
+import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
@@ -163,7 +166,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     fun testCache() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is CacheInstruction.Operation.Expiring) {
+            if (operation is Expiring) {
                 trueFalseSequence { encryptDataGlobally ->
                     trueFalseSequence { compressDataGlobally ->
                         trueFalseSequence { hasPreviousResponse ->
@@ -184,12 +187,98 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    protected abstract fun testCache(iteration: Int,
-                                     operation: CacheInstruction.Operation.Expiring,
-                                     encryptDataGlobally: Boolean,
-                                     compressDataGlobally: Boolean,
-                                     hasPreviousResponse: Boolean,
-                                     isSerialisationSuccess: Boolean)
+    protected open fun prepareCache(iteration: Int,
+                                    operation: Expiring,
+                                    encryptDataGlobally: Boolean,
+                                    compressDataGlobally: Boolean,
+                                    hasPreviousResponse: Boolean,
+                                    isSerialisationSuccess: Boolean) = Unit
+
+    protected abstract fun verifyCache(context: String,
+                                       iteration: Int,
+                                       instructionToken: CacheToken,
+                                       operation: Expiring,
+                                       encryptData: Boolean,
+                                       compressData: Boolean,
+                                       hasPreviousResponse: Boolean,
+                                       isSerialisationSuccess: Boolean,
+                                       duration: Long)
+
+    private fun testCache(iteration: Int,
+                          operation: Expiring,
+                          encryptDataGlobally: Boolean,
+                          compressDataGlobally: Boolean,
+                          hasPreviousResponse: Boolean,
+                          isSerialisationSuccess: Boolean) {
+        val context = "iteration = $iteration,\n" +
+                "operation = $operation,\n" +
+                "encryptDataGlobally = $encryptDataGlobally,\n" +
+                "compressDataGlobally = $compressDataGlobally,\n" +
+                "hasPreviousResponse = $hasPreviousResponse\n" +
+                "isSerialisationSuccess = $isSerialisationSuccess"
+
+        val instructionToken = instructionToken(operation)
+
+        val target = setUp(
+                encryptDataGlobally,
+                compressDataGlobally,
+                instructionToken.instruction
+        )
+
+        prepareCache(
+                iteration,
+                operation,
+                encryptDataGlobally,
+                compressDataGlobally,
+                hasPreviousResponse,
+                isSerialisationSuccess
+        )
+
+        whenever(mockResponseWrapper.metadata.cacheToken.requestMetadata).thenReturn(instructionToken.requestMetadata)
+        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
+
+        val duration = operation.durationInMillis ?: durationInMillis
+
+        if (mockPreviousResponse != null) {
+            val previousMetadata = CacheMetadata<Glitch>(
+                    instructionToken(),
+                    null,
+                    CacheMetadata.Duration(0, 0, 0)
+            )
+            whenever(mockPreviousResponse.metadata).thenReturn(previousMetadata)
+        }
+
+        val encryptData = mockPreviousResponse?.metadata?.cacheToken?.isEncrypted
+                ?: operation.encrypt
+                ?: encryptDataGlobally
+
+        val compressData = mockPreviousResponse?.metadata?.cacheToken?.isCompressed
+                ?: operation.compress
+                ?: compressDataGlobally
+
+        whenever(mockSerialisationManager.serialise(
+                eq(mockResponseWrapper),
+                eq(encryptData),
+                eq(compressData)
+        )).thenReturn(if (isSerialisationSuccess) mockBlob else null)
+
+        target.cache(
+                mockResponseWrapper,
+                mockPreviousResponse
+        )
+
+        verifyCache(
+                context,
+                iteration,
+                instructionToken,
+                operation,
+                encryptData,
+                compressData,
+                hasPreviousResponse,
+                isSerialisationSuccess,
+                duration
+        )
+    }
 
     @Test
     fun testInvalidate() {
@@ -198,13 +287,13 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    protected abstract fun testInvalidate(operation: CacheInstruction.Operation)
+    protected abstract fun testInvalidate(operation: Operation)
 
     @Test
     fun testGetCachedResponse() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is CacheInstruction.Operation.Expiring) {
+            if (operation is Expiring) {
                 trueFalseSequence { hasResults ->
                     trueFalseSequence { isStale ->
                         testGetCachedResponse(
@@ -220,7 +309,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     protected abstract fun testGetCachedResponse(iteration: Int,
-                                                 operation: CacheInstruction.Operation.Expiring,
+                                                 operation: Expiring,
                                                  hasResponse: Boolean,
                                                  isStale: Boolean)
 

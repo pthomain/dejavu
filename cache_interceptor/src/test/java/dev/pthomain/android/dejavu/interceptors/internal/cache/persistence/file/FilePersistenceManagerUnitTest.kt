@@ -23,19 +23,21 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.isNull
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.BasePersistenceManagerUnitTest
+import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
+import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
 import java.io.File
+import java.io.OutputStream
 
-//TODO
 internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<FilePersistenceManager<Glitch>>() {
 
     private lateinit var mockFileNameSerialiser: FileNameSerialiser
@@ -44,7 +46,10 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private lateinit var mockFileOfRightType: File
     private lateinit var mockFileOfWrongType1: File
     private lateinit var mockFileOfWrongType2: File
+    private lateinit var mockFileOutputStreamFactory: (File) -> OutputStream
+    private lateinit var mockOutputStream: OutputStream
 
+    private val mockFileName = "mockFileName"
     private val fileOfRightType = "fileOfRightType"
     private val fileOfWrongType1 = "fileOfWrongType1"
     private val fileOfWrongType2 = "fileOfWrongType2"
@@ -58,6 +63,8 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         mockFileOfRightType = mock()
         mockFileOfWrongType1 = mock()
         mockFileOfWrongType2 = mock()
+        mockFileOutputStreamFactory = mock()
+        mockOutputStream = mock()
 
         val mockCacheConfiguration = setUpConfiguration(
                 encryptDataGlobally,
@@ -68,6 +75,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         return FilePersistenceManager(
                 mockHasher,
                 mockFileFactory,
+                mockFileOutputStreamFactory,
                 mockCacheConfiguration,
                 mockSerialisationManager,
                 mockDateFactory,
@@ -116,22 +124,93 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         }
     }
 
-    override fun testCache(iteration: Int,
-                           operation: CacheInstruction.Operation.Expiring,
-                           encryptDataGlobally: Boolean,
-                           compressDataGlobally: Boolean,
-                           hasPreviousResponse: Boolean,
-                           isSerialisationSuccess: Boolean) {
+    override fun prepareCache(iteration: Int,
+                              operation: Expiring,
+                              encryptDataGlobally: Boolean,
+                              compressDataGlobally: Boolean,
+                              hasPreviousResponse: Boolean,
+                              isSerialisationSuccess: Boolean) {
+        if (isSerialisationSuccess) {
+            whenever(mockFileNameSerialiser.serialise(any()))
+                    .thenReturn(mockFileName)
 
+            whenever(mockFileFactory.invoke(eq(mockCacheDirectory), eq(mockFileName)))
+                    .thenReturn(mockFileOfRightType)
+
+            whenever(mockFileOutputStreamFactory.invoke(eq(mockFileOfRightType)))
+                    .thenReturn(mockOutputStream)
+        }
     }
 
-    override fun testInvalidate(operation: CacheInstruction.Operation) {
+    override fun verifyCache(context: String,
+                             iteration: Int,
+                             instructionToken: CacheToken,
+                             operation: Expiring,
+                             encryptData: Boolean,
+                             compressData: Boolean,
+                             hasPreviousResponse: Boolean,
+                             isSerialisationSuccess: Boolean,
+                             duration: Long) {
+        if (isSerialisationSuccess) {
 
+            val dataHolderCaptor = argumentCaptor<CacheDataHolder>()
+            verifyWithContext(mockFileNameSerialiser, context).serialise(dataHolderCaptor.capture())
+            val cacheDataHolder = dataHolderCaptor.firstValue
+
+            assertCacheDataHolder(
+                    context,
+                    instructionToken,
+                    cacheDataHolder
+            )
+
+            verifyWithContext(mockOutputStream, context).write(eq(cacheDataHolder.data))
+            verifyWithContext(mockOutputStream, context).flush()
+        } else {
+            verifyNeverWithContext(mockFileNameSerialiser, context).serialise(any())
+            verifyNeverWithContext(mockFileFactory, context).invoke(any(), any())
+
+            whenever(mockFileOutputStreamFactory.invoke(eq(mockFileOfRightType)))
+                    .thenReturn(mockOutputStream)
+        }
+    }
+
+    private fun assertCacheDataHolder(context: String,
+                                      instructionToken: CacheToken,
+                                      dataHolder: CacheDataHolder) {
+        assertEqualsWithContext(
+                instructionToken.requestMetadata,
+                dataHolder.requestMetadata,
+                "RequestMetadata didn't match",
+                context
+        )
+        assertEqualsWithContext(
+                currentDateTime,
+                dataHolder.cacheDate,
+                "Cache date didn't match",
+                context
+        )
+        assertEqualsWithContext(
+                currentDateTime + durationInMillis,
+                dataHolder.expiryDate,
+                "Expiry date didn't match",
+                context
+        )
+
+        assertByteArrayEqualsWithContext(
+                mockBlob,
+                dataHolder.data,
+                context
+        )
+    }
+
+    override fun testInvalidate(operation: Operation) {
+        //TODO
     }
 
     override fun testGetCachedResponse(iteration: Int,
-                                       operation: CacheInstruction.Operation.Expiring,
+                                       operation: Expiring,
                                        hasResponse: Boolean,
                                        isStale: Boolean) {
+        //TODO
     }
 }

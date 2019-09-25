@@ -51,6 +51,7 @@ import java.util.*
  */
 class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                                                      private val fileFactory: (File, String) -> File,
+                                                     private val fileOutputStreamFactory: (File) -> OutputStream,
                                                      cacheConfiguration: CacheConfiguration<E>,
                                                      serialisationManager: SerialisationManager<E>,
                                                      dateFactory: (Long?) -> Date,
@@ -80,7 +81,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                 val name = fileNameSerialiser.serialise(this)
                 val file = fileFactory(cacheDirectory, name)
 
-                BufferedOutputStream(FileOutputStream(file)).useAndLogError(
+                fileOutputStreamFactory(file).useAndLogError(
                         {
                             it.write(data)
                             it.flush()
@@ -187,6 +188,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                 FilePersistenceManager(
                         hasher,
                         ::File,
+                        { BufferedOutputStream(FileOutputStream(it)) },
                         cacheConfiguration,
                         serialisationManager,
                         dateFactory,

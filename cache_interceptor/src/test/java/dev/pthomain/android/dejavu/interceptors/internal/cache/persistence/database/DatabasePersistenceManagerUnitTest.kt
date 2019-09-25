@@ -36,6 +36,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
@@ -51,6 +52,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     private lateinit var mockObservable: Observable<TestResponse>
     private lateinit var mockCursor: Cursor
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
+    private lateinit var mockContentValues: ContentValues
 
     override fun setUp(encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
@@ -59,6 +61,8 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         mockObservable = mock()
         mockContentValuesFactory = mock()
         mockCursor = mock()
+        mockContentValuesFactory = mock()
+        mockContentValues = mock()
 
         val mockConfiguration = setUpConfiguration(
                 encryptDataGlobally,
@@ -131,64 +135,24 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         )
     }
 
-    override fun testCache(iteration: Int,
-                           operation: Expiring,
-                           encryptDataGlobally: Boolean,
-                           compressDataGlobally: Boolean,
-                           hasPreviousResponse: Boolean,
-                           isSerialisationSuccess: Boolean) {
-
-        val context = "iteration = $iteration,\n" +
-                "operation = $operation,\n" +
-                "encryptDataGlobally = $encryptDataGlobally,\n" +
-                "compressDataGlobally = $compressDataGlobally,\n" +
-                "hasPreviousResponse = $hasPreviousResponse\n" +
-                "isSerialisationSuccess = $isSerialisationSuccess"
-
-        val instructionToken = instructionToken(operation)
-
-        val target = setUp(
-                encryptDataGlobally,
-                compressDataGlobally,
-                instructionToken.instruction
-        )
-
-        whenever(mockResponseWrapper.metadata.cacheToken.requestMetadata).thenReturn(instructionToken.requestMetadata)
-        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
-
-        val duration = operation.durationInMillis ?: durationInMillis
-
-        if (mockPreviousResponse != null) {
-            val previousMetadata = CacheMetadata<Glitch>(
-                    instructionToken(),
-                    null,
-                    CacheMetadata.Duration(0, 0, 0)
-            )
-            whenever(mockPreviousResponse.metadata).thenReturn(previousMetadata)
-        }
-
-        val encryptData = mockPreviousResponse?.metadata?.cacheToken?.isEncrypted
-                ?: operation.encrypt
-                ?: encryptDataGlobally
-
-        val compressData = mockPreviousResponse?.metadata?.cacheToken?.isCompressed
-                ?: operation.compress
-                ?: compressDataGlobally
-
-        whenever(mockSerialisationManager.serialise(
-                eq(mockResponseWrapper),
-                eq(encryptData),
-                eq(compressData)
-        )).thenReturn(if (isSerialisationSuccess) mockBlob else null)
-
-        val mockContentValues = mock<ContentValues>()
+    override fun prepareCache(iteration: Int,
+                              operation: Expiring,
+                              encryptDataGlobally: Boolean,
+                              compressDataGlobally: Boolean,
+                              hasPreviousResponse: Boolean,
+                              isSerialisationSuccess: Boolean) {
         whenever(mockContentValuesFactory.invoke(any())).thenReturn(mockContentValues)
+    }
 
-        target.cache(
-                mockResponseWrapper,
-                mockPreviousResponse
-        )
-
+    override fun verifyCache(context: String,
+                             iteration: Int,
+                             instructionToken: CacheToken,
+                             operation: Expiring,
+                             encryptData: Boolean,
+                             compressData: Boolean,
+                             hasPreviousResponse: Boolean,
+                             isSerialisationSuccess: Boolean,
+                             duration: Long) {
         if (isSerialisationSuccess) {
             verifyWithContext(mockDatabase, context).insert(
                     eq(TABLE_CACHE),
