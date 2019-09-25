@@ -30,6 +30,7 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
@@ -216,29 +217,32 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         }
     }
 
-    override fun testInvalidate(operation: CacheInstruction.Operation) {
-        val context = "operation = $operation"
+    override fun prepareInvalidate(context: String,
+                                   operation: Operation,
+                                   instructionToken: CacheToken) {
+        whenever(mockContentValuesFactory.invoke(any()))
+                .thenReturn(mockContentValues)
+    }
 
-        val target = setUp(
-                true,
-                true,
-                null
+    override fun prepareCheckInvalidation(context: String,
+                                          operation: Operation,
+                                          instructionToken: CacheToken) {
+        prepareInvalidate(
+                context,
+                operation,
+                instructionToken
         )
+    }
 
+    override fun verifyCheckInvalidation(context: String,
+                                         operation: Operation,
+                                         instructionToken: CacheToken) {
         if (operation.type == INVALIDATE || operation.type == REFRESH) {
-
-            val mockContentValues = mock<ContentValues>()
-            whenever(mockContentValuesFactory.invoke(any())).thenReturn(mockContentValues)
-
             val mapCaptor = argumentCaptor<Map<String, Any>>()
             val tableCaptor = argumentCaptor<String>()
             val conflictCaptor = argumentCaptor<Int>()
             val selectionCaptor = argumentCaptor<String>()
             val selectionArgsCaptor = argumentCaptor<Array<String>>()
-
-            val instructionToken = instructionToken(operation)
-
-            target.invalidate(instructionToken)
 
             verifyWithContext(mockContentValuesFactory, context).invoke(mapCaptor.capture())
 

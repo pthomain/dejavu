@@ -23,14 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.isNull
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -42,6 +40,7 @@ import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
+import dev.pthomain.android.dejavu.test.verifyWithContext
 import org.junit.Test
 import java.util.*
 
@@ -54,6 +53,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
     protected lateinit var mockMetadata: CacheMetadata<Glitch>
 
+    protected val mockHash = "mockHash"
     protected val mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
 
     protected val currentDateTime = 10000L
@@ -187,23 +187,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    protected open fun prepareCache(iteration: Int,
-                                    operation: Expiring,
-                                    encryptDataGlobally: Boolean,
-                                    compressDataGlobally: Boolean,
-                                    hasPreviousResponse: Boolean,
-                                    isSerialisationSuccess: Boolean) = Unit
-
-    protected abstract fun verifyCache(context: String,
-                                       iteration: Int,
-                                       instructionToken: CacheToken,
-                                       operation: Expiring,
-                                       encryptData: Boolean,
-                                       compressData: Boolean,
-                                       hasPreviousResponse: Boolean,
-                                       isSerialisationSuccess: Boolean,
-                                       duration: Long)
-
     private fun testCache(iteration: Int,
                           operation: Expiring,
                           encryptDataGlobally: Boolean,
@@ -280,6 +263,23 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         )
     }
 
+    protected open fun prepareCache(iteration: Int,
+                                    operation: Expiring,
+                                    encryptDataGlobally: Boolean,
+                                    compressDataGlobally: Boolean,
+                                    hasPreviousResponse: Boolean,
+                                    isSerialisationSuccess: Boolean) = Unit
+
+    protected abstract fun verifyCache(context: String,
+                                       iteration: Int,
+                                       instructionToken: CacheToken,
+                                       operation: Expiring,
+                                       encryptData: Boolean,
+                                       compressData: Boolean,
+                                       hasPreviousResponse: Boolean,
+                                       isSerialisationSuccess: Boolean,
+                                       duration: Long)
+
     @Test
     fun testInvalidate() {
         operationSequence { operation ->
@@ -287,7 +287,81 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    protected abstract fun testInvalidate(operation: Operation)
+    private fun testInvalidate(operation: Operation) {
+        prepareAllInvalidation(operation) { context, instructionToken, target ->
+
+            prepareInvalidate(
+                    context,
+                    operation,
+                    instructionToken
+            )
+
+            target.invalidate(instructionToken)
+
+            verifyWithContext(
+                    target,
+                    context
+            ).checkInvalidation(eq(instructionToken.copy(
+                    instruction = instructionToken.instruction.copy(operation = Invalidate)
+            )))
+        }
+    }
+
+    private fun prepareAllInvalidation(operation: Operation,
+                                       andThen: (String, CacheToken, T) -> Unit) {
+        val context = "operation = $operation"
+
+        val target = spy(setUp(
+                true,
+                true,
+                null
+        ))
+
+        val defaultToken = instructionToken(operation)
+        val instructionToken = defaultToken.copy(
+                requestMetadata = defaultToken.requestMetadata.copy(urlHash = mockHash)
+        )
+
+        andThen(context, instructionToken, target)
+    }
+
+    protected abstract fun prepareInvalidate(context: String,
+                                             operation: Operation,
+                                             instructionToken: CacheToken)
+
+    @Test
+    fun testCheckInvalidation() {
+        operationSequence { operation ->
+            testCheckInvalidation(operation)
+        }
+    }
+
+    private fun testCheckInvalidation(operation: Operation) {
+        prepareAllInvalidation(operation) { context, instructionToken, target ->
+
+            prepareCheckInvalidation(
+                    context,
+                    operation,
+                    instructionToken
+            )
+
+            target.checkInvalidation(instructionToken)
+
+            verifyCheckInvalidation(
+                    context,
+                    operation,
+                    instructionToken
+            )
+        }
+    }
+
+    protected open fun prepareCheckInvalidation(context: String,
+                                                operation: Operation,
+                                                instructionToken: CacheToken) = Unit
+
+    protected abstract fun verifyCheckInvalidation(context: String,
+                                                   operation: Operation,
+                                                   instructionToken: CacheToken)
 
     @Test
     fun testGetCachedResponse() {

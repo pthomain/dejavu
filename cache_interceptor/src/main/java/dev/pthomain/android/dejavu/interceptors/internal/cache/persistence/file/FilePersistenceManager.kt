@@ -119,9 +119,9 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
             }
 
     private fun findFileByHash(hash: String) =
-            cacheDirectory.list { _, name ->
+            cacheDirectory.list().firstOrNull { name ->
                 name.startsWith(hash + SEPARATOR)
-            }.firstOrNull()
+            }
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
