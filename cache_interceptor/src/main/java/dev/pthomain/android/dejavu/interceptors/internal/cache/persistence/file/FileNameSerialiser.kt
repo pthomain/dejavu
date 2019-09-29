@@ -26,12 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import java.util.*
 
 //TODO test
-internal class FileNameSerialiser(
-        private val dateFactory: (Long?) -> Date
-) {
+internal class FileNameSerialiser {
 
     fun serialise(cacheDataHolder: CacheDataHolder) =
             with(cacheDataHolder) {
@@ -61,6 +58,6 @@ internal class FileNameSerialiser(
             }
 
     companion object {
-        const val SEPARATOR = "_-_"
+        const val SEPARATOR = "_"
     }
 }

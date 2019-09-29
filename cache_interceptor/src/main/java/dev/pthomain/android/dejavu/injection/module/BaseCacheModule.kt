@@ -38,10 +38,12 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -59,6 +61,9 @@ import io.reactivex.subjects.PublishSubject
 import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileInputStream
 import java.util.*
 import javax.inject.Singleton
 
@@ -93,8 +98,8 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>) =
-            FileNameSerialiser { dateFactory.get(it) }
+    override fun provideFileNameSerialiser() =
+            FileNameSerialiser()
 
     @Provides
     @Singleton
@@ -136,11 +141,12 @@ internal abstract class BaseCacheModule<E>(
                                              byteToStringConverter: Function1<ByteArray, String>,
                                              compresser: Function1<ByteArray, ByteArray>,
                                              uncompresser: Function3<ByteArray, Int, Int, ByteArray>) =
-            SerialisationManager<E>(
+            SerialisationManager(
                     configuration.logger,
-                    { byteToStringConverter.get(it) },
+                    configuration,
+                    byteToStringConverter::get,
                     encryptionManager,
-                    { compresser.get(it) },
+                    compresser::get,
                     { compressed, compressedOffset, compressedSize -> uncompresser.get(compressed, compressedOffset, compressedSize) },
                     configuration.serialiser
             )
@@ -157,9 +163,8 @@ internal abstract class BaseCacheModule<E>(
     @Provides
     @Singleton
     @Synchronized
-    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?): SupportSQLiteDatabase? {
-        return sqlOpenHelper?.writableDatabase
-    }
+    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
+            sqlOpenHelper?.writableDatabase
 
     @Provides
     @Singleton
@@ -189,7 +194,7 @@ internal abstract class BaseCacheModule<E>(
                         hasher,
                         serialisationManager,
                         configuration,
-                        { dateFactory.get(it) },
+                        dateFactory::get,
                         this::mapToContentValues
                 )
             }
@@ -202,10 +207,30 @@ internal abstract class BaseCacheModule<E>(
                 DatabaseStatisticsCompiler(
                         configuration,
                         configuration.logger,
-                        { dateFactory.get(it) },
+                        dateFactory::get,
                         it
                 )
             }
+
+    @Provides
+    @Singleton
+    override fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
+                                               dateFactory: Function1<Long?, Date>) =
+            FileStatisticsCompiler(
+                    configuration,
+                    ::File,
+                    { BufferedInputStream(FileInputStream(it)) },
+                    dateFactory::get,
+                    fileNameSerialiser
+            )
+
+    @Provides
+    @Singleton
+    override fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler,
+                                           databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler? =
+            configuration.cacheDirectory
+                    ?.let { fileStatisticsCompiler }
+                    ?: databaseStatisticsCompiler
 
     @Provides
     @Singleton

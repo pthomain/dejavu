@@ -67,7 +67,7 @@ class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
     /**
      * Returns a Single emitting current cache statistics
      */
-    fun statistics() = component.databaseStatisticsCompiler()?.getStatistics()
+    fun statistics() = component.statisticsCompiler()?.getStatistics()
             ?: Single.error(IllegalStateException("The cache is not using a database to persist its data"))
 
     companion object {

@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -34,6 +35,7 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
 
 //TODO JavaDoc
 class SerialisationManager<E>(private val logger: Logger,
+                              private val configuration: CacheConfiguration<E>,
                               private val byteToStringConverter: (ByteArray) -> String,
                               private val encryptionManager: EncryptionManager,
                               private val compresser: (ByteArray) -> ByteArray,
@@ -52,6 +54,9 @@ class SerialisationManager<E>(private val logger: Logger,
             responseClass == String::class.java -> response as String
             serialiser.canHandleType(responseClass) -> serialiser.serialise(response)
             else -> null
+        }?.let {
+            if (useFileCache()) responseClass.name + "\n" + it
+            else it
         }
 
         return serialised
@@ -95,7 +100,13 @@ class SerialisationManager<E>(private val logger: Logger,
                             ?: throw IllegalStateException("Could not decrypt data")
                 else it
             }.let {
-                serialiser.deserialise(byteToStringConverter(it), responseClass)
+                val serialised = byteToStringConverter(it)
+
+                val payload = if (useFileCache())
+                    serialised.substring(serialised.indexOf("\n"))
+                else serialised
+
+                serialiser.deserialise(payload, responseClass)
             }.let {
                 ResponseWrapper(
                         responseClass,
@@ -114,6 +125,8 @@ class SerialisationManager<E>(private val logger: Logger,
         }
     }
 
+    private fun useFileCache() = configuration.cacheDirectory != null
+
     private fun logCompression(compressedData: ByteArray,
                                simpleName: String,
                                uncompressed: ByteArray) {
@@ -127,4 +140,5 @@ class SerialisationManager<E>(private val logger: Logger,
     companion object {
         private const val DATA_TAG = "DATA_TAG"
     }
+
 }

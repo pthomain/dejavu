@@ -92,6 +92,7 @@ class SerialisationManagerUnitTest {
 
         target = SerialisationManager(
                 mock(),
+                mock(), //FIXME
                 mockByteToStringConverter,
                 mockEncryptionManager,
                 mockCompresser,

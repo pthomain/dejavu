@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.injection.component
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
@@ -39,6 +39,6 @@ internal interface CacheComponent<E>
     fun dejaVuInterceptorFactory(): DejaVuInterceptor.Factory<E>
     fun retrofitCacheAdapterFactory(): RetrofitCallAdapterFactory<E>
     fun cacheMetadataObservable(): Observable<CacheMetadata<E>>
-    fun databaseStatisticsCompiler(): DatabaseStatisticsCompiler?
+    fun statisticsCompiler(): StatisticsCompiler?
 
 }

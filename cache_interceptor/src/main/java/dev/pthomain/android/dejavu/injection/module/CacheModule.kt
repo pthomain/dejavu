@@ -38,9 +38,11 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -71,7 +73,7 @@ internal interface CacheModule<E>
 
     fun provideEncryptionManager(): EncryptionManager
 
-    fun provideFileNameSerialiser(dateFactory: Function1<Long?, Date>): FileNameSerialiser
+    fun provideFileNameSerialiser(): FileNameSerialiser
 
     fun provideFilePersistenceManagerFactory(hasher: Hasher,
                                              serialisationManager: SerialisationManager<E>,
@@ -110,6 +112,12 @@ internal interface CacheModule<E>
 
     fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
                                           dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler?
+
+    fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
+                                      dateFactory: Function1<Long?, Date>): FileStatisticsCompiler
+
+    fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler,
+                                  databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler?
 
     fun provideCacheManager(serialiser: Serialiser,
                             persistenceManager: PersistenceManager<E>,
