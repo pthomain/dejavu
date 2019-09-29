@@ -30,6 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Req
 //TODO test
 internal class FileNameSerialiser {
 
+
     fun serialise(cacheDataHolder: CacheDataHolder) =
             with(cacheDataHolder) {
                 listOf(
@@ -59,5 +60,9 @@ internal class FileNameSerialiser {
 
     companion object {
         const val SEPARATOR = "_"
+
+        private val validFileRegex = Regex("^([^_]+_){5}[^_]+\$")
+
+        fun isValidFormat(name: String) = validFileRegex.matches(name)
     }
 }

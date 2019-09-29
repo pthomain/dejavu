@@ -27,6 +27,7 @@ import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheEntry
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.BaseStatisticsCompiler
 import java.io.File
 import java.io.InputStream
@@ -41,7 +42,8 @@ internal class FileStatisticsCompiler(
 ) : BaseStatisticsCompiler<String, List<String>>(configuration) {
 
     override fun loadEntries() =
-            configuration.cacheDirectory!!.list().toList()
+            configuration.cacheDirectory!!.list()
+                    .filter { isValidFormat(it) }
 
     override fun convert(entry: String): CacheEntry {
         val dataHolder = fileNameSerialiser.deserialise(
