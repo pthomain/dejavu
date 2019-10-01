@@ -170,8 +170,8 @@ internal abstract class BaseDemoPresenter protected constructor(
     private fun onCallComplete() {
         mvpView.onCallComplete()
         dejaVu.statistics().ioUi()
-                .doOnSuccess { it.log(uiLogger, CACHE_STATS) }
-                .doOnError { uiLogger.e(CACHE_STATS, it, "Could not show stats") }
+                .doOnSuccess { it.log(uiLogger) }
+                .doOnError { uiLogger.e(this, it, "Could not show stats") }
                 .autoSubscribe()
     }
 
@@ -188,7 +188,6 @@ internal abstract class BaseDemoPresenter protected constructor(
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"
         internal const val ENDPOINT = "fact"
-        internal const val CACHE_STATS = "CACHE_STATS"
     }
 
 }

@@ -46,6 +46,7 @@ import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.*
 import org.junit.Assert.assertArrayEquals
 import org.mockito.internal.verification.VerificationModeFactory
+import org.mockito.verification.VerificationMode
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.http.GET
@@ -199,23 +200,35 @@ internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
 
 internal fun <T> verifyWithContext(target: T,
                                    context: String?) =
-        verify(
+        verifyAndLogContext(
                 target,
                 VerificationModeFactory.description(
                         atLeastOnce(),
                         "\n$context"
-                )
+                ),
+                context
         )
 
 internal fun <T> verifyNeverWithContext(target: T,
                                         context: String?) =
-        verify(
+        verifyAndLogContext(
                 target,
                 VerificationModeFactory.description(
                         never(),
                         "\n$context"
-                )
+                ),
+                context
         )
+
+private fun <T> verifyAndLogContext(target: T,
+                                    mode: VerificationMode,
+                                    context: String?): T =
+        try {
+            verify(target, mode)
+        } catch (e: Throwable) {
+            context?.also { println(it) }
+            target
+        }
 
 fun assertByteArrayEqualsWithContext(expected: ByteArray?,
                                      other: ByteArray?,

@@ -47,21 +47,22 @@ class SerialisationManager<E>(private val logger: Logger,
     fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,
                   compressData: Boolean): ByteArray? {
-        val response = responseWrapper.response!!
+        val response = responseWrapper.response
         val responseClass = responseWrapper.responseClass
 
         val serialised = when {
             responseClass == String::class.java -> response as String
-            serialiser.canHandleType(responseClass) -> serialiser.serialise(response)
-            else -> null
-        }?.let {
-            if (useFileCache()) responseClass.name + "\n" + it
-            else it
+            response == null || !serialiser.canHandleType(response.javaClass) -> return null
+            else -> serialiser.serialise(response)
         }
 
         return serialised
-                ?.toByteArray()
-                ?.let { data ->
+                .let {
+                    if (useFileCache()) responseClass.name + "\n" + it
+                    else it
+                }
+                .toByteArray()
+                .let { data ->
                     if (encryptData && encryptionManager.isEncryptionAvailable)
                         encryptionManager.encryptBytes(data, DATA_TAG)
                     else data

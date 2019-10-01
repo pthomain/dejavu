@@ -24,8 +24,6 @@
 package dev.pthomain.android.dejavu.interceptors.internal.response
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.DONE
@@ -53,7 +51,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
      * @return an empty ResponseWrapper emitting Single
      */
     fun emptyResponseWrapperSingle(instructionToken: CacheToken) =
-            isOperationCompletable(instructionToken.instruction.operation).let { isDone ->
+            instructionToken.instruction.operation.type.isCompletable.let { isDone ->
                 Single.just(ResponseWrapper(
                         instructionToken.instruction.responseClass,
                         null,
@@ -66,15 +64,6 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                         )
                 ))
             }!!
-
-    /**
-     * Determines whether a given operation is completable, i.e. does not return data.
-     *
-     * @param operation the given operation to assess
-     * @return whether or not this operation returns data
-     */
-    private fun isOperationCompletable(operation: CacheInstruction.Operation) =
-            operation is Invalidate || operation is Clear
 
     /**
      * Creates an empty response to be returned in lieu of an exception if the mergeOnNextOnError

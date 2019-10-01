@@ -21,34 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.retrofit.annotations
+package dev.pthomain.android.dejavu.interceptors.internal.cache
 
-//TODO JavaDoc
-class CacheException(val type: Type,
-                     message: String,
-                     cause: Throwable? = null
-) : Exception(message, cause) {
-
-    enum class Type {
-        ANNOTATION,
-        METADATA,
-        SERIALISATION
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CacheException
-
-        if (type != other.type) return false
-        if (message != other.message) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return type.hashCode() * 31 + message.hashCode()
-    }
-
-}
+//TODO
+class CacheMetadataManagerUnitTest

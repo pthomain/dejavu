@@ -27,7 +27,6 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
@@ -48,7 +47,7 @@ import java.util.*
 class CacheManagerUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
-    private lateinit var mockSerialiser: Serialiser
+    private lateinit var mockCacheMetadataManager: CacheMetadataManager<Glitch>
     private lateinit var mockPersistenceManager: PersistenceManager<Glitch>
     private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
     private lateinit var mockDateFactory: (Long?) -> Date
@@ -57,8 +56,6 @@ class CacheManagerUnitTest {
     private lateinit var mockNetworkMetadata: CacheMetadata<Glitch>
     private lateinit var mockCacheMetadata: CacheMetadata<Glitch>
     private lateinit var expectedExpiryDate: Date
-
-    private val mockSerialisedString = "mockSerialisedString"
 
     private val defaultDurationInMillis = 500L
     private val now = Date(1000L)
@@ -69,20 +66,18 @@ class CacheManagerUnitTest {
 
     private fun setUp() {
         mockErrorFactory = mock()
-        mockSerialiser = mock()
         mockPersistenceManager = mock()
         mockEmptyResponseFactory = mock()
         mockDateFactory = mock()
         mockNetworkGlitch = mock()
         mockSerialisationGlitch = mock()
+        mockCacheMetadataManager = mock()
 
         target = CacheManager(
-                mockErrorFactory,
-                mockSerialiser,
                 mockPersistenceManager,
+                mockCacheMetadataManager,
                 mockEmptyResponseFactory,
                 mockDateFactory,
-                defaultDurationInMillis,
                 mock()
         )
     }
@@ -235,7 +230,7 @@ class CacheManagerUnitTest {
         } else if (!hasCachedResponse || isResponseStaleOverall) {
             prepareFetchAndCache(
                     operation,
-                    mockResponse,
+                    mockResponseWrapper,
                     if (hasCachedResponse) mockCachedResponseWrapper else null,
                     hasCachedResponse,
                     networkCallFails,
@@ -346,7 +341,7 @@ class CacheManagerUnitTest {
     }
 
     private fun prepareFetchAndCache(operation: Expiring,
-                                     mockResponse: TestResponse,
+                                     mockResponseWrapper: ResponseWrapper<Glitch>,
                                      mockCachedResponseWrapper: ResponseWrapper<Glitch>?,
                                      hasCachedResponse: Boolean,
                                      networkCallFails: Boolean,
@@ -358,9 +353,11 @@ class CacheManagerUnitTest {
                 mockCachedResponseWrapper
         )
 
-        prepareSerialise(
+        preparePersistenceManager(
                 serialisationFails,
-                mockResponse
+                hasCachedResponse,
+                mockCachedResponseWrapper,
+                mockResponseWrapper
         )
     }
 
@@ -383,14 +380,16 @@ class CacheManagerUnitTest {
         )).thenReturn(Pair(true, true))
     }
 
-    private fun prepareSerialise(serialisationFails: Boolean,
-                                 response: TestResponse) {
-        whenever(mockSerialiser.canHandleType(
-                eq(TestResponse::class.java)
-        )).thenReturn(true)
-
-        whenever(mockSerialiser.serialise(eq(response)))
-                .thenReturn(if (serialisationFails) null else mockSerialisedString)
+    private fun preparePersistenceManager(serialisationFails: Boolean,
+                                          hasCachedResponse: Boolean,
+                                          mockCachedResponseWrapper: ResponseWrapper<Glitch>?,
+                                          mockResponseWrapper: ResponseWrapper<Glitch>) {
+        if (serialisationFails) {
+            whenever(mockPersistenceManager.cache(
+                    eq(mockResponseWrapper),
+                    if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
+            )).thenThrow(NullPointerException())
+        }
 
         if (serialisationFails) {
             whenever(mockErrorFactory.getError(
@@ -473,14 +472,14 @@ class CacheManagerUnitTest {
                                 metadata = mockCacheMetadata.copy(
                                         exception = mockNetworkGlitch,
                                         cacheToken = instructionToken.copy(
-                                                status = COULD_NOT_REFRESH,
-                                                fetchDate = now
+                                                status = EMPTY,
+                                                cacheDate = null,
+                                                expiryDate = null
                                         )
                                 )
                         )
                     } else {
                         mockResponseWrapper.copy(
-                                response = null,
                                 metadata = mockCacheMetadata.copy(
                                         exception = mockNetworkGlitch,
                                         cacheToken = instructionToken.copy(
@@ -511,9 +510,7 @@ class CacheManagerUnitTest {
                             hasCachedResponse
                     )
                 }
-            } else {
-                mockCachedResponseWrapper
-            }
+            } else mockCachedResponseWrapper
         } else {
             if (networkCallFails) {
                 mockResponseWrapper.copy(
@@ -550,6 +547,13 @@ class CacheManagerUnitTest {
             }
         }
 
+        //FIXME
+//        assertNotNullWithContext(
+//                actualException,
+//                "Exception should be null",
+//                context
+//        )
+
         assertEqualsWithContext(
                 expectedResponseWrapper,
                 actualResponseWrapper,
@@ -565,13 +569,11 @@ class CacheManagerUnitTest {
                                      mockResponseWrapper: ResponseWrapper<Glitch>,
                                      mockCachedResponseWrapper: ResponseWrapper<Glitch>?,
                                      hasCachedResponse: Boolean): ResponseWrapper<Glitch> {
-        verify(mockPersistenceManager).cache(
-                eq(actualResponseWrapper.copy(
-                        response = mockSerialisedString,
-                        responseClass = String::class.java
-                )),
-                if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
-        )
+        verifyWithContext(mockPersistenceManager, context)
+                .cache(
+                        eq(mockResponseWrapper),
+                        if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull()
+                )
 
         val expectedResponseWrapper = if (hasCachedResponse) {
             mockResponseWrapper.copy(

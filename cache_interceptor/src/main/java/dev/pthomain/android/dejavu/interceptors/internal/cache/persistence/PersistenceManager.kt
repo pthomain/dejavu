@@ -80,6 +80,7 @@ interface PersistenceManager<E>
      * @param response the response to cache
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      */
+    @Throws(Exception::class)
     fun cache(response: ResponseWrapper<E>,
               previousCachedResponse: ResponseWrapper<E>?)
 

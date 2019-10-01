@@ -65,7 +65,7 @@ internal class FileStatisticsCompiler(
                 dataHolder.isEncrypted,
                 dataHolder.isCompressed,
                 dateFactory(dataHolder.cacheDate),
-                dateFactory(dataHolder.cacheDate)
+                dateFactory(dataHolder.expiryDate)
         )
     }
 

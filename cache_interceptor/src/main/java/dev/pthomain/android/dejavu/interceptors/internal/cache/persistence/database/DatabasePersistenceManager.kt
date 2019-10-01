@@ -202,11 +202,13 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      *
      * @param response the response to cache
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
+     * @return whether or not the serialisation was successful
      */
+    @Throws(Exception::class)
     override fun cache(response: ResponseWrapper<E>,
                        previousCachedResponse: ResponseWrapper<E>?) {
-        with(serialise(response, previousCachedResponse)) {
-            if (this != null) {
+        serialise(response, previousCachedResponse)?.let {
+            with(it) {
                 val values = HashMap<String, Any>()
                 values[TOKEN.columnName] = requestMetadata!!.urlHash
                 values[DATE.columnName] = cacheDate

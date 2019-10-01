@@ -31,11 +31,15 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.*
+import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
+import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.injection.module.CacheModule.*
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
@@ -234,17 +238,28 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideCacheManager(serialiser: Serialiser,
-                                     persistenceManager: PersistenceManager<E>,
+    override fun provideCacheMetadataManager(persistenceManager: PersistenceManager<E>,
+                                             dateFactory: Function1<Long?, Date>,
+                                             emptyResponseFactory: EmptyResponseFactory<E>) =
+            CacheMetadataManager(
+                    configuration.errorFactory,
+                    persistenceManager,
+                    dateFactory::get,
+                    configuration.cacheDurationInMillis,
+                    configuration.logger
+            )
+
+    @Provides
+    @Singleton
+    override fun provideCacheManager(persistenceManager: PersistenceManager<E>,
+                                     cacheMetadataManager: CacheMetadataManager<E>,
                                      dateFactory: Function1<Long?, Date>,
                                      emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
-                    configuration.errorFactory,
-                    serialiser,
                     persistenceManager,
+                    cacheMetadataManager,
                     emptyResponseFactory,
-                    { dateFactory.get(it) },
-                    configuration.cacheDurationInMillis,
+                    dateFactory::get,
                     configuration.logger
             )
 

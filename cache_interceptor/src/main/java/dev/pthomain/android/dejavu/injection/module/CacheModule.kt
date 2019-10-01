@@ -36,6 +36,7 @@ import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
@@ -119,8 +120,12 @@ internal interface CacheModule<E>
     fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler,
                                   databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler?
 
-    fun provideCacheManager(serialiser: Serialiser,
-                            persistenceManager: PersistenceManager<E>,
+    fun provideCacheMetadataManager(persistenceManager: PersistenceManager<E>,
+                                    dateFactory: Function1<Long?, Date>,
+                                    emptyResponseFactory: EmptyResponseFactory<E>): CacheMetadataManager<E>
+
+    fun provideCacheManager(persistenceManager: PersistenceManager<E>,
+                            cacheMetadataManager: CacheMetadataManager<E>,
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 

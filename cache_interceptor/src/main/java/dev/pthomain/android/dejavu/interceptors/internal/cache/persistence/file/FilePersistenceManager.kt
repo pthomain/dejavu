@@ -75,22 +75,27 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
      *
      * @param response the response to cache
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
+     * @return whether or not the serialisation was successful
      */
+    @Throws(Exception::class)
     override fun cache(response: ResponseWrapper<E>,
                        previousCachedResponse: ResponseWrapper<E>?) {
-        with(serialise(response, previousCachedResponse)) {
-            if (this != null) {
-                val name = fileNameSerialiser.serialise(this)
-                val file = fileFactory(cacheDirectory, name)
+        serialise(response, previousCachedResponse)?.let { holder ->
 
-                fileOutputStreamFactory(file).useAndLogError(
-                        {
-                            it.write(data)
-                            it.flush()
-                        },
-                        logger
-                )
+            findFileByHash(holder.requestMetadata!!.urlHash)?.let {
+                fileFactory(cacheDirectory, it).delete()
             }
+
+            val name = fileNameSerialiser.serialise(holder)
+            val file = fileFactory(cacheDirectory, name)
+
+            fileOutputStreamFactory(file).useAndLogError(
+                    {
+                        it.write(holder.data)
+                        it.flush()
+                    },
+                    logger
+            )
         }
     }
 
