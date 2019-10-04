@@ -72,7 +72,7 @@ interface PersistenceManager<E>
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun invalidatesIfNeeded(instructionToken: CacheToken): Boolean
+    fun invalidateIfNeeded(instructionToken: CacheToken): Boolean
 
     /**
      * Caches a given response.

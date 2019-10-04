@@ -303,7 +303,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             verifyWithContext(
                     target,
                     context
-            ).invalidatesIfNeeded(eq(instructionToken.copy(
+            ).invalidateIfNeeded(eq(instructionToken.copy(
                     instruction = instructionToken.instruction.copy(operation = Invalidate)
             )))
         }
@@ -344,7 +344,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                     instructionToken
             )
 
-            target.invalidatesIfNeeded(instructionToken)
+            target.invalidateIfNeeded(instructionToken)
 
             verifyCheckInvalidation(
                     context,
@@ -460,7 +460,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         )
 
         verifyWithContext(target, context)
-                .invalidatesIfNeeded(eq(instructionToken))
+                .invalidateIfNeeded(eq(instructionToken))
 
         verifyGetCachedResponse(
                 context,

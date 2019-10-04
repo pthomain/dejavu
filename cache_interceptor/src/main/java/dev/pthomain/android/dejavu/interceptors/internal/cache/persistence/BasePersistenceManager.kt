@@ -136,7 +136,7 @@ abstract class BasePersistenceManager<E>(
         val instruction = instructionToken.instruction
         logger.d(this, "Checking for cached ${instruction.responseClass.simpleName}")
 
-        invalidatesIfNeeded(instructionToken)
+        invalidateIfNeeded(instructionToken)
 
         val serialised = getCacheDataHolder(
                 instructionToken,
@@ -232,7 +232,7 @@ abstract class BasePersistenceManager<E>(
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
     final override fun invalidate(instructionToken: CacheToken) =
-            invalidatesIfNeeded(
+            invalidateIfNeeded(
                     instructionToken.copy(
                             instruction = instructionToken.instruction.copy(operation = Invalidate)
                     )

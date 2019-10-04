@@ -164,7 +164,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun invalidatesIfNeeded(instructionToken: CacheToken): Boolean {
+    override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
         if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
             findFileByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
                 fileNameSerialiser

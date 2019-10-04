@@ -175,7 +175,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun invalidatesIfNeeded(instructionToken: CacheToken) =
+    override fun invalidateIfNeeded(instructionToken: CacheToken) =
             if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"

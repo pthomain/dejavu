@@ -53,6 +53,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private lateinit var mockFileOfWrongType1: File
     private lateinit var mockFileOfWrongType2: File
     private lateinit var mockValidFile: File
+    private lateinit var mockFileToDelete: File
     private lateinit var mockInvalidatedFile: File
     private lateinit var mockFileInputStreamFactory: (File) -> InputStream
     private lateinit var mockFileOutputStreamFactory: (File) -> OutputStream
@@ -67,6 +68,8 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private val fileOfWrongType1 = "fileOfWrongType1"
     private val fileOfWrongType2 = "fileOfWrongType2"
     private val invalidatedFileName = "invalidatedFileName"
+    private val mockFileToDelete1 = "mockFileToDelete1"
+    private val mockFileToDelete2 = "mockHash_FileToDelete2"
 
     override fun setUp(encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
@@ -84,6 +87,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         mockOutputStream = mock()
         mockValidFile = mock()
         mockInvalidatedFile = mock()
+        mockFileToDelete = mock()
 
         mockCacheDataHolder = CacheDataHolder(
                 null,
@@ -170,6 +174,16 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
 
             whenever(mockFileOutputStreamFactory.invoke(eq(mockFileOfRightType)))
                     .thenReturn(mockOutputStream)
+
+            whenever(mockCacheDirectory.list()).thenReturn(arrayOf(
+                    mockFileToDelete1,
+                    mockFileToDelete2
+            ))
+
+            whenever(mockFileFactory.invoke(
+                    eq(mockCacheDirectory),
+                    eq(mockFileToDelete2)
+            )).thenReturn(mockFileToDelete)
         }
     }
 
@@ -183,6 +197,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                              isSerialisationSuccess: Boolean,
                              duration: Long) {
         if (isSerialisationSuccess) {
+            verifyWithContext(mockFileToDelete, context).delete()
 
             val dataHolderCaptor = argumentCaptor<CacheDataHolder>()
             verifyWithContext(mockFileNameSerialiser, context).serialise(dataHolderCaptor.capture())
