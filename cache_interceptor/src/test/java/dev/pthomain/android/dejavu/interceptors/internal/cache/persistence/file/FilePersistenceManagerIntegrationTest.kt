@@ -21,9 +21,9 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
+package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManagerIntegrationTest
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 
 internal class FilePersistenceManagerIntegrationTest

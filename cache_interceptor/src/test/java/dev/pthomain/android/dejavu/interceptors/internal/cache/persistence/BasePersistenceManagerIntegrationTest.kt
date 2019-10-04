@@ -21,12 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
+package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE

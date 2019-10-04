@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
+package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expi
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH

@@ -24,4 +24,28 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 //TODO
-class CacheMetadataManagerUnitTest
+class CacheMetadataManagerUnitTest{
+
+
+
+    //    private fun prepareUpdateNetworkCallMetadata(hasCachedResponse: Boolean,
+//                                                 networkCallFails: Boolean,
+//                                                 operation: Expiring,
+//                                                 mockCachedResponseWrapper: ResponseWrapper<Glitch>?) {
+//        if (!networkCallFails) {
+//            val timeToLiveInMs = operation.durationInMillis ?: defaultDurationInMillis
+//            val expiryTimeStamp = now.time + timeToLiveInMs
+//
+//            expectedExpiryDate = Date(expiryTimeStamp)
+//            whenever(mockDateFactory.invoke(eq(expiryTimeStamp)))
+//                    .thenReturn(expectedExpiryDate)
+//        }
+//
+//        whenever(mockPersistenceManager.shouldEncryptOrCompress(
+//                if (hasCachedResponse) eq(mockCachedResponseWrapper) else isNull(),
+//                eq(operation)
+//        )).thenReturn(Pair(true, true))
+//    }
+
+
+}

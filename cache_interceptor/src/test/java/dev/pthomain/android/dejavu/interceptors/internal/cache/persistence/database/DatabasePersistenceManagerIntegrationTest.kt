@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database
 
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManagerIntegrationTest
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 
 internal class DatabasePersistenceManagerIntegrationTest
