@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
@@ -47,7 +47,7 @@ internal class CacheMetadataManager<E>(
         E : NetworkErrorProvider {
 
     fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<E>,
-                               cacheOperation: CacheInstruction.Operation.Expiring,
+                               cacheOperation: Expiring,
                                previousCachedResponse: ResponseWrapper<E>?,
                                instructionToken: CacheToken,
                                diskDuration: Int): ResponseWrapper<E> {
@@ -140,7 +140,8 @@ internal class CacheMetadataManager<E>(
                                        diskDuration: Int) =
             callDuration.copy(
                     disk = diskDuration,
-                    network = callDuration.network - diskDuration
+                    network = callDuration.network - diskDuration,
+                    total = callDuration.network
             )
 
 }

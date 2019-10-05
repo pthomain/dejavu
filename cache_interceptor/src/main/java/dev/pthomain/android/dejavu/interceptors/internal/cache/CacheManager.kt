@@ -70,10 +70,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
         val simpleName = instruction.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
-        val cachedResponse = persistenceManager.getCachedResponse(
-                instructionToken,
-                start
-        )
+        val cachedResponse = persistenceManager.getCachedResponse(instructionToken)
 
         if (cachedResponse != null) {
             logger.d(
@@ -82,11 +79,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
             )
         }
 
-        val diskDuration = cachedResponse
-                ?.metadata
-                ?.callDuration
-                ?.disk
-                ?: (dateFactory(null).time - start).toInt()
+        val diskDuration = (dateFactory(null).time - start).toInt()
 
         if (cacheOperation is Offline) {
             if (cachedResponse == null)

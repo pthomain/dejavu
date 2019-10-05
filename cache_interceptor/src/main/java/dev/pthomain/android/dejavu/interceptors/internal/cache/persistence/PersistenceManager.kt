@@ -49,12 +49,10 @@ interface PersistenceManager<E>
      * Returns a cached entry if available
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return a cached entry if available, or null otherwise
      */
-    fun getCachedResponse(instructionToken: CacheToken,
-                          start: Long): ResponseWrapper<E>?
+    fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>?
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)

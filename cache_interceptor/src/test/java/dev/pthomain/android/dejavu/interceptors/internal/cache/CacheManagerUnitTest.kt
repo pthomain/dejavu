@@ -234,10 +234,8 @@ class CacheManagerUnitTest {
                 null
         )
 
-        whenever(mockPersistenceManager.getCachedResponse(
-                eq(instructionToken),
-                eq(start)
-        )).thenReturn(if (hasCachedResponse) mockCachedResponseWrapper else null)
+        whenever(mockPersistenceManager.getCachedResponse(eq(instructionToken)))
+                .thenReturn(if (hasCachedResponse) mockCachedResponseWrapper else null)
 
         whenever(mockDateFactory.invoke(isNull())).thenReturn(now)
 

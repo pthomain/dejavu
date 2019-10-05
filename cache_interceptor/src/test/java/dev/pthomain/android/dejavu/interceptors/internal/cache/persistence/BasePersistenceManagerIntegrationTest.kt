@@ -47,7 +47,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {
-        val cachedResponse = target.getCachedResponse(instructionToken(), 500)
+        val cachedResponse = target.getCachedResponse(instructionToken())
 
         assertNullWithContext(
                 cachedResponse,
@@ -61,7 +61,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.cache(stubbedResponse, null)
 
-        val cachedResponse = target.getCachedResponse(instructionToken(), 500)
+        val cachedResponse = target.getCachedResponse(instructionToken())
 
         assertResponse(
                 stubbedResponse,
@@ -80,7 +80,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.cache(stubbedResponse, null)
 
-        val cachedResponse = target.getCachedResponse(instructionToken, 500)
+        val cachedResponse = target.getCachedResponse(instructionToken)
 
         assertResponse(
                 stubbedResponse,
@@ -98,7 +98,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         target.cache(stubbedResponse, null)
         target.invalidate(instructionToken)
 
-        val cachedResponse = target.getCachedResponse(instructionToken, 500)
+        val cachedResponse = target.getCachedResponse(instructionToken)
 
         assertResponse(
                 stubbedResponse,
@@ -114,7 +114,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.cache(stubbedResponse, null)
 
-        val cachedResponse = target.getCachedResponse(instructionToken(), 500)
+        val cachedResponse = target.getCachedResponse(instructionToken())
 
         assertResponse(
                 stubbedResponse,
@@ -123,7 +123,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         )
 
         val refreshToken = instructionToken(Refresh())
-        val refreshResponse = target.getCachedResponse(refreshToken, 500)
+        val refreshResponse = target.getCachedResponse(refreshToken)
 
         assertResponse(
                 getStubbedTestResponse(refreshToken),
@@ -139,7 +139,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.cache(stubbedResponse, null)
 
-        val cachedResponse = target.getCachedResponse(instructionToken(), 500)
+        val cachedResponse = target.getCachedResponse(instructionToken())
 
         assertResponse(
                 stubbedResponse,
@@ -157,8 +157,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.clearCache(TestResponse::class.java, false)
 
-        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken, 500)
-        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken, 500)
+        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
+        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)
 
         assertNullWithContext(
                 cachedTestResponseAfterClear,
@@ -181,8 +181,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.clearCache(null, false)
 
-        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken, 500)
-        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken, 500)
+        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
+        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)
 
         assertNullWithContext(
                 cachedTestResponseAfterClear,
@@ -216,8 +216,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
                 "Request metadata for 2 responses of the same type with different URLs should be different"
         )
 
-        val cachedFirstResponse = target.getCachedResponse(firstResponseToken, 500)
-        val cachedSecondResponse = target.getCachedResponse(secondResponseToken, 500)
+        val cachedFirstResponse = target.getCachedResponse(firstResponseToken)
+        val cachedSecondResponse = target.getCachedResponse(secondResponseToken)
 
         assertNotNullWithContext(
                 cachedFirstResponse,
@@ -247,8 +247,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         target.cache(firstResponse, null)
         target.cache(secondResponse, null)
 
-        val cachedFirstResponse = target.getCachedResponse(firstResponseToken, 500)
-        val cachedSecondResponse = target.getCachedResponse(secondResponseToken, 500)
+        val cachedFirstResponse = target.getCachedResponse(firstResponseToken)
+        val cachedSecondResponse = target.getCachedResponse(secondResponseToken)
 
         assertResponse(
                 firstResponse,
@@ -288,8 +288,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.clearCache(TestResponse::class.java, true)
 
-        val freshTestResponseAfterClear = target.getCachedResponse(freshResponseToken, 500)
-        val expiredUserResponseAfterClear = target.getCachedResponse(expiredResponseToken, 500)
+        val freshTestResponseAfterClear = target.getCachedResponse(freshResponseToken)
+        val expiredUserResponseAfterClear = target.getCachedResponse(expiredResponseToken)
 
         assertNullWithContext(
                 expiredUserResponseAfterClear,
@@ -336,11 +336,11 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
                 STALE
         )
 
-        val cachedTestResponse = target.getCachedResponse(testResponseToken, 500)
-        val cachedUserResponse = target.getCachedResponse(userResponseToken, 500)
+        val cachedTestResponse = target.getCachedResponse(testResponseToken)
+        val cachedUserResponse = target.getCachedResponse(userResponseToken)
 
-        val cachedExpiredTestResponse = target.getCachedResponse(expiredTestResponseToken, 500)
-        val cachedExpiredUserResponse = target.getCachedResponse(expiredUserResponseToken, 500)
+        val cachedExpiredTestResponse = target.getCachedResponse(expiredTestResponseToken)
+        val cachedExpiredUserResponse = target.getCachedResponse(expiredUserResponseToken)
 
         assertResponse(
                 testResponse,
@@ -375,11 +375,11 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         target.clearCache(null, true)
 
-        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken, 500)
-        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken, 500)
+        val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
+        val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)
 
-        val cachedExpiredTestResponseAfterClear = target.getCachedResponse(expiredTestResponseToken, 500)
-        val cachedExpiredUserResponseAfterClear = target.getCachedResponse(expiredUserResponseToken, 500)
+        val cachedExpiredTestResponseAfterClear = target.getCachedResponse(expiredTestResponseToken)
+        val cachedExpiredUserResponseAfterClear = target.getCachedResponse(expiredUserResponseToken)
 
         assertResponse(
                 testResponse,

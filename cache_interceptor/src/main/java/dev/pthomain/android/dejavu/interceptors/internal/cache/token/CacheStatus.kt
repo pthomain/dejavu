@@ -54,8 +54,9 @@ enum class CacheStatus(
          */
         val isFresh: Boolean,
         /**
-         * Indicates whether or not this status represents an error and as such should have an
+         * Indicates whether or not this status represents an error and as such contains an
          * error in the cache metadata (for responses implementing the CacheMetadata.Holder interface).
+         * Responses with this status may or may not have a response, but they'll always have an exception.
          */
         val isError: Boolean = false
 ) {

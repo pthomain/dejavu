@@ -110,15 +110,11 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
-    override fun getCacheDataHolder(
-            instructionToken: CacheToken,
-            requestMetadata: RequestMetadata.Hashed,
-            start: Long
-    ): CacheDataHolder? {
+    override fun getCacheDataHolder(instructionToken: CacheToken,
+                                    requestMetadata: RequestMetadata.Hashed): CacheDataHolder? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,

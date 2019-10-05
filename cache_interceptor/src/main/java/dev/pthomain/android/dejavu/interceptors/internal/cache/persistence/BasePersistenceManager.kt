@@ -127,12 +127,10 @@ abstract class BasePersistenceManager<E>(
      * Returns a cached entry if available
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return a cached entry if available, or null otherwise
      */
-    final override fun getCachedResponse(instructionToken: CacheToken,
-                                         start: Long): ResponseWrapper<E>? {
+    final override fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         logger.d(this, "Checking for cached ${instruction.responseClass.simpleName}")
 
@@ -140,15 +138,13 @@ abstract class BasePersistenceManager<E>(
 
         val serialised = getCacheDataHolder(
                 instructionToken,
-                instructionToken.requestMetadata,
-                start
+                instructionToken.requestMetadata
         )
 
         return with(serialised) {
             if (this == null) null
             else deserialise(
                     instructionToken,
-                    start,
                     dateFactory(cacheDate),
                     dateFactory(expiryDate),
                     isCompressed,
@@ -163,19 +159,16 @@ abstract class BasePersistenceManager<E>(
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     protected abstract fun getCacheDataHolder(instructionToken: CacheToken,
-                                              requestMetadata: RequestMetadata.Hashed,
-                                              start: Long): CacheDataHolder?
+                                              requestMetadata: RequestMetadata.Hashed): CacheDataHolder?
 
     /**
      * Deserialises the cached data
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      * @param cacheDate the Date at which the data was cached
      * @param expiryDate the Date at which the data would become STALE
      * @param isCompressed whether or not the cached data was saved compressed
@@ -185,7 +178,6 @@ abstract class BasePersistenceManager<E>(
      * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
      */
     private fun deserialise(instructionToken: CacheToken,
-                            start: Long,
                             cacheDate: Date,
                             expiryDate: Date,
                             isCompressed: Boolean,
@@ -198,12 +190,6 @@ abstract class BasePersistenceManager<E>(
                     isCompressed,
                     { clearCache(null, false) }.act()
             )?.let {
-                val callDuration = CacheMetadata.Duration(
-                        (dateFactory(null).time - start).toInt(),
-                        0,
-                        0
-                )
-
                 logger.d(
                         this,
                         "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
@@ -218,8 +204,7 @@ abstract class BasePersistenceManager<E>(
                                     cacheDate,
                                     expiryDate
                             ),
-                            null,
-                            callDuration
+                            null
                     )
                 }
             }

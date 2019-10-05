@@ -104,13 +104,11 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
      *
      * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
-     * @param start the time at which the operation started in order to calculate the time the operation took.
      *
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed,
-                                    start: Long) =
+                                    requestMetadata: RequestMetadata.Hashed) =
             findFileByHash(requestMetadata.urlHash)?.let {
                 val file = fileFactory(cacheDirectory, it)
 

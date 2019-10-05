@@ -397,8 +397,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 "hasResponse = $hasResponse,\n" +
                 "isStale = $isStale"
 
-        val start = 1234L
-
         val instructionToken = instructionTokenWithHash(operation)
 
         val isCompressed = 1
@@ -454,10 +452,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 expiryDateTime
         )
 
-        val cachedResponse = target.getCachedResponse(
-                instructionToken,
-                start
-        )
+        val cachedResponse = target.getCachedResponse(instructionToken)
 
         verifyWithContext(target, context)
                 .invalidateIfNeeded(eq(instructionToken))
@@ -466,7 +461,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 context,
                 operation,
                 instructionToken,
-                start,
                 hasResponse,
                 isDataStale,
                 cachedResponse
@@ -476,7 +470,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             val actualMetadata = cachedResponse!!.metadata
 
             assertEqualsWithContext(
-                    CacheMetadata.Duration((currentDateTime - start).toInt(), 0, 0),
+                    CacheMetadata.Duration(0, 0, 0),
                     actualMetadata.callDuration,
                     "Metadata call duration didn't match",
                     context
@@ -527,7 +521,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected abstract fun verifyGetCachedResponse(context: String,
                                                    operation: Expiring,
                                                    instructionToken: CacheToken,
-                                                   start: Long,
                                                    hasResponse: Boolean,
                                                    isStale: Boolean,
                                                    cachedResponse: ResponseWrapper<Glitch>?)

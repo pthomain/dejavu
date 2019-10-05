@@ -337,7 +337,6 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     override fun verifyGetCachedResponse(context: String,
                                          operation: Expiring,
                                          instructionToken: CacheToken,
-                                         start: Long,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
                                          cachedResponse: ResponseWrapper<Glitch>?) {
