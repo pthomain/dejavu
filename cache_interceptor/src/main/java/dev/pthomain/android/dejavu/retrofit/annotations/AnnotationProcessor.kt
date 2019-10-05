@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
@@ -68,7 +69,6 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                 is Refresh -> REFRESH
                 is Offline -> OFFLINE
                 is Clear -> CLEAR
-                is ClearAll -> CLEAR_ALL
                 else -> null
             }?.let { operation ->
                 instruction = getInstruction(
@@ -130,11 +130,6 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     )
             )
 
-            is Invalidate -> CacheInstruction(
-                    annotation.typeToInvalidate.java,
-                    Operation.Invalidate
-            )
-
             is Refresh -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Refresh(
@@ -153,21 +148,16 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
                     )
             )
 
+            is Invalidate -> CacheInstruction(
+                    annotation.typeToInvalidate.java,
+                    Operation.Invalidate
+            )
+
             is Clear -> {
                 CacheInstruction(
                         annotation.typeToClear.java,
                         Operation.Clear(
-                                annotation.typeToClear.java,
-                                annotation.clearStaleEntriesOnly
-                        )
-                )
-            }
-
-            is ClearAll -> {
-                CacheInstruction(
-                        responseClass,
-                        Operation.Clear(
-                                null,
+                                annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
                                 annotation.clearStaleEntriesOnly
                         )
                 )

@@ -322,32 +322,6 @@ class AnnotationProcessorUnitTest {
         )
     }
 
-    @Test
-    fun testProcessClearAll() {
-        testProcessAnnotation(
-                getAnnotation<ClearAll>(listOf(false)),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(
-                                null,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessClearAllOlderEntries() {
-        testProcessAnnotation(
-                getAnnotation<ClearAll>(listOf(true)),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(
-                                null,
-                                true
-                        )
-                )
-        )
-    }
-
     private fun testProcessAnnotation(annotation: Annotation,
                                       expectedInstruction: CacheInstruction) {
         val actualInstruction = target.process(

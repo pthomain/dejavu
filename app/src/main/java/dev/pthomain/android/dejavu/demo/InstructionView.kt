@@ -69,8 +69,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                 OFFLINE -> "@GET(\"fact\")"
 
                 INVALIDATE,
-                CLEAR,
-                CLEAR_ALL -> "@DELETE(\"fact\")"
+                CLEAR -> "@DELETE(\"fact\")"
             }.let {
                 applyAnnotationStyle(it, true)
             }
@@ -83,8 +82,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             CACHE -> (operation as Operation.Expiring.Cache).let { cacheOperation ->
                                 arrayOf(
                                         "freshOnly = ${cacheOperation.freshOnly}",
-                                        "durationInMillis = ${cacheOperation.durationInMillis
-                                                ?: "-1L"}",
+                                        "durationInMillis = ${cacheOperation.durationInMillis ?: "-1L"}",
                                         "mergeOnNextOnError = ${getOptionalBoolean(cacheOperation.mergeOnNextOnError)}",
                                         "encrypt = ${getOptionalBoolean(cacheOperation.encrypt)}",
                                         "compress = ${getOptionalBoolean(cacheOperation.compress)}"
@@ -94,8 +92,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             REFRESH -> (operation as Operation.Expiring.Refresh).let { refreshOperation ->
                                 arrayOf(
                                         "freshOnly = ${refreshOperation.freshOnly}",
-                                        "durationInMillis = ${refreshOperation.durationInMillis
-                                                ?: "-1L"}",
+                                        "durationInMillis = ${refreshOperation.durationInMillis ?: "-1L"}",
                                         "mergeOnNextOnError = ${getOptionalBoolean(refreshOperation.mergeOnNextOnError)}"
                                 )
                             }
@@ -107,9 +104,9 @@ class InstructionView @JvmOverloads constructor(context: Context,
                                 )
                             }
 
-                            CLEAR,
-                            CLEAR_ALL -> arrayOf(
-                                    "clearStaleEntriesOnly = ${(operation as Operation.Clear).clearStaleEntriesOnly}"
+                            CLEAR -> arrayOf(
+                                    "typeToClear = ${(operation as Operation.Clear).typeToClear}",
+                                    "clearStaleEntriesOnly = ${operation.clearStaleEntriesOnly}"
                             )
 
                             INVALIDATE,
@@ -232,8 +229,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                 OFFLINE -> "Single<${instruction.responseClass.simpleName}>"
 
                 INVALIDATE,
-                CLEAR,
-                CLEAR_ALL -> "Completable"
+                CLEAR -> "Completable"
             }).let {
                 val leftBracket = it.indexOf('(')
                 SpannableString(it).apply {

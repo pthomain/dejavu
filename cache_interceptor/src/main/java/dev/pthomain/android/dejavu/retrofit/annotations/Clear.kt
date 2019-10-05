@@ -23,11 +23,19 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FUNCTION
 import kotlin.reflect.KClass
 
-//TODO JavaDoc
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Clear(val typeToClear: KClass<*>,
+/**
+ * Retrofit annotation for calls made with an associated INVALIDATE directive.
+ * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
+ *
+ * @param typeToClear the response type to clear (use Any to clear all the entries)
+ * @param clearStaleEntriesOnly whether or not to clear only the stale entries
+ */
+@Target(FUNCTION)
+@Retention(RUNTIME)
+annotation class Clear(val typeToClear: KClass<*> = Any::class,
                        val clearStaleEntriesOnly: Boolean = false)
 

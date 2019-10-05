@@ -140,8 +140,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                             freshOnly,
                             configuration.mergeOnNextOnError
                     )
-                    CLEAR,
-                    CLEAR_ALL -> Clear(clearStaleEntriesOnly = false)
+                    CLEAR -> Clear(clearStaleEntriesOnly = false)
                 }.let { operation ->
                     CacheInstruction(
                             CatFactResponse::class.java,

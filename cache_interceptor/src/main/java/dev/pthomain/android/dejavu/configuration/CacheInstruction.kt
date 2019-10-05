@@ -209,8 +209,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
             REFRESH("@Refresh"),
             OFFLINE("@Offline"),
             INVALIDATE("@Invalidate", true),
-            CLEAR("@Clear", true),
-            CLEAR_ALL("@Clear", true)
+            CLEAR("@Clear", true)
         }
 
     }

@@ -168,11 +168,12 @@ private fun assertClear(expectedOperation: Clear,
     )
 }
 
-fun cacheInstruction(operation: CacheInstruction.Operation) =
+fun cacheInstruction(operation: Operation) =
         CacheInstruction(TestResponse::class.java, operation)
 
-inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>) =
-        T::class.constructors
+inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>?) =
+        if (args == null) emptyMap()
+        else T::class.constructors
                 .first()
                 .parameters
                 .mapIndexed { index, param -> Pair(param, args[index]) }

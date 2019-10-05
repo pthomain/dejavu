@@ -23,9 +23,16 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FUNCTION
 import kotlin.reflect.KClass
 
-//TODO JavaDoc
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+/**
+ * Retrofit annotation for calls made with an associated INVALIDATE directive.
+ * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+ *
+ * @param typeToInvalidate the response type to invalidate
+ */
+@Target(FUNCTION)
+@Retention(RUNTIME)
 annotation class Invalidate(val typeToInvalidate: KClass<*>)

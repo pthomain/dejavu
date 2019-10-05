@@ -68,12 +68,15 @@ internal class CacheInstructionSerialiser {
                         try {
                             when (params[1]) {
                                 DO_NOT_CACHE.name -> DoNotCache
+
                                 INVALIDATE.name -> Invalidate
-                                CLEAR.name,
-                                CLEAR_ALL.name -> getClearOperation(params)
+
+                                CLEAR.name -> getClearOperation(params)
+
                                 CACHE.name,
                                 REFRESH.name,
                                 OFFLINE.name -> getExpiringOperation(params)
+
                                 else -> null
                             }?.let { operation ->
                                 getClassForName(params[0])?.let { responseClass ->
