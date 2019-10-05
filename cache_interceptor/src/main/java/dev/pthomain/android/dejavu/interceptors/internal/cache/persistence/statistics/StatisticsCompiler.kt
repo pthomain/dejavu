@@ -26,6 +26,13 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.stat
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheStatistics
 import io.reactivex.Single
 
+/**
+ * Provides statistics reflecting the current state of the cache
+ */
 interface StatisticsCompiler {
+
+    /**
+     * @return a Single emitting cache statistics
+     */
     fun getStatistics(): Single<CacheStatistics>
 }

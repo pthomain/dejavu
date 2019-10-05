@@ -24,10 +24,24 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.dejavu.retrofit.annotations.OptionalBoolean.DEFAULT
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FUNCTION
 
-//TODO JavaDoc
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+/**
+ * Retrofit annotation for calls made with an associated CACHE directive.
+ * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
+ *
+ * @param freshOnly whether this call should only return FRESH data (either via the network or cached)
+ * @see dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.isFresh
+ *
+ * @param durationInMillis period during which the data is still considered fresh from the time it has been cached
+ * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
+ * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
+ * @param compress whether the cached data should be compressed, useful for large responses
+ * @param encrypt whether the cached data should be encrypted, useful for use on external storage
+ */
+@Target(FUNCTION)
+@Retention(RUNTIME)
 annotation class Cache(val freshOnly: Boolean = false,
                        val durationInMillis: Long = -1L,
                        val connectivityTimeoutInMillis: Long = -1L,

@@ -61,19 +61,22 @@ internal class FileNameSerialiser {
      *
      * @param fileName the local file name
      * @return an incomplete holder to be used for filtering
+     * @throws IllegalArgumentException if the given file name is invalid
      */
+    @Throws(IllegalArgumentException::class)
     fun deserialise(fileName: String) =
-            with(fileName.split(SEPARATOR)) {
-                if (size != 6) null
-                else CacheDataHolder.Incomplete(
-                        get(1).toLong(),
-                        get(2).toLong(),
-                        ByteArray(0),
-                        get(3),
-                        get(4) == "1",
-                        get(5) == "1"
-                )
-            }
+            if (isValidFormat(fileName)) {
+                with(fileName.split(SEPARATOR)) {
+                    CacheDataHolder.Incomplete(
+                            get(1).toLong(),
+                            get(2).toLong(),
+                            ByteArray(0),
+                            get(3),
+                            get(4) == "1",
+                            get(5) == "1"
+                    )
+                }
+            } else throw IllegalArgumentException("This file name is invalid: $fileName")
 
     /**
      * Fully deserialises the given file name and request metadata to the associated cache metadata.
@@ -85,18 +88,16 @@ internal class FileNameSerialiser {
      */
     fun deserialise(requestMetadata: RequestMetadata.Hashed,
                     fileName: String) =
-            deserialise(fileName)?.let {
-                with(it) {
-                    CacheDataHolder.Complete(
-                            requestMetadata,
-                            cacheDate,
-                            expiryDate,
-                            data,
-                            responseClassHash,
-                            isCompressed,
-                            isEncrypted
-                    )
-                }
+            with(deserialise(fileName)) {
+                CacheDataHolder.Complete(
+                        requestMetadata,
+                        cacheDate,
+                        expiryDate,
+                        data,
+                        responseClassHash,
+                        isCompressed,
+                        isEncrypted
+                )
             }
 
     companion object {
@@ -104,6 +105,9 @@ internal class FileNameSerialiser {
 
         private val validFileRegex = Regex("^([^_]+_){5}[^_]+\$")
 
+        /**
+         * @return whether or not the given file name has the format of a serialised cache entry.
+         */
         fun isValidFormat(name: String) = validFileRegex.matches(name)
     }
 }

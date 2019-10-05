@@ -94,7 +94,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
                     encrypt,
                     compress,
                     filterFinal,
-                    Type.CACHE
+                    CACHE
             )
 
             /**

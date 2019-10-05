@@ -58,6 +58,7 @@ class SerialisationManager<E>(private val logger: Logger,
 
         return serialised
                 .let {
+                    //TODO This is to store the metadata, make class abstract and extract this logic
                     if (useFileCache()) responseClass.name + "\n" + it
                     else it
                 }

@@ -190,6 +190,9 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
         SINGLE(Single::class.java),
         COMPLETABLE(Completable::class.java);
 
+        /**
+         * @return a String representation of the typed Rx object
+         */
         fun getTypedName(responseClass: Class<*>) =
                 if (this == COMPLETABLE) rxClass.simpleName
                 else "${rxClass.simpleName}<${responseClass.simpleName}>"

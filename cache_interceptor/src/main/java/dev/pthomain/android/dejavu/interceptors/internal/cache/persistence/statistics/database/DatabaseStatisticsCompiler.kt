@@ -33,16 +33,23 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.datab
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.BaseStatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler.CursorIteror
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler.CursorIterator
 import java.util.*
 
-//TODO JavaDoc
+/**
+ * Provides a concrete StatisticsCompiler implementation for SQLite database entries.
+ *
+ * @param configuration the global cache configuration
+ * @param logger a Logger instance
+ * @param dateFactory the factory converting timestamps to Dates
+ * @param database the SQLite database containing the cache entries
+ */
 internal class DatabaseStatisticsCompiler(
         configuration: CacheConfiguration<*>,
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val database: SupportSQLiteDatabase
-) : BaseStatisticsCompiler<Cursor, CursorIteror>(configuration) {
+) : BaseStatisticsCompiler<Cursor, CursorIterator>(configuration) {
 
     private val projection = arrayOf(
             CLASS.columnName,
@@ -58,32 +65,46 @@ internal class DatabaseStatisticsCompiler(
                     ORDER BY ${CLASS.columnName} ASC
                 """
 
+    /**
+     * Returns an CursorIterator of the database entries.
+     *
+     * @return the CursorIterator
+     */
     override fun loadEntries() =
             database.query(query)
-                    .useAndLogError(::CursorIteror, logger)
+                    .useAndLogError(::CursorIterator, logger)
 
-    override fun convert(entry: Cursor): CacheEntry {
-        with(entry) {
-            val responseClassName = getString(getColumnIndex(CLASS.columnName))
-            val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-            val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
-            val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
-            val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
+    /**
+     * Converts a database Cursor to a CacheEntry.
+     *
+     * @param entry the current cursor
+     * @return the converted entry
+     */
+    override fun convert(entry: Cursor) = with(entry) {
+        val responseClassName = getString(getColumnIndex(CLASS.columnName))
+        val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+        val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
+        val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
+        val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
 
-            val status = getCacheStatus(expiryDate, dateFactory)
+        val status = getCacheStatus(expiryDate, dateFactory)
 
-            return CacheEntry(
-                    Class.forName(responseClassName),
-                    status,
-                    isEncrypted,
-                    isCompressed,
-                    cacheDate,
-                    expiryDate
-            )
-        }
+        CacheEntry(
+                Class.forName(responseClassName),
+                status,
+                isEncrypted,
+                isCompressed,
+                cacheDate,
+                expiryDate
+        )
     }
 
-    class CursorIteror(private val cursor: Cursor) : Iterator<Cursor>, Iterable<Cursor> {
+    /**
+     * This class wraps the Cursor in an Iterable interface.
+     *
+     * @param cursor the cursor to iterate over
+     */
+    internal class CursorIterator(private val cursor: Cursor) : Iterator<Cursor>, Iterable<Cursor> {
         override fun iterator() = this
         override fun hasNext() = cursor.moveToNext()
         override fun next() = cursor

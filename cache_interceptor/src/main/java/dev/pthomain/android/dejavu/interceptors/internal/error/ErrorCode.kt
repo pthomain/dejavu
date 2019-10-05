@@ -23,7 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.error
 
-//TODO JavaDoc
+/**
+ * Represents a converted type of Error.
+ *
+ * @param canRetry whether or not this exception is transient and whether the call can be silently
+ * retried using an exponential backoff for instance.
+ */
 enum class ErrorCode constructor(val canRetry: Boolean) {
     CONFIG(false),
     NETWORK(true),

@@ -31,16 +31,42 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import io.reactivex.Single
 import java.util.*
 
+/**
+ * Skeletal implementation implementing StatisticsCompiler
+ */
 abstract class BaseStatisticsCompiler<T, I : Iterable<T>>(
         private val configuration: CacheConfiguration<*>
 ) : StatisticsCompiler {
 
+    /**
+     * @return a Single emitting cache statistics
+     */
     final override fun getStatistics() =
             Single.fromCallable(::compileStatistics)
 
+    /**
+     * Returns an Iterable of the local metadata entries of a type that can be converted to CacheEntry.
+     *
+     * @see convert
+     * @return the local entries containing the required metadata
+     */
     abstract fun loadEntries(): I
+
+    /**
+     * Converts the given iterated local entry as returned by the loadEntries() method and
+     * converts it to a CacheEntry.
+     *
+     * @param entry the local iterated entry as returned by the Iterable returned by loadEntries()
+     * @see loadEntries
+     * @return the converted CacheEntry
+     */
     abstract fun convert(entry: T): CacheEntry
 
+    /**
+     * Compiles the statistics.
+     *
+     * @return the compiled statistics.
+     */
     private fun compileStatistics(): CacheStatistics {
         val entries = mutableMapOf<Class<*>, MutableList<CacheEntry>>()
 

@@ -143,12 +143,11 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
         cacheDirectory.list()
                 .map { it to fileNameSerialiser.deserialise(it) }
                 .filter {
-                    val cacheDataHolder = it.second
-                    if (cacheDataHolder != null) {
-                        val isRightType = typeToClear == null || cacheDataHolder.responseClassHash == classHash
-                        val isRightExpiry = !clearStaleEntriesOnly || cacheDataHolder.expiryDate <= now
+                    with(it.second) {
+                        val isRightType = typeToClear == null || responseClassHash == classHash
+                        val isRightExpiry = !clearStaleEntriesOnly || expiryDate <= now
                         isRightType && isRightExpiry
-                    } else false
+                    }
                 }
                 .map { fileFactory(cacheDirectory, it.first) }
                 .forEach { it.delete() }
@@ -167,14 +166,14 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
             findFileByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
                 fileNameSerialiser
                         .deserialise(instructionToken.requestMetadata, oldName)
-                        ?.copy(
+                        .copy(
                                 expiryDate = 0L,
                                 requestMetadata = instructionToken.requestMetadata
                         )
-                        ?.also { invalidatedHolder ->
+                        .let { invalidatedHolder ->
                             val newName = fileNameSerialiser.serialise(invalidatedHolder)
                             fileFactory(cacheDirectory, oldName).renameTo(fileFactory(cacheDirectory, newName))
-                            return true
+                            true
                         }
             }
         }

@@ -23,7 +23,9 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-//TODO JavaDoc
+/**
+ * Represents a nullable Boolean value to be used on annotations.
+ */
 enum class OptionalBoolean(val value: Boolean?) {
     TRUE(true),
     FALSE(false),

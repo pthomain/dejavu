@@ -33,6 +33,15 @@ import java.io.File
 import java.io.InputStream
 import java.util.*
 
+/**
+ * Provides a concrete StatisticsCompiler implementation for File entries.
+ *
+ * @param configuration the global cache configuration
+ * @param fileFactory a factory that returns a File for a given parent directory and file name
+ * @param fileInputStreamFactory a factory that returns an InputStream for a given File
+ * @param dateFactory the factory converting timestamps to Dates
+ * @param fileNameSerialiser a class that handles the serialisation of the cache metadata to a file name.
+ */
 internal class FileStatisticsCompiler(
         private val configuration: CacheConfiguration<*>,
         private val fileFactory: (File, String) -> File,
@@ -41,12 +50,23 @@ internal class FileStatisticsCompiler(
         private val fileNameSerialiser: FileNameSerialiser
 ) : BaseStatisticsCompiler<String, List<String>>(configuration) {
 
+    /**
+     * Returns an list of valid file names in the cache directory representing a cached response.
+     *
+     * @return the list of valid file names in the cache directory.
+     */
     override fun loadEntries() =
             configuration.cacheDirectory!!.list()
                     .filter { isValidFormat(it) }
 
+    /**
+     * Converts a file name to a CacheEntry.
+     *
+     * @param entry the current file name
+     * @return the converted entry
+     */
     override fun convert(entry: String): CacheEntry {
-        val dataHolder = fileNameSerialiser.deserialise(entry)!!
+        val dataHolder = fileNameSerialiser.deserialise(entry)
 
         val file = fileFactory(configuration.cacheDirectory!!, entry)
         val responseClassName = fileInputStreamFactory(file).reader().buffered().readLine()
