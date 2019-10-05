@@ -43,7 +43,22 @@ import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 import java.util.*
 
-//TODO JavaDoc
+/**
+ * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
+ *
+ * @param instruction the cache instruction for the intercepted call
+ * @param requestMetadata the associated request metadata
+ * @param configuration the global cache configuration
+ * @param hasher the class handling the request hashing for unicity
+ * @param dateFactory the factory transforming timestamps to dates
+ * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
+ * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with network error handling
+ * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
+ *
+ * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
+ */
 class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction,
                                                private val requestMetadata: RequestMetadata.UnHashed,
                                                private val configuration: CacheConfiguration<E>,
@@ -56,18 +71,42 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
         where E : Exception,
               E : NetworkErrorProvider {
 
-
+    /**
+     * Composes Observables with the wrapped interceptors
+     *
+     * @param upstream the call to intercept
+     * @return the call intercepted with the inner interceptors
+     */
     override fun apply(upstream: Observable<Any>) =
             composeInternal(upstream, OBSERVABLE)
 
+    /**
+     * Composes Single with the wrapped interceptors
+     *
+     * @param upstream the call to intercept
+     * @return the call intercepted with the inner interceptors
+     */
     override fun apply(upstream: Single<Any>) =
             composeInternal(upstream.toObservable(), SINGLE)
                     .firstOrError()!!
 
+    /**
+     * Composes Completables with the wrapped interceptors
+     *
+     * @param upstream the call to intercept
+     * @return the call intercepted with the inner interceptors
+     */
     override fun apply(upstream: Completable) =
             composeInternal(upstream.toObservable(), COMPLETABLE)
                     .ignoreElements()!!
 
+    /**
+     * Deals with the internal composition.
+     *
+     * @param upstream the call to intercept
+     * @param rxType the RxJava return type
+     * @return the call intercepted with the inner interceptors
+     */
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: AnnotationProcessor.RxType): Observable<Any> {
         val (hashedRequestMetadata, isHashed) = hasher.hash(requestMetadata).let {
@@ -100,6 +139,20 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
                 .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
     }
 
+    /**
+     * Factory providing instances of DejaVuInterceptor
+     *
+     * @param hasher the class handling the request hashing for unicity
+     * @param dateFactory the factory transforming timestamps to dates
+     * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
+     * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with network error handling
+     * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
+     * @param configuration the global cache configuration
+     *
+     * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
+     */
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
                                           private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
@@ -109,6 +162,12 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
             where E : Exception,
                   E : NetworkErrorProvider {
 
+        /**
+         * Provides an instance of DejaVuInterceptor
+         *
+         * @param instruction the cache instruction for the intercepted call
+         * @param requestMetadata the associated request metadata
+         */
         fun create(instruction: CacheInstruction,
                    requestMetadata: RequestMetadata.UnHashed) =
                 DejaVuInterceptor(

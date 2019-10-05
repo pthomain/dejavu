@@ -27,14 +27,23 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 
-//TODO test
+/**
+ * Provides methods handling the serialisation and deserialisation of the required cache metadata
+ * to be used as a File name for the purpose of filtering and querying of the cached responses.
+ */
 internal class FileNameSerialiser {
 
-
-    fun serialise(cacheDataHolder: CacheDataHolder) =
+    /**
+     * Serialises the required cache metadata to be used as a File name for the purpose of
+     * filtering and querying of the cached responses.
+     *
+     * @param cacheDataHolder the model containing the metadata required for the name serialisation
+     * @return the file name to use to save the response associated to the given metadata
+     */
+    fun serialise(cacheDataHolder: CacheDataHolder.Complete) =
             with(cacheDataHolder) {
                 listOf(
-                        requestMetadata!!.urlHash,
+                        requestMetadata.urlHash,
                         cacheDate.toString(),
                         expiryDate.toString(),
                         requestMetadata.classHash,
@@ -43,12 +52,20 @@ internal class FileNameSerialiser {
                 ).joinToString(SEPARATOR)
             }
 
-    fun deserialise(requestMetadata: RequestMetadata.Hashed?,
-                    fileName: String) =
+    /**
+     * Partially deserialises the given file name to the associated cache metadata.
+     * The returned holder cannot be used as metadata to a deserialised response as it is missing
+     * the required request metadata. Instead, this holder can be used solely for the purpose
+     * of filtering the locally saved responses based on the existing information contained in the
+     * file name.
+     *
+     * @param fileName the local file name
+     * @return an incomplete holder to be used for filtering
+     */
+    fun deserialise(fileName: String) =
             with(fileName.split(SEPARATOR)) {
                 if (size != 6) null
-                else CacheDataHolder(
-                        requestMetadata,
+                else CacheDataHolder.Incomplete(
                         get(1).toLong(),
                         get(2).toLong(),
                         ByteArray(0),
@@ -56,6 +73,30 @@ internal class FileNameSerialiser {
                         get(4) == "1",
                         get(5) == "1"
                 )
+            }
+
+    /**
+     * Fully deserialises the given file name and request metadata to the associated cache metadata.
+     * The returned holder can be used to populate the metadata of the associated deserialised response.
+     *
+     * @param requestMetadata the optional request metadata needed to fully deserialise the file name.
+     * @param fileName the local file name
+     * @return the complete holder to be used for the deserialised response metadata
+     */
+    fun deserialise(requestMetadata: RequestMetadata.Hashed,
+                    fileName: String) =
+            deserialise(fileName)?.let {
+                with(it) {
+                    CacheDataHolder.Complete(
+                            requestMetadata,
+                            cacheDate,
+                            expiryDate,
+                            data,
+                            responseClassHash,
+                            isCompressed,
+                            isEncrypted
+                    )
+                }
             }
 
     companion object {

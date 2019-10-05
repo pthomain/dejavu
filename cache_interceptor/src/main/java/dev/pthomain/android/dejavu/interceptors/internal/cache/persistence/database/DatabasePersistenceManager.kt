@@ -114,7 +114,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed): CacheDataHolder? {
+                                    requestMetadata: RequestMetadata.Hashed): CacheDataHolder.Complete? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
@@ -145,7 +145,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
                                 val responseClassHash = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
 
-                                return CacheDataHolder(
+                                return CacheDataHolder.Complete(
                                         requestMetadata,
                                         cacheDate.time,
                                         expiryDate.time,
@@ -206,7 +206,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         serialise(response, previousCachedResponse)?.let {
             with(it) {
                 val values = HashMap<String, Any>()
-                values[TOKEN.columnName] = requestMetadata!!.urlHash
+                values[TOKEN.columnName] = requestMetadata.urlHash
                 values[DATE.columnName] = cacheDate
                 values[EXPIRY_DATE.columnName] = expiryDate
                 values[DATA.columnName] = data

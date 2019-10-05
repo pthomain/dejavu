@@ -54,7 +54,8 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
     private lateinit var mockContentValues: ContentValues
 
-    override fun setUp(encryptDataGlobally: Boolean,
+    override fun setUp(instructionToken: CacheToken,
+                       encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
                        cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()

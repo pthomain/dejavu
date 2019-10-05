@@ -85,7 +85,7 @@ abstract class BasePersistenceManager<E>(
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
     protected fun serialise(response: ResponseWrapper<E>,
-                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder? {
+                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete? {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Expiring
@@ -108,7 +108,7 @@ abstract class BasePersistenceManager<E>(
         return if (serialised != null) {
             val now = dateFactory(null).time
 
-            CacheDataHolder(
+            CacheDataHolder.Complete(
                     instructionToken.requestMetadata,
                     now,
                     now + durationInMillis,

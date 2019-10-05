@@ -82,7 +82,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                        previousCachedResponse: ResponseWrapper<E>?) {
         serialise(response, previousCachedResponse)?.let { holder ->
 
-            findFileByHash(holder.requestMetadata!!.urlHash)?.let {
+            findFileByHash(holder.requestMetadata.urlHash)?.let {
                 fileFactory(cacheDirectory, it).delete()
             }
 
@@ -141,7 +141,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
         val classHash = typeToClear?.let { hasher.hash(it.name) }
 
         cacheDirectory.list()
-                .map { it to fileNameSerialiser.deserialise(null, it) }
+                .map { it to fileNameSerialiser.deserialise(it) }
                 .filter {
                     val cacheDataHolder = it.second
                     if (cacheDataHolder != null) {

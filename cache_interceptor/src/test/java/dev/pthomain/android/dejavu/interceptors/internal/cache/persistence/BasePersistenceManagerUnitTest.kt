@@ -102,7 +102,8 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         return mockConfiguration
     }
 
-    protected abstract fun setUp(encryptDataGlobally: Boolean,
+    protected abstract fun setUp(instructionToken: CacheToken,
+                                 encryptDataGlobally: Boolean,
                                  compressDataGlobally: Boolean,
                                  cacheInstruction: CacheInstruction?): T
 
@@ -125,6 +126,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val mockClassHash = "mockHash"
 
         val target = setUp(
+                instructionToken(Operation.Clear(typeToClearClass, clearStaleEntriesOnly)),
                 true,
                 true,
                 null
@@ -205,6 +207,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val instructionToken = instructionTokenWithHash(operation)
 
         val target = setUp(
+                instructionToken,
                 encryptDataGlobally,
                 compressDataGlobally,
                 instructionToken.instruction
@@ -312,14 +315,15 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     private fun prepareAllInvalidation(operation: Operation,
                                        andThen: (String, CacheToken, T) -> Unit) {
         val context = "operation = $operation"
+        val instructionToken = instructionTokenWithHash(operation)
 
         val target = spy(setUp(
+                instructionToken,
                 true,
                 true,
                 null
         ))
 
-        val instructionToken = instructionTokenWithHash(operation)
 
         andThen(context, instructionToken, target)
     }
@@ -403,6 +407,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val isEncrypted = 1
 
         val target = spy(setUp(
+                instructionToken,
                 true,
                 true,
                 instructionToken.instruction

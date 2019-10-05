@@ -25,22 +25,76 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 
-data class CacheDataHolder(
-        val requestMetadata: RequestMetadata.Hashed?,
-        val cacheDate: Long,
-        val expiryDate: Long,
-        val data: ByteArray,
-        val responseClassHash: String,
-        val isCompressed: Boolean,
-        val isEncrypted: Boolean
+sealed class CacheDataHolder(
+        open val cacheDate: Long,
+        open val expiryDate: Long,
+        open val data: ByteArray,
+        open val responseClassHash: String,
+        open val isCompressed: Boolean,
+        open val isEncrypted: Boolean
 ) {
+
+    data class Incomplete(
+            override val cacheDate: Long,
+            override val expiryDate: Long,
+            override val data: ByteArray,
+            override val responseClassHash: String,
+            override val isCompressed: Boolean,
+            override val isEncrypted: Boolean
+    ) : CacheDataHolder(
+            cacheDate,
+            expiryDate,
+            data,
+            responseClassHash,
+            isCompressed,
+            isEncrypted
+    ){
+        override fun equals(other: Any?): Boolean {
+            return super.equals(other)
+        }
+
+        override fun hashCode(): Int {
+            return super.hashCode()
+        }
+    }
+
+    data class Complete(
+            val requestMetadata: RequestMetadata.Hashed,
+            override val cacheDate: Long,
+            override val expiryDate: Long,
+            override val data: ByteArray,
+            override val responseClassHash: String,
+            override val isCompressed: Boolean,
+            override val isEncrypted: Boolean
+    ) : CacheDataHolder(
+            cacheDate,
+            expiryDate,
+            data,
+            responseClassHash,
+            isCompressed,
+            isEncrypted
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Complete
+            if (requestMetadata != other.requestMetadata) return false
+            return super.equals(other)
+        }
+
+        override fun hashCode(): Int {
+            var result = requestMetadata.hashCode()
+            return 31 * result + super.hashCode()
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
         other as CacheDataHolder
 
-        if (requestMetadata != other.requestMetadata) return false
         if (cacheDate != other.cacheDate) return false
         if (expiryDate != other.expiryDate) return false
         if (!data.contentEquals(other.data)) return false
@@ -52,8 +106,7 @@ data class CacheDataHolder(
     }
 
     override fun hashCode(): Int {
-        var result = requestMetadata.hashCode()
-        result = 31 * result + cacheDate.hashCode()
+        var result = cacheDate.hashCode()
         result = 31 * result + expiryDate.hashCode()
         result = 31 * result + data.contentHashCode()
         result = 31 * result + responseClassHash.hashCode()
@@ -61,4 +114,6 @@ data class CacheDataHolder(
         result = 31 * result + isEncrypted.hashCode()
         return result
     }
+
+
 }

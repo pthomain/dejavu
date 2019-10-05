@@ -46,10 +46,7 @@ internal class FileStatisticsCompiler(
                     .filter { isValidFormat(it) }
 
     override fun convert(entry: String): CacheEntry {
-        val dataHolder = fileNameSerialiser.deserialise(
-                null,
-                entry
-        )!!
+        val dataHolder = fileNameSerialiser.deserialise(entry)!!
 
         val file = fileFactory(configuration.cacheDirectory!!, entry)
         val responseClassName = fileInputStreamFactory(file).reader().buffered().readLine()

@@ -60,7 +60,8 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private lateinit var mockFileReader: (InputStream) -> ByteArray
     private lateinit var mockOutputStream: OutputStream
     private lateinit var mockInputStream: InputStream
-    private lateinit var mockCacheDataHolder: CacheDataHolder
+    private lateinit var mockIncompleteCacheDataHolder: CacheDataHolder.Incomplete
+    private lateinit var mockCompleteCacheDataHolder: CacheDataHolder.Complete
 
     private val mockFileWithValidHash = mockHash + SEPARATOR + "abcd"
     private val mockFileName = "mockFileName"
@@ -71,7 +72,8 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
     private val mockFileToDelete1 = "mockFileToDelete1"
     private val mockFileToDelete2 = "mockHash_FileToDelete2"
 
-    override fun setUp(encryptDataGlobally: Boolean,
+    override fun setUp(instructionToken: CacheToken,
+                       encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
                        cacheInstruction: CacheInstruction?): FilePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
@@ -89,8 +91,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         mockInvalidatedFile = mock()
         mockFileToDelete = mock()
 
-        mockCacheDataHolder = CacheDataHolder(
-                null,
+        mockIncompleteCacheDataHolder = CacheDataHolder.Incomplete(
                 mockCacheDateTime,
                 mockExpiryDateTime,
                 mockBlob,
@@ -98,6 +99,18 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                 true,
                 true
         )
+
+        mockCompleteCacheDataHolder = with(mockIncompleteCacheDataHolder) {
+            CacheDataHolder.Complete(
+                    instructionToken.requestMetadata,
+                    cacheDate,
+                    expiryDate,
+                    data,
+                    responseClassHash,
+                    isCompressed,
+                    isEncrypted
+            )
+        }
 
         val mockCacheConfiguration = setUpConfiguration(
                 encryptDataGlobally,
@@ -124,14 +137,14 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                                    clearStaleEntriesOnly: Boolean,
                                    mockClassHash: String) {
         val fileList = arrayOf(fileOfWrongType1, fileOfRightType, fileOfWrongType2)
-        val mockWrongCacheDataHolder1 = mock<CacheDataHolder>()
-        val mockWrongCacheDataHolder2 = mock<CacheDataHolder>()
-        val mockRightCacheDataHolder = mock<CacheDataHolder>()
+        val mockWrongCacheDataHolder1 = mock<CacheDataHolder.Incomplete>()
+        val mockWrongCacheDataHolder2 = mock<CacheDataHolder.Incomplete>()
+        val mockRightCacheDataHolder = mock<CacheDataHolder.Incomplete>()
 
         whenever(mockCacheDirectory.list()).thenReturn(fileList)
-        whenever(mockFileNameSerialiser.deserialise(isNull(), eq(fileOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
-        whenever(mockFileNameSerialiser.deserialise(isNull(), eq(fileOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
-        whenever(mockFileNameSerialiser.deserialise(isNull(), eq(fileOfRightType))).thenReturn(mockRightCacheDataHolder)
+        whenever(mockFileNameSerialiser.deserialise(eq(fileOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
+        whenever(mockFileNameSerialiser.deserialise(eq(fileOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
+        whenever(mockFileNameSerialiser.deserialise(eq(fileOfRightType))).thenReturn(mockRightCacheDataHolder)
 
         if (useTypeToClear) {
             whenever(mockRightCacheDataHolder.responseClassHash).thenReturn(mockClassHash)
@@ -199,7 +212,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         if (isSerialisationSuccess) {
             verifyWithContext(mockFileToDelete, context).delete()
 
-            val dataHolderCaptor = argumentCaptor<CacheDataHolder>()
+            val dataHolderCaptor = argumentCaptor<CacheDataHolder.Complete>()
             verifyWithContext(mockFileNameSerialiser, context).serialise(dataHolderCaptor.capture())
             val cacheDataHolder = dataHolderCaptor.firstValue
 
@@ -220,7 +233,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
 
     private fun assertCacheDataHolder(context: String,
                                       instructionToken: CacheToken,
-                                      dataHolder: CacheDataHolder) {
+                                      dataHolder: CacheDataHolder.Complete) {
         assertEqualsWithContext(
                 instructionToken.requestMetadata,
                 dataHolder.requestMetadata,
@@ -256,12 +269,9 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         whenever(mockFileNameSerialiser.deserialise(
                 eq(instructionToken.requestMetadata),
                 eq(mockFileWithValidHash)
-        )).thenReturn(mockCacheDataHolder)
+        )).thenReturn(mockCompleteCacheDataHolder)
 
-        val invalidatedHolder = mockCacheDataHolder.copy(
-                expiryDate = 0L,
-                requestMetadata = instructionToken.requestMetadata
-        )
+        val invalidatedHolder = mockCompleteCacheDataHolder.copy(expiryDate = 0L)
 
         whenever(mockFileNameSerialiser.serialise(eq(invalidatedHolder)))
                 .thenReturn(invalidatedFileName)
@@ -326,7 +336,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
         whenever(mockFileNameSerialiser.deserialise(
                 eq(instructionToken.requestMetadata),
                 eq(mockFileWithValidHash)
-        )).thenReturn(mockCacheDataHolder.copy(
+        )).thenReturn(mockCompleteCacheDataHolder.copy(
                 cacheDate = cacheDateTimeStamp,
                 expiryDate = expiryDate,
                 isCompressed = isCompressed == 1,
@@ -342,7 +352,7 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                                          cachedResponse: ResponseWrapper<Glitch>?) {
         assertEqualsWithContext(
                 mockBlob,
-                mockCacheDataHolder.data,
+                mockIncompleteCacheDataHolder.data,
                 context
         )
     }
