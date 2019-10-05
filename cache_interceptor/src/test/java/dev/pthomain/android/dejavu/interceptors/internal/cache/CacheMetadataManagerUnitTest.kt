@@ -36,13 +36,13 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.dejavu.test.assertEqualsWithContext
-import dev.pthomain.android.dejavu.test.instructionToken
+import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
+import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
+import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.operationSequence
-import dev.pthomain.android.dejavu.test.trueFalseSequence
 import org.junit.Test
 import java.io.IOException
+import java.io.NotSerializableException
 import java.util.*
 
 class CacheMetadataManagerUnitTest {
@@ -308,6 +308,101 @@ class CacheMetadataManagerUnitTest {
         }
     }
 
+    @Test
+    fun testSetSerialisationFailedMetadata() {
+        var iteration = 0
+        operationSequence { operation ->
+            if (operation is Expiring && operation !is Offline) {
+                testSetSerialisationFailedMetadata(
+                        iteration++,
+                        operation
+                )
+            }
+        }
+    }
 
-    //TODO finish
+    private fun testSetSerialisationFailedMetadata(iteration: Int,
+                                                   operation: Expiring) {
+        setUp()
+        val context = "iteration = $iteration,\n" +
+                "operation = ${operation.type}"
+
+        val instructionToken = instructionToken(operation).copy(
+                cacheDate = Date(1234L),
+                fetchDate = Date(1456L)
+        )
+
+        val cause = NotSerializableException()
+        val mockGlitch = Glitch(cause)
+
+        val metadata = CacheMetadata<Glitch>(
+                instructionToken,
+                null
+        )
+
+        val responseWrapper = ResponseWrapper(
+                TestResponse::class.java,
+                mock<TestResponse>(),
+                metadata
+        )
+
+        val message = "Could not serialise ${TestResponse::class.java.simpleName}: this response will not be cached."
+
+        val expectedException = CacheException(
+                SERIALISATION,
+                message,
+                cause
+        )
+
+        whenever(mockErrorFactory.getError(eq(expectedException))).thenReturn(mockGlitch)
+
+        val actualWrapper = target.setSerialisationFailedMetadata(
+                responseWrapper,
+                cause
+        )
+
+        assertEqualsWithContext(
+                responseWrapper.response,
+                actualWrapper.response,
+                "Response didn't match",
+                context
+        )
+
+        assertEqualsWithContext(
+                responseWrapper.responseClass,
+                actualWrapper.responseClass,
+                "Response class didn't match",
+                context
+        )
+
+        with(actualWrapper.metadata) {
+            assertEqualsWithContext(
+                    mockGlitch,
+                    exception,
+                    "Exception didn't match",
+                    context
+            )
+
+            assertEqualsWithContext(
+                    NOT_CACHED,
+                    cacheToken.status,
+                    "Cache status didn't match",
+                    context
+            )
+
+            assertNullWithContext(
+                    cacheToken.cacheDate,
+                    "Cache date should be null",
+                    context
+            )
+
+            assertNullWithContext(
+                    cacheToken.expiryDate,
+                    "Expiry date should be null",
+                    context
+            )
+        }
+
+    }
+
 }

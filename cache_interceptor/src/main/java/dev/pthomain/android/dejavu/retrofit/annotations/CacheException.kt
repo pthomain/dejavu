@@ -24,31 +24,15 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 //TODO JavaDoc
-class CacheException(val type: Type,
-                     message: String,
-                     cause: Throwable? = null
+data class CacheException(val type: Type,
+                          override val message: String,
+                          override val cause: Throwable? = null
 ) : Exception(message, cause) {
 
     enum class Type {
         ANNOTATION,
         METADATA,
         SERIALISATION
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CacheException
-
-        if (type != other.type) return false
-        if (message != other.message) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return type.hashCode() * 31 + message.hashCode()
     }
 
 }
