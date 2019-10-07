@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest

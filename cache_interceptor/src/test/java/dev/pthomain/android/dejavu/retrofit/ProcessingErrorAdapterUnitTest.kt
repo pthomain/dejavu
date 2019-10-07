@@ -27,11 +27,11 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*

@@ -25,11 +25,11 @@ package dev.pthomain.android.dejavu.interceptors.internal.response
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.DONE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.response.CacheMetadata
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.DONE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.EMPTY
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Single
 
@@ -41,7 +41,7 @@ import io.reactivex.Single
  */
 internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>)
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Returns a Single emitting a ResponseWrapper with no response and a status of

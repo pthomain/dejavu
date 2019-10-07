@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.token
+package dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token
 
 /**
  * Class representing the cache status of a response

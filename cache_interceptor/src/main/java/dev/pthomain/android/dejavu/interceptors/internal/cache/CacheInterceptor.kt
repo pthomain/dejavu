@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -51,7 +51,7 @@ internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
                                    private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Composes the given input observable and returns a decorated instance of the same type.

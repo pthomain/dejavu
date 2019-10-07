@@ -21,30 +21,53 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
+package dev.pthomain.android.dejavu.interceptors.internal.cache.metadata
 
-//TODO JavaDoc
+/**
+ * Holds metadata related to the request
+ *
+ * @param responseClass the response model's class
+ * @param url the full URL of the request including query parameters
+ * @param requestBody the optional body of the request
+ */
 sealed class RequestMetadata(open val responseClass: Class<*>,
                              open val url: String,
                              open val requestBody: String? = null) {
 
+    /**
+     * Holds metadata related to the request prior to internal hashing of the URL
+     * and response class.
+     *
+     * @param responseClass the response model's class
+     * @param url the full URL of the request including query parameters
+     * @param requestBody the optional body of the request
+     */
     data class UnHashed(override val responseClass: Class<*>,
                         override val url: String,
-                        override val requestBody: String? = null)
-        : RequestMetadata(
+                        override val requestBody: String? = null) : RequestMetadata(
             responseClass,
             url,
             requestBody
     )
 
+    /**
+     * Holds metadata related to the request after internal hashing of the URL
+     * and response class.
+     *
+     * @param responseClass the response model's class
+     * @param url the full URL of the request including query parameters
+     * @param requestBody the optional body of the request
+     * @param urlHash the hash of the URL and its alphabetically sorted query parameters
+     * @param classHash the response class' hash
+     */
     data class Hashed internal constructor(override val responseClass: Class<*>,
                                            override val url: String,
                                            override val requestBody: String?,
                                            val urlHash: String,
-                                           val classHash: String)
-        : RequestMetadata(
+                                           val classHash: String) : RequestMetadata(
             responseClass,
             url,
             requestBody
     )
+
 }

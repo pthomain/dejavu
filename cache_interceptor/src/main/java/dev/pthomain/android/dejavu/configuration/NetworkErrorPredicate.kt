@@ -27,7 +27,7 @@ package dev.pthomain.android.dejavu.configuration
  * Interface indicating whether a Throwable is a network error for the purpose of
  * exponential backoff retries on failed calls
  */
-interface NetworkErrorProvider {
+interface NetworkErrorPredicate {
 
     /**
      * @return whether or not the class implementing this interface represents a network error

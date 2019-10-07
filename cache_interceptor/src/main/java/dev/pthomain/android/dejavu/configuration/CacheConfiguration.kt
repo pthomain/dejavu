@@ -28,8 +28,8 @@ import android.os.Looper
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.component.CacheComponent
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -67,14 +67,14 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val cacheDurationInMillis: Long,
                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     companion object {
 
         internal fun <E> builder(errorFactory: ErrorFactory<E>,
                                  componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>)
                 where E : Exception,
-                      E : NetworkErrorProvider =
+                      E : NetworkErrorPredicate =
                 Builder(errorFactory, componentProvider)
 
     }
@@ -83,7 +83,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
             private val errorFactory: ErrorFactory<E>,
             private val componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>
     ) where E : Exception,
-            E : NetworkErrorProvider {
+            E : NetworkErrorPredicate {
 
         private var logger: Logger? = null
         private var customErrorFactory: ErrorFactory<E>? = null

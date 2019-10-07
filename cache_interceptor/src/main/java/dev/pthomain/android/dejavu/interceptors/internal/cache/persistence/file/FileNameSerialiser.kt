@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 
 /**
  * Provides methods handling the serialisation and deserialisation of the required cache metadata

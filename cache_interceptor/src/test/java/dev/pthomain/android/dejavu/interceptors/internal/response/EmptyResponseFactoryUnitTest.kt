@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.response
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.EMPTY
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

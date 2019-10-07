@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 import android.net.Uri
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException

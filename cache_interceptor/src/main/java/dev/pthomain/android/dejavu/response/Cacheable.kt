@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.response
 
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 
 /**

@@ -31,10 +31,10 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION

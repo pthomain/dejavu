@@ -24,10 +24,10 @@
 package dev.pthomain.android.dejavu.configuration
 
 /**
- * Converts a given Throwable into a new type extending from Exception and NetworkErrorProvider
+ * Converts a given Throwable into a new type extending from Exception and NetworkErrorPredicate
  */
 interface ErrorFactory<E> where E : Exception,
-                                E : NetworkErrorProvider {
+                                E : NetworkErrorPredicate {
 
     /**
      * @param throwable the throwable to evaluate

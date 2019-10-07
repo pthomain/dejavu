@@ -27,7 +27,7 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext

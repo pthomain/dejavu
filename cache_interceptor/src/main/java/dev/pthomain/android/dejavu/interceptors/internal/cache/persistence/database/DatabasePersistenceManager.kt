@@ -30,15 +30,15 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
@@ -63,7 +63,7 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
         serialisationManager,
         dateFactory
 ) where E : Exception,
-        E : NetworkErrorProvider {
+        E : NetworkErrorPredicate {
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).

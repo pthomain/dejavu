@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Observable
@@ -42,7 +42,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                                private val dateFactory: (Long?) -> Date,
                                private val logger: Logger)
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     fun clearCache(instructionToken: CacheToken,
                    typeToClear: Class<*>?,

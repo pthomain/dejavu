@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expi
 import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*

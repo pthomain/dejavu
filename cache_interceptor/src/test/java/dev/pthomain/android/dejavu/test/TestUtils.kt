@@ -32,12 +32,12 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH

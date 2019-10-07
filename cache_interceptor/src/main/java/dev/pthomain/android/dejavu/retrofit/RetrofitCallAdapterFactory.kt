@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -61,7 +61,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                                                          private val logger: Logger)
     : CallAdapter.Factory()
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Returns a call adapter for interface methods that return {@code returnType}, or null if it

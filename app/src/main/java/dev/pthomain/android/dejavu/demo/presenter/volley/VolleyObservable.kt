@@ -29,7 +29,7 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import io.reactivex.Observable
@@ -41,7 +41,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                                                  private val url: String)
     : Observable<R>()
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     private lateinit var observer: Observer<in R>
 
@@ -72,7 +72,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                           cacheInterceptor: DejaVuTransformer,
                           url: String)
                 where E : Exception,
-                      E : NetworkErrorProvider =
+                      E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
                         requestQueue,
                         gson,

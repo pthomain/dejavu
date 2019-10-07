@@ -23,7 +23,13 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-//TODO JavaDoc
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FUNCTION
+
+/**
+ * Retrofit annotation for calls made with an associated DO_NOT_CACHE directive.
+ * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
+ */
+@Target(FUNCTION)
+@Retention(RUNTIME)
 annotation class DoNotCache

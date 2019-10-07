@@ -23,7 +23,8 @@
 
 package dev.pthomain.android.dejavu.response
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 
 /**
  * Wraps the call and associated metadata for internal use.
@@ -37,4 +38,4 @@ data class ResponseWrapper<E>(val responseClass: Class<*>,
                               @Transient override var metadata: CacheMetadata<E>)
     : CacheMetadata.Holder<E>
         where E : Exception,
-              E : NetworkErrorProvider
+              E : NetworkErrorPredicate

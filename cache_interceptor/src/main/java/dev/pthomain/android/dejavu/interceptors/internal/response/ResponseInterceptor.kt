@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.internal.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory.EmptyResponseException
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
@@ -69,7 +69,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val mergeOnNextOnError: Boolean)
     : ObservableTransformer<ResponseWrapper<E>, Any>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     private val responseFilter = Predicate<ResponseWrapper<E>> {
         val status = it.metadata.cacheToken.status

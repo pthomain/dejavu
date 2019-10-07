@@ -27,11 +27,11 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Action.Companion.act
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,13 +41,12 @@ import java.util.*
  *
  * @param cacheConfiguration the global cache configuration
  */
-abstract class BasePersistenceManager<E>(
-        protected val cacheConfiguration: CacheConfiguration<E>,
-        protected val serialisationManager: SerialisationManager<E>,
-        protected val dateFactory: (Long?) -> Date
-) : PersistenceManager<E>
+internal abstract class BasePersistenceManager<E>(protected val cacheConfiguration: CacheConfiguration<E>,
+                                                  protected val serialisationManager: SerialisationManager<E>,
+                                                  protected val dateFactory: (Long?) -> Date)
+    : PersistenceManager<E>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     protected val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
     protected val logger = cacheConfiguration.logger

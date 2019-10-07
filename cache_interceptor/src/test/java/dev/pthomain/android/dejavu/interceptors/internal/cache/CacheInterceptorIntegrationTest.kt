@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 import dev.pthomain.android.dejavu.injection.module.CacheModule.Function2
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import org.junit.Test

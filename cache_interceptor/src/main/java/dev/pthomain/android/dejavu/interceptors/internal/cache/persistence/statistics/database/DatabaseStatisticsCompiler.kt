@@ -29,10 +29,10 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheEntry
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.BaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.CacheEntry
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler.CursorIterator
 import java.util.*
 

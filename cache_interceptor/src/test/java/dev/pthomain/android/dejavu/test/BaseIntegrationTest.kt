@@ -38,10 +38,10 @@ import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegra
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationCacheModule
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken.Companion.fromInstruction
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
 import dev.pthomain.android.dejavu.response.ResponseWrapper

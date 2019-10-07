@@ -28,7 +28,7 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 import kotlin.reflect.KClass
 
 /**
- * Retrofit annotation for calls made with an associated INVALIDATE directive.
+ * Retrofit annotation for calls made with an associated CLEAR directive.
  * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
  *
  * @param typeToClear the response type to clear (use Any to clear all the entries)

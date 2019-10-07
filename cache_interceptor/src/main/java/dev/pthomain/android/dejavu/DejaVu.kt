@@ -24,14 +24,14 @@
 package dev.pthomain.android.dejavu
 
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.injection.component.CacheComponent
 import dev.pthomain.android.dejavu.injection.component.DaggerDefaultCacheComponent
 import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -41,7 +41,7 @@ import io.reactivex.Single
  */
 class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Provides the current configuration

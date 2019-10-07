@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheStatistics
 import io.reactivex.Single
 
 /**

@@ -34,12 +34,14 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.injection.module.CacheModule.*
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
@@ -50,11 +52,9 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.stati
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.retrofit.ProcessingErrorAdapter
 import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter
@@ -76,7 +76,7 @@ internal abstract class BaseCacheModule<E>(
         protected val configuration: CacheConfiguration<E>
 ) : CacheModule<E>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     companion object {
         const val DATABASE_NAME = "dejavu.db"

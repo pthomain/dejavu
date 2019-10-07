@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.error
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode.UNKNOWN
 
 //TODO JavaDoc
@@ -32,7 +32,7 @@ data class Glitch constructor(override val cause: Throwable,
                               val errorCode: ErrorCode = UNKNOWN,
                               val description: String? = "${cause.javaClass.name}: ${cause.message}")
     : Exception(cause),
-        NetworkErrorProvider {
+        NetworkErrorPredicate {
 
     override fun isNetworkError() = errorCode === ErrorCode.NETWORK
 

@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.retrofit
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch.Companion.NON_HTTP_STATUS

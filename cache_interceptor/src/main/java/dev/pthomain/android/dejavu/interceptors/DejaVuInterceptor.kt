@@ -28,11 +28,11 @@ import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken.Companion.fromInstruction
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken.Companion.fromInstruction
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -69,7 +69,7 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
                                                private val cacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>)
     : DejaVuTransformer
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Composes Observables with the wrapped interceptors
@@ -160,7 +160,7 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
                                           private val configuration: CacheConfiguration<E>)
             where E : Exception,
-                  E : NetworkErrorProvider {
+                  E : NetworkErrorPredicate {
 
         /**
          * Provides an instance of DejaVuInterceptor

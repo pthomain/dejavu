@@ -23,11 +23,11 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -58,7 +58,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                                                              exception: CacheException)
     : CallAdapter<Any, Any> by defaultAdapter
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     private val errorInterceptor = errorInterceptorFactory(
             cacheToken,
@@ -102,7 +102,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                      private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                      private val dateFactory: (Long?) -> Date)
             where E : Exception,
-                  E : NetworkErrorProvider {
+                  E : NetworkErrorPredicate {
 
         fun create(defaultAdapter: CallAdapter<Any, Any>,
                    cacheToken: CacheToken,

@@ -21,10 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.response
+package dev.pthomain.android.dejavu.interceptors.internal.cache.metadata
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 
 /**
  * Contains cache metadata for the given call. This metadata is used on the ResponseWrapper and is added
@@ -38,7 +38,7 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
                             @Transient val exception: E? = null,
                             @Transient val callDuration: Duration = Duration(0, 0, 0))
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Contains information about how long the call took to execute at different stages of the caching process.
@@ -57,7 +57,7 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
      */
     interface Holder<E>
             where E : Exception,
-                  E : NetworkErrorProvider {
+                  E : NetworkErrorPredicate {
         var metadata: CacheMetadata<E>
     }
 

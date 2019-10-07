@@ -24,10 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics
 
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheEntry
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheEntrySummary
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheStatistics
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
 import io.reactivex.Single
 import java.util.*
 

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 
 sealed class CacheDataHolder(
         open val cacheDate: Long,

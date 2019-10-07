@@ -29,9 +29,9 @@ import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -57,7 +57,7 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     /**
      * Returns the value type as defined by the default RxJava adapter.

@@ -23,7 +23,13 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-//TODO JavaDoc
+/**
+ * Represent an exception related to a failed cache operation.
+ *
+ * @param type the type of exception
+ * @param message the description of this exception
+ * @param cause the underlying cause
+ */
 data class CacheException(val type: Type,
                           override val message: String,
                           override val cause: Throwable? = null

@@ -25,16 +25,16 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.util.*
 
 interface PersistenceManager<E>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
      * Both parameters work in conjunction to form an intersection of entries to be cleared.

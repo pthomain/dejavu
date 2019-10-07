@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.response.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
@@ -42,7 +42,7 @@ class SerialisationManager<E>(private val logger: Logger,
                               private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
                               private val serialiser: Serialiser)
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,

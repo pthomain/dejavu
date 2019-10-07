@@ -29,9 +29,9 @@ import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
-import dev.pthomain.android.dejavu.response.CacheMetadata
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -51,7 +51,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
                                    private val requestTimeOutInSeconds: Int)
     : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     override fun apply(upstream: Observable<Any>) = upstream
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242

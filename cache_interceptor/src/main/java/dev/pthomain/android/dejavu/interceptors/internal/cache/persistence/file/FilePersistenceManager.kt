@@ -27,13 +27,13 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.io.*
 import java.util.*
@@ -49,22 +49,22 @@ import java.util.*
  * @param context the application context
  * @param cacheDirectory which directory to use to persist the response (use cache dir by default)
  */
-class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
-                                                     private val fileFactory: (File, String) -> File,
-                                                     private val fileInputStreamFactory: (File) -> InputStream,
-                                                     private val fileOutputStreamFactory: (File) -> OutputStream,
-                                                     private val fileReader: (InputStream) -> ByteArray,
-                                                     cacheConfiguration: CacheConfiguration<E>,
-                                                     serialisationManager: SerialisationManager<E>,
-                                                     dateFactory: (Long?) -> Date,
-                                                     private val fileNameSerialiser: FileNameSerialiser,
-                                                     private val cacheDirectory: File)
+internal class FilePersistenceManager<E>(private val hasher: Hasher,
+                                         private val fileFactory: (File, String) -> File,
+                                         private val fileInputStreamFactory: (File) -> InputStream,
+                                         private val fileOutputStreamFactory: (File) -> OutputStream,
+                                         private val fileReader: (InputStream) -> ByteArray,
+                                         cacheConfiguration: CacheConfiguration<E>,
+                                         serialisationManager: SerialisationManager<E>,
+                                         dateFactory: (Long?) -> Date,
+                                         private val fileNameSerialiser: FileNameSerialiser,
+                                         private val cacheDirectory: File)
     : BasePersistenceManager<E>(
         cacheConfiguration,
         serialisationManager,
         dateFactory
 ) where E : Exception,
-        E : NetworkErrorProvider {
+        E : NetworkErrorPredicate {
 
     init {
         cacheDirectory.mkdirs()
@@ -186,7 +186,7 @@ class FilePersistenceManager<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
                                           private val fileNameSerialiser: FileNameSerialiser
     ) where E : Exception,
-            E : NetworkErrorProvider {
+            E : NetworkErrorPredicate {
 
         fun create(cacheDirectory: File = cacheConfiguration.context.cacheDir) =
                 FilePersistenceManager(

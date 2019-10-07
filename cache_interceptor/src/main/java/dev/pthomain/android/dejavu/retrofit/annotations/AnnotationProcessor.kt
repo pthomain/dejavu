@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -41,7 +41,7 @@ import io.reactivex.Single
  */
 internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
         where  E : Exception,
-               E : NetworkErrorProvider {
+               E : NetworkErrorPredicate {
 
     private val logger = cacheConfiguration.logger
 

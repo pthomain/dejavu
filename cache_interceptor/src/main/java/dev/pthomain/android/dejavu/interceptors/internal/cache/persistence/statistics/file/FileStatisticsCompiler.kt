@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.stat
 
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.CacheEntry
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.BaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.CacheEntry
 import java.io.File
 import java.io.InputStream
 import java.util.*

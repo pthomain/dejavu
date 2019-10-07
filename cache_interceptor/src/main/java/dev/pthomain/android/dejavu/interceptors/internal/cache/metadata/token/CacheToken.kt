@@ -21,12 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.token
+package dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.INSTRUCTION
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.NOT_CACHED
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.NOT_CACHED
 import java.util.*
 
 //TODO JavaDoc

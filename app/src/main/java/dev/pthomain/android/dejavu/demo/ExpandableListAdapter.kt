@@ -35,8 +35,8 @@ import dev.pthomain.android.cache_interceptor.demo.R
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.*
 import java.text.SimpleDateFormat
 import java.util.*
 

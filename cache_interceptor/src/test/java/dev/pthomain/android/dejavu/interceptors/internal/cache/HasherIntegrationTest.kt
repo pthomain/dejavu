@@ -27,8 +27,8 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache
 import android.net.Uri
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.RequestMetadata
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import org.junit.Test

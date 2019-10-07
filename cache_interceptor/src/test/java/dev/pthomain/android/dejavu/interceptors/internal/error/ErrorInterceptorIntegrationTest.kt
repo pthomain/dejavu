@@ -27,7 +27,7 @@ import android.content.Context
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
 import dev.pthomain.android.dejavu.injection.module.CacheModule
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable

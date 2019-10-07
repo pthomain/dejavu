@@ -29,12 +29,12 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expi
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.configuration.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

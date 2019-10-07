@@ -24,16 +24,16 @@
 package dev.pthomain.android.dejavu.injection.component
 
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.NetworkErrorProvider
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
 
 internal interface CacheComponent<E>
         where E : Exception,
-              E : NetworkErrorProvider {
+              E : NetworkErrorPredicate {
 
     fun configuration(): CacheConfiguration<E>
     fun dejaVuInterceptorFactory(): DejaVuInterceptor.Factory<E>

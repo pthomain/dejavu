@@ -33,13 +33,13 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expi
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.CacheMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
