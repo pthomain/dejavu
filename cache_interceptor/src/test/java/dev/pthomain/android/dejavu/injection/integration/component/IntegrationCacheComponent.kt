@@ -23,14 +23,13 @@
 
 package dev.pthomain.android.dejavu.injection.integration.component
 
-import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.injection.component.CacheComponent
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationCacheModule
-import dev.pthomain.android.dejavu.injection.module.CacheModule
+import dev.pthomain.android.dejavu.injection.module.CacheModule.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
@@ -55,7 +54,7 @@ import javax.inject.Singleton
 @Component(modules = [IntegrationCacheModule::class])
 internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
 
-    fun dateFactory(): CacheModule.Function1<Long?, Date>
+    fun dateFactory(): Function1<Long?, Date>
     fun serialiser(): Serialiser
     fun encryptionManager(): EncryptionManager
     fun serialisationManager(): SerialisationManager<Glitch>
@@ -63,12 +62,12 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
     fun hasher(): Hasher
-    fun databasePersistenceManager(): DatabasePersistenceManager<Glitch>?
+    fun databasePersistenceManagerFactory(): DatabasePersistenceManager.Factory<Glitch>?
     fun filePersistenceManagerFactory(): FilePersistenceManager.Factory<Glitch>
     fun cacheManager(): CacheManager<Glitch>
-    fun errorInterceptorFactory(): CacheModule.Function3<Context, CacheToken, Long, ErrorInterceptor<Glitch>>
-    fun cacheInterceptorFactory(): CacheModule.Function2<CacheToken, Long, CacheInterceptor<Glitch>>
-    fun responseInterceptorFactory(): CacheModule.Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
+    fun errorInterceptorFactory(): Function2<CacheToken, Long, ErrorInterceptor<Glitch>>
+    fun cacheInterceptorFactory(): Function2<CacheToken, Long, CacheInterceptor<Glitch>>
+    fun responseInterceptorFactory(): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
     fun processingErrorAdapterFactory(): ProcessingErrorAdapter.Factory<Glitch>
     fun cacheMetadataSubject(): PublishSubject<CacheMetadata<Glitch>>

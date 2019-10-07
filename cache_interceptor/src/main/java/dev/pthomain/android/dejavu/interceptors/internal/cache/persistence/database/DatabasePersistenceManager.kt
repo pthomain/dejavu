@@ -35,6 +35,7 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestM
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
@@ -52,12 +53,12 @@ import java.util.*
  * @param dateFactory class providing the time, for the purpose of testing
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
-internal class DatabasePersistenceManager<E>(private val database: SupportSQLiteDatabase,
-                                             private val hasher: Hasher,
-                                             serialisationManager: SerialisationManager<E>,
-                                             cacheConfiguration: CacheConfiguration<E>,
-                                             dateFactory: (Long?) -> Date,
-                                             private val contentValuesFactory: (Map<String, *>) -> ContentValues)
+internal class DatabasePersistenceManager<E> internal constructor(private val database: SupportSQLiteDatabase,
+                                                                  private val hasher: Hasher,
+                                                                  serialisationManager: SerialisationManager<E>,
+                                                                  cacheConfiguration: CacheConfiguration<E>,
+                                                                  dateFactory: (Long?) -> Date,
+                                                                  private val contentValuesFactory: (Map<String, *>) -> ContentValues)
     : BasePersistenceManager<E>(
         cacheConfiguration,
         serialisationManager,
@@ -221,5 +222,23 @@ internal class DatabasePersistenceManager<E>(private val database: SupportSQLite
                 )
             }
         }
+    }
+
+    class Factory<E>(private val database: SupportSQLiteDatabase,
+                     private val hasher: Hasher,
+                     private val serialisationManager: SerialisationManager<E>,
+                     private val cacheConfiguration: CacheConfiguration<E>,
+                     private val dateFactory: (Long?) -> Date,
+                     private val contentValuesFactory: (Map<String, *>) -> ContentValues)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+        fun create(): PersistenceManager<E> = DatabasePersistenceManager(
+                database,
+                hasher,
+                serialisationManager,
+                cacheConfiguration,
+                dateFactory,
+                contentValuesFactory
+        )
     }
 }

@@ -113,7 +113,6 @@ class RetrofitCallAdapterUnitTest {
                 mock(),
                 mock(),
                 mock(),
-                mock(),
                 true,
                 true,
                 true,

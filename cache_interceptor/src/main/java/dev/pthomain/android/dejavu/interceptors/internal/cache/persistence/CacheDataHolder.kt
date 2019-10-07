@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 
+//TODO JavaDoc
 sealed class CacheDataHolder(
         open val cacheDate: Long,
         open val expiryDate: Long,

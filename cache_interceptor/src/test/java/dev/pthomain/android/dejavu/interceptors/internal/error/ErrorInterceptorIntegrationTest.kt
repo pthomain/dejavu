@@ -23,10 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.error
 
-import android.content.Context
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.injection.module.CacheModule
+import dev.pthomain.android.dejavu.injection.module.CacheModule.Function2
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -35,7 +34,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class ErrorInterceptorIntegrationTest
-    : BaseIntegrationTest<CacheModule.Function3<Context, CacheToken, Long, ErrorInterceptor<Glitch>>>(IntegrationCacheComponent::errorInterceptorFactory) {
+    : BaseIntegrationTest<Function2<CacheToken, Long, ErrorInterceptor<Glitch>>>(IntegrationCacheComponent::errorInterceptorFactory) {
 
     private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
 
@@ -43,7 +42,6 @@ internal class ErrorInterceptorIntegrationTest
     override fun setUp() {
         super.setUp()
         targetErrorInterceptor = target.get(
-                configuration.context,
                 instructionToken(Cache()),
                 1234L
         )

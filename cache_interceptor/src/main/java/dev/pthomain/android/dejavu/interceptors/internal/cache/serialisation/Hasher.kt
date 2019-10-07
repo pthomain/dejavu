@@ -24,43 +24,49 @@
 package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 
-//TODO JavaDoc
+/**
+ * Handles the hashing of the request's URL and parameters to provide a unique key per distinct request.
+ *
+ * @param logger a Logger instance
+ * @param messageDigest the hashing algorithm
+ * @param uriParser a factory converting String to Uri
+ */
 internal class Hasher(private val logger: Logger,
                       private val messageDigest: MessageDigest?,
                       private val uriParser: (String) -> Uri) {
 
+    /**
+     * Hashes a RequestMetadata
+     *
+     * @param requestMetadata the unhashed metadata
+     * @return the hashed metadata or null if the hashing of the URL or class name failed.
+     */
     fun hash(requestMetadata: RequestMetadata.UnHashed): RequestMetadata.Hashed? {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 
-        val sortedUrl = getSortedUrl(
-                uri,
-                sortedParameters
-        )
+        val sortedUrl = with(uri) {
+            "$scheme:$host$path?$sortedParameters"
+        }
 
         val urlAndBody = requestMetadata.requestBody?.let { "$sortedUrl||$it" } ?: sortedUrl
 
-        val urlHash = try {
+        val urlHash = tryOrNull(this, logger, "Could not hash URL and body") {
             hash(urlAndBody)
-        } catch (e: Exception) {
-            logger.e(this, e, "Could not hash URL and body")
-            return null
         }
 
-        val classHash = try {
+        val classHash = tryOrNull(this, logger, "Could not hash response class") {
             hash(requestMetadata.responseClass.name)
-        } catch (e: Exception) {
-            logger.e(this, e, "Could not hash response class")
-            return null
         }
 
-        return RequestMetadata.Hashed(
+        return if (urlHash == null || classHash == null) null
+        else RequestMetadata.Hashed(
                 requestMetadata.responseClass,
                 requestMetadata.url,
                 requestMetadata.requestBody,
@@ -69,18 +75,26 @@ internal class Hasher(private val logger: Logger,
         )
     }
 
-    private fun getSortedUrl(url: Uri,
-                             sortedParameters: String) = with(url) {
-        "$scheme:$host$path?$sortedParameters"
-    }
-
-    internal fun getSortedParameters(uri: Uri) =
+    /**
+     * Sorts the parameters in alphabetical order.
+     *
+     * @param uri the URI to sort
+     * @return a String representing the parameters sorted in alphabetical order
+     */
+    @VisibleForTesting
+    fun getSortedParameters(uri: Uri) =
             uri.queryParameterNames
                     .sorted()
                     .joinToString(separator = "&") {
                         "$it=${uri.getQueryParameter(it)}"
                     }
 
+    /**
+     * Hashes a String.
+     *
+     * @param text the String to hash
+     * @return the hashed String
+     */
     @Throws(UnsupportedEncodingException::class)
     fun hash(text: String) =
             if (messageDigest == null) {
@@ -95,6 +109,12 @@ internal class Hasher(private val logger: Logger,
                 bytesToString(messageDigest.digest() ?: textBytes)
             }
 
+    /**
+     * Serialises a byte array to hexadecimal.
+     *
+     * @param bytes the array to serialise
+     * @return the hexadecimal representation of this array
+     */
     private fun bytesToString(bytes: ByteArray): String {
         val hexChars = CharArray(bytes.size * 2)
         for (j in bytes.indices) {
@@ -105,27 +125,35 @@ internal class Hasher(private val logger: Logger,
         return String(hexChars)
     }
 
+    /**
+     * Factory providing an instance of Hasher with the available Hashing algorithm.
+     *
+     * @param logger a Logger instance
+     * @param uriParser a factory converting String to Uri
+     */
     class Factory(private val logger: Logger,
                   private val uriParser: (String) -> Uri) {
 
         fun create(): Hasher {
-            var messageDigest = try {
+            var messageDigest = tryOrNull(
+                    this,
+                    logger,
+                    "Could not create a SHA-1 message digest"
+            ) {
                 MessageDigest.getInstance("SHA-1").also {
                     logger.d(this, "Using SHA-1 hasher")
                 }
-            } catch (e: NoSuchAlgorithmException) {
-                logger.e(this, "Could not create a SHA-1 message digest")
-                null
             }
 
             if (messageDigest == null) {
-                messageDigest = try {
+                messageDigest = tryOrNull(
+                        this,
+                        logger,
+                        "Could not create a MD5 message digest"
+                ) {
                     MessageDigest.getInstance("MD5").also {
                         logger.d(this, "Using MD5 hasher")
                     }
-                } catch (e: NoSuchAlgorithmException) {
-                    logger.e(this, "Could not create a MD5 message digest")
-                    null
                 }
             }
 
@@ -141,3 +169,14 @@ internal class Hasher(private val logger: Logger,
         private val hexArray = "0123456789ABCDEF".toCharArray()
     }
 }
+
+private inline fun <T> tryOrNull(caller: Any,
+                                 logger: Logger,
+                                 message: String,
+                                 action: () -> T): T? =
+        try {
+            action()
+        } catch (e: Exception) {
+            logger.e(caller, e, message)
+            null
+        }

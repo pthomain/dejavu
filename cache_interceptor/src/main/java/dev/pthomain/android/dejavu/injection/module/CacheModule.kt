@@ -48,6 +48,10 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.stati
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
@@ -72,14 +76,11 @@ internal interface CacheModule<E>
 
     fun provideSerialiser(): Serialiser
 
+    fun provideLogger(): Logger
+
     fun provideEncryptionManager(): EncryptionManager
 
     fun provideFileNameSerialiser(): FileNameSerialiser
-
-    fun provideFilePersistenceManagerFactory(hasher: Hasher,
-                                             serialisationManager: SerialisationManager<E>,
-                                             dateFactory: Function1<Long?, Date>,
-                                             fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
 
     fun provideDateFactory(): Function1<Long?, Date>
 
@@ -89,10 +90,20 @@ internal interface CacheModule<E>
 
     fun provideByteToStringConverter(): Function1<ByteArray, String>
 
-    fun provideSerialisationManager(encryptionManager: EncryptionManager,
-                                    byteToStringConverter: Function1<ByteArray, String>,
-                                    compresser: Function1<ByteArray, ByteArray>,
-                                    uncompresser: Function3<ByteArray, Int, Int, ByteArray>): SerialisationManager<E>
+    fun provideFileSerialisationDecorator(byteToStringConverter: Function1<ByteArray, String>): FileSerialisationDecorator<E>
+
+    fun provideCompressionSerialisationDecorator(logger: Logger,
+                                                 compresser: Function1<ByteArray, ByteArray>,
+                                                 uncompresser: Function3<ByteArray, Int, Int, ByteArray>): CompressionSerialisationDecorator<E>
+
+    fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager): EncryptionSerialisationDecorator<E>
+
+    fun provideSerialisationDecoratorList(fileSerialisationDecorator: FileSerialisationDecorator<E>,
+                                          compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
+                                          encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>): LinkedList<SerialisationDecorator<E>>
+
+    fun provideSerialisationManager(byteToStringConverter: Function1<ByteArray, String>,
+                                    decoratorList: LinkedList<SerialisationDecorator<E>>): SerialisationManager<E>
 
     fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
 
@@ -103,22 +114,28 @@ internal interface CacheModule<E>
 
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
-    fun providePersistenceManager(databasePersistenceManager: DatabasePersistenceManager<E>?,
+    fun provideFilePersistenceManagerFactory(hasher: Hasher,
+                                             serialisationManager: SerialisationManager<E>,
+                                             dateFactory: Function1<Long?, Date>,
+                                             fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
+
+    fun providePersistenceManager(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
                                   filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E>
 
-    fun provideDatabasePersistenceManager(hasher: Hasher,
-                                          database: SupportSQLiteDatabase?,
-                                          dateFactory: Function1<Long?, Date>,
-                                          serialisationManager: SerialisationManager<E>): DatabasePersistenceManager<E>?
+    fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
+                                                 database: SupportSQLiteDatabase?,
+                                                 dateFactory: Function1<Long?, Date>,
+                                                 serialisationManager: SerialisationManager<E>): DatabasePersistenceManager.Factory<E>?
 
     fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
                                           dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler?
 
     fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
-                                      dateFactory: Function1<Long?, Date>): FileStatisticsCompiler
+                                      persistenceManager: PersistenceManager<E>,
+                                      dateFactory: Function1<Long?, Date>): FileStatisticsCompiler?
 
-    fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler,
-                                  databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler?
+    fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler?,
+                                  databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler
 
     fun provideCacheMetadataManager(persistenceManager: PersistenceManager<E>,
                                     dateFactory: Function1<Long?, Date>,
@@ -129,7 +146,7 @@ internal interface CacheModule<E>
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 
-    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function3<Context, CacheToken, Long, ErrorInterceptor<E>>
+    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>>
 
     fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
                                        cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
@@ -140,7 +157,7 @@ internal interface CacheModule<E>
 
     fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                         dateFactory: Function1<Long?, Date>,
-                                        errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
+                                        errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>
 
@@ -157,7 +174,7 @@ internal interface CacheModule<E>
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                           annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
 
-    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function3<Context, CacheToken, Long, ErrorInterceptor<E>>,
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
                                              dateFactory: Function1<Long?, Date>,
                                              responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): ProcessingErrorAdapter.Factory<E>
 

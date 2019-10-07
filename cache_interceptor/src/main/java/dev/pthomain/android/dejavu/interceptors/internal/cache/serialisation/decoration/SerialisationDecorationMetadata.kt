@@ -21,26 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.retrofit
+package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration
 
-import okhttp3.Request
-import okio.Buffer
-import java.io.IOException
-
-class RequestBodyConverter : (Request) -> String? {
-    /**
-     * Converts a request's body to String
-     *
-     * @param p1 the OkHttp request
-     * @return the request's body as a String
-     */
-    override fun invoke(p1: Request) =
-            try {
-                Buffer().apply {
-                    p1.newBuilder().build().body()?.writeTo(this)
-                }.readUtf8()
-            } catch (e: IOException) {
-                null
-            }
-
-}
+//TODO find a more dynamic way to represent this
+// TODO JavaDoc
+data class SerialisationDecorationMetadata(
+        val isCompressed:Boolean,
+        val isEncrypted:Boolean
+)

@@ -58,7 +58,7 @@ internal class FilePersistenceManager<E>(private val hasher: Hasher,
                                          serialisationManager: SerialisationManager<E>,
                                          dateFactory: (Long?) -> Date,
                                          private val fileNameSerialiser: FileNameSerialiser,
-                                         private val cacheDirectory: File)
+                                         val cacheDirectory: File)
     : BasePersistenceManager<E>(
         cacheConfiguration,
         serialisationManager,

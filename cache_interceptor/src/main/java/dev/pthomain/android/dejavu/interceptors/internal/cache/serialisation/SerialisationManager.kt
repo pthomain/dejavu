@@ -25,60 +25,52 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.mumbo.base.EncryptionManager
+import java.util.*
 
-//TODO JavaDoc
-class SerialisationManager<E>(private val logger: Logger,
-                              private val configuration: CacheConfiguration<E>,
-                              private val byteToStringConverter: (ByteArray) -> String,
-                              private val encryptionManager: EncryptionManager,
-                              private val compresser: (ByteArray) -> ByteArray,
-                              private val uncompresser: (ByteArray, Int, Int) -> ByteArray,
-                              private val serialiser: Serialiser)
+/**
+ * TODO + test
+ */
+internal class SerialisationManager<E>(private val logger: Logger,
+                                       private val serialiser: Serialiser,
+                                       private val byteToStringConverter: (ByteArray) -> String,
+                                       private val decoratorList: LinkedList<SerialisationDecorator<E>>)
         where E : Exception,
               E : NetworkErrorPredicate {
+
+    private val reversedDecoratorList = decoratorList.reversed()
 
     fun serialise(responseWrapper: ResponseWrapper<E>,
                   encryptData: Boolean,
                   compressData: Boolean): ByteArray? {
         val response = responseWrapper.response
         val responseClass = responseWrapper.responseClass
+        val metadata = SerialisationDecorationMetadata(
+                compressData,
+                encryptData
+        )
 
-        val serialised = when {
-            responseClass == String::class.java -> response as String
-            response == null || !serialiser.canHandleType(response.javaClass) -> return null
+        var serialised = when {
+            responseClass == String::class.java -> response?.let { it as String }
+            response == null || !serialiser.canHandleType(response.javaClass) -> null
             else -> serialiser.serialise(response)
+        }?.toByteArray()
+
+        decoratorList.forEach {
+            serialised = it.decorateSerialisation(
+                    responseWrapper,
+                    metadata,
+                    serialised
+            )
         }
 
         return serialised
-                .let {
-                    //TODO This is to store the metadata, make class abstract and extract this logic
-                    if (useFileCache()) responseClass.name + "\n" + it
-                    else it
-                }
-                .toByteArray()
-                .let { data ->
-                    if (encryptData && encryptionManager.isEncryptionAvailable)
-                        encryptionManager.encryptBytes(data, DATA_TAG)
-                    else data
-                }
-                ?.let { data ->
-                    if (compressData)
-                        compresser(data).also { compressed ->
-                            logCompression(
-                                    compressed,
-                                    responseClass.simpleName,
-                                    data
-                            )
-                        }
-                    else data
-                }
     }
 
     fun deserialise(instructionToken: CacheToken,
@@ -88,59 +80,39 @@ class SerialisationManager<E>(private val logger: Logger,
                     onError: Action): ResponseWrapper<E>? {
         val responseClass = instructionToken.instruction.responseClass
         val simpleName = responseClass.simpleName
-
-        try {
-            return (if (isCompressed) {
-                uncompresser(data, 0, data.size).also {
-                    logCompression(data, simpleName, it)
-                }
-            } else {
-                data
-            }).let {
-                if (isEncrypted && encryptionManager.isEncryptionAvailable)
-                    encryptionManager.decryptBytes(it, DATA_TAG)
-                            ?: throw IllegalStateException("Could not decrypt data")
-                else it
-            }.let {
-                val serialised = byteToStringConverter(it)
-
-                val payload = if (useFileCache())
-                    serialised.substring(serialised.indexOf("\n"))
-                else serialised
-
-                serialiser.deserialise(payload, responseClass)
-            }.let {
-                ResponseWrapper(
-                        responseClass,
-                        it,
-                        CacheMetadata<E>(instructionToken, null)
-                )
-            }
-        } catch (e: Exception) {
-            logger.e(
-                    this,
-                    e,
-                    "Could not deserialise $simpleName: clearing the cache"
-            )
-            onError()
-            return null
-        }
-    }
-
-    private fun useFileCache() = configuration.cacheDirectory != null
-
-    private fun logCompression(compressedData: ByteArray,
-                               simpleName: String,
-                               uncompressed: ByteArray) {
-        logger.d(
-                this,
-                "Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B "
-                        + "(${100 * compressedData.size / uncompressed.size}%)"
+        val metadata = SerialisationDecorationMetadata(
+                isCompressed,
+                isEncrypted
         )
-    }
 
-    companion object {
-        private const val DATA_TAG = "DATA_TAG"
+        var deserialised: ByteArray? = data
+
+        reversedDecoratorList.forEach {
+            deserialised = it.decorateDeserialisation(
+                    instructionToken,
+                    metadata,
+                    deserialised
+            )
+        }
+
+        return deserialised
+                ?.let { byteToStringConverter(it) }
+                ?.let { serialiser.deserialise(it, responseClass) }
+                ?.let {
+                    ResponseWrapper(
+                            responseClass,
+                            it,
+                            CacheMetadata<E>(instructionToken, null)
+                    )
+                }.apply {
+                    if (this == null) {
+                        logger.e(
+                                this@SerialisationManager,
+                                "Could not deserialise $simpleName: clearing the cache"
+                        )
+                        onError()
+                    }
+                }
     }
 
 }

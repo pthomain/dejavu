@@ -34,7 +34,6 @@ import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.android.schedulers.AndroidSchedulers
-import java.io.File
 
 /**
  * Class holding the global cache configuration. Values defined here are used by default
@@ -56,7 +55,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val serialiser: Serialiser,
                                                       val encryptionManager: EncryptionManager,
                                                       val persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)?,
-                                                      val cacheDirectory: File?,
                                                       val isCacheEnabled: Boolean,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
@@ -90,7 +88,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
 
         private var persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)? = null
-        private var cacheDirectoryProvider: ((Context) -> File)? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -213,16 +210,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                 apply { this.persistenceManagerPicker = persistenceManagerPicker }
 
         /**
-         * Uses an implementation of PersistenceManager serialising the responses to the given directory.
-         * Special care needs to be taken with public directories for which encryption should be enabled
-         * by default (see encryptByDefault()). This is overridden by persistenceManager().
-         *
-         * @param cacheDirectoryProvider the factory providing the file directory to use for caching
-         */
-        fun useFileCaching(cacheDirectoryProvider: (Context) -> File = Context::getCacheDir) =
-                apply { this.cacheDirectoryProvider = cacheDirectoryProvider }
-
-        /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
          * see @Cache::mergeOnNextOnError for call-specific directive).
          *
@@ -304,7 +291,6 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     serialiser,
                                     encryptionManager,
                                     persistenceManagerPicker,
-                                    cacheDirectoryProvider?.invoke(context),
                                     isCacheEnabled,
                                     encryptData,
                                     compressData,
