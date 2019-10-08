@@ -26,12 +26,18 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.de
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator.SerialisationDecoratorException
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 
-//TODO JavaDoc + test
+/**
+ * Optional compression step of the serialisation process
+ *
+ * @param logger a Logger instance
+ * @param compresser a function compressing an input ByteArray
+ * @param uncompresser a function decompressing an input ByteArray
+ */
 internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
                                                     private val compresser: (ByteArray) -> ByteArray,
                                                     private val uncompresser: (ByteArray, Int, Int) -> ByteArray)
@@ -39,26 +45,43 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    @Throws(SerialisationDecoratorException::class)
+    /**
+     * Implements optional compression during the serialisation process.
+     *
+     * @param responseWrapper the wrapper associated with the payload being serialised
+     * @param metadata the overall metadata associated with the current serialisation
+     * @param payload the payload being serialised
+     * @return the compressed payload
+     * @throws SerialisationException in case this compression step failed
+     */
+    @Throws(SerialisationException::class)
     override fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
                                        metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray?) =
+                                       payload: ByteArray) =
             if (metadata.isCompressed) {
-                payload?.let { compresser(it) }
-                        ?.also { compressed ->
-                            logCompression(
-                                    compressed,
-                                    responseWrapper.responseClass.simpleName,
-                                    payload
-                            )
-                        }
+                compresser(payload).also { compressed ->
+                    logCompression(
+                            compressed,
+                            responseWrapper.responseClass.simpleName,
+                            payload
+                    )
+                }
             } else payload
 
-    @Throws(SerialisationDecoratorException::class)
+    /**
+     * Implements optional decompression during the deserialisation process.
+     *
+     * @param instructionToken the request's instruction token associated with the payload being deserialised
+     * @param metadata the overall metadata associated with the current serialisation
+     * @param payload the payload being serialised
+     * @return the decompressed payload
+     * @throws SerialisationException in case this decompression step failed
+     */
+    @Throws(SerialisationException::class)
     override fun decorateDeserialisation(instructionToken: CacheToken,
                                          metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray?) =
-            if (payload != null && metadata.isCompressed) {
+                                         payload: ByteArray) =
+            if (metadata.isCompressed) {
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
@@ -68,6 +91,13 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
                 }
             } else payload
 
+    /**
+     * Logs the compression level for the given compressed payload
+     *
+     * @param compressedData the compressed payload
+     * @param simpleName the class name of the response associated with the payload
+     * @param uncompressed the original payload
+     */
     private fun logCompression(compressedData: ByteArray,
                                simpleName: String,
                                uncompressed: ByteArray) {

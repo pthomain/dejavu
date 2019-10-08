@@ -30,6 +30,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.component.CacheComponent
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -54,7 +55,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                                       val errorFactory: ErrorFactory<E>,
                                                       val serialiser: Serialiser,
                                                       val encryptionManager: EncryptionManager,
-                                                      val persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)?,
+                                                      val useDatabase: Boolean,
+                                                      val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
                                                       val isCacheEnabled: Boolean,
                                                       val encrypt: Boolean,
                                                       val compress: Boolean,
@@ -87,7 +89,8 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
         private var customErrorFactory: ErrorFactory<E>? = null
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
 
-        private var persistenceManagerPicker: ((CacheConfiguration<E>) -> PersistenceManager<E>)? = null
+        private var useDatabase = false
+        private var persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)? = null
 
         private var requestTimeOutInSeconds: Int = 15
         private var connectivityTimeoutInMillis: Long = 0L
@@ -204,10 +207,15 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * The default implementation is DatabasePersistenceManager which saves the responses to
          * an SQLite database (using requery). This takes precedence over useFileCaching().
          *
-         * @param persistenceManagerPicker a factory providing this configuration and returning the PersistenceManager implementation to use instead of the default provided one
+         * @param enableDatabase whether or not to instantiate the classes related to database caching (this will give access to DatabasePersistenceManager.Factory)
+         * @param persistenceManagerPicker a picker providing a PersistenceManagerFactory and returning the PersistenceManager implementation to override the default one
          */
-        fun persistenceManager(persistenceManagerPicker: (CacheConfiguration<E>) -> PersistenceManager<E>) =
-                apply { this.persistenceManagerPicker = persistenceManagerPicker }
+        fun persistenceManager(enableDatabase: Boolean,
+                               persistenceManagerPicker: (PersistenceManagerFactory<E>) -> PersistenceManager<E>) =
+                apply {
+                    useDatabase = enableDatabase
+                    this.persistenceManagerPicker = persistenceManagerPicker
+                }
 
         /**
          * Sets response/error merging globally (used by default for all calls with no specific directive,
@@ -290,6 +298,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
                                     customErrorFactory ?: errorFactory,
                                     serialiser,
                                     encryptionManager,
+                                    useDatabase,
                                     persistenceManagerPicker,
                                     isCacheEnabled,
                                     encryptData,

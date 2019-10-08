@@ -35,7 +35,9 @@ import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Observable
 import java.util.*
 
-//TODO JavaDoc
+/**
+ * TODO
+ */
 internal class CacheManager<E>(private val persistenceManager: PersistenceManager<E>,
                                private val cacheMetadataManager: CacheMetadataManager<E>,
                                private val emptyResponseFactory: EmptyResponseFactory<E>,

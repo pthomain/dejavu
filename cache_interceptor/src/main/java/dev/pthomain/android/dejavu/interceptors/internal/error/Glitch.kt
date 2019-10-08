@@ -24,17 +24,29 @@
 package dev.pthomain.android.dejavu.interceptors.internal.error
 
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode.NETWORK
 import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode.UNKNOWN
 
-//TODO JavaDoc
-data class Glitch constructor(override val cause: Throwable,
-                              val httpStatus: Int = NON_HTTP_STATUS,
-                              val errorCode: ErrorCode = UNKNOWN,
-                              val description: String? = "${cause.javaClass.name}: ${cause.message}")
+/**
+ * Wraps an exception and decorates it with some metadata.
+ *
+ * @see GlitchFactory for how this object is created
+ * @param cause the original exception
+ * @param httpStatus the associated HTTP status, if available (or -1 otherwise)
+ * @param errorCode the parsed ErrorCode
+ * @param description a custom description of the exception
+ */
+data class Glitch(override val cause: Throwable,
+                  val httpStatus: Int = NON_HTTP_STATUS,
+                  val errorCode: ErrorCode = UNKNOWN,
+                  val description: String? = "${cause.javaClass.name}: ${cause.message}")
     : Exception(cause),
         NetworkErrorPredicate {
 
-    override fun isNetworkError() = errorCode === ErrorCode.NETWORK
+    /**
+     * @return whether or not the class implementing this interface represents a network error
+     */
+    override fun isNetworkError() = errorCode == NETWORK
 
     companion object {
         const val NON_HTTP_STATUS = -1

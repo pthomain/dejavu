@@ -41,7 +41,25 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
-//TODO JavaDoc
+/**
+ * Interceptor handling network exceptions, converting them using the chose ErrorFactory and
+ * returning a ResponseWrapper holding the response or exception.
+ *
+ * This interceptor also adds a connectivity timeout to the network call, which defines a maximum
+ * period of time to wait for the network to become available.
+ * This delay does not affect the emission of any available cached data (according to the request's
+ * cache instruction) but only the network call in the case the data is STALE and the request's
+ * instruction warrants FRESH data to be returned (i.e CACHE or REFRESH operation).
+ *
+ * @see ErrorFactory
+ * @param context the application context
+ * @param errorFactory the factory converting throwables to custom exceptions
+ * @param logger a Logger instance
+ * @param dateFactory a factory converting timestamps to Dates
+ * @param instructionToken the original request's instruction token
+ * @param start the time at which the request started
+ * @param requestTimeOutInSeconds the aforementioned network availability delay
+ */
 internal class ErrorInterceptor<E>(private val context: Context,
                                    private val errorFactory: ErrorFactory<E>,
                                    private val logger: Logger,
@@ -53,16 +71,30 @@ internal class ErrorInterceptor<E>(private val context: Context,
         where E : Exception,
               E : NetworkErrorPredicate {
 
+    /**
+     * The composition method converting an upstream response Observable to an Observable emitting
+     * a ResponseWrapper holding the response or the converted exception.
+     *
+     * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
+     * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
+     */
     override fun apply(upstream: Observable<Any>) = upstream
             .filter { it != null } //see https://github.com/square/retrofit/issues/2242
             .map { wrap(it) }
             .timeout(requestTimeOutInSeconds.toLong(), SECONDS) //fixing timeout not working in OkHttp
-            .defaultIfEmpty(getErrorResponse(NoSuchElementException("Response was empty")))
-            .onErrorResumeNext(Function { getErrorResponse(it).observable() })
+            .defaultIfEmpty(wrapError(NoSuchElementException("Response was empty")))
+            .onErrorResumeNext(Function { wrapError(it).observable() })
             .compose {
                 addConnectivityTimeOutIfNeeded(it)
             }!!
 
+    /**
+     * Adds an optional delay for network availability (if the value is set as more than 0).
+     *
+     * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.connectivityTimeoutInMillis
+     * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
+     * @return the composed Observable optionally delayed for network availability
+     */
     private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
             instructionToken.instruction.operation.let {
                 if (it is CacheInstruction.Operation.Expiring) {
@@ -74,9 +106,15 @@ internal class ErrorInterceptor<E>(private val context: Context,
                 } else upstream
             }
 
-    private fun wrap(it: Any) = ResponseWrapper<E>(
+    /**
+     * Wraps a given response in a ResponseWrapper
+     *
+     * @param response the response to wrap
+     * @return a ResponseWrapper holding the given response with some metadata
+     */
+    private fun wrap(response: Any) = ResponseWrapper<E>(
             instructionToken.instruction.responseClass,
-            it,
+            response,
             CacheMetadata(
                     instructionToken,
                     null,
@@ -84,7 +122,13 @@ internal class ErrorInterceptor<E>(private val context: Context,
             )
     )
 
-    private fun getErrorResponse(throwable: Throwable) =
+    /**
+     * Wraps a given throwable in a ResponseWrapper
+     *
+     * @param throwable the throwable to wrap
+     * @return a ResponseWrapper holding the given throwable with some metadata
+     */
+    private fun wrapError(throwable: Throwable) =
             ResponseWrapper(
                     instructionToken.instruction.responseClass,
                     null,
@@ -95,6 +139,9 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     )
             )
 
+    /**
+     * @return a Duration metadata object holding the duration of the network call
+     */
     private fun getCallDuration() =
             CacheMetadata.Duration(
                     0,

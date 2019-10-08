@@ -31,6 +31,7 @@ import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.BasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
@@ -49,19 +50,19 @@ import java.util.*
  * @param context the application context
  * @param cacheDirectory which directory to use to persist the response (use cache dir by default)
  */
-internal class FilePersistenceManager<E>(private val hasher: Hasher,
-                                         private val fileFactory: (File, String) -> File,
-                                         private val fileInputStreamFactory: (File) -> InputStream,
-                                         private val fileOutputStreamFactory: (File) -> OutputStream,
-                                         private val fileReader: (InputStream) -> ByteArray,
-                                         cacheConfiguration: CacheConfiguration<E>,
-                                         serialisationManager: SerialisationManager<E>,
-                                         dateFactory: (Long?) -> Date,
-                                         private val fileNameSerialiser: FileNameSerialiser,
-                                         val cacheDirectory: File)
+class FilePersistenceManager<E> private constructor(private val hasher: Hasher,
+                                                    private val fileFactory: (File, String) -> File,
+                                                    private val fileInputStreamFactory: (File) -> InputStream,
+                                                    private val fileOutputStreamFactory: (File) -> OutputStream,
+                                                    private val fileReader: (InputStream) -> ByteArray,
+                                                    cacheConfiguration: CacheConfiguration<E>,
+                                                    serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                                    dateFactory: (Long?) -> Date,
+                                                    private val fileNameSerialiser: FileNameSerialiser,
+                                                    val cacheDirectory: File)
     : BasePersistenceManager<E>(
         cacheConfiguration,
-        serialisationManager,
+        serialisationManagerFactory,
         dateFactory
 ) where E : Exception,
         E : NetworkErrorPredicate {
@@ -120,7 +121,7 @@ internal class FilePersistenceManager<E>(private val hasher: Hasher,
                 fileNameSerialiser.deserialise(
                         instructionToken.requestMetadata,
                         it
-                )?.copy(data = data)
+                ).copy(data = data)
             }
 
     private fun findFileByHash(hash: String) =
@@ -182,13 +183,13 @@ internal class FilePersistenceManager<E>(private val hasher: Hasher,
 
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val cacheConfiguration: CacheConfiguration<E>,
-                                          private val serialisationManager: SerialisationManager<E>,
+                                          private val serialisationManagerFactory: SerialisationManager.Factory<E>,
                                           private val dateFactory: (Long?) -> Date,
                                           private val fileNameSerialiser: FileNameSerialiser
     ) where E : Exception,
             E : NetworkErrorPredicate {
 
-        fun create(cacheDirectory: File = cacheConfiguration.context.cacheDir) =
+        fun create(cacheDirectory: File = cacheConfiguration.context.cacheDir): PersistenceManager<E> =
                 FilePersistenceManager(
                         hasher,
                         ::File,
@@ -196,7 +197,7 @@ internal class FilePersistenceManager<E>(private val hasher: Hasher,
                         { BufferedOutputStream(FileOutputStream(it)) },
                         { it.readBytes() },
                         cacheConfiguration,
-                        serialisationManager,
+                        serialisationManagerFactory,
                         dateFactory,
                         fileNameSerialiser,
                         cacheDirectory

@@ -102,8 +102,8 @@ internal interface CacheModule<E>
                                           compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
                                           encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>): LinkedList<SerialisationDecorator<E>>
 
-    fun provideSerialisationManager(byteToStringConverter: Function1<ByteArray, String>,
-                                    decoratorList: LinkedList<SerialisationDecorator<E>>): SerialisationManager<E>
+    fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
+                                           decoratorList: LinkedList<SerialisationDecorator<E>>): SerialisationManager.Factory<E>
 
     fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
 
@@ -115,7 +115,7 @@ internal interface CacheModule<E>
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
     fun provideFilePersistenceManagerFactory(hasher: Hasher,
-                                             serialisationManager: SerialisationManager<E>,
+                                             serialisationManagerFactory: SerialisationManager.Factory<E>,
                                              dateFactory: Function1<Long?, Date>,
                                              fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
 
@@ -125,7 +125,7 @@ internal interface CacheModule<E>
     fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
                                                  database: SupportSQLiteDatabase?,
                                                  dateFactory: Function1<Long?, Date>,
-                                                 serialisationManager: SerialisationManager<E>): DatabasePersistenceManager.Factory<E>?
+                                                 serialisationManagerFactory: SerialisationManager.Factory<E>): DatabasePersistenceManager.Factory<E>?
 
     fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
                                           dateFactory: Function1<Long?, Date>): DatabaseStatisticsCompiler?

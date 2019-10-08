@@ -29,6 +29,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNo
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
@@ -139,8 +140,9 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
             } catch (cacheException: CacheException) {
                 processingErrorAdapterFactory.create(
                         defaultCallAdapter,
-                        CacheToken.fromInstruction(
+                        CacheToken(
                                 CacheInstruction(responseClass, DoNotCache),
+                                NOT_CACHED,
                                 false,
                                 false,
                                 RequestMetadata.Hashed(

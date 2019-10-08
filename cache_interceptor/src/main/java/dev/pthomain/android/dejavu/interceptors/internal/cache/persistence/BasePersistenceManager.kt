@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
-import dev.pthomain.android.boilerplate.core.utils.lambda.Action.Companion.act
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
@@ -31,7 +30,10 @@ import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager.Companion.getCacheStatus
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,16 +43,17 @@ import java.util.*
  *
  * @param cacheConfiguration the global cache configuration
  */
-internal abstract class BasePersistenceManager<E>(protected val cacheConfiguration: CacheConfiguration<E>,
-                                                  protected val serialisationManager: SerialisationManager<E>,
-                                                  protected val dateFactory: (Long?) -> Date)
+abstract class BasePersistenceManager<E> internal constructor(private val cacheConfiguration: CacheConfiguration<E>,
+                                                              serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                                              protected val dateFactory: (Long?) -> Date)
     : PersistenceManager<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    protected val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
+    private val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
     protected val logger = cacheConfiguration.logger
     protected val durationInMillis = cacheConfiguration.cacheDurationInMillis
+    private val serialisationManager = serialisationManagerFactory.create(javaClass)
 
     /**
      * Indicates whether or not the entry should be compressed or encrypted based primarily
@@ -61,19 +64,19 @@ internal abstract class BasePersistenceManager<E>(protected val cacheConfigurati
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @param cacheOperation the cache operation for the entry being saved
      *
-     * @return a pair of Boolean indicating in order whether the data was encrypted or compressed
+     * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
     final override fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
                                                cacheOperation: Expiring) =
-            with(previousCachedResponse?.metadata?.cacheToken) {
-                if (this != null)
-                    isEncrypted to isCompressed
-                else
-                    Pair(
-                            cacheOperation.encrypt ?: cacheConfiguration.encrypt,
-                            cacheOperation.compress ?: cacheConfiguration.compress
-                    )
-            }
+            previousCachedResponse?.metadata?.cacheToken?.let {
+                SerialisationDecorationMetadata(
+                        it.isCompressed,
+                        it.isEncrypted
+                )
+            } ?: SerialisationDecorationMetadata(
+                    cacheOperation.compress ?: cacheConfiguration.compress,
+                    cacheOperation.encrypt ?: cacheConfiguration.encrypt
+            )
 
     /**
      * Serialises the response and generates all the associated metadata for caching.
@@ -93,33 +96,27 @@ internal abstract class BasePersistenceManager<E>(protected val cacheConfigurati
 
         logger.d(this, "Caching $simpleName")
 
-        val (encryptData, compressData) = shouldEncryptOrCompress(
+        val metadata = shouldEncryptOrCompress(
                 previousCachedResponse,
                 operation
         )
 
         val serialised = serialisationManager.serialise(
                 response,
-                encryptData,
-                compressData
+                metadata
         )
 
-        return if (serialised != null) {
-            val now = dateFactory(null).time
+        val now = dateFactory(null).time
 
-            CacheDataHolder.Complete(
-                    instructionToken.requestMetadata,
-                    now,
-                    now + durationInMillis,
-                    serialised,
-                    instructionToken.requestMetadata.classHash,
-                    compressData,
-                    encryptData
-            )
-        } else
-            null.also {
-                logger.e(this, "Could not serialise and store data for $simpleName")
-            }
+        return CacheDataHolder.Complete(
+                instructionToken.requestMetadata,
+                now,
+                now + durationInMillis,
+                serialised,
+                instructionToken.requestMetadata.classHash,
+                metadata.isCompressed,
+                metadata.isEncrypted
+        )
     }
 
     /**
@@ -181,32 +178,38 @@ internal abstract class BasePersistenceManager<E>(protected val cacheConfigurati
                             expiryDate: Date,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
-                            localData: ByteArray) =
+                            localData: ByteArray): ResponseWrapper<E>? {
+        val simpleName = instructionToken.instruction.responseClass.simpleName
+
+        return try {
             serialisationManager.deserialise(
                     instructionToken,
                     localData,
-                    isEncrypted,
-                    isCompressed,
-                    { clearCache(null, false) }.act()
-            )?.let {
-                logger.d(
-                        this,
-                        "Returning cached ${instructionToken.instruction.responseClass.simpleName} cached until ${dateFormat.format(expiryDate)}"
-                )
-                it.apply {
+                    SerialisationDecorationMetadata(isEncrypted, isCompressed)
+            ).let { wrapper ->
+                val formattedDate = dateFormat.format(expiryDate)
+                logger.d(this, "Returning cached $simpleName cached until $formattedDate")
+
+                wrapper.apply {
                     metadata = CacheMetadata(
-                            CacheToken.cached(
-                                    instructionToken,
-                                    PersistenceManager.getCacheStatus(expiryDate, dateFactory),
-                                    isCompressed,
-                                    isEncrypted,
-                                    cacheDate,
-                                    expiryDate
+                            instructionToken.copy(
+                                    status = dateFactory.getCacheStatus(expiryDate),
+                                    isCompressed = isCompressed,
+                                    isEncrypted = isEncrypted,
+                                    fetchDate = cacheDate, //TODO check this
+                                    cacheDate = cacheDate,
+                                    expiryDate = expiryDate
                             ),
                             null
                     )
                 }
             }
+        } catch (e: SerialisationException) {
+            logger.e(this, "Could not deserialise $simpleName: clearing the cache")
+            clearCache(null, false)
+            null
+        }
+    }
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
@@ -216,9 +219,10 @@ internal abstract class BasePersistenceManager<E>(protected val cacheConfigurati
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
     final override fun invalidate(instructionToken: CacheToken) =
-            invalidateIfNeeded(
-                    instructionToken.copy(
-                            instruction = instructionToken.instruction.copy(operation = Invalidate)
-                    )
-            )
+            with(instructionToken) {
+                invalidateIfNeeded(
+                        copy(instruction = instruction.copy(operation = Invalidate))
+                )
+            }
+
 }

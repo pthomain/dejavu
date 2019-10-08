@@ -120,4 +120,6 @@ internal class SerialisationManagerIntegrationTest
 
         verify(mockErrorCallback).invoke()
     }
+
+    //TODO test encryption
 }

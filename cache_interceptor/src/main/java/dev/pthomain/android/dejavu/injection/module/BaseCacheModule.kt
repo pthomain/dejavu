@@ -41,6 +41,7 @@ import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataMana
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
@@ -175,10 +176,9 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideSerialisationManager(byteToStringConverter: Function1<ByteArray, String>,
-                                             decoratorList: LinkedList<SerialisationDecorator<E>>) =
-            SerialisationManager(
-                    configuration.logger,
+    override fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
+                                                    decoratorList: LinkedList<SerialisationDecorator<E>>) =
+            SerialisationManager.Factory(
                     configuration.serialiser,
                     byteToStringConverter::get,
                     decoratorList
@@ -188,20 +188,24 @@ internal abstract class BaseCacheModule<E>(
     @Singleton
     override fun providePersistenceManager(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
                                            filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E> =
-            configuration.persistenceManagerPicker?.invoke(configuration)
-                    ?: databasePersistenceManagerFactory?.create()
-                    ?: filePersistenceManagerFactory.create()
+            configuration.persistenceManagerPicker
+                    ?.invoke(
+                            PersistenceManagerFactory(
+                                    filePersistenceManagerFactory,
+                                    databasePersistenceManagerFactory
+                            )
+                    ) ?: databasePersistenceManagerFactory!!.create()
 
     @Provides
     @Singleton
     override fun provideFilePersistenceManagerFactory(hasher: Hasher,
-                                                      serialisationManager: SerialisationManager<E>,
+                                                      serialisationManagerFactory: SerialisationManager.Factory<E>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       fileNameSerialiser: FileNameSerialiser) =
             FilePersistenceManager.Factory(
                     hasher,
                     configuration,
-                    serialisationManager,
+                    serialisationManagerFactory,
                     dateFactory::get,
                     fileNameSerialiser
             )
@@ -211,12 +215,12 @@ internal abstract class BaseCacheModule<E>(
     override fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
                                                           database: SupportSQLiteDatabase?,
                                                           dateFactory: Function1<Long?, Date>,
-                                                          serialisationManager: SerialisationManager<E>) =
+                                                          serialisationManagerFactory: SerialisationManager.Factory<E>) =
             if (database != null)
                 DatabasePersistenceManager.Factory(
                         database,
                         hasher,
-                        serialisationManager,
+                        serialisationManagerFactory,
                         configuration,
                         dateFactory::get,
                         ::mapToContentValues
@@ -226,7 +230,7 @@ internal abstract class BaseCacheModule<E>(
     @Provides
     @Singleton
     override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback? =
-            if (usesDatabaseCacheManager()) SqlOpenHelperCallback(DATABASE_VERSION)
+            if (configuration.useDatabase) SqlOpenHelperCallback(DATABASE_VERSION)
             else null
 
     @Provides
@@ -448,8 +452,5 @@ internal abstract class BaseCacheModule<E>(
     @Singleton
     override fun provideEmptyResponseFactory() =
             EmptyResponseFactory(configuration.errorFactory)
-
-    private fun usesDatabaseCacheManager() =
-            configuration.persistenceManagerPicker == null
 
 }

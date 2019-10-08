@@ -30,8 +30,8 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNo
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.INSTRUCTION
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken.Companion.fromInstruction
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
@@ -122,8 +122,9 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
             )
         }
 
-        val instructionToken = fromInstruction(
+        val instructionToken = CacheToken(
                 if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+                INSTRUCTION,
                 (instruction.operation as? Expiring)?.compress ?: configuration.compress,
                 (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
                 hashedRequestMetadata

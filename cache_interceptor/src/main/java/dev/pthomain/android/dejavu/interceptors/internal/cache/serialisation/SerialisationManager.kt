@@ -23,69 +23,65 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation
 
-import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.util.*
 
 /**
  * TODO + test
  */
-internal class SerialisationManager<E>(private val logger: Logger,
-                                       private val serialiser: Serialiser,
-                                       private val byteToStringConverter: (ByteArray) -> String,
-                                       private val decoratorList: LinkedList<SerialisationDecorator<E>>)
+internal class SerialisationManager<E> private constructor(private val serialiser: Serialiser,
+                                                           private val byteToStringConverter: (ByteArray) -> String,
+                                                           private val decoratorList: List<SerialisationDecorator<E>>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     private val reversedDecoratorList = decoratorList.reversed()
+    private val nullException = SerialisationException(
+            "Could not serialise the given response",
+            NullPointerException("The response was null")
+    )
 
+    @Throws(SerialisationException::class)
     fun serialise(responseWrapper: ResponseWrapper<E>,
-                  encryptData: Boolean,
-                  compressData: Boolean): ByteArray? {
+                  metadata: SerialisationDecorationMetadata): ByteArray {
         val response = responseWrapper.response
         val responseClass = responseWrapper.responseClass
-        val metadata = SerialisationDecorationMetadata(
-                compressData,
-                encryptData
-        )
 
-        var serialised = when {
-            responseClass == String::class.java -> response?.let { it as String }
-            response == null || !serialiser.canHandleType(response.javaClass) -> null
+        return if (response == null) throw nullException
+        else when {
+            responseClass == String::class.java -> (response as String)
+            !serialiser.canHandleType(response.javaClass) -> throw nullException
             else -> serialiser.serialise(response)
-        }?.toByteArray()
+        }.let {
+            var serialised = it.toByteArray()
 
-        decoratorList.forEach {
-            serialised = it.decorateSerialisation(
-                    responseWrapper,
-                    metadata,
-                    serialised
-            )
+            decoratorList.forEach {
+                serialised = it.decorateSerialisation(
+                        responseWrapper,
+                        metadata,
+                        serialised
+                )
+            }
+
+            serialised
         }
-
-        return serialised
     }
 
+    @Throws(SerialisationException::class)
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
-                    isEncrypted: Boolean,
-                    isCompressed: Boolean,
-                    onError: Action): ResponseWrapper<E>? {
+                    metadata: SerialisationDecorationMetadata): ResponseWrapper<E> {
         val responseClass = instructionToken.instruction.responseClass
-        val simpleName = responseClass.simpleName
-        val metadata = SerialisationDecorationMetadata(
-                isCompressed,
-                isEncrypted
-        )
-
-        var deserialised: ByteArray? = data
+        var deserialised = data
 
         reversedDecoratorList.forEach {
             deserialised = it.decorateDeserialisation(
@@ -95,24 +91,34 @@ internal class SerialisationManager<E>(private val logger: Logger,
             )
         }
 
-        return deserialised
-                ?.let { byteToStringConverter(it) }
-                ?.let { serialiser.deserialise(it, responseClass) }
-                ?.let {
+        return byteToStringConverter(deserialised)
+                .let { serialiser.deserialise(it, responseClass) }
+                .let {
                     ResponseWrapper(
                             responseClass,
                             it,
                             CacheMetadata<E>(instructionToken, null)
                     )
-                }.apply {
-                    if (this == null) {
-                        logger.e(
-                                this@SerialisationManager,
-                                "Could not deserialise $simpleName: clearing the cache"
-                        )
-                        onError()
-                    }
                 }
     }
 
+    class Factory<E>(private val serialiser: Serialiser,
+                     private val byteToStringConverter: (ByteArray) -> String,
+                     private val decoratorList: LinkedList<SerialisationDecorator<E>>)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        fun <P : PersistenceManager<E>> create(persistenceManagerClass: Class<P>): SerialisationManager<E> {
+            val filteredList = if (persistenceManagerClass == FilePersistenceManager::class.java)
+                decoratorList
+            else
+                decoratorList.filter { it !is FileSerialisationDecorator<E> }
+
+            return SerialisationManager(
+                    serialiser,
+                    byteToStringConverter,
+                    filteredList
+            )
+        }
+    }
 }

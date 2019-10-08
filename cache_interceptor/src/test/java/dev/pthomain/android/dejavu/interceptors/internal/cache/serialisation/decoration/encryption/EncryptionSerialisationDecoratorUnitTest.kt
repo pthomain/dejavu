@@ -21,16 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration
+package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.encryption
 
-//TODO find a more dynamic way to represent this
-/**
- * Represents metadata to be used by the SerialisationDecorators
- *
- * @param isCompressed whether or not the payload needs to be compressed or uncompressed
- * @param isEncrypted whether or not the payload needs to be encrypted or decrypted
- */
-data class SerialisationDecorationMetadata(
-        val isCompressed: Boolean,
-        val isEncrypted: Boolean
-)
+//TODO
+class EncryptionSerialisationDecoratorUnitTest

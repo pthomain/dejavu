@@ -86,8 +86,7 @@ internal class DatabaseStatisticsCompiler(
         val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
         val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
         val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
-
-        val status = getCacheStatus(expiryDate, dateFactory)
+        val status = dateFactory.getCacheStatus(expiryDate)
 
         CacheEntry(
                 Class.forName(responseClassName),
@@ -106,7 +105,11 @@ internal class DatabaseStatisticsCompiler(
      */
     internal class CursorIterator(private val cursor: Cursor) : Iterator<Cursor>, Iterable<Cursor> {
         override fun iterator() = this
-        override fun hasNext() = cursor.moveToNext()
         override fun next() = cursor
+        override fun hasNext() = try {
+            cursor.moveToNext()
+        } catch (e: Exception) {
+            false
+        }
     }
 }

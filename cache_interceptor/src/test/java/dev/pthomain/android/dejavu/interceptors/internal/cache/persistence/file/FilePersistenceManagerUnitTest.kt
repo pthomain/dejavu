@@ -118,18 +118,13 @@ internal class FilePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<F
                 cacheInstruction
         )
 
-        return FilePersistenceManager(
+        return FilePersistenceManager.Factory(
                 mockHasher,
-                mockFileFactory,
-                mockFileInputStreamFactory,
-                mockFileOutputStreamFactory,
-                mockFileReader,
                 mockCacheConfiguration,
                 mockSerialisationManager,
                 mockDateFactory,
-                mockFileNameSerialiser,
-                mockCacheDirectory
-        )
+                mockFileNameSerialiser
+        ).create(mockCacheDirectory) as FilePersistenceManager<Glitch>
     }
 
     override fun prepareClearCache(context: String,

@@ -37,7 +37,15 @@ import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
 import java.util.*
 
-//TODO JavaDoc
+/**
+ * Handles the update of the ResponseWrapper's metadata.
+ *
+ * @param errorFactory the factory converting exceptions to the custom exception type
+ * @param persistenceManager the object in charge of persisting the response
+ * @param dateFactory a factory converting timestamps in Dates
+ * @param defaultDurationInMillis the default cache duration as defined globally in CacheConfiguration
+ * @param logger a Logger instance
+ */
 internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager<E>,
@@ -47,6 +55,17 @@ internal class CacheMetadataManager<E>(
 ) where E : Exception,
         E : NetworkErrorPredicate {
 
+    /**
+     * Updates the metadata of a ResponseWrapper just after a network call.
+     *
+     * @param responseWrapper the wrapper returned from the network call
+     * @param cacheOperation the instructed request cache operation
+     * @param previousCachedResponse the optional previously cached response for this call
+     * @param instructionToken the original request instruction token
+     * @param diskDuration the time spent loading the previous response from cache
+     *
+     * @return the ResponseWrapper updated with the new metadata
+     */
     fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<E>,
                                cacheOperation: Expiring,
                                previousCachedResponse: ResponseWrapper<E>?,
@@ -110,6 +129,13 @@ internal class CacheMetadataManager<E>(
         )
     }
 
+    /**
+     * Sets the metadata associated with a failure to serialise the response for caching.
+     *
+     * @param wrapper the wrapper to be cached
+     * @param exception the exception that occurred during serialisation
+     * @return the response wrapper with the udpated metadata
+     */
     fun setSerialisationFailedMetadata(wrapper: ResponseWrapper<E>,
                                        exception: Exception): ResponseWrapper<E> {
         val message = "Could not serialise ${wrapper.responseClass.simpleName}: this response will not be cached."
@@ -137,6 +163,13 @@ internal class CacheMetadataManager<E>(
         )
     }
 
+    /**
+     * Refreshes the Duration metadata
+     *
+     * @param callDuration the duration of the network call
+     * @param diskDuration the duration of the operation to retrieve the response from cache
+     * @return the udpated Duration metadata
+     */
     private fun getRefreshCallDuration(callDuration: CacheMetadata.Duration,
                                        diskDuration: Int) =
             callDuration.copy(

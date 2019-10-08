@@ -25,7 +25,16 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
 
-//TODO JavaDoc
+/**
+ * Holds cache data for the purpose of persistence or filtering of the cached responses.
+ *
+ * @param cacheDate the optional date at which the response was cached
+ * @param expiryDate the optional date at which the response will expire
+ * @param data the serialised response payload
+ * @param responseClassHash the hash of the response class
+ * @param isCompressed whether or not the response was cached compressed
+ * @param isEncrypted whether or not the response was cached encrypted
+ */
 sealed class CacheDataHolder(
         open val cacheDate: Long,
         open val expiryDate: Long,
@@ -35,6 +44,16 @@ sealed class CacheDataHolder(
         open val isEncrypted: Boolean
 ) {
 
+    /**
+     * Holds the incomplete cache data for the purpose of filtering the cached responses only.
+     *
+     * @param cacheDate the optional date at which the response was cached
+     * @param expiryDate the optional date at which the response will expire
+     * @param data the serialised response payload
+     * @param responseClassHash the hash of the response class
+     * @param isCompressed whether or not the response was cached compressed
+     * @param isEncrypted whether or not the response was cached encrypted
+     */
     data class Incomplete(
             override val cacheDate: Long,
             override val expiryDate: Long,
@@ -49,16 +68,22 @@ sealed class CacheDataHolder(
             responseClassHash,
             isCompressed,
             isEncrypted
-    ){
-        override fun equals(other: Any?): Boolean {
-            return super.equals(other)
-        }
-
-        override fun hashCode(): Int {
-            return super.hashCode()
-        }
+    ) {
+        override fun equals(other: Any?) = super.equals(other)
+        override fun hashCode() = super.hashCode()
     }
 
+    /**
+     * Holds complete cache data for the purpose of persistence.
+     *
+     * @param requestMetadata the hashed request metadata containing the keys required for unicity
+     * @param cacheDate the optional date at which the response was cached
+     * @param expiryDate the optional date at which the response will expire
+     * @param data the serialised response payload
+     * @param responseClassHash the hash of the response class
+     * @param isCompressed whether or not the response was cached compressed
+     * @param isEncrypted whether or not the response was cached encrypted
+     */
     data class Complete(
             val requestMetadata: RequestMetadata.Hashed,
             override val cacheDate: Long,
@@ -85,7 +110,7 @@ sealed class CacheDataHolder(
         }
 
         override fun hashCode(): Int {
-            var result = requestMetadata.hashCode()
+            val result = requestMetadata.hashCode()
             return 31 * result + super.hashCode()
         }
     }
@@ -115,6 +140,5 @@ sealed class CacheDataHolder(
         result = 31 * result + isEncrypted.hashCode()
         return result
     }
-
 
 }

@@ -28,5 +28,5 @@ import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
 
 internal class FilePersistenceManagerIntegrationTest
     : BasePersistenceManagerIntegrationTest<FilePersistenceManager<Glitch>>(
-        { it.filePersistenceManagerFactory().create() }
+        { it.filePersistenceManagerFactory().create() as FilePersistenceManager<Glitch>  }
 )

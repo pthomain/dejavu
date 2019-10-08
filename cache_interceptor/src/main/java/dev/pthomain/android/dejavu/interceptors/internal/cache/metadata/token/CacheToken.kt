@@ -25,11 +25,20 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.INSTRUCTION
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.NOT_CACHED
 import java.util.*
 
-//TODO JavaDoc
+/**
+ * Represent the cache settings of the request and response.
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param isCompressed whether or not the response was cached compressed
+ * @param isEncrypted whether or not the response was cached encrypted
+ * @param requestMetadata the hashed request metadata to be used for the unique cache key
+ * @param fetchDate the optional date at which the request was made
+ * @param cacheDate the optional date at which the response was cached
+ * @param expiryDate the optional date at which the response will expire
+ */
 data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,
@@ -37,71 +46,4 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val requestMetadata: RequestMetadata.Hashed,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
-                                           val expiryDate: Date? = null) {
-
-    companion object {
-
-        internal fun fromInstruction(instruction: CacheInstruction,
-                                     isCompressed: Boolean,
-                                     isEncrypted: Boolean,
-                                     requestMetadata: RequestMetadata.Hashed) = CacheToken(
-                instruction,
-                INSTRUCTION,
-                isCompressed,
-                isEncrypted,
-                requestMetadata
-        )
-
-        internal fun notCached(instructionToken: CacheToken,
-                               fetchDate: Date) = instructionToken.copy(
-                status = NOT_CACHED,
-                fetchDate = fetchDate
-        )
-
-        internal fun cached(instructionToken: CacheToken,
-                            status: CacheStatus,
-                            isCompressed: Boolean,
-                            isEncrypted: Boolean,
-                            cacheDate: Date,
-                            expiryDate: Date) = instructionToken.copy(
-                status = status,
-                isCompressed = isCompressed,
-                isEncrypted = isEncrypted,
-                cacheDate = cacheDate,
-                fetchDate = cacheDate,
-                expiryDate = expiryDate
-        )
-
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CacheToken
-
-        if (instruction != other.instruction) return false
-        if (status != other.status) return false
-        if (isCompressed != other.isCompressed) return false
-        if (isEncrypted != other.isEncrypted) return false
-        if (requestMetadata != other.requestMetadata) return false
-        if (fetchDate != other.fetchDate) return false
-        if (cacheDate != other.cacheDate) return false
-        if (expiryDate != other.expiryDate) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = instruction.hashCode()
-        result = 31 * result + status.hashCode()
-        result = 31 * result + isCompressed.hashCode()
-        result = 31 * result + isEncrypted.hashCode()
-        result = 31 * result + requestMetadata.hashCode()
-        result = 31 * result + (fetchDate?.hashCode() ?: 0)
-        result = 31 * result + (cacheDate?.hashCode() ?: 0)
-        result = 31 * result + (expiryDate?.hashCode() ?: 0)
-        return result
-    }
-
-}
+                                           val expiryDate: Date? = null)

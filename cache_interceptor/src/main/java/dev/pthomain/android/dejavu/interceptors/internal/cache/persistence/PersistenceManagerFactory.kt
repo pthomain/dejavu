@@ -21,16 +21,14 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration
+package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
-//TODO find a more dynamic way to represent this
-/**
- * Represents metadata to be used by the SerialisationDecorators
- *
- * @param isCompressed whether or not the payload needs to be compressed or uncompressed
- * @param isEncrypted whether or not the payload needs to be encrypted or decrypted
- */
-data class SerialisationDecorationMetadata(
-        val isCompressed: Boolean,
-        val isEncrypted: Boolean
-)
+import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
+
+class PersistenceManagerFactory<E> internal constructor(
+        val filePersistenceManagerFactory: FilePersistenceManager.Factory<E>,
+        val databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?
+) where E : Exception,
+        E : NetworkErrorPredicate

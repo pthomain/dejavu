@@ -25,34 +25,39 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.de
 
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator.SerialisationDecoratorException
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 
+/**
+ * Optional encryption step of the serialisation process
+ *
+ * @param encryptionManager an instance of EncryptionManager
+ * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.Builder.encryption
+ */
 class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArray) -> String)
     : SerialisationDecorator<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    @Throws(SerialisationDecoratorException::class)
+    //TODO
+    @Throws(SerialisationException::class)
     override fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
                                        metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray?) =
-            payload?.let {
-                responseWrapper.responseClass.name + "\n" + byteToStringConverter(it)
-            }?.toByteArray()
+                                       payload: ByteArray) =
+            responseWrapper.responseClass.name
+                    .plus("\n")
+                    .plus(byteToStringConverter(payload))
+                    .toByteArray()
 
-    @Throws(SerialisationDecoratorException::class)
+    @Throws(SerialisationException::class)
     override fun decorateDeserialisation(instructionToken: CacheToken,
                                          metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray?) =
-            payload?.let { byteToStringConverter(it) }
-                    ?.let {
-                        if (it.contains("\n"))
-                            it.substring(it.indexOf("\n"))
-                        else throw SerialisationDecoratorException("Could not extract the payload")
-                    }
-                    ?.toByteArray()
+                                         payload: ByteArray) =
+            byteToStringConverter(payload).let {
+                if (it.contains("\n")) it.substring(it.indexOf("\n"))
+                else throw SerialisationException("Could not extract the payload")
+            }.toByteArray()
 
 }

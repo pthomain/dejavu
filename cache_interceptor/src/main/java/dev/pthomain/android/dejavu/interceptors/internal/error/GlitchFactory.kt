@@ -31,9 +31,20 @@ import retrofit2.HttpException
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
-//TODO JavaDoc
+/**
+ * Default implementation of ErrorFactory handling some usual base exceptions.
+ *
+ * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.errorFactory for overriding this factory
+ * @see Glitch
+ */
 open class GlitchFactory : ErrorFactory<Glitch> {
 
+    /**
+     * Converts a throwable to a Glitch, containing some metadata around the exception
+     *
+     * @param throwable the given throwable to make sense of
+     * @return an instance of Glitch
+     */
     override fun getError(throwable: Throwable) =
             when (throwable) {
                 is IOException,
@@ -45,6 +56,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                 else -> getDefaultError(throwable)
             }
 
+    /**
+     * Converts an HttpException to a Glitch
+     *
+     * @param throwable the original exception
+     * @return the converted Glitch
+     */
     private fun getHttpError(throwable: HttpException) =
             Glitch(
                     throwable,
@@ -53,6 +70,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                     throwable.message()
             )
 
+    /**
+     * Converts an CacheException to a Glitch
+     *
+     * @param throwable the original exception
+     * @return the converted Glitch
+     */
     private fun getConfigError(throwable: CacheException) =
             Glitch(
                     throwable,
@@ -61,6 +84,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                     "Configuration error"
             )
 
+    /**
+     * Converts an IO exception to a Glitch
+     *
+     * @param throwable the original exception
+     * @return the converted Glitch
+     */
     private fun getIoError(throwable: Throwable) =
             Glitch(
                     throwable,
@@ -69,6 +98,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                     throwable.message
             )
 
+    /**
+     * Converts a generic Exception to a Glitch
+     *
+     * @param throwable the original exception
+     * @return the converted Glitch
+     */
     private fun getDefaultError(throwable: Throwable) =
             Glitch.from(throwable) ?: Glitch(
                     throwable,
@@ -76,6 +111,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                     UNKNOWN
             )
 
+    /**
+     * Parses an HttpException and returns an associated ErrorCode.
+     *
+     * @param httpException the original exception
+     * @return the associated ErrorCode
+     */
     private fun parseErrorCode(httpException: HttpException) =
             when (httpException.code()) {
                 401 -> UNAUTHORISED

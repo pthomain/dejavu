@@ -85,6 +85,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             GlitchFactory(),
             GsonSerialiser(Gson()),
             Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
+            true,
             null,
             true,
             true,

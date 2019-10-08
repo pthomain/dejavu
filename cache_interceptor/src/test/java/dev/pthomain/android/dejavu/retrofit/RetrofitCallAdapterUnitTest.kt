@@ -112,7 +112,8 @@ class RetrofitCallAdapterUnitTest {
                 mock(),
                 mock(),
                 mock(),
-                mock(),
+                true,
+                null,
                 true,
                 true,
                 true,
@@ -230,7 +231,7 @@ class RetrofitCallAdapterUnitTest {
                         eq(requestMetadata)
                 )
 
-                val capturedInstruction = argumentCaptor.firstValue//TODO
+                val capturedInstruction = argumentCaptor.firstValue
                 val subContext = "$context: Returned cache predicate CacheInstruction was incorrect"
 
                 assertEqualsWithContext(

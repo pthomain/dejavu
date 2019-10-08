@@ -25,31 +25,57 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.de
 
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
-//TODO JavaDoc + test
-internal class EncryptionSerialisationDecorator<E>(
-        private val encryptionManager: EncryptionManager
-) : SerialisationDecorator<E>
+/**
+ * Optional encryption step of the serialisation process
+ *
+ * @param encryptionManager an instance of EncryptionManager
+ * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.Builder.encryption
+ */
+internal class EncryptionSerialisationDecorator<E>(private val encryptionManager: EncryptionManager)
+    : SerialisationDecorator<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
+    /**
+     * Implements optional encryption during the serialisation process.
+     *
+     * @param responseWrapper the wrapper associated with the payload being serialised
+     * @param metadata the overall metadata associated with the current serialisation
+     * @param payload the payload being serialised
+     * @return the encrypted payload
+     * @throws SerialisationException in case this encryption step failed
+     */
+    @Throws(SerialisationException::class)
     override fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
                                        metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray?) =
+                                       payload: ByteArray) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.encryptBytes(payload, DATA_TAG)
+                        ?: throw SerialisationException("Could not encrypt data")
             } else payload
 
+    /**
+     * Implements optional decryption during the deserialisation process.
+     *
+     * @param instructionToken the request's instruction token associated with the payload being deserialised
+     * @param metadata the overall metadata associated with the current serialisation
+     * @param payload the payload being serialised
+     * @return the decrypted payload
+     * @throws SerialisationException in case this decryption step failed
+     */
+    @Throws(SerialisationException::class)
     override fun decorateDeserialisation(instructionToken: CacheToken,
                                          metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray?) =
+                                         payload: ByteArray) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.decryptBytes(payload, DATA_TAG)
-                        ?: throw IllegalStateException("Could not decrypt data")
+                        ?: throw SerialisationException("Could not decrypt data")
             } else payload
 
     companion object {

@@ -29,6 +29,7 @@ import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import java.util.*
 
@@ -91,10 +92,10 @@ interface PersistenceManager<E>
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @param cacheOperation the cache operation for the entry being saved
      *
-     * @return a pair of Boolean indicating in order whether the data was encrypted or compressed
+     * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
     fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
-                                cacheOperation: Expiring): Pair<Boolean, Boolean>
+                                cacheOperation: Expiring): SerialisationDecorationMetadata
 
     companion object {
         /**
@@ -104,14 +105,10 @@ interface PersistenceManager<E>
          *
          * @return whether the data is FRESH or STALE
          */
-        fun getCacheStatus(
-                expiryDate: Date,
-                dateFactory: (Long?) -> Date
-        ) =
-                ifElse(
-                        dateFactory(null).time >= expiryDate.time,
-                        STALE,
-                        FRESH
-                )
+        fun ((Long?) -> Date).getCacheStatus(expiryDate: Date) = ifElse(
+                this(null).time >= expiryDate.time,
+                STALE,
+                FRESH
+        )
     }
 }

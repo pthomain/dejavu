@@ -84,7 +84,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                     .cacheDurationInMillis(30000)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
-                    .useFileCaching()
+                    .persistenceManager(true) { it.databasePersistenceManagerFactory!!.create() }
                     //replace with .encryption { CustomEncryptionManager() } to use your own implementation
                     .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
                     .errorFactory(GsonGlitchFactory())

@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache
 
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 import io.reactivex.Observable
@@ -92,9 +93,11 @@ internal class CacheInterceptor<E>(private val cacheManager: CacheManager<E>,
     private fun doNotCache(upstream: Observable<ResponseWrapper<E>>) =
             upstream.doOnNext { responseWrapper ->
                 responseWrapper.metadata = responseWrapper.metadata.copy(
-                        CacheToken.notCached(
-                                instructionToken,
-                                dateFactory(null)
+                        instructionToken.copy(
+                                status = NOT_CACHED,
+                                fetchDate = dateFactory(null),
+                                cacheDate = null,
+                                expiryDate = null
                         )
                 )
             }

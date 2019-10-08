@@ -25,24 +25,44 @@ package dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.de
 
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.response.ResponseWrapper
 
-//TODO JavaDoc
+/**
+ * Interface representing a step in the serialisation process provided as a list to the
+ * SerialisationManager to be executed in their defined order during serialisation
+ * (and in reverse during deserialisation).
+ */
 interface SerialisationDecorator<E> where E : Exception,
                                           E : NetworkErrorPredicate {
 
-    @Throws(SerialisationDecoratorException::class)
+    /**
+     * Implements a single concern during the serialisation process.
+     *
+     * @param responseWrapper the wrapper associated with the payload being serialised
+     * @param metadata the overall metadata associated with the current serialisation
+     * @param payload the payload being serialised
+     * @return the payload converted according to this class' serialisation concern
+     * @throws SerialisationException in case this serialisation step failed
+     */
+    @Throws(SerialisationException::class)
     fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
                               metadata: SerialisationDecorationMetadata,
-                              payload: ByteArray?): ByteArray?
+                              payload: ByteArray): ByteArray
 
-    @Throws(SerialisationDecoratorException::class)
+    /**
+     * Implements a single concern during the deserialisation process.
+     *
+     * @param instructionToken the request's instruction token associated with the payload being deserialised
+     * @param metadata the overall metadata associated with the current deserialisation
+     * @param payload the payload being deserialised
+     * @return the payload converted according to this class' deserialisation concern
+     * @throws SerialisationException in case this deserialisation step failed
+     */
+    @Throws(SerialisationException::class)
     fun decorateDeserialisation(instructionToken: CacheToken,
                                 metadata: SerialisationDecorationMetadata,
-                                payload: ByteArray?): ByteArray?
+                                payload: ByteArray): ByteArray
 
-    class SerialisationDecoratorException(message: String?,
-                                          cause: Throwable? = null)
-        : Exception(message, cause)
 
 }
