@@ -40,6 +40,8 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.PersistenceMode.*
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
@@ -52,7 +54,8 @@ internal abstract class BaseDemoPresenter protected constructor(
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
-    private var instructionType: Type = CACHE
+    private var instructionType = CACHE
+    private var persistenceMode = DATABASE
 
     final override var useSingle: Boolean = false
     final override var allowNonFinalForSingle: Boolean = false
@@ -84,11 +87,25 @@ internal abstract class BaseDemoPresenter protected constructor(
                     .cacheDurationInMillis(30000)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
-                    .persistenceManager(true) { it.memoryPersistenceManagerFactory.create() }
-                    //replace with .encryption { CustomEncryptionManager() } to use your own implementation
+                    .persistenceManager(true, ::pickPersistenceMode)
                     .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
                     .errorFactory(GsonGlitchFactory())
                     .build(demoActivity, GsonSerialiser(gson))
+
+    private fun pickPersistenceMode(persistenceManagerFactory: PersistenceManagerFactory<Glitch>) =
+            with(persistenceManagerFactory) {
+                when (persistenceMode) {
+                    FILE -> filePersistenceManagerFactory.create()
+                    DATABASE -> databasePersistenceManagerFactory!!.create()
+                    MEMORY -> memoryPersistenceManagerFactory.create()
+                }
+            }
+
+    enum class PersistenceMode {
+        FILE,
+        DATABASE,
+        MEMORY
+    }
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
@@ -188,6 +205,5 @@ internal abstract class BaseDemoPresenter protected constructor(
         internal const val BASE_URL = "https://catfact.ninja/"
         internal const val ENDPOINT = "fact"
     }
-
 }
 

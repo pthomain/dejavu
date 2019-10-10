@@ -115,7 +115,7 @@ abstract class BaseKeyValuePersistenceManager<E> internal constructor(private va
                 fileNameSerialiser.deserialise(
                         instructionToken.requestMetadata,
                         it
-                ).copy(data = get(it)!!.data)
+                ).copy(data = get(it).data)
             }
 
     /**
