@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.injection.component
 
 import dagger.Component
 import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import javax.inject.Singleton
 
 @Singleton

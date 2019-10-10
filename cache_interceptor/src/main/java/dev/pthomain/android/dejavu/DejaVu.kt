@@ -29,9 +29,9 @@ import dev.pthomain.android.dejavu.injection.component.CacheComponent
 import dev.pthomain.android.dejavu.injection.component.DaggerDefaultCacheComponent
 import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
 import io.reactivex.Single

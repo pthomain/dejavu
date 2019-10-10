@@ -35,29 +35,30 @@ import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.injection.module.CacheModule.*
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManagerFactory
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.SqlOpenHelperCallback
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.file.FileSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
+import dev.pthomain.android.dejavu.interceptors.cache.CacheMetadataManager
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.database.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file.FileStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.ProcessingErrorAdapter
 import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter
@@ -165,36 +166,45 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideSerialisationDecoratorList(fileSerialisationDecorator: FileSerialisationDecorator<E>,
-                                                   compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                                   encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
-            LinkedList<SerialisationDecorator<E>>().apply {
-                add(fileSerialisationDecorator)
-                add(encryptionSerialisationDecorator)
-                add(compressionSerialisationDecorator)
-            }
-
-    @Provides
-    @Singleton
     override fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
-                                                    decoratorList: LinkedList<SerialisationDecorator<E>>) =
+                                                    fileSerialisationDecorator: FileSerialisationDecorator<E>,
+                                                    compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
+                                                    encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
             SerialisationManager.Factory(
                     configuration.serialiser,
                     byteToStringConverter::get,
-                    decoratorList
+                    fileSerialisationDecorator,
+                    compressionSerialisationDecorator,
+                    encryptionSerialisationDecorator
             )
 
     @Provides
     @Singleton
     override fun providePersistenceManager(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-                                           filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E> =
+                                           filePersistenceManagerFactory: FilePersistenceManager.Factory<E>,
+                                           memoryPersistenceManagerFactory: MemoryPersistenceManager.Factory<E>): PersistenceManager<E> =
             configuration.persistenceManagerPicker
                     ?.invoke(
                             PersistenceManagerFactory(
                                     filePersistenceManagerFactory,
-                                    databasePersistenceManagerFactory
+                                    databasePersistenceManagerFactory,
+                                    memoryPersistenceManagerFactory
                             )
                     ) ?: databasePersistenceManagerFactory!!.create()
+
+    @Provides
+    @Singleton
+    override fun provideMemoryPersistenceManagerFactory(hasher: Hasher,
+                                                        serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                                        dateFactory: Function1<Long?, Date>,
+                                                        fileNameSerialiser: FileNameSerialiser) =
+            MemoryPersistenceManager.Factory(
+                    hasher,
+                    configuration,
+                    dateFactory::get,
+                    fileNameSerialiser,
+                    serialisationManagerFactory
+            )
 
     @Provides
     @Singleton
@@ -303,30 +313,44 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>> =
-            object : Function2<CacheToken, Long, ErrorInterceptor<E>> {
-                override fun get(t1: CacheToken, t2: Long) = ErrorInterceptor(
+    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>) =
+            object : Function1<CacheToken, ErrorInterceptor<E>> {
+                override fun get(t1: CacheToken) = ErrorInterceptor(
                         configuration.context,
                         configuration.errorFactory,
                         configuration.logger,
                         dateFactory::get,
+                        t1
+                )
+            }
+
+    @Provides
+    @Singleton
+    override fun provideNetworkInterceptorFactory(dateFactory: Function1<Long?, Date>) =
+            object : Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>> {
+                override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = NetworkInterceptor(
+                        configuration.context,
+                        configuration.logger,
                         t1,
+                        dateFactory::get,
                         t2,
-                        configuration.requestTimeOutInSeconds
+                        t3,
+                        configuration.connectivityTimeoutInMillis.toInt()
                 )
             }
 
     @Provides
     @Singleton
     override fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
-                                                cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>> =
-            object : Function2<CacheToken, Long, CacheInterceptor<E>> {
-                override fun get(t1: CacheToken, t2: Long) = CacheInterceptor(
+                                                cacheManager: CacheManager<E>) =
+            object : Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>> {
+                override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = CacheInterceptor(
+                        t1,
                         cacheManager,
                         dateFactory::get,
                         configuration.isCacheEnabled,
-                        t1,
-                        t2
+                        t2,
+                        t3
                 )
             }
 
@@ -334,7 +358,7 @@ internal abstract class BaseCacheModule<E>(
     @Singleton
     override fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
                                             metadataSubject: PublishSubject<CacheMetadata<E>>,
-                                            emptyResponseFactory: EmptyResponseFactory<E>): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> =
+                                            emptyResponseFactory: EmptyResponseFactory<E>) =
             object : Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
                                  t2: Boolean,
@@ -357,13 +381,15 @@ internal abstract class BaseCacheModule<E>(
     @Singleton
     override fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                                  dateFactory: Function1<Long?, Date>,
-                                                 errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
-                                                 cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
+                                                 networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
+                                                 errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
+                                                 cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
                                                  responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     dateFactory::get,
                     errorInterceptorFactory::get,
+                    networkInterceptorFactory::get,
                     cacheInterceptorFactory::get,
                     responseInterceptor::get,
                     configuration
@@ -424,7 +450,7 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(

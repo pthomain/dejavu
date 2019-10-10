@@ -40,7 +40,7 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -84,7 +84,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                     .cacheDurationInMillis(30000)
                     .allowNonFinalForSingle(allowNonFinalForSingle)
                     .logger(uiLogger)
-                    .persistenceManager(true) { it.databasePersistenceManagerFactory!!.create() }
+                    .persistenceManager(true) { it.memoryPersistenceManagerFactory.create() }
                     //replace with .encryption { CustomEncryptionManager() } to use your own implementation
                     .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
                     .errorFactory(GsonGlitchFactory())

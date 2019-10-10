@@ -31,7 +31,7 @@ import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.injection.module.BaseCacheModule
 import dev.pthomain.android.dejavu.injection.module.CacheModule
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import java.util.*
 import javax.inject.Singleton
 

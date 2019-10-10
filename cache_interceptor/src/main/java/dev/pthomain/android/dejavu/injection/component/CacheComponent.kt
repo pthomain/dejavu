@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.injection.component
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
 

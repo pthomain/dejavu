@@ -29,11 +29,12 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.INSTRUCTION
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.response.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
@@ -51,22 +52,25 @@ import java.util.*
  * @param configuration the global cache configuration
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
- * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
+ * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
  * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with network error handling
  * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
+ * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
  *
- * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.internal.network.NetworkInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
  */
 class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction,
                                                private val requestMetadata: RequestMetadata.UnHashed,
                                                private val configuration: CacheConfiguration<E>,
                                                private val hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
-                                               private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
-                                               private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
-                                               private val cacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>)
+                                               private val errorInterceptorFactory: (CacheToken) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                               private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                               private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>,
+                                               private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>)
     : DejaVuTransformer
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -135,8 +139,11 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
         val observable = if (isHashed) upstream
         else Observable.error<Any>(IllegalStateException("The request could not be hashed"))
 
-        return observable.compose(errorInterceptorFactory(instructionToken, start))
-                .compose(cacheInterceptorFactory(instructionToken, start))
+        val errorInterceptor = errorInterceptorFactory(instructionToken) as ErrorInterceptor<E>
+
+        return observable
+                .compose(networkInterceptorFactory(errorInterceptor, instructionToken, start))
+                .compose(cacheInterceptorFactory(errorInterceptor, instructionToken, start))
                 .compose(responseInterceptorFactory(instructionToken, rxType == SINGLE, rxType == COMPLETABLE, start))
     }
 
@@ -145,19 +152,22 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
      *
      * @param hasher the class handling the request hashing for unicity
      * @param dateFactory the factory transforming timestamps to dates
-     * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
-     * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with network error handling
+     * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
+     * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with error handling
      * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
+     * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
      * @param configuration the global cache configuration
      *
-     * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
      * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.internal.network.NetworkInterceptor
      * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
      */
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
-                                          private val errorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
-                                          private val cacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>,
+                                          private val errorInterceptorFactory: (CacheToken) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                          private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
+                                          private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>,
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
                                           private val configuration: CacheConfiguration<E>)
             where E : Exception,
@@ -177,9 +187,11 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
                         configuration,
                         hasher,
                         dateFactory,
-                        responseInterceptorFactory,
                         errorInterceptorFactory,
-                        cacheInterceptorFactory
+                        networkInterceptorFactory,
+                        cacheInterceptorFactory,
+                        responseInterceptorFactory
                 ) as DejaVuTransformer
     }
+
 }

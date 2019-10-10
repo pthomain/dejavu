@@ -31,7 +31,7 @@ import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import io.reactivex.Observable
 import io.reactivex.Observer
 

@@ -34,27 +34,28 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.CacheMetadataManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FileNameSerialiser
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.file.FilePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.StatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.database.DatabaseStatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.statistics.file.FileStatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.decoration.file.FileSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
+import dev.pthomain.android.dejavu.interceptors.cache.CacheMetadataManager
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.database.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file.FileStatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.ProcessingErrorAdapter
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
@@ -98,12 +99,10 @@ internal interface CacheModule<E>
 
     fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager): EncryptionSerialisationDecorator<E>
 
-    fun provideSerialisationDecoratorList(fileSerialisationDecorator: FileSerialisationDecorator<E>,
-                                          compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                          encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>): LinkedList<SerialisationDecorator<E>>
-
     fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
-                                           decoratorList: LinkedList<SerialisationDecorator<E>>): SerialisationManager.Factory<E>
+                                           fileSerialisationDecorator: FileSerialisationDecorator<E>,
+                                           compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
+                                           encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>): SerialisationManager.Factory<E>
 
     fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
 
@@ -114,13 +113,19 @@ internal interface CacheModule<E>
 
     fun provideHasher(uriParser: Function1<String, Uri>): Hasher
 
+    fun provideMemoryPersistenceManagerFactory(hasher: Hasher,
+                                               serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                               dateFactory: Function1<Long?, Date>,
+                                               fileNameSerialiser: FileNameSerialiser): MemoryPersistenceManager.Factory<E>
+
     fun provideFilePersistenceManagerFactory(hasher: Hasher,
                                              serialisationManagerFactory: SerialisationManager.Factory<E>,
                                              dateFactory: Function1<Long?, Date>,
                                              fileNameSerialiser: FileNameSerialiser): FilePersistenceManager.Factory<E>
 
     fun providePersistenceManager(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-                                  filePersistenceManagerFactory: FilePersistenceManager.Factory<E>): PersistenceManager<E>
+                                  filePersistenceManagerFactory: FilePersistenceManager.Factory<E>,
+                                  memoryPersistenceManagerFactory: MemoryPersistenceManager.Factory<E>): PersistenceManager<E>
 
     fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
                                                  database: SupportSQLiteDatabase?,
@@ -146,10 +151,12 @@ internal interface CacheModule<E>
                             dateFactory: Function1<Long?, Date>,
                             emptyResponseFactory: EmptyResponseFactory<E>): CacheManager<E>
 
-    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function2<CacheToken, Long, ErrorInterceptor<E>>
+    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>): Function1<CacheToken, ErrorInterceptor<E>>
+
+    fun provideNetworkInterceptorFactory(dateFactory: Function1<Long?, Date>): Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>
 
     fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
-                                       cacheManager: CacheManager<E>): Function2<CacheToken, Long, CacheInterceptor<E>>
+                                       cacheManager: CacheManager<E>): Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>
 
     fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
@@ -157,8 +164,9 @@ internal interface CacheModule<E>
 
     fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                         dateFactory: Function1<Long?, Date>,
-                                        errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
-                                        cacheInterceptorFactory: Function2<CacheToken, Long, CacheInterceptor<E>>,
+                                        networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
+                                        errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
+                                        cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): DejaVuInterceptor.Factory<E>
 
     fun provideDefaultAdapterFactory(): RxJava2CallAdapterFactory
@@ -174,7 +182,7 @@ internal interface CacheModule<E>
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                           annotationProcessor: AnnotationProcessor<E>): RetrofitCallAdapterFactory<E>
 
-    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function2<CacheToken, Long, ErrorInterceptor<E>>,
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                              dateFactory: Function1<Long?, Date>,
                                              responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>): ProcessingErrorAdapter.Factory<E>
 

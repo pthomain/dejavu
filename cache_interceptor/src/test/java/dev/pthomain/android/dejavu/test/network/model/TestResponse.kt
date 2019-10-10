@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.test.network.model
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 
 class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
 

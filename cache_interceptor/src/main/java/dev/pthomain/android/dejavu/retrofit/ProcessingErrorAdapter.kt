@@ -24,10 +24,10 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -49,7 +49,7 @@ import java.util.*
  * @param exception the caught exception to be processed
  */
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
-                                                             errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+                                                             errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
                                                              responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                                                              private val dateFactory: (Long?) -> Date,
                                                              cacheToken: CacheToken,
@@ -60,10 +60,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    private val errorInterceptor = errorInterceptorFactory(
-            cacheToken,
-            start
-    )
+    private val errorInterceptor = errorInterceptorFactory(cacheToken)
 
     private val responseInterceptor = responseInterceptorFactory(
             cacheToken,
@@ -98,7 +95,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
                 }
             }!!
 
-    class Factory<E>(private val errorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<E>,
+    class Factory<E>(private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
                      private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
                      private val dateFactory: (Long?) -> Date)
             where E : Exception,

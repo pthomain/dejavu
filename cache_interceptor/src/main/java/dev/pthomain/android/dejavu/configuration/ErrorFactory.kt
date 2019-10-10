@@ -26,12 +26,6 @@ package dev.pthomain.android.dejavu.configuration
 /**
  * Converts a given Throwable into a new type extending from Exception and NetworkErrorPredicate
  */
-interface ErrorFactory<E> where E : Exception,
-                                E : NetworkErrorPredicate {
-
-    /**
-     * @param throwable the throwable to evaluate
-     * @return the custom Exception type for the given throwable
-     */
-    fun getError(throwable: Throwable): E
-}
+interface ErrorFactory<E> : (Throwable) -> E
+        where E : Exception,
+              E : NetworkErrorPredicate

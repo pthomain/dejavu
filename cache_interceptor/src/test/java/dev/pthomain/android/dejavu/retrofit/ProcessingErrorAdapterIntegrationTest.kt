@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.retrofit
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.ErrorCode
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException

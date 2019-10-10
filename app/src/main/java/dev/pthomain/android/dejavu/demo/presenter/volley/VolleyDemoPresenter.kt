@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Inva
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)

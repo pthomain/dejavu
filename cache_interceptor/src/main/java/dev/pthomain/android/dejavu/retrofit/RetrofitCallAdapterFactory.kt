@@ -28,9 +28,9 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException

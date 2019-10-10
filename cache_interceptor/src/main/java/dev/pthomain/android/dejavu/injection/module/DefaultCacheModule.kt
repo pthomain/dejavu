@@ -28,7 +28,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
 import javax.inject.Singleton

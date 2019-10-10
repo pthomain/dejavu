@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.model
 
-import dev.pthomain.android.dejavu.response.Cacheable
+import dev.pthomain.android.dejavu.interceptors.response.Cacheable
 
 class CatFactResponse : Cacheable() {
 

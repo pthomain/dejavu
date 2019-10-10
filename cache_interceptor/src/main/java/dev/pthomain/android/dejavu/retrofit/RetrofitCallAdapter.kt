@@ -31,7 +31,7 @@ import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 
 /**
  * Holds cache data for the purpose of persistence or filtering of the cached responses.
@@ -100,6 +100,16 @@ sealed class CacheDataHolder(
             isCompressed,
             isEncrypted
     ) {
+
+        val incomplete = Incomplete(
+                cacheDate,
+                expiryDate,
+                data,
+                responseClassHash,
+                isCompressed,
+                isEncrypted
+        )
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false

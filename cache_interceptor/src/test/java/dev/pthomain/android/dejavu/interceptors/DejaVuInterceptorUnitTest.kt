@@ -28,11 +28,11 @@ import dev.pthomain.android.dejavu.configuration.CacheConfiguration
 import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.test.*

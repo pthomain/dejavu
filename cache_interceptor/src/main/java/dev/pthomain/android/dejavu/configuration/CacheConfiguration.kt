@@ -28,9 +28,9 @@ import android.os.Looper
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.component.CacheComponent
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.PersistenceManagerFactory
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -206,6 +206,10 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
          * Provide a different PersistenceManager to handle the persistence of the cached requests.
          * The default implementation is DatabasePersistenceManager which saves the responses to
          * an SQLite database (using requery). This takes precedence over useFileCaching().
+         *
+         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
+         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
+         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
          *
          * @param enableDatabase whether or not to instantiate the classes related to database caching (this will give access to DatabasePersistenceManager.Factory)
          * @param persistenceManagerPicker a picker providing a PersistenceManagerFactory and returning the PersistenceManager implementation to override the default one
