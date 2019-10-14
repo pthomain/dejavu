@@ -21,33 +21,36 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.module
+package dev.pthomain.android.dejavu.injection.glitch
 
 import android.content.Context
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.injection.DejaVuModule
+import dev.pthomain.android.dejavu.injection.Function1
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
 import javax.inject.Singleton
 
-@Module
-internal class DefaultDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
-    : BaseDejaVuModule<Glitch>(configuration) {
+@Module(includes = [GlitchModule::class])
+internal class GlitchDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
+    : DejaVuModule<Glitch>(configuration) {
 
     @Provides
     @Singleton
-    override fun provideDateFactory() = object : Function1<Long?, Date> {
+    fun provideDateFactory() = object : Function1<Long?, Date> {
         override fun get(t1: Long?) =
                 t1?.let { Date(it) } ?: Date()
     }
 
     @Provides
     @Singleton
-    override fun provideSqlOpenHelper(context: Context,
-                                      callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
+    fun provideSqlOpenHelper(context: Context,
+                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
             callback?.let {
                 RequerySQLiteOpenHelperFactory().create(
                         SupportSQLiteOpenHelper.Configuration.builder(context)
@@ -58,3 +61,4 @@ internal class DefaultDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
             }
 
 }
+

@@ -30,9 +30,8 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.module.BaseDejaVuModule.Companion.DATABASE_VERSION
-import dev.pthomain.android.dejavu.injection.module.Function1
-import dev.pthomain.android.dejavu.injection.module.mapToContentValues
+import dev.pthomain.android.dejavu.injection.Function1
+import dev.pthomain.android.dejavu.injection.mapToContentValues
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback
@@ -45,8 +44,8 @@ import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal class PersistenceModule<E> where E : Exception,
-                                          E : NetworkErrorPredicate {
+internal abstract class PersistenceModule<E> where E : Exception,
+                                                   E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
@@ -143,4 +142,8 @@ internal class PersistenceModule<E> where E : Exception,
     fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
             sqlOpenHelper?.writableDatabase
 
+    companion object {
+        const val DATABASE_NAME = "dejavu.db"
+        const val DATABASE_VERSION = 1
+    }
 }

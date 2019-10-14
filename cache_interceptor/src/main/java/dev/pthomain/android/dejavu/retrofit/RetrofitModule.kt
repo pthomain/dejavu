@@ -23,15 +23,16 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
+import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
-import dev.pthomain.android.dejavu.injection.module.Function1
-import dev.pthomain.android.dejavu.injection.module.Function4
-import dev.pthomain.android.dejavu.injection.module.Function6
+import dev.pthomain.android.dejavu.injection.Function1
+import dev.pthomain.android.dejavu.injection.Function4
+import dev.pthomain.android.dejavu.injection.Function6
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -42,7 +43,8 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.util.*
 import javax.inject.Singleton
 
-internal class RetrofitModule<E>
+@Module
+internal abstract class RetrofitModule<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 

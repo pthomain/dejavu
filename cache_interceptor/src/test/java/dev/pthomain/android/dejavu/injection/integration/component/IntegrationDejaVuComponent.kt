@@ -27,11 +27,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.Function1
+import dev.pthomain.android.dejavu.injection.Function3
+import dev.pthomain.android.dejavu.injection.Function4
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
-import dev.pthomain.android.dejavu.injection.module.Function1
-import dev.pthomain.android.dejavu.injection.module.Function3
-import dev.pthomain.android.dejavu.injection.module.Function4
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata

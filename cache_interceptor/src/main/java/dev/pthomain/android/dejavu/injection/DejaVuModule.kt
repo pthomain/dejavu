@@ -21,13 +21,39 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.component
+package dev.pthomain.android.dejavu.injection
 
-import dagger.Component
-import dev.pthomain.android.dejavu.injection.module.DefaultDejaVuModule
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import android.net.Uri
+import dagger.Module
+import dagger.Provides
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import javax.inject.Singleton
 
-@Singleton
-@Component(modules = [DefaultDejaVuModule::class])
-internal interface DefaultDejaVuComponent : DejaVuComponent<Glitch>
+@Module
+internal abstract class DejaVuModule<E>(private val configuration: DejaVuConfiguration<E>)
+        where E : Exception,
+              E : NetworkErrorPredicate {
+
+    @Provides
+    @Singleton
+    fun provideContext() =
+            configuration.context
+
+    @Provides
+    @Singleton
+    fun provideConfiguration() =
+            configuration
+
+    @Provides
+    @Singleton
+    fun provideLogger() =
+            configuration.logger
+
+    @Provides
+    @Singleton
+    fun provideUriParser() = object : Function1<String, Uri> {
+        override fun get(t1: String) = Uri.parse(t1)
+    }
+
+}

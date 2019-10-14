@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.error
 
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.injection.module.DejaVuModule.Function2
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -34,7 +34,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class ErrorInterceptorIntegrationTest
-    : BaseIntegrationTest<Function2<CacheToken, Long, ErrorInterceptor<Glitch>>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
+    : BaseIntegrationTest<Function1<CacheToken, ErrorInterceptor<Glitch>>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
 
     private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
 
@@ -42,8 +42,7 @@ internal class ErrorInterceptorIntegrationTest
     override fun setUp() {
         super.setUp()
         targetErrorInterceptor = target.get(
-                instructionToken(Cache()),
-                1234L
+                instructionToken(Cache())
         )
     }
 

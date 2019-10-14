@@ -29,7 +29,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
@@ -70,16 +70,6 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
               E : NetworkErrorPredicate {
-
-    companion object {
-
-        internal fun <E> builder(errorFactory: ErrorFactory<E>,
-                                 componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>)
-                where E : Exception,
-                      E : NetworkErrorPredicate =
-                Builder(errorFactory, componentProvider)
-
-    }
 
     class Builder<E> internal constructor(
             private val errorFactory: ErrorFactory<E>,
@@ -282,7 +272,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * Returns an instance of DejaVu.
          *
          * @param context the Android context
-         * @param serialiser custom Serialiser implementation
+         * @param serialiser the mandatory custom Serialiser implementation
          */
         fun build(context: Context,
                   serialiser: Serialiser): DejaVu<E> {

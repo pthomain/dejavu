@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.component.DaggerDefaultDejaVuComponent
-import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
-import dev.pthomain.android.dejavu.injection.module.DefaultDejaVuModule
+import dev.pthomain.android.dejavu.injection.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
+import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
@@ -77,21 +77,26 @@ class DejaVu<E> internal constructor(private val component: DejaVuComponent<E>)
          */
         const val DejaVuHeader = "DejaVuHeader"
 
-        private fun defaultComponentProvider() = { dejaVuConfiguration: DejaVuConfiguration<Glitch> ->
-            DaggerDefaultDejaVuComponent
-                    .builder()
-                    .defaultCacheModule(DefaultDejaVuModule(dejaVuConfiguration))
-                    .build()
-        }
+        /**
+         * @return Builder for DejaVuConfiguration
+         */
+        fun <E> builder(errorFactory: ErrorFactory<E>,
+                        componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>) where E : Exception,
+                                                                                                 E : NetworkErrorPredicate =
+                DejaVuConfiguration.Builder(
+                        errorFactory,
+                        componentProvider
+                )
 
         /**
          * @return Builder for DejaVuConfiguration
          */
-        fun builder() =
-                DejaVuConfiguration.builder(
-                        GlitchFactory(),
-                        defaultComponentProvider()
-                )
+        fun builder() = builder(GlitchFactory()) {
+            DaggerGlitchDejaVuComponent
+                    .builder()
+                    .glitchDejaVuModule(GlitchDejaVuModule(it))
+                    .build()
+        }
 
     }
 }

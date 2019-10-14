@@ -21,17 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.module
+package dev.pthomain.android.dejavu.injection.glitch
 
-import android.content.Context
-import androidx.sqlite.db.SupportSQLiteOpenHelper
-import java.util.*
+import dagger.Component
+import dev.pthomain.android.dejavu.injection.DejaVuComponent
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import javax.inject.Singleton
 
-interface DejaVuModule {
-
-    fun provideDateFactory(): Function1<Long?, Date>
-
-    fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper?
-
-}
+@Singleton
+@Component(modules = [GlitchDejaVuModule::class])
+internal interface GlitchDejaVuComponent : DejaVuComponent<Glitch>

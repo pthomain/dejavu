@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.module
+package dev.pthomain.android.dejavu.injection
 
 import android.content.ContentValues
 

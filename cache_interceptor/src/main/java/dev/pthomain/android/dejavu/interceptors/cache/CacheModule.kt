@@ -28,7 +28,7 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.module.Function1
+import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
@@ -38,7 +38,7 @@ import javax.inject.Singleton
 
 
 @Module
-internal class CacheModule<E>
+internal abstract class CacheModule<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 

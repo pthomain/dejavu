@@ -21,59 +21,41 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.module
+package dev.pthomain.android.dejavu.injection.glitch
 
-import android.net.Uri
 import dagger.Module
-import dagger.Provides
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.InterceptorModule
 import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsModule
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationModule
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitModule
-import javax.inject.Singleton
 
 @Module(includes = [
-    SerialisationModule::class,
-    PersistenceModule::class,
-    StatisticsModule::class,
-    InterceptorModule::class,
-    CacheModule::class,
-    RetrofitModule::class
+    GlitchSerialisationModule::class,
+    GlitchPersistenceModule::class,
+    GlitchStatisticsModule::class,
+    GlitchInterceptorModule::class,
+    GlitchCacheModule::class,
+    GlitchRetrofitModule::class
 ])
-internal abstract class BaseDejaVuModule<E>(
-        protected val configuration: DejaVuConfiguration<E>
-) : DejaVuModule
-        where E : Exception,
-              E : NetworkErrorPredicate {
+internal class GlitchModule
 
-    companion object {
-        const val DATABASE_NAME = "dejavu.db"
-        const val DATABASE_VERSION = 1
-    }
+@Module
+internal class GlitchSerialisationModule : SerialisationModule<Glitch>()
 
-    @Provides
-    @Singleton
-    fun provideContext() =
-            configuration.context
+@Module
+internal class GlitchPersistenceModule : PersistenceModule<Glitch>()
 
-    @Provides
-    @Singleton
-    fun provideConfiguration() =
-            configuration
+@Module
+internal class GlitchStatisticsModule : StatisticsModule<Glitch>()
 
-    @Provides
-    @Singleton
-    fun provideLogger() =
-            configuration.logger
+@Module
+internal class GlitchInterceptorModule : InterceptorModule<Glitch>()
 
-    @Provides
-    @Singleton
-    fun provideUriParser() = object : Function1<String, Uri> {
-        override fun get(t1: String) = Uri.parse(t1)
-    }
+@Module
+internal class GlitchCacheModule : CacheModule<Glitch>()
 
-}
+@Module
+internal class GlitchRetrofitModule : RetrofitModule<Glitch>()

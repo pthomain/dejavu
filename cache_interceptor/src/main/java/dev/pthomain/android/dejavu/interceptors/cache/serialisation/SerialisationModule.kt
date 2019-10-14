@@ -29,8 +29,8 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.module.Function1
-import dev.pthomain.android.dejavu.injection.module.Function3
+import dev.pthomain.android.dejavu.injection.Function1
+import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
@@ -39,8 +39,8 @@ import org.iq80.snappy.Snappy
 import javax.inject.Singleton
 
 @Module
-internal class SerialisationModule<E> where E : Exception,
-                                            E : NetworkErrorPredicate {
+internal abstract class SerialisationModule<E> where E : Exception,
+                                                     E : NetworkErrorPredicate {
     @Provides
     @Singleton
     fun provideSerialiser(configuration: DejaVuConfiguration<E>) =
@@ -77,8 +77,7 @@ internal class SerialisationModule<E> where E : Exception,
 
     @Provides
     @Singleton
-    fun provideHasher(configuration: DejaVuConfiguration<E>,
-                      logger: Logger,
+    fun provideHasher(logger: Logger,
                       uriParser: Function1<String, Uri>) =
             Hasher.Factory(
                     logger,
