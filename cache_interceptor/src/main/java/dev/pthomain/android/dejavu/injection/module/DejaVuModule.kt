@@ -21,12 +21,17 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.file
+package dev.pthomain.android.dejavu.injection.module
 
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerIntegrationTest
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import android.content.Context
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import java.util.*
 
-internal class FilePersistenceManagerIntegrationTest
-    : BasePersistenceManagerIntegrationTest<FilePersistenceManager<Glitch>>(
-        { it.filePersistenceManagerFactory.create() as FilePersistenceManager<Glitch>  }
-)
+interface DejaVuModule {
+
+    fun provideDateFactory(): Function1<Long?, Date>
+
+    fun provideSqlOpenHelper(context: Context,
+                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper?
+
+}

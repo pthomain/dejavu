@@ -27,8 +27,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -39,7 +39,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class SerialisationManagerIntegrationTest
-    : BaseIntegrationTest<SerialisationManager<Glitch>>(IntegrationCacheComponent::serialisationManager) {
+    : BaseIntegrationTest<SerialisationManager<Glitch>>(IntegrationDejaVuComponent::serialisationManager) {
 
     private lateinit var wrapper: ResponseWrapper<Glitch>
     private lateinit var instructionToken: CacheToken

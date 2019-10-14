@@ -21,41 +21,40 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.integration.module
+package dev.pthomain.android.dejavu.injection.module
 
 import android.content.Context
 import androidx.sqlite.db.SupportSQLiteOpenHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.injection.module.BaseCacheModule
-import dev.pthomain.android.dejavu.injection.module.CacheModule
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal class IntegrationCacheModule(configuration: CacheConfiguration<Glitch>)
-    : BaseCacheModule<Glitch>(configuration) {
-
-    val NOW = Date(1234L)
+internal class DefaultDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
+    : BaseDejaVuModule<Glitch>(configuration) {
 
     @Provides
     @Singleton
-    override fun provideDateFactory() = object : CacheModule.Function1<Long?, Date> {
-        override fun get(t1: Long?) = if (t1 == null) NOW else Date(t1)
+    override fun provideDateFactory() = object : Function1<Long?, Date> {
+        override fun get(t1: Long?) =
+                t1?.let { Date(it) } ?: Date()
     }
 
     @Provides
     @Singleton
     override fun provideSqlOpenHelper(context: Context,
                                       callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
-            FrameworkSQLiteOpenHelperFactory().create(
-                    SupportSQLiteOpenHelper.Configuration.builder(context)
-                            .name(DATABASE_NAME)
-                            .callback(callback!!)
-                            .build()
-            )
+            callback?.let {
+                RequerySQLiteOpenHelperFactory().create(
+                        SupportSQLiteOpenHelper.Configuration.builder(context)
+                                .name(DATABASE_NAME)
+                                .callback(it)
+                                .build()
+                )
+            }
 
 }

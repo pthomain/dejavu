@@ -27,19 +27,20 @@ import android.content.ContentValues
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
@@ -50,25 +51,23 @@ import java.util.*
  *
  * @param database the opened database
  * @param hasher the class handling the request hashing for unicity
- * @param serialisationManagerFactory used for the serialisation/deserialisation of the cache entries
- * @param cacheConfiguration the global cache configuration
+ * @param serialisationManager used for the serialisation/deserialisation of the cache entries
+ * @param dejaVuConfiguration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
 class DatabasePersistenceManager<E> internal constructor(private val database: SupportSQLiteDatabase,
                                                          private val hasher: Hasher,
-                                                         serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                                         cacheConfiguration: CacheConfiguration<E>,
+                                                         serialisationManager: SerialisationManager<E>,
+                                                         dejaVuConfiguration: DejaVuConfiguration<E>,
                                                          dateFactory: (Long?) -> Date,
                                                          private val contentValuesFactory: (Map<String, *>) -> ContentValues)
     : BasePersistenceManager<E>(
-        cacheConfiguration,
-        serialisationManagerFactory,
+        dejaVuConfiguration,
+        serialisationManager,
         dateFactory
 ) where E : Exception,
         E : NetworkErrorPredicate {
-
-    override val serialisationManager = serialisationManagerFactory.create()
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -99,7 +98,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         }
 
         database.delete(
-                TABLE_CACHE,
+                TABLE_DEJA_VU,
                 arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
                 args.toArray()
         ).let { deleted ->
@@ -135,7 +134,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
         val query = """
             SELECT ${projection.joinToString(", ")}
-            FROM $TABLE_CACHE
+            FROM $TABLE_DEJA_VU
             WHERE ${TOKEN.columnName} = '${requestMetadata.urlHash}'
             LIMIT 1
             """
@@ -189,7 +188,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                 val selectionArgs = arrayOf(instructionToken.requestMetadata.urlHash)
 
                 database.update(
-                        TABLE_CACHE,
+                        TABLE_DEJA_VU,
                         CONFLICT_REPLACE,
                         contentValuesFactory(map),
                         selection,
@@ -228,7 +227,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
                 try {
                     database.insert(
-                            TABLE_CACHE,
+                            TABLE_DEJA_VU,
                             CONFLICT_REPLACE,
                             contentValuesFactory(values)
                     )
@@ -239,10 +238,11 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         }
     }
 
+    //TODO remove this
     class Factory<E> internal constructor(private val database: SupportSQLiteDatabase,
                                           private val hasher: Hasher,
                                           private val serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                          private val cacheConfiguration: CacheConfiguration<E>,
+                                          private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                           private val dateFactory: (Long?) -> Date,
                                           private val contentValuesFactory: (Map<String, *>) -> ContentValues)
             where E : Exception,
@@ -251,8 +251,8 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         fun create(): PersistenceManager<E> = DatabasePersistenceManager(
                 database,
                 hasher,
-                serialisationManagerFactory,
-                cacheConfiguration,
+                serialisationManagerFactory.create(DATABASE),
+                dejaVuConfiguration,
                 dateFactory,
                 contentValuesFactory
         )

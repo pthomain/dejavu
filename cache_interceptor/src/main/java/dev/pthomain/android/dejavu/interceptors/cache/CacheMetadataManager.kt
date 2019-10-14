@@ -25,9 +25,9 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -43,7 +43,7 @@ import java.util.*
  * @param errorFactory the factory converting exceptions to the custom exception type
  * @param persistenceManager the object in charge of persisting the response
  * @param dateFactory a factory converting timestamps in Dates
- * @param defaultDurationInMillis the default cache duration as defined globally in CacheConfiguration
+ * @param defaultDurationInMillis the default cache duration as defined globally in DejaVuConfiguration
  * @param logger a Logger instance
  */
 internal class CacheMetadataManager<E>(

@@ -21,9 +21,9 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration
+package dev.pthomain.android.dejavu.configuration.instruction
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
 
 /**
  * Contains the cache operation, target response class and call-specific directives.
@@ -69,7 +69,7 @@ data class CacheInstruction constructor(val responseClass: Class<*>,
              * for the duration defined by durationInMillis.
              *
              * This instruction takes precedence over the global cacheAllByDefault directive.
-             * @see CacheConfiguration.cacheAllByDefault
+             * @see DejaVuConfiguration.cacheAllByDefault
              *
              * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
              * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)

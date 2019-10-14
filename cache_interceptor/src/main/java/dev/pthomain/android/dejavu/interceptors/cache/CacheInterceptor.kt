@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor

@@ -21,12 +21,16 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.file
+package dev.pthomain.android.dejavu.configuration.error
 
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerIntegrationTest
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+/**
+ * Interface indicating whether a Throwable is a network error for the purpose of
+ * exponential backoff retries on failed calls
+ */
+interface NetworkErrorPredicate {
 
-internal class FilePersistenceManagerIntegrationTest
-    : BasePersistenceManagerIntegrationTest<FilePersistenceManager<Glitch>>(
-        { it.filePersistenceManagerFactory.create() as FilePersistenceManager<Glitch>  }
-)
+    /**
+     * @return whether or not the class implementing this interface represents a network error
+     */
+    fun isNetworkError(): Boolean
+}

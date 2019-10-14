@@ -23,10 +23,10 @@
 
 package dev.pthomain.android.dejavu.test
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance

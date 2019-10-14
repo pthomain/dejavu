@@ -21,16 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration
+package dev.pthomain.android.dejavu.injection.component
 
-/**
- * Interface indicating whether a Throwable is a network error for the purpose of
- * exponential backoff retries on failed calls
- */
-interface NetworkErrorPredicate {
+import dagger.Component
+import dev.pthomain.android.dejavu.injection.module.DefaultDejaVuModule
+import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import javax.inject.Singleton
 
-    /**
-     * @return whether or not the class implementing this interface represents a network error
-     */
-    fun isNetworkError(): Boolean
-}
+@Singleton
+@Component(modules = [DefaultDejaVuModule::class])
+internal interface DefaultDejaVuComponent : DejaVuComponent<Glitch>

@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.response
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
@@ -48,7 +48,7 @@ import java.util.*
 class ResponseInterceptorUnitTest {
 
     private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
-    private lateinit var mockConfiguration: CacheConfiguration<Glitch>
+    private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockMetadataSubject: PublishSubject<CacheMetadata<Glitch>>
     private lateinit var mockEmptyException: Glitch
 
@@ -167,7 +167,7 @@ class ResponseInterceptorUnitTest {
         else
             Observable.just(mockUpstreamWrapper)
 
-        mockConfiguration = CacheConfiguration(
+        mockConfiguration = DejaVuConfiguration(
                 mock(),
                 mock(),
                 mock(),

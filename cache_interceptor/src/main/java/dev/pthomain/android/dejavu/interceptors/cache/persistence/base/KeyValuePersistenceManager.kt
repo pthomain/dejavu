@@ -23,16 +23,21 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.MEMORY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import java.util.*
@@ -42,43 +47,28 @@ import java.util.*
  * This would be slightly less performant than the database implementation with a large number of entries.
  *
  * Be careful to encrypt the data if you change this directory to a publicly readable directory,
- * see CacheConfiguration.Builder().encryptByDefault().
+ * see DejaVuConfiguration.Builder().encryptByDefault().
  *
  * @param hasher the class handling the request hashing for unicity
- * @param cacheConfiguration the global cache configuration
- * @param serialisationManagerFactory used for the serialisation/deserialisation of the cache entries
+ * @param dejaVuConfiguration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
  * @param fileNameSerialiser a class that handles the serialisation of the cache metadata to a file name.
+ * @param store the KeyValueStore holding the data
+ * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  */
-abstract class BaseKeyValuePersistenceManager<E> internal constructor(private val hasher: Hasher,
-                                                                      cacheConfiguration: CacheConfiguration<E>,
-                                                                      serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                                                      dateFactory: (Long?) -> Date,
-                                                                      private val fileNameSerialiser: FileNameSerialiser)
+class KeyValuePersistenceManager<E> internal constructor(private val hasher: Hasher,
+                                                         dejaVuConfiguration: DejaVuConfiguration<E>,
+                                                         dateFactory: (Long?) -> Date,
+                                                         private val fileNameSerialiser: FileNameSerialiser,
+                                                         private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
+                                                         serialisationManager: SerialisationManager<E>)
     : BasePersistenceManager<E>(
-        cacheConfiguration,
-        serialisationManagerFactory,
+        dejaVuConfiguration,
+        serialisationManager,
         dateFactory
-), KeyValueStore<String, CacheDataHolder.Incomplete>
+), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store
         where E : Exception,
               E : NetworkErrorPredicate {
-
-    /**
-     * Returns an existing entry name matching the given URL hash.
-     *
-     * @param hash the URL hash used as a unique key
-     * @return the matching file name if present
-     */
-    abstract fun findEntryNameByHash(hash: String): String?
-
-    /**
-     * Converts a given key to an incomplete CacheDataHolder
-     *
-     * @param key the entry's key
-     * @return the incomplete CacheDataHolder if present in cache
-     */
-    final override fun get(key: String) =
-            fileNameSerialiser.deserialise(key)
 
     /**
      * Caches a given response.
@@ -88,11 +78,11 @@ abstract class BaseKeyValuePersistenceManager<E> internal constructor(private va
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    final override fun cache(responseWrapper: ResponseWrapper<E>,
-                             previousCachedResponse: ResponseWrapper<E>?) {
+    override fun cache(responseWrapper: ResponseWrapper<E>,
+                       previousCachedResponse: ResponseWrapper<E>?) {
         serialise(responseWrapper, previousCachedResponse)?.let { holder ->
 
-            findEntryNameByHash(holder.requestMetadata.urlHash)?.let {
+            findPartialKey(holder.requestMetadata.urlHash)?.let {
                 delete(it)
             }
 
@@ -109,14 +99,10 @@ abstract class BaseKeyValuePersistenceManager<E> internal constructor(private va
      *
      * @return the cached data as a CacheDataHolder
      */
-    final override fun getCacheDataHolder(instructionToken: CacheToken,
-                                          requestMetadata: RequestMetadata.Hashed) =
-            findEntryNameByHash(requestMetadata.urlHash)?.let {
-                fileNameSerialiser.deserialise(
-                        instructionToken.requestMetadata,
-                        it
-                ).copy(data = get(it).data)
-            }
+    override fun getCacheDataHolder(instructionToken: CacheToken,
+                                    requestMetadata: RequestMetadata.Hashed) =
+            findPartialKey(requestMetadata.urlHash)
+                    ?.let { get(it) }
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -127,12 +113,12 @@ abstract class BaseKeyValuePersistenceManager<E> internal constructor(private va
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    final override fun clearCache(typeToClear: Class<*>?,
-                                  clearStaleEntriesOnly: Boolean) {
+    override fun clearCache(typeToClear: Class<*>?,
+                            clearStaleEntriesOnly: Boolean) {
         val now = dateFactory(null).time
         val classHash = typeToClear?.let { hasher.hash(it.name) }
 
-        list().map { it.key to fileNameSerialiser.deserialise(it.key) }
+        values().map { it.key to fileNameSerialiser.deserialise(it.key) }
                 .filter {
                     with(it.second) {
                         val isRightType = typeToClear == null || responseClassHash == classHash
@@ -153,30 +139,57 @@ abstract class BaseKeyValuePersistenceManager<E> internal constructor(private va
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    final override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
+    override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
         if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            findEntryNameByHash(instructionToken.requestMetadata.urlHash)?.also { oldName ->
-                fileNameSerialiser
-                        .deserialise(instructionToken.requestMetadata, oldName)
-                        .copy(
-                                expiryDate = 0L,
-                                requestMetadata = instructionToken.requestMetadata
-                        )
-                        .let { invalidatedHolder ->
-                            val newName = fileNameSerialiser.serialise(invalidatedHolder)
-                            rename(oldName, newName)
-                            true
-                        }
+            findPartialKey(instructionToken.requestMetadata.urlHash)?.also { oldName ->
+                fileNameSerialiser.deserialise(instructionToken.requestMetadata, oldName).let {
+                    if (it.expiryDate != 0L) {
+                        val newName = fileNameSerialiser.serialise(it.copy(expiryDate = 0L))
+                        rename(oldName, newName)
+                    }
+                    true
+                }
             }
         }
         return false
     }
 
-    /**
-     * Renames an entry
-     *
-     * @param oldName the old entry name
-     * @param newName  the new entry name
-     */
-    abstract fun rename(oldName: String, newName: String)
+    class Factory<E> internal constructor(private val fileStoreFactory: FileStore.Factory<E>,
+                                          private val memoryStoreFactory: MemoryStore.Factory,
+                                          private val hasher: Hasher,
+                                          private val serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                          private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                                          private val dateFactory: (Long?) -> Date,
+                                          private val fileNameSerialiser: FileNameSerialiser)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        inner class File {
+            fun create(cacheDirectory: java.io.File = dejaVuConfiguration.context.cacheDir): PersistenceManager<E> {
+                return KeyValuePersistenceManager(
+                        hasher,
+                        dejaVuConfiguration,
+                        dateFactory,
+                        fileNameSerialiser,
+                        fileStoreFactory.create(cacheDirectory),
+                        serialisationManagerFactory.create(FILE)
+                )
+            }
+        }
+
+        inner class Memory {
+            fun create(maxEntries: Int = 20,
+                       disableEncryption: Boolean = false): PersistenceManager<E> {
+                return KeyValuePersistenceManager(
+                        hasher,
+                        dejaVuConfiguration,
+                        dateFactory,
+                        fileNameSerialiser,
+                        memoryStoreFactory.create(maxEntries),
+                        serialisationManagerFactory.create(MEMORY, disableEncryption)
+                )
+            }
+        }
+    }
+
 }

@@ -35,7 +35,7 @@ enum class CacheStatus(
          * allowNonFinalForSingle directive is set to true and filterFinal is set to false on
          * the call's directives.
          *
-         * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.allowNonFinalForSingle
+         * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.allowNonFinalForSingle
          * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.filterFinal
          */
         isFinal: Boolean,

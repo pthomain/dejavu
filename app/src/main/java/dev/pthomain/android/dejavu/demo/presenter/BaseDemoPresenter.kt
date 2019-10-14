@@ -31,17 +31,17 @@ import dev.pthomain.android.boilerplate.core.mvp.MvpPresenter
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.PersistenceMode.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
@@ -55,7 +55,7 @@ internal abstract class BaseDemoPresenter protected constructor(
         DemoPresenter {
 
     private var instructionType = CACHE
-    private var persistenceMode = DATABASE
+    private var persistenceType = FILE
 
     final override var useSingle: Boolean = false
     final override var allowNonFinalForSingle: Boolean = false
@@ -94,18 +94,12 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     private fun pickPersistenceMode(persistenceManagerFactory: PersistenceManagerFactory<Glitch>) =
             with(persistenceManagerFactory) {
-                when (persistenceMode) {
+                when (persistenceType) {
                     FILE -> filePersistenceManagerFactory.create()
                     DATABASE -> databasePersistenceManagerFactory!!.create()
                     MEMORY -> memoryPersistenceManagerFactory.create()
                 }
             }
-
-    enum class PersistenceMode {
-        FILE,
-        DATABASE,
-        MEMORY
-    }
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
@@ -169,6 +163,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
+                    .doOnNext { it.metadata.exception?.also { uiLogger.e(this, it) } }
                     .doFinally(::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 

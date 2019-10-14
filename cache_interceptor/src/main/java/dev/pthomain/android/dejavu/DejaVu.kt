@@ -23,11 +23,11 @@
 
 package dev.pthomain.android.dejavu
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.component.CacheComponent
-import dev.pthomain.android.dejavu.injection.component.DaggerDefaultCacheComponent
-import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.injection.component.DaggerDefaultDejaVuComponent
+import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.module.DefaultDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
@@ -39,14 +39,14 @@ import io.reactivex.Single
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
  */
-class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
+class DejaVu<E> internal constructor(private val component: DejaVuComponent<E>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     /**
      * Provides the current configuration
      */
-    val configuration: CacheConfiguration<E> = component.configuration()
+    val configuration: DejaVuConfiguration<E> = component.configuration()
 
     /**
      * Provides the adapter factory to use with Retrofit
@@ -77,18 +77,18 @@ class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
          */
         const val DejaVuHeader = "DejaVuHeader"
 
-        private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<Glitch> ->
-            DaggerDefaultCacheComponent
+        private fun defaultComponentProvider() = { dejaVuConfiguration: DejaVuConfiguration<Glitch> ->
+            DaggerDefaultDejaVuComponent
                     .builder()
-                    .defaultCacheModule(DefaultCacheModule(cacheConfiguration))
+                    .defaultCacheModule(DefaultDejaVuModule(dejaVuConfiguration))
                     .build()
         }
 
         /**
-         * @return Builder for CacheConfiguration
+         * @return Builder for DejaVuConfiguration
          */
         fun builder() =
-                CacheConfiguration.builder(
+                DejaVuConfiguration.builder(
                         GlitchFactory(),
                         defaultComponentProvider()
                 )

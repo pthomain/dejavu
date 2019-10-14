@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.DoNotCache
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.INSTRUCTION
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -64,7 +64,7 @@ import java.util.*
  */
 class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction,
                                                private val requestMetadata: RequestMetadata.UnHashed,
-                                               private val configuration: CacheConfiguration<E>,
+                                               private val configuration: DejaVuConfiguration<E>,
                                                private val hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
                                                private val errorInterceptorFactory: (CacheToken) -> ObservableTransformer<Any, ResponseWrapper<E>>,
@@ -169,7 +169,7 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
                                           private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<E>>,
                                           private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>,
                                           private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<E>, Any>,
-                                          private val configuration: CacheConfiguration<E>)
+                                          private val configuration: DejaVuConfiguration<E>)
             where E : Exception,
                   E : NetworkErrorPredicate {
 

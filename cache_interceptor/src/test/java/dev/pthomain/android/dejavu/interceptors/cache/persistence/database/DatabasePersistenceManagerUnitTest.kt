@@ -28,15 +28,16 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -71,10 +72,13 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                 cacheInstruction
         )
 
+        whenever(mockSerialisationManagerFactory.create(eq(DATABASE))).thenReturn(mockSerialisationManager)
+
+
         return DatabasePersistenceManager(
                 mockDatabase,
                 mockHasher,
-                mockSerialisationManager,
+                mockSerialisationManagerFactory,
                 mockConfiguration,
                 mockDateFactory,
                 mockContentValuesFactory
@@ -115,7 +119,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         }
 
         assertEqualsWithContext(
-                TABLE_CACHE,
+                TABLE_DEJA_VU,
                 tableCaptor.firstValue,
                 "Clear cache target table didn't match",
                 context
@@ -156,7 +160,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                              duration: Long) {
         if (isSerialisationSuccess) {
             verifyWithContext(mockDatabase, context).insert(
-                    eq(TABLE_CACHE),
+                    eq(TABLE_DEJA_VU),
                     eq(CONFLICT_REPLACE),
                     eq(mockContentValues)
             )
@@ -255,7 +259,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
             )
 
             assertEqualsWithContext(
-                    TABLE_CACHE,
+                    TABLE_DEJA_VU,
                     tableCaptor.firstValue,
                     "Table value didn't match",
                     context
@@ -344,7 +348,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         assertEqualsWithContext(
                 "\n" +
                         "            SELECT cache_date, expiry_date, data, is_compressed, is_encrypted, class\n" +
-                        "            FROM rx_cache\n" +
+                        "            FROM $TABLE_DEJA_VU\n" +
                         "            WHERE token = '$mockHash'\n" +
                         "            LIMIT 1\n" +
                         "            ",

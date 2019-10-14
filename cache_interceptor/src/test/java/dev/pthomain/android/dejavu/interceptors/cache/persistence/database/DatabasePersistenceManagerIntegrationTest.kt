@@ -28,5 +28,5 @@ import dev.pthomain.android.dejavu.interceptors.error.Glitch
 
 internal class DatabasePersistenceManagerIntegrationTest
     : BasePersistenceManagerIntegrationTest<DatabasePersistenceManager<Glitch>>(
-        { it.databasePersistenceManagerFactory()!!.create() as DatabasePersistenceManager<Glitch> }
+        { it.databasePersistenceManagerFactory!!.create() as DatabasePersistenceManager<Glitch> }
 )

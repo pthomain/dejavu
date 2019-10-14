@@ -21,11 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration
+package dev.pthomain.android.dejavu.configuration.instruction
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
 
 /**
  * Class in charge of operating a simple serialisation of CacheInstruction

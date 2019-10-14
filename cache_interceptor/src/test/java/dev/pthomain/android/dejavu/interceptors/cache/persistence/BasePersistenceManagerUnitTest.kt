@@ -25,20 +25,20 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.test.*
@@ -46,10 +46,11 @@ import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Test
 import java.util.*
 
-//TODO rename BaseSerialisationPersistenceManagerUnitTest + memory
+//TODO rename KeyValuePersistenceManagerUnitTest + memory
 internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Glitch>> {
 
     protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
+    protected lateinit var mockSerialisationManagerFactory: SerialisationManager.Factory<Glitch>
     protected lateinit var mockDateFactory: (Long?) -> Date
     protected lateinit var mockHasher: Hasher
     protected lateinit var mockCacheToken: CacheToken
@@ -71,7 +72,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected fun setUpConfiguration(encryptDataGlobally: Boolean,
                                      compressDataGlobally: Boolean,
-                                     cacheInstruction: CacheInstruction?): CacheConfiguration<Glitch> {
+                                     cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
         mockHasher = mock()
@@ -94,7 +95,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
         }
 
-        val mockConfiguration = mock<CacheConfiguration<Glitch>>()
+        val mockConfiguration = mock<DejaVuConfiguration<Glitch>>()
         whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
         whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
         whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
@@ -245,10 +246,11 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 ?: operation.compress
                 ?: compressDataGlobally
 
+        val metadata = SerialisationDecorationMetadata(compressData, encryptData)
+
         whenever(mockSerialisationManager.serialise(
                 eq(mockResponseWrapper),
-                eq(encryptData),
-                eq(compressData)
+                eq(metadata)
         )).thenReturn(if (isSerialisationSuccess) mockBlob else null)
 
         target.cache(
@@ -438,12 +440,15 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 mock()
         )
 
+        val metadata = SerialisationDecorationMetadata(
+                eq(isCompressed == 1),
+                eq(isEncrypted == 1)
+        )
+
         whenever(mockSerialisationManager.deserialise(
                 eq(instructionToken),
                 eq(mockBlob),
-                eq(isEncrypted == 1),
-                eq(isCompressed == 1),
-                any()
+                eq(metadata)
         )).thenReturn(if (hasResponse) mockResponseWrapper else null)
 
         prepareGetCachedResponse(
@@ -496,22 +501,18 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             )
         }
 
-        val onErrorCaptor = argumentCaptor<Action>()
-
         verifyWithContext(mockSerialisationManager, context).deserialise(
                 eq(instructionToken),
                 eq(mockBlob),
-                eq(isEncrypted == 1),
-                eq(isCompressed == 1),
-                onErrorCaptor.capture()
+                eq(metadata)
         )
-
-        onErrorCaptor.firstValue()
 
         verifyWithContext(target, context).clearCache(
                 isNull(),
                 eq(false)
         )
+
+        //TODO test clear cache onError
     }
 
     protected open fun prepareGetCachedResponse(context: String,

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import io.reactivex.Single
 import java.util.*
@@ -32,7 +32,7 @@ import java.util.*
  * Skeletal implementation implementing StatisticsCompiler
  */
 abstract class BaseStatisticsCompiler<T, I : Iterable<T>>(
-        private val configuration: CacheConfiguration<*>
+        private val configuration: DejaVuConfiguration<*>
 ) : StatisticsCompiler {
 
     /**

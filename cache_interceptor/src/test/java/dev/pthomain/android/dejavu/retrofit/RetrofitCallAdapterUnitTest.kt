@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.retrofit
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
-import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
@@ -67,7 +67,7 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockTestResponse: TestResponse
     private lateinit var requestMetadata: RequestMetadata.UnHashed
     private lateinit var mockRequestBodyConverter: (Request) -> String?
-    private lateinit var configuration: CacheConfiguration<Glitch>
+    private lateinit var configuration: DejaVuConfiguration<Glitch>
 
     private val responseClass = TestResponse::class.java
     private val mockMethodDescription = "mockMethodDescription"
@@ -106,7 +106,7 @@ class RetrofitCallAdapterUnitTest {
             }
         }
 
-        configuration = CacheConfiguration(
+        configuration = DejaVuConfiguration(
                 mock(),
                 mock(),
                 mock(),

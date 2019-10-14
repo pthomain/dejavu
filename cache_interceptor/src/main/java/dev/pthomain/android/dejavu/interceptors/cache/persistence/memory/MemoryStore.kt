@@ -21,10 +21,16 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 
+import android.util.LruCache
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
+import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 
-interface KeyValueStore<K, P, V> {
+class MemoryStore internal constructor(
+        private val lruCache: LruCache<String, CacheDataHolder.Incomplete>
+) : KeyValueStore<String, String, CacheDataHolder.Incomplete> {
 
     /**
      * Returns an existing entry key matching the given partial key
@@ -32,7 +38,11 @@ interface KeyValueStore<K, P, V> {
      * @param partialKey the partial key used to retrieve the full key
      * @return the matching full key if present
      */
-    fun findPartialKey(partialKey: P): K?
+    override fun findPartialKey(partialKey: String) =
+            lruCache.snapshot()
+                    .entries
+                    .firstOrNull { it.key.startsWith(partialKey + SEPARATOR) }
+                    ?.key
 
     /**
      * Returns an entry for the given key, if present
@@ -40,7 +50,8 @@ interface KeyValueStore<K, P, V> {
      * @param key the entry's key
      * @return the matching entry if present
      */
-    fun get(key: K): V?
+    override fun get(key: String) =
+            lruCache.get(key)
 
     /**
      * Saves an entry with a given key
@@ -48,20 +59,24 @@ interface KeyValueStore<K, P, V> {
      * @param key the key to save the entry under
      * @param value the value to associate with the key
      */
-    fun save(key: K,
-             value: V)
+    override fun save(key: String, value: CacheDataHolder.Incomplete) {
+        lruCache.put(key, value)
+    }
 
     /**
      * @return a map of the existing entries
      */
-    fun values(): Map<K, V>
+    override fun values() =
+            lruCache.snapshot()
 
     /**
      * Deletes the entry matching the given key
      *
      * @param key the entry's key
      */
-    fun delete(key: K)
+    override fun delete(key: String) {
+        lruCache.remove(key)
+    }
 
     /**
      * Renames an entry
@@ -69,6 +84,17 @@ interface KeyValueStore<K, P, V> {
      * @param oldKey the old entry key
      * @param newKey  the new entry key
      */
-    fun rename(oldKey: K, newKey: K)
+    @Synchronized
+    override fun rename(oldKey: String,
+                        newKey: String) {
+        val oldEntry = lruCache.get(oldKey)
+        delete(oldKey)
+        lruCache.put(newKey, oldEntry)
+    }
 
+    class Factory {
+        fun create(maxEntries: Int = 20) = MemoryStore(
+                LruCache(maxEntries)
+        )
+    }
 }

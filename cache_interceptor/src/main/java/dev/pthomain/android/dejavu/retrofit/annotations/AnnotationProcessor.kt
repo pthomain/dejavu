@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -39,11 +39,11 @@ import io.reactivex.Single
  *
  * @see dev.pthomain.android.dejavu.configuration.CacheInstruction
  */
-internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
+internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>)
         where  E : Exception,
                E : NetworkErrorPredicate {
 
-    private val logger = cacheConfiguration.logger
+    private val logger = dejaVuConfiguration.logger
 
     /**
      * Processes the annotations on the Retrofit call and tries to convert them to a CacheInstruction
@@ -121,8 +121,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             is Cache -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Cache(
-                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it },
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
+                            annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it },
+                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value,
                             annotation.encrypt.value,
@@ -133,8 +133,8 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
             is Refresh -> CacheInstruction(
                     responseClass,
                     Operation.Expiring.Refresh(
-                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
+                            annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
+                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
                             annotation.freshOnly,
                             annotation.mergeOnNextOnError.value
                     )

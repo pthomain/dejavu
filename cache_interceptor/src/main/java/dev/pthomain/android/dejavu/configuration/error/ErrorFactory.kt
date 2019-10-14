@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration
+package dev.pthomain.android.dejavu.configuration.error
 
 /**
  * Converts a given Throwable into a new type extending from Exception and NetworkErrorPredicate

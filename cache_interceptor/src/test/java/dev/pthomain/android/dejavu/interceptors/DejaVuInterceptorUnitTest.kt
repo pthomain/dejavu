@@ -24,10 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.DO_NOT_CACHE
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
@@ -52,7 +52,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<Glitch>>
     private lateinit var mockCacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
     private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, Any>
-    private lateinit var mockConfiguration: CacheConfiguration<Glitch>
+    private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: RequestMetadata.UnHashed
     private lateinit var mockHashedMetadata: RequestMetadata.Hashed

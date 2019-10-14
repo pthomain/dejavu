@@ -27,7 +27,9 @@ import android.content.Context
 import android.os.Looper
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.injection.component.CacheComponent
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
@@ -50,29 +52,29 @@ import io.reactivex.android.schedulers.AndroidSchedulers
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Offline
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Refresh
  */
-data class CacheConfiguration<E> internal constructor(val context: Context,
-                                                      val logger: Logger,
-                                                      val errorFactory: ErrorFactory<E>,
-                                                      val serialiser: Serialiser,
-                                                      val encryptionManager: EncryptionManager,
-                                                      val useDatabase: Boolean,
-                                                      val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-                                                      val isCacheEnabled: Boolean,
-                                                      val encrypt: Boolean,
-                                                      val compress: Boolean,
-                                                      val mergeOnNextOnError: Boolean,
-                                                      val allowNonFinalForSingle: Boolean,
-                                                      val requestTimeOutInSeconds: Int,
-                                                      val connectivityTimeoutInMillis: Long,
-                                                      val cacheDurationInMillis: Long,
-                                                      val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
+data class DejaVuConfiguration<E> internal constructor(val context: Context,
+                                                       val logger: Logger,
+                                                       val errorFactory: ErrorFactory<E>,
+                                                       val serialiser: Serialiser,
+                                                       val encryptionManager: EncryptionManager,
+                                                       val useDatabase: Boolean,
+                                                       val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
+                                                       val isCacheEnabled: Boolean,
+                                                       val encrypt: Boolean,
+                                                       val compress: Boolean,
+                                                       val mergeOnNextOnError: Boolean,
+                                                       val allowNonFinalForSingle: Boolean,
+                                                       val requestTimeOutInSeconds: Int,
+                                                       val connectivityTimeoutInMillis: Long,
+                                                       val cacheDurationInMillis: Long,
+                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     companion object {
 
         internal fun <E> builder(errorFactory: ErrorFactory<E>,
-                                 componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>)
+                                 componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>)
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 Builder(errorFactory, componentProvider)
@@ -81,7 +83,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
 
     class Builder<E> internal constructor(
             private val errorFactory: ErrorFactory<E>,
-            private val componentProvider: (CacheConfiguration<E>) -> CacheComponent<E>
+            private val componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>
     ) where E : Exception,
             E : NetworkErrorPredicate {
 
@@ -296,7 +298,7 @@ data class CacheConfiguration<E> internal constructor(val context: Context,
 
             return DejaVu(
                     componentProvider(
-                            CacheConfiguration(
+                            DejaVuConfiguration(
                                     context.applicationContext,
                                     logger,
                                     customErrorFactory ?: errorFactory,

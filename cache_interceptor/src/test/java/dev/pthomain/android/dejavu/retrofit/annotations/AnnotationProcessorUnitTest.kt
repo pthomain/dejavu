@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.OFFLINE
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.DO_NOT_CACHE
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.test.*
@@ -43,7 +43,7 @@ class AnnotationProcessorUnitTest {
     private val responseKClass = TestResponse::class
     private val responseClass = responseKClass.java
 
-    private lateinit var configuration: CacheConfiguration<Glitch>
+    private lateinit var configuration: DejaVuConfiguration<Glitch>
     private lateinit var target: AnnotationProcessor<Glitch>
 
     @Before

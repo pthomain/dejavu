@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.error
 
-import dev.pthomain.android.dejavu.configuration.ErrorFactory
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.ErrorCode.*
 import dev.pthomain.android.dejavu.interceptors.error.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeoutException
 /**
  * Default implementation of ErrorFactory handling some usual base exceptions.
  *
- * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.errorFactory for overriding this factory
+ * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.errorFactory for overriding this factory
  * @see Glitch
  */
 open class GlitchFactory : ErrorFactory<Glitch> {

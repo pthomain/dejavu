@@ -29,14 +29,14 @@ import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.BuildConfig
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationCacheComponent
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
-import dev.pthomain.android.dejavu.injection.integration.module.IntegrationCacheModule
+import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
+import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
@@ -62,7 +62,7 @@ import java.util.*
 @RunWith(RobolectricTestRunner::class)
 @Config(packageName = BuildConfig.LIBRARY_PACKAGE_NAME)
 internal abstract class BaseIntegrationTest<T : Any>(
-        private val targetExtractor: (IntegrationCacheComponent) -> T,
+        private val targetExtractor: (IntegrationDejaVuComponent) -> T,
         private val useDefaultConfiguration: Boolean = true
 ) {
 
@@ -74,12 +74,12 @@ internal abstract class BaseIntegrationTest<T : Any>(
     protected lateinit var testClient: TestClient
     protected lateinit var assetHelper: AssetHelper
 
-    protected lateinit var cacheComponent: IntegrationCacheComponent
+    protected lateinit var cacheComponent: IntegrationDejaVuComponent
     protected lateinit var target: T
 
     private lateinit var dejaVu: DejaVu<Glitch>
 
-    protected open val configuration = CacheConfiguration(
+    protected open val configuration = DejaVuConfiguration(
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
@@ -106,9 +106,9 @@ internal abstract class BaseIntegrationTest<T : Any>(
         }
     }
 
-    protected fun setUpWithConfiguration(configuration: CacheConfiguration<Glitch>) {
-        cacheComponent = DaggerIntegrationCacheComponent.builder()
-                .integrationCacheModule(IntegrationCacheModule(configuration))
+    protected fun setUpWithConfiguration(configuration: DejaVuConfiguration<Glitch>) {
+        cacheComponent = DaggerIntegrationDejaVuComponent.builder()
+                .integrationCacheModule(IntegrationDejaVuModule(configuration))
                 .build()
 
         dejaVu = DejaVu(cacheComponent)

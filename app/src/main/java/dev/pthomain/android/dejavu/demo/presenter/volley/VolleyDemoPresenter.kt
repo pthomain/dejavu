@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter

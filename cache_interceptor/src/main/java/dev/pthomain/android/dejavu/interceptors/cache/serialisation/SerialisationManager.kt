@@ -23,10 +23,11 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.Serialiser
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
@@ -130,7 +131,9 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
      * Factory providing an instance of SerialisationManager
      * @param serialiser instance of Serialiser in charge of serialising a model to a String (typically JSON)
      * @param byteToStringConverter a factory converting a ByteArray to a String
-     * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
+     * @param fileSerialisationDecorator a SerialisationDecorator used specifically for file serialisation
+     * @param compressionSerialisationDecorator a SerialisationDecorator used for payload compression
+     * @param encryptionSerialisationDecorator a SerialisationDecorator used for payload encryption
      */
     class Factory<E> internal constructor(private val serialiser: Serialiser,
                                           private val byteToStringConverter: (ByteArray) -> String,
@@ -143,13 +146,14 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
         /**
          * Factory providing an instance of SerialisationManager
          *
-         * @param persistenceManagerClass the type of PersistenceManager used in order to filter unnecessary decorators
+         * @param persistenceType the chosen type of persistence
+         * @param disableEncryption whether or not to disable encryption, typically for memory cache
          * @return a SerialisationManager instance
          */
-        fun create(isFilePersistence: Boolean = false,
+        fun create(persistenceType: Type,
                    disableEncryption: Boolean = false): SerialisationManager<E> {
             val decoratorList = LinkedList<SerialisationDecorator<E>>().apply {
-                if (isFilePersistence) add(fileSerialisationDecorator)
+                if (persistenceType == FILE) add(fileSerialisationDecorator) //TODO check if this is really needed
                 if (!disableEncryption) add(encryptionSerialisationDecorator)
                 add(compressionSerialisationDecorator)
             }
@@ -160,5 +164,12 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
                     decoratorList
             )
         }
+
+        enum class Type {
+            FILE,
+            DATABASE,
+            MEMORY
+        }
+
     }
 }

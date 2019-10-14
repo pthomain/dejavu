@@ -21,13 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.component
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 
-import dagger.Component
-import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerIntegrationTest
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
-import javax.inject.Singleton
 
-@Singleton
-@Component(modules = [DefaultCacheModule::class])
-internal interface DefaultCacheComponent : CacheComponent<Glitch>
+internal class MemoryPersistenceManagerIntegrationTest
+    : BasePersistenceManagerIntegrationTest<MemoryPersistenceManager<Glitch>>(
+        { it.memoryPersistenceManagerFactory.create() as MemoryPersistenceManager<Glitch> }
+)

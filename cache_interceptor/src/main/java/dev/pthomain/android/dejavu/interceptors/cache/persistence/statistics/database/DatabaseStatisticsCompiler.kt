@@ -27,10 +27,10 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_CACHE
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.CacheEntry
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.database.DatabaseStatisticsCompiler.CursorIterator
@@ -45,7 +45,7 @@ import java.util.*
  * @param database the SQLite database containing the cache entries
  */
 internal class DatabaseStatisticsCompiler(
-        configuration: CacheConfiguration<*>,
+        configuration: DejaVuConfiguration<*>,
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val database: SupportSQLiteDatabase
@@ -61,7 +61,7 @@ internal class DatabaseStatisticsCompiler(
 
     private val query = """
                     SELECT ${projection.joinToString(", ")}
-                    FROM $TABLE_CACHE
+                    FROM $TABLE_DEJA_VU
                     ORDER BY ${CLASS.columnName} ASC
                 """
 
@@ -71,7 +71,7 @@ internal class DatabaseStatisticsCompiler(
      * @return the CursorIterator
      */
     override fun loadEntries() =
-            database.query(query)
+            database.query(query) //FIXME no entries shown
                     .useAndLogError(::CursorIterator, logger)
 
     /**

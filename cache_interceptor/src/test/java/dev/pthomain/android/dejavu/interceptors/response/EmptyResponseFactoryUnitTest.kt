@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.ErrorFactory
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.test.*

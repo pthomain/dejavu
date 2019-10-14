@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.interceptors.network
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -88,7 +88,7 @@ internal class NetworkInterceptor<E>(private val context: Context,
     /**
      * Adds an optional delay for network availability (if the value is set as more than 0).
      *
-     * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.connectivityTimeoutInMillis
+     * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.connectivityTimeoutInMillis
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable optionally delayed for network availability
      */

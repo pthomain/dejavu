@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser.Companion.isValidFormat
@@ -44,7 +44,7 @@ import java.util.*
  * @param fileNameSerialiser a class that handles the serialisation of the cache metadata to a file name.
  */
 internal class FileStatisticsCompiler(
-        private val configuration: CacheConfiguration<*>,
+        private val configuration: DejaVuConfiguration<*>,
         private val cacheDirectory: File,
         private val fileFactory: (File, String) -> File,
         private val fileInputStreamFactory: (File) -> InputStream,

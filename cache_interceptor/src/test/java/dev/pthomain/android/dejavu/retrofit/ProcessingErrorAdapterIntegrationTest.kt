@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorCode
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
@@ -50,7 +50,7 @@ import retrofit2.CallAdapter
 
 @Suppress("UNCHECKED_CAST")
 internal class ProcessingErrorAdapterIntegrationTest
-    : BaseIntegrationTest<ProcessingErrorAdapter.Factory<Glitch>>(IntegrationCacheComponent::processingErrorAdapterFactory) {
+    : BaseIntegrationTest<ProcessingErrorAdapter.Factory<Glitch>>(IntegrationDejaVuComponent::processingErrorAdapterFactory) {
 
     private lateinit var cacheException: CacheException
     private lateinit var cacheToken: CacheToken

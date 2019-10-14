@@ -27,15 +27,18 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.injection.component.CacheComponent
-import dev.pthomain.android.dejavu.injection.integration.module.IntegrationCacheModule
-import dev.pthomain.android.dejavu.injection.module.CacheModule.*
+import dev.pthomain.android.dejavu.injection.component.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
+import dev.pthomain.android.dejavu.injection.module.Function1
+import dev.pthomain.android.dejavu.injection.module.Function3
+import dev.pthomain.android.dejavu.injection.module.Function4
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -51,22 +54,22 @@ import java.util.*
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [IntegrationCacheModule::class])
-internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
+@Component(modules = [IntegrationDejaVuModule::class])
+internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
 
     fun dateFactory(): Function1<Long?, Date>
     fun serialiser(): Serialiser
     fun encryptionManager(): EncryptionManager
-    fun serialisationManager(): SerialisationManager<Glitch>
+    fun serialisationManagerFactory(): SerialisationManager.Factory<Glitch>
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
     fun hasher(): Hasher
     fun databasePersistenceManagerFactory(): DatabasePersistenceManager.Factory<Glitch>?
-    fun filePersistenceManagerFactory(): FilePersistenceManager.Factory<Glitch>
+    fun filePersistenceManagerFactory(): KeyValuePersistenceManager.Factory<Glitch>.File
     fun cacheManager(): CacheManager<Glitch>
-    fun errorInterceptorFactory(): Function2<CacheToken, Long, ErrorInterceptor<Glitch>>
-    fun cacheInterceptorFactory(): Function2<CacheToken, Long, CacheInterceptor<Glitch>>
+    fun errorInterceptorFactory(): Function1<CacheToken, ErrorInterceptor<Glitch>>
+    fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>
     fun responseInterceptorFactory(): Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
     fun processingErrorAdapterFactory(): ProcessingErrorAdapter.Factory<Glitch>
@@ -74,5 +77,6 @@ internal interface IntegrationCacheComponent : CacheComponent<Glitch> {
     fun annotationProcessor(): AnnotationProcessor<Glitch>
     fun emptyResponseFactory(): EmptyResponseFactory<Glitch>
     fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
+    fun persistenceManagerFactory(): PersistenceManagerFactory<Glitch>
 
 }

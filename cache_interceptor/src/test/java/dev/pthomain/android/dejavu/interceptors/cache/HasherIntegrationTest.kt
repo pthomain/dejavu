@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import android.net.Uri
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
+import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
@@ -38,7 +38,7 @@ import java.security.MessageDigest
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationCacheComponent::hasher) {
+internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDejaVuComponent::hasher) {
 
     private val paramsKeys = "bedac"
     private val paramsKeysInOrder = "abcde"

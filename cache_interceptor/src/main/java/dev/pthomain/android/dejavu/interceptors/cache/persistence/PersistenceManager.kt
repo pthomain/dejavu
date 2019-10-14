@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -95,7 +95,7 @@ interface PersistenceManager<E>
      * Indicates whether or not the entry should be compressed or encrypted based primarily
      * on the settings of the previous cached entry if available. If there was no previous entry,
      * then the cache settings are defined by the operation or, if undefined in the operation,
-     * by the values defined globally in CacheConfiguration.
+     * by the values defined globally in DejaVuConfiguration.
      *
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @param cacheOperation the cache operation for the entry being saved

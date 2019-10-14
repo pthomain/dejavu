@@ -29,11 +29,10 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.module.CacheModule.*
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
@@ -42,11 +41,12 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.database.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file.FileStatisticsCompiler
@@ -69,16 +69,13 @@ import io.reactivex.subjects.PublishSubject
 import org.iq80.snappy.Snappy
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
 import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class BaseCacheModule<E>(
-        protected val configuration: CacheConfiguration<E>
-) : CacheModule<E>
+internal abstract class BaseDejaVuModule<E>(
+        protected val configuration: DejaVuConfiguration<E>
+) : DejaVuModule
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -87,57 +84,77 @@ internal abstract class BaseCacheModule<E>(
         const val DATABASE_VERSION = 1
     }
 
+
+    //Core
+
     @Provides
     @Singleton
-    override fun provideContext() =
+    fun provideContext() =
             configuration.context
 
     @Provides
     @Singleton
-    override fun provideConfiguration() =
+    fun provideConfiguration() =
             configuration
 
     @Provides
     @Singleton
-    override fun provideLogger() =
+    fun provideLogger() =
             configuration.logger
 
     @Provides
     @Singleton
-    override fun provideSerialiser() =
+    fun provideUriParser() = object : Function1<String, Uri> {
+        override fun get(t1: String) = Uri.parse(t1)
+    }
+
+
+    //Serialisation
+
+
+    @Provides
+    @Singleton
+    fun provideSerialiser() =
             configuration.serialiser
 
-    @Provides
-    @Singleton
-    override fun provideEncryptionManager() =
-            configuration.encryptionManager
 
     @Provides
     @Singleton
-    override fun provideFileNameSerialiser() =
-            FileNameSerialiser()
-
-    @Provides
-    @Singleton
-    override fun provideCompresser() = object : Function1<ByteArray, ByteArray> {
+    fun provideCompresser() = object : Function1<ByteArray, ByteArray> {
         override fun get(t1: ByteArray) = Snappy.compress(t1)
     }
 
     @Provides
     @Singleton
-    override fun provideUncompresser() = object : Function3<ByteArray, Int, Int, ByteArray> {
+    fun provideUncompresser() = object : Function3<ByteArray, Int, Int, ByteArray> {
         override fun get(t1: ByteArray, t2: Int, t3: Int) = Snappy.uncompress(t1, t2, t3)
     }
 
     @Provides
     @Singleton
-    override fun provideByteToStringConverter() = object : Function1<ByteArray, String> {
+    fun provideByteToStringConverter() = object : Function1<ByteArray, String> {
         override fun get(t1: ByteArray) = String(t1)
     }
 
+
     @Provides
     @Singleton
-    override fun provideHasher(uriParser: Function1<String, Uri>) =
+    fun provideEncryptionManager() =
+            configuration.encryptionManager
+
+
+
+
+    @Provides
+    @Singleton
+    fun provideFileNameSerialiser() =
+            FileNameSerialiser()
+
+
+
+    @Provides
+    @Singleton
+    fun provideHasher(uriParser: Function1<String, Uri>) =
             Hasher.Factory(
                     configuration.logger,
                     uriParser::get
@@ -145,14 +162,14 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideFileSerialisationDecorator(byteToStringConverter: Function1<ByteArray, String>) =
+    fun provideFileSerialisationDecorator(byteToStringConverter: Function1<ByteArray, String>) =
             FileSerialisationDecorator<E>(byteToStringConverter::get)
 
     @Provides
     @Singleton
-    override fun provideCompressionSerialisationDecorator(logger: Logger,
-                                                          compresser: Function1<ByteArray, ByteArray>,
-                                                          uncompresser: Function3<ByteArray, Int, Int, ByteArray>) =
+    fun provideCompressionSerialisationDecorator(logger: Logger,
+                                                 compresser: Function1<ByteArray, ByteArray>,
+                                                 uncompresser: Function3<ByteArray, Int, Int, ByteArray>) =
             CompressionSerialisationDecorator<E>(
                     logger,
                     compresser::get,
@@ -161,15 +178,15 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager) =
+    fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager) =
             EncryptionSerialisationDecorator<E>(encryptionManager)
 
     @Provides
     @Singleton
-    override fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
-                                                    fileSerialisationDecorator: FileSerialisationDecorator<E>,
-                                                    compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                                    encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
+    fun provideSerialisationManagerFactory(byteToStringConverter: Function1<ByteArray, String>,
+                                           fileSerialisationDecorator: FileSerialisationDecorator<E>,
+                                           compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
+                                           encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
             SerialisationManager.Factory(
                     configuration.serialiser,
                     byteToStringConverter::get,
@@ -178,54 +195,79 @@ internal abstract class BaseCacheModule<E>(
                     encryptionSerialisationDecorator
             )
 
-    @Provides
-    @Singleton
-    override fun providePersistenceManager(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-                                           filePersistenceManagerFactory: FilePersistenceManager.Factory<E>,
-                                           memoryPersistenceManagerFactory: MemoryPersistenceManager.Factory<E>): PersistenceManager<E> =
-            configuration.persistenceManagerPicker
-                    ?.invoke(
-                            PersistenceManagerFactory(
-                                    filePersistenceManagerFactory,
-                                    databasePersistenceManagerFactory,
-                                    memoryPersistenceManagerFactory
-                            )
-                    ) ?: databasePersistenceManagerFactory!!.create()
+
+
+    //Persistence
 
     @Provides
     @Singleton
-    override fun provideMemoryPersistenceManagerFactory(hasher: Hasher,
-                                                        serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                                        dateFactory: Function1<Long?, Date>,
-                                                        fileNameSerialiser: FileNameSerialiser) =
-            MemoryPersistenceManager.Factory(
-                    hasher,
-                    configuration,
-                    dateFactory::get,
-                    fileNameSerialiser,
-                    serialisationManagerFactory
+    fun providePersistenceManagerFactory(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
+                                         filePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.File,
+                                         memoryPersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.Memory) =
+            PersistenceManagerFactory(
+                    filePersistenceManagerFactory,
+                    databasePersistenceManagerFactory,
+                    memoryPersistenceManagerFactory
             )
 
     @Provides
     @Singleton
-    override fun provideFilePersistenceManagerFactory(hasher: Hasher,
+    fun providePersistenceManager(persistenceManagerFactory: PersistenceManagerFactory<E>,
+                                  databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?): PersistenceManager<E> =
+            configuration.persistenceManagerPicker
+                    ?.invoke(persistenceManagerFactory)
+                    ?: databasePersistenceManagerFactory!!.create()
+
+    @Provides
+    @Singleton
+    fun provideFileStoreFactory(logger: Logger,
+                                dejaVuConfiguration: DejaVuConfiguration<E>,
+                                fileNameSerialiser: FileNameSerialiser) =
+            FileStore.Factory(
+                    logger,
+                    dejaVuConfiguration,
+                    fileNameSerialiser
+            )
+
+    @Provides
+    @Singleton
+    fun provideMemoryStoreFactory() =
+            MemoryStore.Factory()
+
+    @Provides
+    @Singleton
+    fun provideKeyValueStorePersistenceManagerFactory(fileStoreFactory: FileStore.Factory<E>,
+                                                      memoryStoreFactory: MemoryStore.Factory,
+                                                      hasher: Hasher,
                                                       serialisationManagerFactory: SerialisationManager.Factory<E>,
                                                       dateFactory: Function1<Long?, Date>,
                                                       fileNameSerialiser: FileNameSerialiser) =
-            FilePersistenceManager.Factory(
+            KeyValuePersistenceManager.Factory(
+                    fileStoreFactory,
+                    memoryStoreFactory,
                     hasher,
-                    configuration,
                     serialisationManagerFactory,
+                    configuration,
                     dateFactory::get,
                     fileNameSerialiser
             )
 
     @Provides
     @Singleton
-    override fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
-                                                          database: SupportSQLiteDatabase?,
-                                                          dateFactory: Function1<Long?, Date>,
-                                                          serialisationManagerFactory: SerialisationManager.Factory<E>) =
+    fun provideMemoryPersistenceManagerFactory(keyValuePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>) =
+            keyValuePersistenceManagerFactory.Memory()
+
+    @Provides
+    @Singleton
+    fun provideFilePersistenceManagerFactory(keyValuePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>) =
+            keyValuePersistenceManagerFactory.File()
+
+    @Provides
+    @Singleton
+    fun provideDatabasePersistenceManagerFactory(hasher: Hasher,
+                                                 database: SupportSQLiteDatabase?,
+                                                 dateFactory: Function1<Long?, Date>,
+                                                 serialisationManagerFactory: SerialisationManager.Factory<E>) =
             if (database != null)
                 DatabasePersistenceManager.Factory(
                         database,
@@ -239,20 +281,23 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback? =
+    fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback? =
             if (configuration.useDatabase) SqlOpenHelperCallback(DATABASE_VERSION)
             else null
 
     @Provides
     @Singleton
     @Synchronized
-    override fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
+    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
             sqlOpenHelper?.writableDatabase
+
+
+    //Statistics
 
     @Provides
     @Singleton
-    override fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
-                                                   dateFactory: Function1<Long?, Date>) =
+    fun provideDatabaseStatisticsCompiler(database: SupportSQLiteDatabase?,
+                                          dateFactory: Function1<Long?, Date>) =
             database?.let {
                 DatabaseStatisticsCompiler(
                         configuration,
@@ -264,31 +309,35 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
-                                               persistenceManager: PersistenceManager<E>,
-                                               dateFactory: Function1<Long?, Date>) =
-            (persistenceManager as? FilePersistenceManager<E>)?.let {
-                FileStatisticsCompiler(
-                        configuration,
-                        it.cacheDirectory,
-                        ::File,
-                        { BufferedInputStream(FileInputStream(it)) },
-                        dateFactory::get,
-                        fileNameSerialiser
-                )
-            }
+    fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
+                                      persistenceManager: PersistenceManager<E>,
+                                      dateFactory: Function1<Long?, Date>) =
+            null as FileStatisticsCompiler?
+//            (persistenceManager as? FilePersistenceManager<E>)?.let {
+//                FileStatisticsCompiler(
+//                        configuration,
+//                        it.cacheDirectory,
+//                        ::File,
+//                        { BufferedInputStream(FileInputStream(it)) },
+//                        dateFactory::get,
+//                        fileNameSerialiser
+//                )
+//            }
 
     @Provides
     @Singleton
-    override fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler?,
-                                           databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler =
+    fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler?,
+                                  databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler =
             databaseStatisticsCompiler ?: fileStatisticsCompiler!!
 
+
+    //Cache
+
+
     @Provides
     @Singleton
-    override fun provideCacheMetadataManager(persistenceManager: PersistenceManager<E>,
-                                             dateFactory: Function1<Long?, Date>,
-                                             emptyResponseFactory: EmptyResponseFactory<E>) =
+    fun provideCacheMetadataManager(persistenceManager: PersistenceManager<E>,
+                                    dateFactory: Function1<Long?, Date>) =
             CacheMetadataManager(
                     configuration.errorFactory,
                     persistenceManager,
@@ -299,10 +348,10 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideCacheManager(persistenceManager: PersistenceManager<E>,
-                                     cacheMetadataManager: CacheMetadataManager<E>,
-                                     dateFactory: Function1<Long?, Date>,
-                                     emptyResponseFactory: EmptyResponseFactory<E>) =
+    fun provideCacheManager(persistenceManager: PersistenceManager<E>,
+                            cacheMetadataManager: CacheMetadataManager<E>,
+                            dateFactory: Function1<Long?, Date>,
+                            emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
                     persistenceManager,
                     cacheMetadataManager,
@@ -313,7 +362,20 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>) =
+    fun provideCacheMetadataSubject() =
+            PublishSubject.create<CacheMetadata<E>>()
+
+    @Provides
+    @Singleton
+    fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<E>>) =
+            subject.map { it }!!
+
+
+    // Interceptors
+
+    @Provides
+    @Singleton
+    fun provideErrorInterceptorFactory(dateFactory: Function1<Long?, Date>) =
             object : Function1<CacheToken, ErrorInterceptor<E>> {
                 override fun get(t1: CacheToken) = ErrorInterceptor(
                         configuration.context,
@@ -326,7 +388,7 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideNetworkInterceptorFactory(dateFactory: Function1<Long?, Date>) =
+    fun provideNetworkInterceptorFactory(dateFactory: Function1<Long?, Date>) =
             object : Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>> {
                 override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = NetworkInterceptor(
                         configuration.context,
@@ -341,8 +403,8 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
-                                                cacheManager: CacheManager<E>) =
+    fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
+                                       cacheManager: CacheManager<E>) =
             object : Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>> {
                 override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = CacheInterceptor(
                         t1,
@@ -356,9 +418,9 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
-                                            metadataSubject: PublishSubject<CacheMetadata<E>>,
-                                            emptyResponseFactory: EmptyResponseFactory<E>) =
+    fun provideResponseInterceptor(dateFactory: Function1<Long?, Date>,
+                                   metadataSubject: PublishSubject<CacheMetadata<E>>,
+                                   emptyResponseFactory: EmptyResponseFactory<E>) =
             object : Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
                                  t2: Boolean,
@@ -377,14 +439,20 @@ internal abstract class BaseCacheModule<E>(
                 )
             }
 
+
     @Provides
     @Singleton
-    override fun provideDejaVuInterceptorFactory(hasher: Hasher,
-                                                 dateFactory: Function1<Long?, Date>,
-                                                 networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
-                                                 errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
-                                                 cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
-                                                 responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
+    fun provideEmptyResponseFactory() =
+            EmptyResponseFactory(configuration.errorFactory)
+
+    @Provides
+    @Singleton
+    fun provideDejaVuInterceptorFactory(hasher: Hasher,
+                                        dateFactory: Function1<Long?, Date>,
+                                        networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
+                                        errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
+                                        cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
+                                        responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     dateFactory::get,
@@ -395,20 +463,18 @@ internal abstract class BaseCacheModule<E>(
                     configuration
             )
 
+
+    //Retrofit
+
     @Provides
     @Singleton
-    override fun provideDefaultAdapterFactory() =
+    fun provideDefaultAdapterFactory() =
             RxJava2CallAdapterFactory.create()!!
 
-    @Provides
-    @Singleton
-    override fun provideUriParser() = object : Function1<String, Uri> {
-        override fun get(t1: String) = Uri.parse(t1)
-    }
 
     @Provides
     @Singleton
-    override fun provideRetrofitCallAdapterInnerFactory() =
+    fun provideRetrofitCallAdapterInnerFactory() =
             object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
@@ -432,12 +498,12 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
-                                                   innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
-                                                   defaultAdapterFactory: RxJava2CallAdapterFactory,
-                                                   dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
-                                                   processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
-                                                   annotationProcessor: AnnotationProcessor<E>) =
+    fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
+                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                          defaultAdapterFactory: RxJava2CallAdapterFactory,
+                                          dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
+                                          processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
+                                          annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     defaultAdapterFactory,
                     innerFactory::get,
@@ -450,9 +516,9 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
-                                                      dateFactory: Function1<Long?, Date>,
-                                                      responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
+    fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
+                                             dateFactory: Function1<Long?, Date>,
+                                             responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
                     errorInterceptorFactory::get,
                     responseInterceptorFactory::get,
@@ -461,22 +527,7 @@ internal abstract class BaseCacheModule<E>(
 
     @Provides
     @Singleton
-    override fun provideCacheMetadataSubject() =
-            PublishSubject.create<CacheMetadata<E>>()
-
-    @Provides
-    @Singleton
-    override fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<E>>) =
-            subject.map { it }!!
-
-    @Provides
-    @Singleton
-    override fun provideAnnotationProcessor() =
+    fun provideAnnotationProcessor() =
             AnnotationProcessor(configuration)
-
-    @Provides
-    @Singleton
-    override fun provideEmptyResponseFactory() =
-            EmptyResponseFactory(configuration.errorFactory)
 
 }

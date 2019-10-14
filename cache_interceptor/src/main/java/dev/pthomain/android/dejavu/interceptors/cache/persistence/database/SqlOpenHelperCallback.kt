@@ -43,7 +43,7 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
      */
     override fun onCreate(db: SupportSQLiteDatabase) {
         db.execSQL(String.format("CREATE TABLE IF NOT EXISTS %s (%s)",
-                TABLE_CACHE,
+                TABLE_DEJA_VU,
                 values().joinToString(separator = ", ") { it.columnName + " " + it.type }
         ))
 
@@ -61,7 +61,7 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
                          columnName: String) {
         db.execSQL(String.format("CREATE INDEX IF NOT EXISTS %s_index ON %s(%s)",
                 columnName,
-                TABLE_CACHE,
+                TABLE_DEJA_VU,
                 columnName
         ))
     }
@@ -110,12 +110,13 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
     override fun onUpgrade(sqLiteDatabase: SupportSQLiteDatabase,
                            oldVersion: Int,
                            newVersion: Int) {
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_CACHE")
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS $TABLE_DEJA_VU")
         onCreate(sqLiteDatabase)
     }
 
     companion object {
-        const val TABLE_CACHE = "rx_cache"
+
+        const val TABLE_DEJA_VU = "dejavu"
 
         enum class COLUMNS(val columnName: String,
                            val type: String) {

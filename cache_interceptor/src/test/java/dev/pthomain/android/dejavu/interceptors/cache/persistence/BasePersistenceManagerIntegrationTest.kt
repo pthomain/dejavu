@@ -23,9 +23,8 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationCacheComponent
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
@@ -43,8 +42,8 @@ import java.util.*
 
 //TODO memory
 internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceManager<Glitch>>(
-        targetExtractor: (IntegrationCacheComponent) -> T
-) : BaseIntegrationTest<PersistenceManager<Glitch>>(targetExtractor) {
+        targetExtractor: (PersistenceManagerFactory<Glitch>) -> T
+) : BaseIntegrationTest<PersistenceManager<Glitch>>({ targetExtractor(it.persistenceManagerFactory()) }) {
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {

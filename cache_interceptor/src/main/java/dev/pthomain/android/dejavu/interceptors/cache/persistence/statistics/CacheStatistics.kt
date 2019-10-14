@@ -27,7 +27,7 @@ import android.annotation.SuppressLint
 import com.jakewharton.fliptables.FlipTable
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,7 +39,7 @@ import java.util.*
  * @param entries compiled list of CacheEntrySummary
  */
 data class CacheStatistics(
-        val configuration: CacheConfiguration<*>,
+        val configuration: DejaVuConfiguration<*>,
         val entries: List<CacheEntrySummary>
 ) {
     override fun toString(): String {

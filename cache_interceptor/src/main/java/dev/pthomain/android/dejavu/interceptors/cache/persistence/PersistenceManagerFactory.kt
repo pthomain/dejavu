@@ -23,22 +23,21 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
 
 /**
  * Holder wrapping the available factory implementations of PersistenceManager
  *
  * @param filePersistenceManagerFactory a factory returning FilePersistenceManager, useful for a small number of entries
  * @param databasePersistenceManagerFactory an optional factory returning DatabasePersistenceManager, useful for a larger number of entries
- * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.useDatabase
+ * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.useDatabase
  * @param memoryPersistenceManagerFactory  a factory returning MemoryPersistenceManager, useful only if there is a strict requirement not to persist data to disk
  */
 class PersistenceManagerFactory<E> internal constructor(
-        val filePersistenceManagerFactory: FilePersistenceManager.Factory<E>,
+        val filePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.File,
         val databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-        val memoryPersistenceManagerFactory: MemoryPersistenceManager.Factory<E>
+        val memoryPersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.Memory
 ) where E : Exception,
         E : NetworkErrorPredicate

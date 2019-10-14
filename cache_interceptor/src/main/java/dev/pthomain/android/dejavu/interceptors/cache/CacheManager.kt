@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -107,10 +107,8 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
                           instructionToken: CacheToken,
                           start: Long) = Observable.defer<ResponseWrapper<E>> {
-        val cacheOperation = instructionToken.instruction.operation as Expiring
-
-        //FIXME
-//        require(cacheOperation is Expiring) { "Wrong cache operation: $cacheOperation" }
+        val cacheOperation = instructionToken.instruction.operation
+        require(cacheOperation is Expiring) { "Wrong cache operation: $cacheOperation" }
 
         val instruction = instructionToken.instruction
         val simpleName = instruction.responseClass.simpleName
@@ -141,7 +139,6 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                     diskDuration
             )
     }!!
-
 
     //TODO
     private fun getOnlineObservable(cachedResponse: ResponseWrapper<E>?,

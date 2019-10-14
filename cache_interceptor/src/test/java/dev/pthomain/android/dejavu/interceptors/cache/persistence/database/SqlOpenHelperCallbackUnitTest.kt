@@ -54,13 +54,13 @@ class SqlOpenHelperCallbackUnitTest {
     private fun verifyOnCreate(inOrder: InOrder = inOrder(mockSupportSQLiteDatabase)) {
         inOrder.apply {
             verify(mockSupportSQLiteDatabase).execSQL(
-                    eq("CREATE TABLE IF NOT EXISTS rx_cache (token TEXT UNIQUE, cache_date INTEGER, expiry_date INTEGER, data NONE, class TEXT, is_encrypted INTEGER, is_compressed INTEGER)")
+                    eq("CREATE TABLE IF NOT EXISTS dejavu(token TEXT UNIQUE, cache_date INTEGER, expiry_date INTEGER, data NONE, class TEXT, is_encrypted INTEGER, is_compressed INTEGER)")
             )
             verify(mockSupportSQLiteDatabase).execSQL(
-                    eq("CREATE INDEX IF NOT EXISTS token_index ON rx_cache(token)")
+                    eq("CREATE INDEX IF NOT EXISTS token_index ON dejavu(token)")
             )
             verify(mockSupportSQLiteDatabase).execSQL(
-                    eq("CREATE INDEX IF NOT EXISTS expiry_date_index ON rx_cache(expiry_date)")
+                    eq("CREATE INDEX IF NOT EXISTS expiry_date_index ON dejavu(expiry_date)")
             )
         }
     }
@@ -78,7 +78,7 @@ class SqlOpenHelperCallbackUnitTest {
 
     private fun verifyOnUpgradeDowngrade() {
         val inOrder = inOrder(mockSupportSQLiteDatabase)
-        inOrder.verify(mockSupportSQLiteDatabase).execSQL("DROP TABLE IF EXISTS ${SqlOpenHelperCallback.TABLE_CACHE}")
+        inOrder.verify(mockSupportSQLiteDatabase).execSQL("DROP TABLE IF EXISTS ${SqlOpenHelperCallback.TABLE_DEJA_VU}")
 
         verifyOnCreate(inOrder)
     }

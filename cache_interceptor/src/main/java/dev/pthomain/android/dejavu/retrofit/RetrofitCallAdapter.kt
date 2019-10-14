@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstructionSerialiser
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import io.reactivex.Completable
@@ -46,7 +46,7 @@ import java.lang.reflect.Type
  *
  * @see dev.pthomain.android.dejavu.configuration.ErrorFactory
  */
-internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfiguration<E>,
+internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                       private val responseClass: Class<*>,
                                       private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                       private val serialiser: CacheInstructionSerialiser,
@@ -102,16 +102,16 @@ internal class RetrofitCallAdapter<E>(private val cacheConfiguration: CacheConfi
 
     private fun adaptedByDefault(call: Call<Any>): Any? {
         val metadata = getRequestMetadata(call)
-        return if (cacheConfiguration.cachePredicate(responseClass, metadata)) {
+        return if (dejaVuConfiguration.cachePredicate(responseClass, metadata)) {
             CacheInstruction(
                     responseClass,
                     CacheInstruction.Operation.Expiring.Cache(
-                            cacheConfiguration.cacheDurationInMillis,
-                            cacheConfiguration.connectivityTimeoutInMillis,
+                            dejaVuConfiguration.cacheDurationInMillis,
+                            dejaVuConfiguration.connectivityTimeoutInMillis,
                             false,
-                            cacheConfiguration.mergeOnNextOnError,
-                            cacheConfiguration.encrypt,
-                            cacheConfiguration.compress,
+                            dejaVuConfiguration.mergeOnNextOnError,
+                            dejaVuConfiguration.encrypt,
+                            dejaVuConfiguration.compress,
                             false
                     )
             ).let {

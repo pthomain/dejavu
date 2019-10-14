@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -60,7 +60,7 @@ import java.util.*
 internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val dateFactory: (Long?) -> Date,
                                       private val emptyResponseFactory: EmptyResponseFactory<E>,
-                                      private val configuration: CacheConfiguration<E>,
+                                      private val configuration: DejaVuConfiguration<E>,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
                                       private val instructionToken: CacheToken,
                                       private val isSingle: Boolean,

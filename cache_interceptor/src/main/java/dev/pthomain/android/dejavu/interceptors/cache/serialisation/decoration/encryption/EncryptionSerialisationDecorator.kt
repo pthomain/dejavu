@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption
 
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
@@ -35,7 +35,7 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * Optional encryption step of the serialisation process
  *
  * @param encryptionManager an instance of EncryptionManager
- * @see dev.pthomain.android.dejavu.configuration.CacheConfiguration.Builder.encryption
+ * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Builder.encryption
  */
 internal class EncryptionSerialisationDecorator<E>(private val encryptionManager: EncryptionManager)
     : SerialisationDecorator<E>

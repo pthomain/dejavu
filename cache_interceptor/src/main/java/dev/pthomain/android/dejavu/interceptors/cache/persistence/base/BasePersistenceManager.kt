@@ -23,10 +23,10 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -43,25 +43,26 @@ import java.util.*
 /**
  * Provides a skeletal implementation of PersistenceManager
  *
- * @param cacheConfiguration the global cache configuration
+ * @param dejaVuConfiguration the global cache configuration
+ * @param serialisationManager used for the serialisation/deserialisation of the cache entries
+ * @param dateFactory class providing the time, for the purpose of testing
  */
-abstract class BasePersistenceManager<E> internal constructor(private val cacheConfiguration: CacheConfiguration<E>,
-                                                              protected val serialisationManagerFactory: SerialisationManager.Factory<E>,
+abstract class BasePersistenceManager<E> internal constructor(private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                                                              private val serialisationManager: SerialisationManager<E>,
                                                               protected val dateFactory: (Long?) -> Date)
     : PersistenceManager<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
     private val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
-    protected val logger = cacheConfiguration.logger
-    protected val durationInMillis = cacheConfiguration.cacheDurationInMillis
-    protected abstract val serialisationManager: SerialisationManager<E>
+    protected val logger = dejaVuConfiguration.logger
+    protected val durationInMillis = dejaVuConfiguration.cacheDurationInMillis
 
     /**
      * Indicates whether or not the entry should be compressed or encrypted based primarily
      * on the settings of the previous cached entry if available. If there was no previous entry,
      * then the cache settings are defined by the operation or, if undefined in the operation,
-     * by the values defined globally in CacheConfiguration.
+     * by the values defined globally in DejaVuConfiguration.
      *
      * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @param cacheOperation the cache operation for the entry being saved
@@ -76,8 +77,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val cacheC
                         it.isEncrypted
                 )
             } ?: SerialisationDecorationMetadata(
-                    cacheOperation.compress ?: cacheConfiguration.compress,
-                    cacheOperation.encrypt ?: cacheConfiguration.encrypt
+                    cacheOperation.compress ?: dejaVuConfiguration.compress,
+                    cacheOperation.encrypt ?: dejaVuConfiguration.encrypt
             )
 
     /**
