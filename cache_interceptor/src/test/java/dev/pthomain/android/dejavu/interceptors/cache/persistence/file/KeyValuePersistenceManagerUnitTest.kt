@@ -31,7 +31,8 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileNameSerialiser.Companion.SEPARATOR
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper

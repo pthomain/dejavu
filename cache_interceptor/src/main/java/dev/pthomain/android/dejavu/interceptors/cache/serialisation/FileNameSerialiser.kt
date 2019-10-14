@@ -21,11 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.file
+package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder.Incomplete
 
