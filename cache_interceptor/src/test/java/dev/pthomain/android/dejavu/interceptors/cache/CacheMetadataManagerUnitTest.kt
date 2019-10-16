@@ -34,8 +34,9 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
 import dev.pthomain.android.dejavu.test.*
@@ -183,7 +184,7 @@ class CacheMetadataManagerUnitTest {
         whenever(mockPersistenceManager.shouldEncryptOrCompress(
                 if (hasCachedResponse) eq(previousCachedResponse) else isNull(),
                 eq(operationWithDuration)
-        )).thenReturn(Pair(encryptData, compressData))
+        )).thenReturn(SerialisationDecorationMetadata(compressData, encryptData))
 
         val actualWrapper = target.setNetworkCallMetadata(
                 responseWrapper,
@@ -354,7 +355,7 @@ class CacheMetadataManagerUnitTest {
                 cause
         )
 
-        whenever(mockErrorFactory.getError(eq(expectedException))).thenReturn(mockGlitch)
+        whenever(mockErrorFactory(eq(expectedException))).thenReturn(mockGlitch)
 
         val actualWrapper = target.setSerialisationFailedMetadata(
                 responseWrapper,

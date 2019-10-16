@@ -50,8 +50,8 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Provides
     @Singleton
     fun providePersistenceManagerFactory(databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-                                         filePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.File,
-                                         memoryPersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.Memory) =
+                                         filePersistenceManagerFactory: KeyValuePersistenceManager.FileFactory<E>,
+                                         memoryPersistenceManagerFactory: KeyValuePersistenceManager.MemoryFactory<E>) =
             PersistenceManagerFactory(
                     filePersistenceManagerFactory,
                     databasePersistenceManagerFactory,
@@ -85,16 +85,14 @@ internal abstract class PersistenceModule<E> where E : Exception,
 
     @Provides
     @Singleton
-    fun provideKeyValueStorePersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
-                                                      fileStoreFactory: FileStore.Factory<E>,
-                                                      memoryStoreFactory: MemoryStore.Factory,
-                                                      hasher: Hasher,
-                                                      serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                                      dateFactory: Function1<Long?, Date>,
-                                                      fileNameSerialiser: FileNameSerialiser) =
-            KeyValuePersistenceManager.Factory(
+    fun provideMemoryPersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
+                                               fileStoreFactory: FileStore.Factory<E>,
+                                               hasher: Hasher,
+                                               serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                               dateFactory: Function1<Long?, Date>,
+                                               fileNameSerialiser: FileNameSerialiser) =
+            KeyValuePersistenceManager.FileFactory(
                     fileStoreFactory,
-                    memoryStoreFactory,
                     hasher,
                     serialisationManagerFactory,
                     configuration,
@@ -104,13 +102,20 @@ internal abstract class PersistenceModule<E> where E : Exception,
 
     @Provides
     @Singleton
-    fun provideMemoryPersistenceManagerFactory(keyValuePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>) =
-            keyValuePersistenceManagerFactory.Memory()
-
-    @Provides
-    @Singleton
-    fun provideFilePersistenceManagerFactory(keyValuePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>) =
-            keyValuePersistenceManagerFactory.File()
+    fun provideFilePersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
+                                             memoryStoreFactory: MemoryStore.Factory,
+                                             hasher: Hasher,
+                                             serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                             dateFactory: Function1<Long?, Date>,
+                                             fileNameSerialiser: FileNameSerialiser) =
+            KeyValuePersistenceManager.MemoryFactory(
+                    memoryStoreFactory,
+                    hasher,
+                    serialisationManagerFactory,
+                    configuration,
+                    dateFactory::get,
+                    fileNameSerialiser
+            )
 
     @Provides
     @Singleton

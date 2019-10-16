@@ -35,7 +35,7 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSer
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext

@@ -24,9 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerIntegrationTest
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 internal class MemoryPersistenceManagerIntegrationTest
-    : BasePersistenceManagerIntegrationTest<MemoryPersistenceManager<Glitch>>(
-        { it.memoryPersistenceManagerFactory.create() as MemoryPersistenceManager<Glitch> }
+    : BasePersistenceManagerIntegrationTest<KeyValuePersistenceManager<Glitch>>(
+        { it.memoryPersistenceManagerFactory.create() as KeyValuePersistenceManager<Glitch> }
 )

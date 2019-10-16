@@ -29,12 +29,11 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.KeyValuePersistenceManagerUnitTest
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 //TODO
-internal class MemoryPersistenceManagerUnitTest : KeyValuePersistenceManagerUnitTest<MemoryPersistenceManager<Glitch>>() {
+internal class MemoryStoreUnitTest {
 
     private lateinit var mockLruCache : LruCache<String, CacheDataHolder.Incomplete>
 

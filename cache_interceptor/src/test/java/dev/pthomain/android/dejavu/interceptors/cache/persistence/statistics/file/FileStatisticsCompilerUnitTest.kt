@@ -21,7 +21,8 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.file
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file
 
-//TODO
-class FileNameSerialiserUnitTest
+class FileStatisticsCompilerUnitTest{
+    //TODO
+}

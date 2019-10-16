@@ -37,8 +37,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
@@ -270,11 +270,12 @@ fun defaultRequestMetadata() = RequestMetadata.UnHashed(
         DEFAULT_URL
 )
 
-fun instructionToken(operation: Operation = Cache()) = CacheToken.fromInstruction(
+fun instructionToken(operation: Operation = Cache()) = CacheToken(
         CacheInstruction(
                 TestResponse::class.java,
                 operation
         ),
+        INSTRUCTION,
         true,
         true,
         RequestMetadata.Hashed(

@@ -21,14 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache
+package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 
 import android.net.Uri
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import org.junit.Test
@@ -43,7 +42,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
     private val paramsKeys = "bedac"
     private val paramsKeysInOrder = "abcde"
 
-    private val strings = Arrays.asList(
+    private val strings = listOf(
             "http://6qIyrDOprTaxiSa7yH7PbCIOGoji0eZWO9sw.com",
             "http://FWFu3SO1CofJsmF8JEv5KmEb38Jmao9X4MPR.com",
             "http://5FpLfvFcAsjRONmc1gYYfURd82x44naN9gL2.com",
@@ -76,7 +75,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
             "http://CzozkCHpma7XJ0yCf1x7Rd4lNcQeVKZOjQK9.com"
     )
 
-    private val sha1Hashes = Arrays.asList(
+    private val sha1Hashes = listOf(
             "3F44E93227041FD770A0A19019E26D72121B0C7D",
             "B704FD9BAEB2E3DEC5016FD2AE5CD41B989EAC5A",
             "7D430E48339256C7121CDAC7BB2B6FC4EA4D6EC3",
@@ -109,7 +108,7 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
             "633921825B411DCC49D713F0272D1C8D0CC8084E"
     )
 
-    private val md5Hashes = Arrays.asList(
+    private val md5Hashes = listOf(
             "E11CF56B88EFA89751DA6EFBC0493A50",
             "AA2F2B137C6FC8AE2C7D5831E3C4CC2F",
             "3F9E1A94ADA51AABA53D6F0A4310F0D7",

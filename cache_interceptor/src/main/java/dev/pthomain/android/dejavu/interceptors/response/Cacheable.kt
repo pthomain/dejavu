@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 /**
  * Default implementation of CacheMetadata.Holder. Have the response extend this class

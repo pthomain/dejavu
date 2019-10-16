@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.interceptors.error.glitch
 
 /**
  * Represents a converted type of Error.

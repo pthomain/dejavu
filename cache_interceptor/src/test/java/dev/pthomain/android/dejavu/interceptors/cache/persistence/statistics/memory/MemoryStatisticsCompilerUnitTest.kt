@@ -21,13 +21,8 @@
  *
  */
 
-package dev.pthomain.android.dejavu.injection.glitch
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.memory
 
-import dagger.Component
-import dev.pthomain.android.dejavu.injection.DejaVuComponent
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import javax.inject.Singleton
-
-@Singleton
-@Component(modules = [GlitchDejaVuModule::class])
-internal interface GlitchDejaVuComponent : DejaVuComponent<Glitch>
+class MemoryStatisticsCompilerUnitTest{
+    //TODO
+}

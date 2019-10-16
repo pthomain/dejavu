@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.internal.cache.persistence
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 

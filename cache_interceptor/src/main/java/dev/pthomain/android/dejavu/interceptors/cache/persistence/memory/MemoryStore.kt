@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 
 import android.util.LruCache
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 
 class MemoryStore internal constructor(
         private val lruCache: LruCache<String, CacheDataHolder.Incomplete>

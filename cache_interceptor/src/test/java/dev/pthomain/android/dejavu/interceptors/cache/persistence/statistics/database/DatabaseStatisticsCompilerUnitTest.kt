@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.database
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.database
 
 class DatabaseStatisticsCompilerUnitTest{
     //TODO

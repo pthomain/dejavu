@@ -21,12 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration
+package dev.pthomain.android.dejavu.configuration.instruction
 
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.assertEquals
 import org.junit.Test

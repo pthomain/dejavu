@@ -27,11 +27,11 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.isValidFormat
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import java.io.*
 
 class FileStore private constructor(

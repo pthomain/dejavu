@@ -31,7 +31,7 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.DejaVuModule
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
 import javax.inject.Singleton

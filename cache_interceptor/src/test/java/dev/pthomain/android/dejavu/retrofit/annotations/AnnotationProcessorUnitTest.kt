@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

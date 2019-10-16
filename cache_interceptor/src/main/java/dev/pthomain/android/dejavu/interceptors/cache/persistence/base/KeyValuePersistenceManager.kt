@@ -39,7 +39,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.MEMORY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import java.util.*
 
 /**
@@ -154,41 +153,44 @@ class KeyValuePersistenceManager<E> internal constructor(private val hasher: Has
         return false
     }
 
-    class Factory<E> internal constructor(private val fileStoreFactory: FileStore.Factory<E>,
-                                          private val memoryStoreFactory: MemoryStore.Factory,
-                                          private val hasher: Hasher,
-                                          private val serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                          private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                                          private val dateFactory: (Long?) -> Date,
-                                          private val fileNameSerialiser: FileNameSerialiser)
+    class FileFactory<E> internal constructor(private val fileStoreFactory: FileStore.Factory<E>,
+                                              private val hasher: Hasher,
+                                              private val serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                              private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                                              private val dateFactory: (Long?) -> Date,
+                                              private val fileNameSerialiser: FileNameSerialiser)
             where E : Exception,
                   E : NetworkErrorPredicate {
-
-        inner class File {
-            fun create(cacheDirectory: java.io.File = dejaVuConfiguration.context.cacheDir): PersistenceManager<E> {
-                return KeyValuePersistenceManager(
-                        hasher,
-                        dejaVuConfiguration,
-                        dateFactory,
-                        fileNameSerialiser,
-                        fileStoreFactory.create(cacheDirectory),
-                        serialisationManagerFactory.create(FILE)
-                )
-            }
+        fun create(cacheDirectory: java.io.File = dejaVuConfiguration.context.cacheDir): PersistenceManager<E> {
+            return KeyValuePersistenceManager(
+                    hasher,
+                    dejaVuConfiguration,
+                    dateFactory,
+                    fileNameSerialiser,
+                    fileStoreFactory.create(cacheDirectory),
+                    serialisationManagerFactory.create(FILE)
+            )
         }
+    }
 
-        inner class Memory {
-            fun create(maxEntries: Int = 20,
-                       disableEncryption: Boolean = false): PersistenceManager<E> {
-                return KeyValuePersistenceManager(
-                        hasher,
-                        dejaVuConfiguration,
-                        dateFactory,
-                        fileNameSerialiser,
-                        memoryStoreFactory.create(maxEntries),
-                        serialisationManagerFactory.create(MEMORY, disableEncryption)
-                )
-            }
+    class MemoryFactory<E> internal constructor(private val memoryStoreFactory: MemoryStore.Factory,
+                                                private val hasher: Hasher,
+                                                private val serialisationManagerFactory: SerialisationManager.Factory<E>,
+                                                private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                                                private val dateFactory: (Long?) -> Date,
+                                                private val fileNameSerialiser: FileNameSerialiser)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+        fun create(maxEntries: Int = 20,
+                   disableEncryption: Boolean = false): PersistenceManager<E> {
+            return KeyValuePersistenceManager(
+                    hasher,
+                    dejaVuConfiguration,
+                    dateFactory,
+                    fileNameSerialiser,
+                    memoryStoreFactory.create(maxEntries),
+                    serialisationManagerFactory.create(MEMORY, disableEncryption)
+            )
         }
     }
 

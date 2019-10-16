@@ -50,7 +50,7 @@ internal class FileStatisticsCompiler(
         private val fileInputStreamFactory: (File) -> InputStream,
         private val dateFactory: (Long?) -> Date,
         private val fileNameSerialiser: FileNameSerialiser
-) : BaseStatisticsCompiler<String, List<String>>(configuration) {
+) : BaseStatisticsCompiler<String, List<String>>(configuration) { //TODO use KeyValueStore
 
     /**
      * Returns an list of valid file names in the cache directory representing a cached response.

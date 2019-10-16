@@ -36,7 +36,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import java.text.SimpleDateFormat
 import java.util.*
 

@@ -27,9 +27,9 @@ import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.error.ErrorCode
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.error.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException

@@ -41,10 +41,9 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestM
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken.Companion.fromInstruction
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.network.model.User
@@ -108,7 +107,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
 
     protected fun setUpWithConfiguration(configuration: DejaVuConfiguration<Glitch>) {
         cacheComponent = DaggerIntegrationDejaVuComponent.builder()
-                .integrationCacheModule(IntegrationDejaVuModule(configuration))
+                .integrationDejaVuModule(IntegrationDejaVuModule(configuration))
                 .build()
 
         dejaVu = DejaVu(cacheComponent)
@@ -213,11 +212,12 @@ internal abstract class BaseIntegrationTest<T : Any>(
 
     protected fun instructionToken(operation: Operation = Cache(durationInMillis = 3600_000),
                                    responseClass: Class<*> = TestResponse::class.java,
-                                   url: String = "http://test.com/testResponse") = fromInstruction(
+                                   url: String = "http://test.com/testResponse") = CacheToken(
             CacheInstruction(
                     responseClass,
                     operation
             ),
+            CacheStatus.INSTRUCTION,
             true,
             true,
             cacheComponent.hasher().hash(

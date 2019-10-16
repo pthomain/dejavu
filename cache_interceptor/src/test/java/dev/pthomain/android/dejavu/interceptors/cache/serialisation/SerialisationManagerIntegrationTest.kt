@@ -28,10 +28,10 @@ import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertResponseWrapperWithContext
 import org.junit.Assert.assertEquals
@@ -39,7 +39,9 @@ import org.junit.Before
 import org.junit.Test
 
 internal class SerialisationManagerIntegrationTest
-    : BaseIntegrationTest<SerialisationManager<Glitch>>(IntegrationDejaVuComponent::serialisationManager) {
+    : BaseIntegrationTest<SerialisationManager<Glitch>>({
+    it.serialisationManagerFactory().create(FILE) //TODO test the factory
+}) {
 
     private lateinit var wrapper: ResponseWrapper<Glitch>
     private lateinit var instructionToken: CacheToken

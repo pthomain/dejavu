@@ -21,10 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.configuration.error
 
 import com.google.gson.stream.MalformedJsonException
 import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import junit.framework.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -46,7 +49,7 @@ class GlitchFactoryUnitTest {
     fun testParseMalformedJsonException() {
         val exception = MalformedJsonException("malformed")
 
-        val apiError = target.getError(exception)
+        val apiError = target(exception)
 
         assertGlitch(
                 apiError,
@@ -61,7 +64,7 @@ class GlitchFactoryUnitTest {
     fun testParseIOException() {
         val exception = IOException("time out")
 
-        val apiError = target.getError(exception)
+        val apiError = target(exception)
 
         assertGlitch(
                 apiError,
@@ -78,7 +81,7 @@ class GlitchFactoryUnitTest {
         whenever(exception.code()).thenReturn(401)
         whenever(exception.message()).thenReturn("not authorised")
 
-        val apiError = target.getError(exception)
+        val apiError = target(exception)
 
         assertGlitch(
                 apiError,
@@ -95,7 +98,7 @@ class GlitchFactoryUnitTest {
         whenever(exception.code()).thenReturn(500)
         whenever(exception.message()).thenReturn("server error")
 
-        val apiError = target.getError(exception)
+        val apiError = target(exception)
 
         assertGlitch(
                 apiError,
@@ -112,7 +115,7 @@ class GlitchFactoryUnitTest {
         whenever(exception.code()).thenReturn(1)
         whenever(exception.message()).thenReturn("unknown")
 
-        val apiError = target.getError(exception)
+        val apiError = target(exception)
 
         assertGlitch(
                 apiError,

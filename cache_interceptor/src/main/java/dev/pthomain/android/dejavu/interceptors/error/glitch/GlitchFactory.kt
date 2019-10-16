@@ -21,11 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.interceptors.error.glitch
 
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.interceptors.error.ErrorCode.*
-import dev.pthomain.android.dejavu.interceptors.error.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.*
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import retrofit2.HttpException
 import java.io.IOException
@@ -105,11 +105,12 @@ open class GlitchFactory : ErrorFactory<Glitch> {
      * @return the converted Glitch
      */
     private fun getDefaultError(throwable: Throwable) =
-            Glitch.from(throwable) ?: Glitch(
-                    throwable,
-                    NON_HTTP_STATUS,
-                    UNKNOWN
-            )
+            Glitch.from(throwable)
+                    ?: Glitch(
+                            throwable,
+                            NON_HTTP_STATUS,
+                            UNKNOWN
+                    )
 
     /**
      * Parses an HttpException and returns an associated ErrorCode.

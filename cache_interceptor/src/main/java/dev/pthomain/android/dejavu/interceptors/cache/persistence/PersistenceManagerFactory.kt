@@ -36,8 +36,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.Datab
  * @param memoryPersistenceManagerFactory  a factory returning MemoryPersistenceManager, useful only if there is a strict requirement not to persist data to disk
  */
 class PersistenceManagerFactory<E> internal constructor(
-        val filePersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.File,
+        val filePersistenceManagerFactory: KeyValuePersistenceManager.FileFactory<E>,
         val databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
-        val memoryPersistenceManagerFactory: KeyValuePersistenceManager.Factory<E>.Memory
+        val memoryPersistenceManagerFactory: KeyValuePersistenceManager.MemoryFactory<E>
 ) where E : Exception,
         E : NetworkErrorPredicate

@@ -35,6 +35,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
@@ -42,7 +43,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.internal.cache.persistence.CacheDataHolder
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
 

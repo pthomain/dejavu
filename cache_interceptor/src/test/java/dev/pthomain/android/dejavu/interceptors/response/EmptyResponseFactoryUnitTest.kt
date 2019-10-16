@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.interceptors.response
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Before
@@ -73,14 +73,14 @@ class EmptyResponseFactoryUnitTest {
         val instructionToken = instructionToken()
         val mockError = mock<Glitch>()
 
-        whenever(mockErrorFactory.getError(any())).thenReturn(mockError)
+        whenever(mockErrorFactory(any())).thenReturn(mockError)
 
         val wrapper = target.emptyResponseWrapperSingle(
                 instructionToken
         ).blockingGet()
 
         val captor = argumentCaptor<NoSuchElementException>()
-        verify(mockErrorFactory).getError(captor.capture())
+        verify(mockErrorFactory).invoke(captor.capture())
         val capturedException = captor.firstValue
 
         assertNotNullWithContext(

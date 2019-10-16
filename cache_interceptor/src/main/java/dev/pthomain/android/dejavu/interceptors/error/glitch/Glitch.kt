@@ -21,11 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.interceptors.error.glitch
 
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.error.ErrorCode.NETWORK
-import dev.pthomain.android.dejavu.interceptors.error.ErrorCode.UNKNOWN
+import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.NETWORK
+import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.UNKNOWN
 
 /**
  * Wraps an exception and decorates it with some metadata.

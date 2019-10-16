@@ -28,7 +28,7 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient

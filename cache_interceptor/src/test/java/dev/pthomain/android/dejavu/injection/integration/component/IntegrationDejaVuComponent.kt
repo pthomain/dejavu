@@ -39,10 +39,12 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.ProcessingErrorAdapter
@@ -60,13 +62,16 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun dateFactory(): Function1<Long?, Date>
     fun serialiser(): Serialiser
     fun encryptionManager(): EncryptionManager
-    fun serialisationManagerFactory(): SerialisationManager.Factory<Glitch>
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
     fun hasher(): Hasher
+    fun serialisationManagerFactory(): SerialisationManager.Factory<Glitch>
     fun databasePersistenceManagerFactory(): DatabasePersistenceManager.Factory<Glitch>?
-    fun filePersistenceManagerFactory(): KeyValuePersistenceManager.Factory<Glitch>.File
+    fun filePersistenceManagerFactory(): KeyValuePersistenceManager.FileFactory<Glitch>
+    fun fileStoreFactory(): FileStore.Factory<Glitch>
+    fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<Glitch>
+    fun memoryStoreFactory(): MemoryStore.Factory
     fun cacheManager(): CacheManager<Glitch>
     fun errorInterceptorFactory(): Function1<CacheToken, ErrorInterceptor<Glitch>>
     fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>

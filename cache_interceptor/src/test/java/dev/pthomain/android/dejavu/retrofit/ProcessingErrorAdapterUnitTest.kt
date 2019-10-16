@@ -30,8 +30,8 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
@@ -52,7 +52,7 @@ import java.util.*
 class ProcessingErrorAdapterUnitTest {
 
     private lateinit var mockDefaultAdapter: CallAdapter<Any, Any>
-    private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ErrorInterceptor<Glitch>
+    private lateinit var mockErrorInterceptorFactory: (CacheToken) -> ErrorInterceptor<Glitch>
     private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<Glitch>
     private lateinit var mockCacheToken: CacheToken
     private lateinit var mockException: CacheException
@@ -103,8 +103,7 @@ class ProcessingErrorAdapterUnitTest {
 
     private fun createTarget(mockRxType: AnnotationProcessor.RxType): CallAdapter<Any, Any> {
         whenever(mockErrorInterceptorFactory.invoke(
-                eq(mockCacheToken),
-                eq(mockStart)
+                eq(mockCacheToken)
         )).thenReturn(mockErrorInterceptor)
 
         whenever(mockResponseInterceptorFactory.invoke(

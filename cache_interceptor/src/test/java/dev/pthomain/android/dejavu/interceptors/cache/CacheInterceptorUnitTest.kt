@@ -27,11 +27,12 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -101,8 +102,8 @@ class CacheInterceptorUnitTest {
             if (isCacheEnabled) {
                 when (operation) {
                     is Expiring -> prepareGetCachedResponse(operation)
-                    is Operation.Clear -> prepareClearCache(operation)
-                    is Operation.Invalidate -> prepareInvalidate()
+                    is Clear -> prepareClearCache(operation)
+                    is Invalidate -> prepareInvalidate()
                 }
             }
 
@@ -111,8 +112,8 @@ class CacheInterceptorUnitTest {
             if (isCacheEnabled) {
                 when (operation) {
                     is Expiring,
-                    is Operation.Clear,
-                    is Operation.Invalidate -> assertEqualsWithContext(
+                    is Clear,
+                    is Invalidate -> assertEqualsWithContext(
                             mockReturnedResponseWrapper,
                             responseWrapper,
                             "The returned observable did not match",
@@ -138,13 +139,12 @@ class CacheInterceptorUnitTest {
     private fun prepareGetCachedResponse(operation: Expiring) {
         whenever(mockCacheManager.getCachedResponse(
                 eq(mockUpstream),
-                eq(mockInstructionToken),
-                eq(operation),
+                eq(mockInstructionToken.copy(instruction = mockInstructionToken.instruction.copy(operation = operation))),
                 eq(mockStart)
         )).thenReturn(mockReturnedObservable)
     }
 
-    private fun prepareClearCache(operation: Operation.Clear) {
+    private fun prepareClearCache(operation: Clear) {
         whenever(mockCacheManager.clearCache(
                 eq(mockInstructionToken),
                 eq(operation.typeToClear),
@@ -162,9 +162,11 @@ class CacheInterceptorUnitTest {
                                  isCacheEnabled: Boolean,
                                  responseWrapper: ResponseWrapper<Glitch>) {
         assertEqualsWithContext(
-                mockMetadata.copy(cacheToken = CacheToken.notCached(
-                        mockInstructionToken,
-                        Date(1234L)
+                mockMetadata.copy(cacheToken = mockInstructionToken.copy(
+                        status = NOT_CACHED,
+                        cacheDate = Date(1234L),
+                        fetchDate = null,
+                        expiryDate = null
                 )),
                 responseWrapper.metadata,
                 "Response wrapper metadata didn't match for operation == $operation and isCacheEnabled == $isCacheEnabled"

@@ -31,7 +31,7 @@ import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
+import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
 import io.reactivex.Single

@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.database
 
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerIntegrationTest
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 internal class DatabasePersistenceManagerIntegrationTest
     : BasePersistenceManagerIntegrationTest<DatabasePersistenceManager<Glitch>>(

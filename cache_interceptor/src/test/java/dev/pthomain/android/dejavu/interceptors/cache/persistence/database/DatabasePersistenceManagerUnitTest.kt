@@ -38,8 +38,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenc
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
-import dev.pthomain.android.dejavu.interceptors.error.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
@@ -78,7 +78,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         return DatabasePersistenceManager(
                 mockDatabase,
                 mockHasher,
-                mockSerialisationManagerFactory,
+                mockSerialisationManager,
                 mockConfiguration,
                 mockDateFactory,
                 mockContentValuesFactory
