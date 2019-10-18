@@ -50,7 +50,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
     private val white = Color.parseColor("#A9B7C6")
 
     fun setInstruction(useSingle: Boolean,
-                       instruction: CacheInstruction) {
+                       instruction: CacheInstruction<*>) {
         text = instruction.operation.type.annotationName.let {
             TextUtils.concat(
                     getRestMethod(instruction.operation),
@@ -220,7 +220,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
             )
 
     private fun getMethod(useSingle: Boolean,
-                          instruction: CacheInstruction): CharSequence =
+                          instruction: CacheInstruction<*>): CharSequence =
             ("\nfun call(): " + when (instruction.operation.type) {
                 CACHE,
                 REFRESH -> "${if (useSingle) "Single" else "Observable"}<${instruction.responseClass.simpleName}>"

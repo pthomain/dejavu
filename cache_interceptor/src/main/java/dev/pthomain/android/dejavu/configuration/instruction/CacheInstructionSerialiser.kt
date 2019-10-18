@@ -79,9 +79,7 @@ internal class CacheInstructionSerialiser {
 
                                 else -> null
                             }?.let { operation ->
-                                getClassForName(params[0])?.let { responseClass ->
-                                    CacheInstruction(responseClass, operation)
-                                }
+                                getClassForName(params[0])?.let { operation.newInstruction(it) }
                             }
                         } catch (e: Exception) {
                             null

@@ -71,7 +71,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected fun setUpConfiguration(encryptDataGlobally: Boolean,
                                      compressDataGlobally: Boolean,
-                                     cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
+                                     cacheInstruction: CacheInstruction<*>?): DejaVuConfiguration<Glitch> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
         mockHasher = mock()
@@ -106,7 +106,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected abstract fun setUp(instructionToken: CacheToken,
                                  encryptDataGlobally: Boolean,
                                  compressDataGlobally: Boolean,
-                                 cacheInstruction: CacheInstruction?): T
+                                 cacheInstruction: CacheInstruction<*>?): T
 
     @Test
     fun testClearCache() {

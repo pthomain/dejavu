@@ -58,7 +58,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     override fun setUp(instructionToken: CacheToken,
                        encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
-                       cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
+                       cacheInstruction: CacheInstruction<*>?): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockContentValuesFactory = mock()

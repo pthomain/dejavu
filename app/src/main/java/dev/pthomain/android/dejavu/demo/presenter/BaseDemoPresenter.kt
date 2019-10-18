@@ -126,38 +126,33 @@ internal abstract class BaseDemoPresenter protected constructor(
         subscribe(getInvalidateCompletable())
     }
 
-    final override fun getCacheInstruction() =
-            dejaVu.configuration.let { configuration ->
+    final override fun getCacheInstruction(): CacheInstruction<CatFactResponse> =
+            with(dejaVu.configuration) {
                 when (instructionType) {
                     CACHE -> Cache(
-                            configuration.cacheDurationInMillis,
-                            configuration.connectivityTimeoutInMillis,
+                            cacheDurationInMillis,
+                            connectivityTimeoutInMillis,
                             freshOnly,
-                            configuration.mergeOnNextOnError,
+                            mergeOnNextOnError,
                             encrypt,
                             compress,
                             false
                     )
                     REFRESH -> Refresh(
-                            configuration.cacheDurationInMillis,
-                            configuration.connectivityTimeoutInMillis,
+                            cacheDurationInMillis,
+                            connectivityTimeoutInMillis,
                             freshOnly,
-                            configuration.mergeOnNextOnError,
+                            mergeOnNextOnError,
                             false
                     )
                     DO_NOT_CACHE -> DoNotCache
                     INVALIDATE -> Invalidate
                     OFFLINE -> Offline(
                             freshOnly,
-                            configuration.mergeOnNextOnError
+                            mergeOnNextOnError
                     )
                     CLEAR -> Clear(clearStaleEntriesOnly = false)
-                }.let { operation ->
-                    CacheInstruction(
-                            CatFactResponse::class.java,
-                            operation
-                    )
-                }
+                }.newInstruction()
             }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =

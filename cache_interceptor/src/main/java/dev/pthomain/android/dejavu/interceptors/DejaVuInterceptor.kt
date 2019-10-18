@@ -57,12 +57,12 @@ import java.util.*
  * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
  * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
  *
- * @see dev.pthomain.android.dejavu.interceptors.internal.network.NetworkInterceptor
- * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
- * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
- * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
-class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction,
+class DejaVuInterceptor<E> private constructor(private val instruction: CacheInstruction<*>,
                                                private val requestMetadata: RequestMetadata.UnHashed,
                                                private val configuration: DejaVuConfiguration<E>,
                                                private val hasher: Hasher,
@@ -158,10 +158,10 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
      * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
      * @param configuration the global cache configuration
      *
-     * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
-     * @see dev.pthomain.android.dejavu.interceptors.internal.network.NetworkInterceptor
-     * @see dev.pthomain.android.dejavu.interceptors.internal.cache.CacheInterceptor
-     * @see dev.pthomain.android.dejavu.interceptors.internal.response.ResponseInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
      */
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
@@ -179,7 +179,7 @@ class DejaVuInterceptor<E> private constructor(private val instruction: CacheIns
          * @param instruction the cache instruction for the intercepted call
          * @param requestMetadata the associated request metadata
          */
-        fun create(instruction: CacheInstruction,
+        fun create(instruction: CacheInstruction<*>,
                    requestMetadata: RequestMetadata.UnHashed) =
                 DejaVuInterceptor(
                         instruction,

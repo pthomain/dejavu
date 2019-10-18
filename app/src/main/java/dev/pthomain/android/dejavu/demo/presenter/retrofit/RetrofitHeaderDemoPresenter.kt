@@ -24,11 +24,10 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
@@ -58,10 +57,7 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
             executeOperation(Invalidate)
                     .ignoreElements()!!
 
-    private fun executeOperation(cacheOperation: CacheInstruction.Operation) =
-            catFactClient().instruct(CacheInstruction(
-                    CatFactResponse::class.java,
-                    cacheOperation
-            ))
+    private fun executeOperation(cacheOperation: Operation) =
+            catFactClient().instruct(cacheOperation.newInstruction())
 
 }

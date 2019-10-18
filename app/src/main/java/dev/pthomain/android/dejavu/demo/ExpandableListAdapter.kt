@@ -53,7 +53,7 @@ internal class ExpandableListAdapter(context: Context)
     private var callStart = 0L
 
     fun onStart(useSingle: Boolean,
-                instruction: CacheInstruction) {
+                instruction: CacheInstruction<*>) {
         headers.clear()
         children.clear()
         logs.clear()
@@ -182,7 +182,7 @@ internal class ExpandableListAdapter(context: Context)
                             instruction.visibility = View.VISIBLE
                             instruction.setInstruction(
                                     child.first as Boolean,
-                                    child.second as CacheInstruction
+                                    child.second as CacheInstruction<*>
                             )
                         }
                     }

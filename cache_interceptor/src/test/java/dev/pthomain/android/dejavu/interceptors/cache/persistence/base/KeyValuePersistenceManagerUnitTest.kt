@@ -66,7 +66,7 @@ internal class KeyValuePersistenceManagerUnitTest
     override fun setUp(instructionToken: CacheToken,
                        encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
-                       cacheInstruction: CacheInstruction?): KeyValuePersistenceManager<Glitch> {
+                       cacheInstruction: CacheInstruction<*>?): KeyValuePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(

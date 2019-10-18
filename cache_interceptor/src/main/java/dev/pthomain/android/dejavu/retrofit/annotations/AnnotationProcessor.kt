@@ -37,7 +37,7 @@ import io.reactivex.Single
 /**
  * Processes Retrofit annotations and generates a CacheInstruction if needed.
  *
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction
+ * @see CacheInstruction
  */
 internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>)
         where  E : Exception,
@@ -58,8 +58,8 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     @Throws(CacheException::class)
     fun process(annotations: Array<Annotation>,
                 rxType: RxType,
-                responseClass: Class<*>): CacheInstruction? {
-        var instruction: CacheInstruction? = null
+                responseClass: Class<*>): CacheInstruction<*>? {
+        var instruction: CacheInstruction<*>? = null
 
         annotations.forEach { annotation ->
             when (annotation) {
@@ -102,11 +102,11 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the processed cache instruction for the given annotation
      */
     @Throws(CacheException::class)
-    private fun getInstruction(currentInstruction: CacheInstruction?,
+    private fun getInstruction(currentInstruction: CacheInstruction<*>?,
                                rxType: RxType,
                                responseClass: Class<*>,
                                foundOperation: Operation.Type,
-                               annotation: Annotation): CacheInstruction? {
+                               annotation: Annotation): CacheInstruction<*>? {
         if (currentInstruction != null) {
             CacheException(
                     ANNOTATION,

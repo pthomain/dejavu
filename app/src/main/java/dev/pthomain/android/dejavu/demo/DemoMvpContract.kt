@@ -57,7 +57,7 @@ internal class DemoMvpContract {
         fun clearEntries()
         fun invalidate()
         fun offline()
-        fun getCacheInstruction(): CacheInstruction
+        fun getCacheInstruction(): CacheInstruction<CatFactResponse>
 
     }
 

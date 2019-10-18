@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
@@ -66,7 +65,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                     gson,
                     responseClass,
                     dejaVu.dejaVuInterceptor.create(
-                            CacheInstruction(responseClass, cacheOperation),
+                            cacheOperation.newInstruction(responseClass),
                             RequestMetadata.UnHashed(responseClass, URL)
                     ),
                     URL

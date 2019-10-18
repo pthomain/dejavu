@@ -28,6 +28,7 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -48,7 +49,7 @@ class SerialisationManagerUnitTest {
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
     private lateinit var mockOnError: Action
     private lateinit var mockInstructionToken: CacheToken
-    private lateinit var mockInstruction: CacheInstruction
+    private lateinit var mockInstruction: CacheInstruction<*>
     private lateinit var mockResponse: TestResponse
 
     private val mockStringResponse = "mockStringResponse"
@@ -270,8 +271,7 @@ class SerialisationManagerUnitTest {
         val result = target.deserialise(
                 mockInstructionToken,
                 mockStoredData,
-                isEncrypted,
-                isCompressed,
+                SerialisationDecorationMetadata(isCompressed, isEncrypted),
                 mockOnError
         )
 

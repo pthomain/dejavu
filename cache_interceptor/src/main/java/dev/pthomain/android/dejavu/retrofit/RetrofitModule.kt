@@ -56,13 +56,13 @@ internal abstract class RetrofitModule<E>
     @Provides
     @Singleton
     fun provideRetrofitCallAdapterInnerFactory(configuration: DejaVuConfiguration<E>) =
-            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
+            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction<*>?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
                         t2: Logger,
                         t3: String,
                         t4: Class<*>,
-                        t5: CacheInstruction?,
+                        t5: CacheInstruction<*>?,
                         t6: CallAdapter<Any, Any>
                 ) = RetrofitCallAdapter(
                         configuration,
@@ -81,7 +81,7 @@ internal abstract class RetrofitModule<E>
     @Singleton
     fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
                                           logger: Logger,
-                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction<*>?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
                                           dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,

@@ -62,7 +62,7 @@ internal abstract class StatisticsModule<E>
     fun provideFileStatisticsCompiler(fileNameSerialiser: FileNameSerialiser,
                                       persistenceManager: PersistenceManager<E>,
                                       dateFactory: Function1<Long?, Date>) =
-            null as FileStatisticsCompiler?
+            null as FileStatisticsCompiler? //FIXME
 //            (persistenceManager as? FilePersistenceManager<E>)?.let {
 //                FileStatisticsCompiler(
 //                        configuration,

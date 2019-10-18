@@ -121,6 +121,6 @@ internal interface SingleCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun instruct(@Header(DejaVuHeader) instruction: CacheInstruction): Single<CatFactResponse>
+    fun instruct(@Header(DejaVuHeader) instruction: CacheInstruction<CatFactResponse>): Single<CatFactResponse>
 
 }

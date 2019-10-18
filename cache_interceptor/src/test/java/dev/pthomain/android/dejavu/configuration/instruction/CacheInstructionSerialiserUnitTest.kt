@@ -34,7 +34,7 @@ class CacheInstructionSerialiserUnitTest {
     private fun getMap(targetClass: Class<*>) = targetClass.name.let {
         fun newCacheInstruction(operation: CacheInstruction.Operation) = CacheInstruction(targetClass, operation)
 
-        LinkedHashMap<String, CacheInstruction>().apply {
+        LinkedHashMap<String, CacheInstruction<*>>().apply {
             put("$it:DO_NOT_CACHE:", newCacheInstruction(DoNotCache))
             put("$it:INVALIDATE:", newCacheInstruction(Invalidate))
             put("$it:CLEAR:$it:true", newCacheInstruction(Clear(targetClass, true)))

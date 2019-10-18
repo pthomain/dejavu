@@ -122,6 +122,6 @@ internal interface ObservableCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun instruct(@Header(DejaVuHeader) instruction: CacheInstruction): Observable<CatFactResponse>
+    fun instruct(@Header(DejaVuHeader) instruction: CacheInstruction<CatFactResponse>): Observable<CatFactResponse>
 
 }
