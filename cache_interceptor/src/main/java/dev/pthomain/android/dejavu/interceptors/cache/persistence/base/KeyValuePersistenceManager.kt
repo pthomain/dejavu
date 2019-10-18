@@ -99,7 +99,7 @@ class KeyValuePersistenceManager<E> internal constructor(private val hasher: Has
      * @return the cached data as a CacheDataHolder
      */
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed) =
+                                    requestMetadata: RequestMetadata.Hashed<*>) =
             findPartialKey(requestMetadata.urlHash)
                     ?.let { get(it) }
 

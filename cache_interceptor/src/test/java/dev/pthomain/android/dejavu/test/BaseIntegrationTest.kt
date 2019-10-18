@@ -160,8 +160,9 @@ internal abstract class BaseIntegrationTest<T : Any>(
                             (it.response as TestResponse).first(),
                             copy(
                                     cacheToken = cacheToken.copy(
-                                            cacheToken.instruction.copy(
-                                                    responseClass = instructionToken.requestMetadata.responseClass
+                                            CacheInstruction(
+                                                    instructionToken.requestMetadata.responseClass,
+                                                    cacheToken.instruction.operation
                                             ),
                                             requestMetadata = cacheComponent.hasher().hash(
                                                     RequestMetadata.UnHashed(

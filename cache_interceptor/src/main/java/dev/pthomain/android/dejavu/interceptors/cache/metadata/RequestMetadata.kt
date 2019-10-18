@@ -30,9 +30,9 @@ package dev.pthomain.android.dejavu.interceptors.cache.metadata
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-sealed class RequestMetadata(open val responseClass: Class<*>,
-                             open val url: String,
-                             open val requestBody: String? = null) {
+sealed class RequestMetadata<T>(open val responseClass: Class<T>,
+                                open val url: String,
+                                open val requestBody: String? = null) {
 
     /**
      * Holds metadata related to the request prior to internal hashing of the URL
@@ -42,9 +42,9 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
      * @param url the full URL of the request including query parameters
      * @param requestBody the optional body of the request
      */
-    data class UnHashed(override val responseClass: Class<*>,
-                        override val url: String,
-                        override val requestBody: String? = null) : RequestMetadata(
+    data class UnHashed<T>(override val responseClass: Class<T>,
+                            override val url: String,
+                            override val requestBody: String? = null) : RequestMetadata<T>(
             responseClass,
             url,
             requestBody
@@ -60,11 +60,11 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
      * @param urlHash the hash of the URL and its alphabetically sorted query parameters
      * @param classHash the response class' hash
      */
-    data class Hashed internal constructor(override val responseClass: Class<*>,
-                                           override val url: String,
-                                           override val requestBody: String?,
-                                           val urlHash: String,
-                                           val classHash: String) : RequestMetadata(
+    data class Hashed<T> internal constructor(override val responseClass: Class<T>,
+                                              override val url: String,
+                                              override val requestBody: String?,
+                                              val urlHash: String,
+                                              val classHash: String) : RequestMetadata<T>(
             responseClass,
             url,
             requestBody

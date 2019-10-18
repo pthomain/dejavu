@@ -60,16 +60,17 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             })
 
     private fun getObservableForOperation(cacheOperation: Operation) =
-            VolleyObservable.createDefault(
-                    requestQueue,
-                    gson,
-                    responseClass,
-                    dejaVu.dejaVuInterceptor.create(
-                            cacheOperation.newInstruction(responseClass),
-                            RequestMetadata.UnHashed(responseClass, URL)
-                    ),
-                    URL
-            )
+            RequestMetadata.UnHashed(responseClass, URL).let {
+                VolleyObservable.createDefault(
+                        requestQueue,
+                        gson,
+                        dejaVu.dejaVuInterceptor.create(
+                                cacheOperation.newInstruction(responseClass),
+                                it
+                        ),
+                        it
+                )
+            }
 
     override fun getOfflineSingle(freshOnly: Boolean) =
             getObservableForOperation(Offline(freshOnly)).firstOrError()!!

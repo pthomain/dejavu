@@ -122,7 +122,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      */
     @Throws(SerialisationException::class)
     override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed): CacheDataHolder.Complete? {
+                                    requestMetadata: RequestMetadata.Hashed<*>): CacheDataHolder.Complete? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,

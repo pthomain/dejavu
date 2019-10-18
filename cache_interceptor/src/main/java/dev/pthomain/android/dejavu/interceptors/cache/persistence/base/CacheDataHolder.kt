@@ -85,7 +85,7 @@ sealed class CacheDataHolder(
      * @param isEncrypted whether or not the response was cached encrypted
      */
     data class Complete(
-            val requestMetadata: RequestMetadata.Hashed,
+            val requestMetadata: RequestMetadata.Hashed<*>,
             override val cacheDate: Long,
             override val expiryDate: Long,
             override val data: ByteArray,

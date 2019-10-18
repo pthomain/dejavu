@@ -57,9 +57,9 @@ class RetrofitCallAdapterFactoryUnitTest {
     private lateinit var mockAnnotations: Array<Annotation>
     private lateinit var mockRetrofit: Retrofit
     private lateinit var mockReturnType: Type
-    private lateinit var mockCacheInstruction: CacheInstruction
+    private lateinit var mockCacheInstruction: CacheInstruction<*>
     private lateinit var mockException: CacheException
-    private lateinit var mockInnerFactory: Function6<DejaVuInterceptor.Factory<Glitch>, Logger, String, Class<*>, CacheInstruction?, CallAdapter<Any, Any>, CallAdapter<*, *>>
+    private lateinit var mockInnerFactory: Function6<DejaVuInterceptor.Factory<Glitch>, Logger, String, Class<*>, CacheInstruction<*>?, CallAdapter<Any, Any>, CallAdapter<*, *>>
     private lateinit var mockReturnedAdapter: CallAdapter<*, *>
 
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }

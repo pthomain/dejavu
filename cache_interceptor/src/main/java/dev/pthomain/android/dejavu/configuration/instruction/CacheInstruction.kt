@@ -32,8 +32,8 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
  * @param responseClass the target response class
  * @param operation the cache operation with call-specific directives
  */
-data class CacheInstruction<T> constructor(val responseClass: Class<T>,
-                                           val operation: Operation) {
+data class CacheInstruction<T>(val responseClass: Class<T>,
+                               val operation: Operation) {
 
     /**
      * Represent a cache operation. Directives defined here take precedence over global config.

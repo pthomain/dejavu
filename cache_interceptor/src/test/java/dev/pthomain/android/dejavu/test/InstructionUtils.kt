@@ -31,8 +31,8 @@ import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance
 
-fun assertInstruction(expectedInstruction: CacheInstruction,
-                      actualInstruction: CacheInstruction?,
+fun assertInstruction(expectedInstruction: CacheInstruction<*>,
+                      actualInstruction: CacheInstruction<*>?,
                       context: String? = null) {
     assertEqualsWithContext(
             expectedInstruction.responseClass,
@@ -49,7 +49,7 @@ fun assertInstruction(expectedInstruction: CacheInstruction,
 }
 
 fun assertInstruction(expectedOperation: Operation,
-                      actualInstruction: CacheInstruction?,
+                      actualInstruction: CacheInstruction<*>?,
                       context: String? = null) {
     TestCase.assertNotNull(
             withContext("Instruction shouldn't be null", context),

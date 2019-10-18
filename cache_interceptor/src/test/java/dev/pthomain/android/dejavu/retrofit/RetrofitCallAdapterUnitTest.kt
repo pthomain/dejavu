@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
@@ -63,9 +62,9 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockCall: Call<Any>
     private lateinit var mockCacheInstructionSerialiser: CacheInstructionSerialiser
     private lateinit var mockRequest: Request
-    private lateinit var mockDejaVuTransformer: DejaVuTransformer
+    private lateinit var mockDejaVuTransformer: DejaVuInterceptor<Glitch>
     private lateinit var mockTestResponse: TestResponse
-    private lateinit var requestMetadata: RequestMetadata.UnHashed
+    private lateinit var requestMetadata: RequestMetadata.UnHashed<TestResponse>
     private lateinit var mockRequestBodyConverter: (Request) -> String?
     private lateinit var configuration: DejaVuConfiguration<Glitch>
 
@@ -91,7 +90,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun getTarget(hasInstruction: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean,
+                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean): RetrofitCallAdapter<Glitch> {
         whenever(mockCall.request()).thenReturn(mockRequest)
@@ -140,7 +139,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun testAdapt(hasInstruction: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean,
+                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean) {
         sequenceOf(
@@ -210,7 +209,7 @@ class RetrofitCallAdapterUnitTest {
             val context = "For rxType == $rxType"
 
             if (rxType == null) {
-                verify(mockDejaVuFactory, never()).create(
+                verify(mockDejaVuFactory, never()).create<TestResponse>(
                         any(),
                         any()
                 )
@@ -222,7 +221,7 @@ class RetrofitCallAdapterUnitTest {
                         context
                 )
             } else if ((hasHeader && isHeaderDeserialisationSuccess) || hasInstruction || usesDefaultAdaptation) {
-                val argumentCaptor = argumentCaptor<CacheInstruction>()
+                val argumentCaptor = argumentCaptor<CacheInstruction<TestResponse>>()
                 verifyWithContext(
                         mockDejaVuFactory,
                         "$context: DejaVuFactory should have been called with the default CacheInstruction, using the cache predicate"

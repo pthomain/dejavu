@@ -258,7 +258,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
     private fun getDejaVuInterceptor(call: Call<Any>,
                                      instruction: CacheInstruction<*>) =
             dejaVuFactory.create(
-                    instruction,
+                    instruction as CacheInstruction<Any>,
                     getRequestMetadata(call)
             )
 
@@ -274,6 +274,6 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                     responseClass,
                     call.request().url().toString(),
                     requestBodyConverter(call.request())
-            )
+            ) as RequestMetadata.UnHashed<Any>
 
 }

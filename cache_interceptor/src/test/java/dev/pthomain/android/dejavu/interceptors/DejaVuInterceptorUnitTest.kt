@@ -36,6 +36,7 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -54,8 +55,8 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, Any>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed
-    private lateinit var mockHashedMetadata: RequestMetadata.Hashed
+    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed<TestResponse>
+    private lateinit var mockHashedMetadata: RequestMetadata.Hashed<TestResponse>
     private lateinit var mockErrorInterceptor: ObservableTransformer<Any, ResponseWrapper<Glitch>>
     private lateinit var mockCacheInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
     private lateinit var mockResponseInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, Any>
@@ -128,9 +129,9 @@ class DejaVuInterceptorUnitTest {
         whenever(mockConfiguration.encrypt).thenReturn(true)
 
         return targetFactory.create(
-                mockInstructionToken.instruction,
+                mockInstructionToken.instruction as CacheInstruction<TestResponse>,
                 mockRequestMetadata
-        ) as DejaVuInterceptor<Glitch>
+        )
     }
 
     @Test

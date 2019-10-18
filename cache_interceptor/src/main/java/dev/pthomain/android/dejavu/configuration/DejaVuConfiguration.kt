@@ -46,7 +46,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
  * @see CacheInstruction
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Clear
- * @see dev.pthomain.android.dejavu.retrofit.annotations.ClearAll
  * @see dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Offline
@@ -67,7 +66,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val requestTimeOutInSeconds: Int,
                                                        val connectivityTimeoutInMillis: Long,
                                                        val cacheDurationInMillis: Long,
-                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
+                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean)
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -93,7 +92,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
         private var allowNonFinalForSingle: Boolean = false
-        private var cachePredicate: (Class<*>, RequestMetadata) -> Boolean = { _, _ -> false }
+        private var cachePredicate: (Class<*>, RequestMetadata<*>) -> Boolean = { _, _ -> false }
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -199,9 +198,8 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * The default implementation is DatabasePersistenceManager which saves the responses to
          * an SQLite database (using requery). This takes precedence over useFileCaching().
          *
-         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FilePersistenceManager
+         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
          * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
-         * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryPersistenceManager
          *
          * @param enableDatabase whether or not to instantiate the classes related to database caching (this will give access to DatabasePersistenceManager.Factory)
          * @param persistenceManagerPicker a picker providing a PersistenceManagerFactory and returning the PersistenceManager implementation to override the default one
@@ -239,8 +237,8 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * for the next call. By default, Singles will only return responses with final status.
          * The 'filterFinal' directive on the cache instruction will take precedence if set.
          *
-         * @see dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus
-         * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.filterFinal
+         * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
+         * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.filterFinal
          */
         fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) =
                 apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
@@ -265,7 +263,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * @see cacheAllByDefault
          */
         fun cachePredicate(predicate: (responseClass: Class<*>,
-                                       metadata: RequestMetadata) -> Boolean) =
+                                       metadata: RequestMetadata<*>) -> Boolean) =
                 apply { this.cachePredicate = predicate }
 
         /**

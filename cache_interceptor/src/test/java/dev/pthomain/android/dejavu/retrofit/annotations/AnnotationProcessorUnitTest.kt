@@ -323,7 +323,7 @@ class AnnotationProcessorUnitTest {
     }
 
     private fun testProcessAnnotation(annotation: Annotation,
-                                      expectedInstruction: CacheInstruction) {
+                                      expectedInstruction: CacheInstruction<*>) {
         val actualInstruction = target.process(
                 arrayOf(annotation),
                 OBSERVABLE,

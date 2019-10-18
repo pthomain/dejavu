@@ -30,15 +30,15 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.DejaVuTransformer
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.Observer
 
 class VolleyObservable<E, R> private constructor(private val requestQueue: RequestQueue,
                                                  private val gson: Gson,
-                                                 private val responseClass: Class<R>,
-                                                 private val url: String)
+                                                 private val requestMetadata: RequestMetadata.UnHashed<R>)
     : Observable<R>()
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -49,14 +49,14 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
         this.observer = observer
         requestQueue.add(StringRequest(
                 Request.Method.GET,
-                url.toString(),
+                requestMetadata.url,
                 Response.Listener(this::onResponse),
                 Response.ErrorListener(this::onError)
         ))
     }
 
     private fun onResponse(response: String) {
-        observer.onNext(gson.fromJson(response, responseClass))
+        observer.onNext(gson.fromJson(response, requestMetadata.responseClass))
         observer.onComplete()
     }
 
@@ -68,31 +68,27 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
 
         fun <E, R> create(requestQueue: RequestQueue,
                           gson: Gson,
-                          responseClass: Class<R>,
-                          cacheInterceptor: DejaVuTransformer,
-                          url: String)
+                          dejaVuInterceptor: DejaVuInterceptor<E>,
+                          requestMetadata: RequestMetadata.UnHashed<R>)
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
                         requestQueue,
                         gson,
-                        responseClass,
-                        url
+                        requestMetadata
                 ).cast(Any::class.java)
-                        .compose(cacheInterceptor)
-                        .cast(responseClass)!!
+                        .compose(dejaVuInterceptor)
+                        .cast(requestMetadata.responseClass)!!
 
         fun <R> createDefault(requestQueue: RequestQueue,
                               gson: Gson,
-                              responseClass: Class<R>,
-                              cacheInterceptor: DejaVuTransformer,
-                              url: String) =
-                create<Glitch, R>(
+                              dejaVuInterceptor: DejaVuInterceptor<Glitch>,
+                              requestMetadata: RequestMetadata.UnHashed<R>) =
+                create(
                         requestQueue,
                         gson,
-                        responseClass,
-                        cacheInterceptor,
-                        url
+                        dejaVuInterceptor,
+                        requestMetadata
                 )
     }
 }
