@@ -28,7 +28,11 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -44,6 +48,9 @@ class SerialisationManagerUnitTest {
     private lateinit var mockEncryptionManager: EncryptionManager
     private lateinit var mockWrapper: ResponseWrapper<Glitch>
     private lateinit var mockSerialiser: Serialiser
+    private lateinit var mockFileSerialisationDecorator: FileSerialisationDecorator<Glitch>
+    private lateinit var mockCompressionSerialisationDecorator: CompressionSerialisationDecorator<Glitch>
+    private lateinit var mockEncryptionSerialisationDecorator: EncryptionSerialisationDecorator<Glitch>
     private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
     private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
@@ -80,6 +87,9 @@ class SerialisationManagerUnitTest {
         mockInstructionToken = mock()
         mockInstruction = mock()
         mockResponse = mock()
+        mockFileSerialisationDecorator = mock()
+        mockCompressionSerialisationDecorator = mock()
+        mockEncryptionSerialisationDecorator = mock()
 
         whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
         whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
@@ -91,14 +101,13 @@ class SerialisationManagerUnitTest {
                 mock()
         )
 
-        target = SerialisationManager(
-                mock(), //FIXME
+        target = SerialisationManager.Factory(
+                mock(), //FIXME test serialiser
                 mockByteToStringConverter,
-                mockEncryptionManager,
-                mockCompresser,
-                mockUncompresser,
-                mockSerialiser
-        )
+                mockFileSerialisationDecorator, //TODO move logic to separate tests
+                mockCompressionSerialisationDecorator,
+                mockEncryptionSerialisationDecorator
+        ).create(FILE) //TODO test factory
     }
 
     @Test
@@ -169,8 +178,7 @@ class SerialisationManagerUnitTest {
 
         val serialised = target.serialise(
                 mockWrapper,
-                encryptData,
-                compressData
+                SerialisationDecorationMetadata(compressData, encryptData)
         )
 
         if (useString) {
@@ -271,12 +279,11 @@ class SerialisationManagerUnitTest {
         val result = target.deserialise(
                 mockInstructionToken,
                 mockStoredData,
-                SerialisationDecorationMetadata(isCompressed, isEncrypted),
-                mockOnError
+                SerialisationDecorationMetadata(isCompressed, isEncrypted)
         )
 
         if (mockJsonByteArray == null) {
-            verify(mockOnError).invoke()
+            verify(mockOnError).invoke()    //TODO check error logic
             assertNullWithContext(
                     result,
                     "Result should be null",
@@ -285,7 +292,7 @@ class SerialisationManagerUnitTest {
         } else {
             assertEqualsWithContext(
                     TestResponse::class.java,
-                    result!!.responseClass,
+                    result.responseClass,
                     "Response class didn't match",
                     context
             )

@@ -56,10 +56,10 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the processed CacheInstruction if applicable
      */
     @Throws(CacheException::class)
-    fun process(annotations: Array<Annotation>,
-                rxType: RxType,
-                responseClass: Class<*>): CacheInstruction<*>? {
-        var instruction: CacheInstruction<*>? = null
+    fun <T : Any> process(annotations: Array<Annotation>,
+                          rxType: RxType,
+                          responseClass: Class<T>): CacheInstruction<T>? {
+        var instruction: CacheInstruction<T>? = null
 
         annotations.forEach { annotation ->
             when (annotation) {
@@ -102,11 +102,11 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the processed cache instruction for the given annotation
      */
     @Throws(CacheException::class)
-    private fun getInstruction(currentInstruction: CacheInstruction<*>?,
-                               rxType: RxType,
-                               responseClass: Class<*>,
-                               foundOperation: Operation.Type,
-                               annotation: Annotation): CacheInstruction<*>? {
+    private fun <T : Any> getInstruction(currentInstruction: CacheInstruction<T>?,
+                                         rxType: RxType,
+                                         responseClass: Class<T>,
+                                         foundOperation: Operation.Type,
+                                         annotation: Annotation): CacheInstruction<T>? {
         if (currentInstruction != null) {
             CacheException(
                     ANNOTATION,
@@ -149,13 +149,13 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
             )
 
             is Invalidate -> CacheInstruction(
-                    annotation.typeToInvalidate.java,
+                    annotation.typeToInvalidate.java as Class<T>, //TODO validation
                     Operation.Invalidate
             )
 
             is Clear -> {
                 CacheInstruction(
-                        annotation.typeToClear.java,
+                        annotation.typeToClear.java as Class<T>, //TODO validation
                         Operation.Clear(
                                 annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
                                 annotation.clearStaleEntriesOnly

@@ -53,7 +53,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
-                                      private val instruction: CacheInstruction<*>?,
+                                      private val instruction: CacheInstruction<out Any>?,
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
         where E : Exception,
@@ -138,7 +138,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the call adapted to RxJava type
      */
     private fun adaptedWithInstruction(call: Call<Any>,
-                                       instruction: CacheInstruction<*>,
+                                       instruction: CacheInstruction<out Any>,
                                        source: String): Any {
         logger.d(
                 this,
@@ -222,7 +222,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the call adapted according to the cache instruction
      */
     private fun adaptRxCall(call: Call<Any>,
-                            instruction: CacheInstruction<*>,
+                            instruction: CacheInstruction<out Any>,
                             adapted: Any) =
             when (adapted) {
                 is Observable<*> -> adapted.compose(getDejaVuInterceptor(call, instruction))
@@ -256,9 +256,9 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the resulting DejaVuInterceptor
      */
     private fun getDejaVuInterceptor(call: Call<Any>,
-                                     instruction: CacheInstruction<*>) =
+                                     instruction: CacheInstruction<out Any>) =
             dejaVuFactory.create(
-                    instruction as CacheInstruction<Any>,
+                    instruction,
                     getRequestMetadata(call)
             )
 
@@ -274,6 +274,6 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                     responseClass,
                     call.request().url().toString(),
                     requestBodyConverter(call.request())
-            ) as RequestMetadata.UnHashed<Any>
+            )
 
 }

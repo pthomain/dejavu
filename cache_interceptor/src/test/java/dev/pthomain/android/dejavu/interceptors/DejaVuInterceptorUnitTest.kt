@@ -31,6 +31,7 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -50,13 +51,14 @@ class DejaVuInterceptorUnitTest {
     private val start = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(start) }
 
-    private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<Glitch>>
-    private lateinit var mockCacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
+    private lateinit var mockErrorInterceptorFactory: (CacheToken) -> ObservableTransformer<Any, ResponseWrapper<Glitch>>
+    private lateinit var mockNetworkInterceptorFactory: (ErrorInterceptor<Glitch>, CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<Glitch>>
+    private lateinit var mockCacheInterceptorFactory: (ErrorInterceptor<Glitch>, CacheToken, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
     private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, Any>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed<TestResponse>
-    private lateinit var mockHashedMetadata: RequestMetadata.Hashed<TestResponse>
+    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed
+    private lateinit var mockHashedMetadata: RequestMetadata.Hashed
     private lateinit var mockErrorInterceptor: ObservableTransformer<Any, ResponseWrapper<Glitch>>
     private lateinit var mockCacheInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
     private lateinit var mockResponseInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, Any>
@@ -97,6 +99,7 @@ class DejaVuInterceptorUnitTest {
                 mockHasher,
                 mockDateFactory,
                 mockErrorInterceptorFactory,
+                mockNetworkInterceptorFactory,
                 mockCacheInterceptorFactory,
                 mockResponseInterceptorFactory,
                 mockConfiguration
@@ -107,11 +110,11 @@ class DejaVuInterceptorUnitTest {
         responseTokenCaptor = argumentCaptor()
 
         whenever(mockErrorInterceptorFactory.invoke(
-                errorTokenCaptor.capture(),
-                eq(start)
+                errorTokenCaptor.capture()
         )).thenReturn(mockErrorInterceptor)
 
         whenever(mockCacheInterceptorFactory.invoke(
+                eq(mockErrorInterceptor as ErrorInterceptor<Glitch>),
                 cacheTokenCaptor.capture(),
                 eq(start)
         )).thenReturn(mockCacheInterceptor)

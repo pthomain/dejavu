@@ -32,8 +32,8 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Op
  * @param responseClass the target response class
  * @param operation the cache operation with call-specific directives
  */
-data class CacheInstruction<T>(val responseClass: Class<T>,
-                               val operation: Operation) {
+data class CacheInstruction<T : Any>(val responseClass: Class<T>,
+                                     val operation: Operation) {
 
     /**
      * Represent a cache operation. Directives defined here take precedence over global config.
@@ -218,7 +218,7 @@ data class CacheInstruction<T>(val responseClass: Class<T>,
          * @param responseClass the instruction's target response class
          * @return the CacheInstruction for this Operation
          */
-        fun <T> newInstruction(responseClass: Class<T>) = CacheInstruction(
+        fun <T : Any> newInstruction(responseClass: Class<T>) = CacheInstruction(
                 responseClass,
                 this
         )
@@ -228,7 +228,7 @@ data class CacheInstruction<T>(val responseClass: Class<T>,
          *
          * @return the CacheInstruction for this Operation
          */
-        inline fun <reified T> newInstruction() = newInstruction(T::class.java)
+        inline fun <reified T : Any> newInstruction() = newInstruction(T::class.java)
     }
 
     override fun toString() = serialiser.serialise(

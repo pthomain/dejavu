@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
+import android.util.LruCache
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
@@ -81,7 +82,7 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Provides
     @Singleton
     fun provideMemoryStoreFactory() =
-            MemoryStore.Factory()
+            MemoryStore.Factory(::LruCache)
 
     @Provides
     @Singleton

@@ -91,7 +91,7 @@ internal class FileNameSerialiser {
      * @throws SerialisationException if the given file name is invalid
      */
     @Throws(SerialisationException::class)
-    fun deserialise(requestMetadata: RequestMetadata.Hashed<*>,
+    fun deserialise(requestMetadata: RequestMetadata.Hashed,
                     fileName: String) =
             with(deserialise(fileName)) {
                 CacheDataHolder.Complete(

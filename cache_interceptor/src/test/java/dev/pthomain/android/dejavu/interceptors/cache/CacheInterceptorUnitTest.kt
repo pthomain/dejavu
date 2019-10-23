@@ -25,12 +25,14 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -44,6 +46,7 @@ import java.util.*
 class CacheInterceptorUnitTest {
 
     private lateinit var mockInstructionToken: CacheToken
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
     private lateinit var mockMetadata: CacheMetadata<Glitch>
     private lateinit var mockUpstream: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<Glitch>
@@ -62,6 +65,7 @@ class CacheInterceptorUnitTest {
 
         mockInstructionToken = instructionToken(operation)
         mockMetadata = CacheMetadata(mockInstructionToken)
+        mockErrorInterceptor = mock()
 
         mockUpstreamResponseWrapper = ResponseWrapper(
                 TestResponse::class.java,
@@ -73,7 +77,10 @@ class CacheInterceptorUnitTest {
         mockReturnedResponseWrapper = mock()
         mockReturnedObservable = Observable.just(mockReturnedResponseWrapper)
 
+        whenever(mockErrorInterceptor.apply(eq(mockReturnedObservable) as Observable<Any>)).thenReturn(mockReturnedObservable)
+
         return CacheInterceptor(
+                mockErrorInterceptor,
                 mockCacheManager,
                 mockDateFactory,
                 isCacheEnabled,
@@ -134,6 +141,8 @@ class CacheInterceptorUnitTest {
                 )
             }
         }
+
+        verify(mockErrorInterceptor).apply(eq(mockReturnedObservable) as Observable<Any>)
     }
 
     private fun prepareGetCachedResponse(operation: Expiring) {

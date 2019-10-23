@@ -28,8 +28,6 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Complete
@@ -45,23 +43,25 @@ import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
 
+//FIXME
 internal class KeyValuePersistenceManagerUnitTest
     : BasePersistenceManagerUnitTest<KeyValuePersistenceManager<Glitch>>() {
 
+    private lateinit var mockRightCacheDataHolder: Incomplete
+    private lateinit var mockWrongCacheDataHolder2: Incomplete
+    private lateinit var mockWrongCacheDataHolder1: Incomplete
     private lateinit var mockIncompleteCacheDataHolder: Incomplete
     private lateinit var mockCompleteCacheDataHolder: Complete
     private lateinit var mockFileNameSerialiser: FileNameSerialiser
     private lateinit var mockDejaVuConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockKeyValueStore: KeyValueStore<String, String, Incomplete>
 
-    private val mockFileWithValidHash = mockHash + SEPARATOR + "abcd"
-    private val mockFileName = "mockFileName"
-    private val fileOfRightType = "fileOfRightType"
-    private val fileOfWrongType1 = "fileOfWrongType1"
-    private val fileOfWrongType2 = "fileOfWrongType2"
-    private val invalidatedFileName = "invalidatedFileName"
-    private val mockFileToDelete1 = "mockFileToDelete1"
-    private val mockFileToDelete2 = "mockHash_FileToDelete2"
+    private val mockEntryWithValidHash = mockHash + SEPARATOR + "abcd"
+    private val unrelatedEntryName = "unrelatedEntryName"
+    private val entryOfRightType = "EntryOfRightType"
+    private val entryOfWrongType1 = "EntryOfWrongType1"
+    private val entryOfWrongType2 = "EntryOfWrongType2"
+    private val invalidatedEntryName = "invalidatedEntryName"
 
     override fun setUp(instructionToken: CacheToken,
                        encryptDataGlobally: Boolean,
@@ -100,6 +100,10 @@ internal class KeyValuePersistenceManagerUnitTest
 
         mockKeyValueStore = mock()
 
+        mockWrongCacheDataHolder1 = mock()
+        mockWrongCacheDataHolder2 = mock()
+        mockRightCacheDataHolder = mock()
+
         return KeyValuePersistenceManager(
                 mockHasher,
                 mockDejaVuConfiguration,
@@ -114,20 +118,17 @@ internal class KeyValuePersistenceManagerUnitTest
                                    useTypeToClear: Boolean,
                                    clearStaleEntriesOnly: Boolean,
                                    mockClassHash: String) {
-        val fileList = arrayOf(fileOfWrongType1, fileOfRightType, fileOfWrongType2)
-        val mockWrongCacheDataHolder1 = mock<Incomplete>()
-        val mockWrongCacheDataHolder2 = mock<Incomplete>()
-        val mockRightCacheDataHolder = mock<Incomplete>()
+        val entryList = arrayOf(entryOfWrongType1, entryOfRightType, entryOfWrongType2)
 
         whenever(mockKeyValueStore.values()).thenReturn(mapOf(
-                fileList[0] to mockWrongCacheDataHolder1,
-                fileList[1] to mockRightCacheDataHolder,
-                fileList[2] to mockWrongCacheDataHolder2
+                entryList[0] to mockWrongCacheDataHolder1,
+                entryList[1] to mockRightCacheDataHolder,
+                entryList[2] to mockWrongCacheDataHolder2
         ))
 
-        whenever(mockFileNameSerialiser.deserialise(eq(fileOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
-        whenever(mockFileNameSerialiser.deserialise(eq(fileOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
-        whenever(mockFileNameSerialiser.deserialise(eq(fileOfRightType))).thenReturn(mockRightCacheDataHolder)
+        whenever(mockFileNameSerialiser.deserialise(eq(entryOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
+        whenever(mockFileNameSerialiser.deserialise(eq(entryOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
+        whenever(mockFileNameSerialiser.deserialise(eq(entryOfRightType))).thenReturn(mockRightCacheDataHolder)
 
         if (useTypeToClear) {
             whenever(mockRightCacheDataHolder.responseClassHash).thenReturn(mockClassHash)
@@ -140,14 +141,14 @@ internal class KeyValuePersistenceManagerUnitTest
                                   useTypeToClear: Boolean,
                                   clearStaleEntriesOnly: Boolean,
                                   mockClassHash: String) {
-        verifyWithContext(mockKeyValueStore, context).delete(eq(fileOfRightType))
+        verifyWithContext(mockKeyValueStore, context).delete(eq(entryOfRightType))
 
         if (!useTypeToClear) {
-            verifyWithContext(mockKeyValueStore, context).delete(eq(fileOfWrongType1))
-            verifyWithContext(mockKeyValueStore, context).delete(eq(fileOfWrongType2))
+            verifyWithContext(mockKeyValueStore, context).delete(eq(entryOfWrongType1))
+            verifyWithContext(mockKeyValueStore, context).delete(eq(entryOfWrongType2))
         } else {
-            verifyNeverWithContext(mockKeyValueStore, context).delete(eq(fileOfWrongType1))
-            verifyNeverWithContext(mockKeyValueStore, context).delete(eq(fileOfWrongType2))
+            verifyNeverWithContext(mockKeyValueStore, context).delete(eq(entryOfWrongType1))
+            verifyNeverWithContext(mockKeyValueStore, context).delete(eq(entryOfWrongType2))
         }
     }
 
@@ -159,23 +160,14 @@ internal class KeyValuePersistenceManagerUnitTest
                               isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
             whenever(mockFileNameSerialiser.serialise(any()))
-                    .thenReturn(mockFileName)
+                    .thenReturn(mockEntryWithValidHash)
 
-            whenever(mockFileFactory.invoke(eq(mockCacheDirectory), eq(mockFileName)))
-                    .thenReturn(mockFileOfRightType)
+            whenever(mockKeyValueStore.get(eq(mockEntryWithValidHash))).thenReturn(mockRightCacheDataHolder)
 
-            whenever(mockFileOutputStreamFactory.invoke(eq(mockFileOfRightType)))
-                    .thenReturn(mockOutputStream)
-
-            whenever(mockCacheDirectory.list()).thenReturn(arrayOf(
-                    mockFileToDelete1,
-                    mockFileToDelete2
+            whenever(mockKeyValueStore.values()).thenReturn(mapOf(
+                    unrelatedEntryName to mockWrongCacheDataHolder1,
+                    mockEntryWithValidHash to mockRightCacheDataHolder
             ))
-
-            whenever(mockFileFactory.invoke(
-                    eq(mockCacheDirectory),
-                    eq(mockFileToDelete2)
-            )).thenReturn(mockFileToDelete)
         }
     }
 
@@ -199,15 +191,20 @@ internal class KeyValuePersistenceManagerUnitTest
                     cacheDataHolder
             )
 
-            verifyWithContext(mockFileToDelete, context).delete()
-            verifyWithContext(mockOutputStream, context).write(eq(cacheDataHolder.data))
-            verifyWithContext(mockOutputStream, context).flush()
+            verifyWithContext(mockKeyValueStore, context).delete(eq(mockEntryWithValidHash))
+
+            val argumentCaptor = argumentCaptor<Incomplete>()
+
+            verifyWithContext(mockKeyValueStore, context)
+                    .save(eq(mockEntryWithValidHash), argumentCaptor.capture())
+
+            //TODO verify capture
 
         } else {
-            verifyNeverWithContext(mockFileNameSerialiser, context).serialise(any())
-            verifyNeverWithContext(mockFileFactory, context).invoke(any(), any())
-            verifyNeverWithContext(mockFileOutputStreamFactory, context).invoke(any())
+            verifyNeverWithContext(mockKeyValueStore, context).delete(eq(mockEntryWithValidHash))
         }
+
+        verifyNeverWithContext(mockKeyValueStore, context).delete(eq(unrelatedEntryName))
     }
 
     private fun assertCacheDataHolder(context: String,
@@ -242,29 +239,30 @@ internal class KeyValuePersistenceManagerUnitTest
     override fun prepareInvalidate(context: String,
                                    operation: Operation,
                                    instructionToken: CacheToken) {
-        val fileList = arrayOf(mockFileWithValidHash)
+        val entryList = mapOf(
+                mockEntryWithValidHash to mockRightCacheDataHolder
+        )
 
         whenever(mockFileNameSerialiser.deserialise(
                 eq(instructionToken.requestMetadata),
-                eq(mockFileWithValidHash)
+                eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder)
 
         val invalidatedHolder = mockCompleteCacheDataHolder.copy(expiryDate = 0L)
 
         whenever(mockFileNameSerialiser.serialise(eq(invalidatedHolder)))
-                .thenReturn(invalidatedFileName)
+                .thenReturn(invalidatedEntryName)
 
-        whenever(mockCacheDirectory.list()).thenReturn(fileList)
+        whenever(mockKeyValueStore.values()).thenReturn(entryList)
 
-        whenever(mockFileFactory.invoke(
-                eq(mockCacheDirectory),
-                eq(mockFileWithValidHash)
-        )).thenReturn(mockValidFile)
-
-        whenever(mockFileFactory.invoke(
-                eq(mockCacheDirectory),
-                eq(invalidatedFileName)
-        )).thenReturn(mockInvalidatedFile)
+//        whenever(mockKeyValueStore.get(
+//                eq(mockEntryWithValidHash)
+//        )).thenReturn(mockValidEntry)
+//
+//        whenever(mockFileFactory.invoke(
+//                eq(mockCacheDirectory),
+//                eq(invalidatedEntryName)
+//        )).thenReturn(mockInvalidatedEntry)
     }
 
     override fun prepareCheckInvalidation(context: String,
@@ -280,17 +278,17 @@ internal class KeyValuePersistenceManagerUnitTest
     override fun verifyCheckInvalidation(context: String,
                                          operation: Operation,
                                          instructionToken: CacheToken) {
-        if (operation.type == INVALIDATE || operation.type == REFRESH) {
-            verifyWithContext(
-                    mockValidFile,
-                    context
-            ).renameTo(eq(mockInvalidatedFile))
-        } else {
-            verifyNeverWithContext(
-                    mockValidFile,
-                    context
-            ).renameTo(any())
-        }
+//        if (operation.type == INVALIDATE || operation.type == REFRESH) {
+//            verifyWithContext(
+//                    mockValidEntry,
+//                    context
+//            ).renameTo(eq(mockInvalidatedEntry))
+//        } else {
+//            verifyNeverWithContext(
+//                    mockValidEntry,
+//                    context
+//            ).renameTo(any())
+//        }
     }
 
     override fun prepareGetCachedResponse(context: String,
@@ -302,21 +300,21 @@ internal class KeyValuePersistenceManagerUnitTest
                                           isEncrypted: Int,
                                           cacheDateTimeStamp: Long,
                                           expiryDate: Long) {
-        val fileList = arrayOf(mockFileWithValidHash)
+        val EntryList = arrayOf(mockEntryWithValidHash)
 
-        whenever(mockCacheDirectory.list()).thenReturn(fileList)
-
-        whenever(mockFileFactory.invoke(eq(mockCacheDirectory), eq(mockFileWithValidHash)))
-                .thenReturn(mockValidFile)
-
-        whenever(mockFileInputStreamFactory.invoke(eq(mockValidFile)))
-                .thenReturn(mockInputStream)
-
-        whenever(mockFileReader.invoke(eq(mockInputStream))).thenReturn(mockBlob)
+//        whenever(mockCacheDirectory.list()).thenReturn(EntryList)
+//
+//        whenever(mockFileFactory.invoke(eq(mockCacheDirectory), eq(mockEntryWithValidHash)))
+//                .thenReturn(mockValidEntry)
+//
+//        whenever(mockFileInputStreamFactory.invoke(eq(mockValidEntry)))
+//                .thenReturn(mockInputStream)
+//
+//        whenever(mockFileReader.invoke(eq(mockInputStream))).thenReturn(mockBlob)
 
         whenever(mockFileNameSerialiser.deserialise(
                 eq(instructionToken.requestMetadata),
-                eq(mockFileWithValidHash)
+                eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder.copy(
                 cacheDate = cacheDateTimeStamp,
                 expiryDate = expiryDate,

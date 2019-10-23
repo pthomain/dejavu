@@ -36,9 +36,9 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.Observer
 
-class VolleyObservable<E, R> private constructor(private val requestQueue: RequestQueue,
-                                                 private val gson: Gson,
-                                                 private val requestMetadata: RequestMetadata.UnHashed<R>)
+class VolleyObservable<E, R : Any> private constructor(private val requestQueue: RequestQueue,
+                                                       private val gson: Gson,
+                                                       private val requestMetadata: RequestMetadata.UnHashed)
     : Observable<R>()
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -56,7 +56,7 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
     }
 
     private fun onResponse(response: String) {
-        observer.onNext(gson.fromJson(response, requestMetadata.responseClass))
+        observer.onNext(gson.fromJson(response, requestMetadata.responseClass) as R)
         observer.onComplete()
     }
 
@@ -66,10 +66,10 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
 
     companion object {
 
-        fun <E, R> create(requestQueue: RequestQueue,
-                          gson: Gson,
-                          dejaVuInterceptor: DejaVuInterceptor<E>,
-                          requestMetadata: RequestMetadata.UnHashed<R>)
+        fun <E, R : Any> create(requestQueue: RequestQueue,
+                                gson: Gson,
+                                dejaVuInterceptor: DejaVuInterceptor<E>,
+                                requestMetadata: RequestMetadata.UnHashed): Observable<R>
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
@@ -78,13 +78,13 @@ class VolleyObservable<E, R> private constructor(private val requestQueue: Reque
                         requestMetadata
                 ).cast(Any::class.java)
                         .compose(dejaVuInterceptor)
-                        .cast(requestMetadata.responseClass)!!
+                        .cast(requestMetadata.responseClass as Class<R>)!!
 
-        fun <R> createDefault(requestQueue: RequestQueue,
-                              gson: Gson,
-                              dejaVuInterceptor: DejaVuInterceptor<Glitch>,
-                              requestMetadata: RequestMetadata.UnHashed<R>) =
-                create(
+        fun <R : Any> createDefault(requestQueue: RequestQueue,
+                                    gson: Gson,
+                                    dejaVuInterceptor: DejaVuInterceptor<Glitch>,
+                                    requestMetadata: RequestMetadata.UnHashed) =
+                create<Glitch, R>(
                         requestQueue,
                         gson,
                         dejaVuInterceptor,

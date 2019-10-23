@@ -78,7 +78,7 @@ class SqlOpenHelperCallbackUnitTest {
 
     private fun verifyOnUpgradeDowngrade() {
         val inOrder = inOrder(mockSupportSQLiteDatabase)
-        inOrder.verify(mockSupportSQLiteDatabase).execSQL("DROP TABLE IF EXISTS ${SqlOpenHelperCallback.TABLE_DEJA_VU}")
+        inOrder.verify(mockSupportSQLiteDatabase).execSQL("DROP TABLE IF EXISTS dejavu")
 
         verifyOnCreate(inOrder)
     }

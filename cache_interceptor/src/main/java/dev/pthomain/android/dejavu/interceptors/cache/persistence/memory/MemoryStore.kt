@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 
 import android.util.LruCache
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
 
 class MemoryStore internal constructor(
-        private val lruCache: LruCache<String, CacheDataHolder.Incomplete>
-) : KeyValueStore<String, String, CacheDataHolder.Incomplete> {
+        private val lruCache: LruCache<String, Incomplete>
+) : KeyValueStore<String, String, Incomplete> {
 
     /**
      * Returns an existing entry key matching the given partial key
@@ -59,7 +59,7 @@ class MemoryStore internal constructor(
      * @param key the key to save the entry under
      * @param value the value to associate with the key
      */
-    override fun save(key: String, value: CacheDataHolder.Incomplete) {
+    override fun save(key: String, value: Incomplete) {
         lruCache.put(key, value)
     }
 
@@ -92,9 +92,12 @@ class MemoryStore internal constructor(
         lruCache.put(newKey, oldEntry)
     }
 
-    class Factory {
+    class Factory internal constructor(private val lruCacheFactory: (Int) -> LruCache<String, Incomplete>) {
+
         fun create(maxEntries: Int = 20) = MemoryStore(
-                LruCache(maxEntries)
+                lruCacheFactory(maxEntries)
         )
+
     }
+
 }

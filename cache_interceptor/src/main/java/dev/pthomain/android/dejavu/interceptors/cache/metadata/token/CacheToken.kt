@@ -39,12 +39,11 @@ import java.util.*
  * @param cacheDate the optional date at which the response was cached
  * @param expiryDate the optional date at which the response will expire
  */
-//TODO add type
 data class CacheToken internal constructor(val instruction: CacheInstruction<*>,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,
                                            val isEncrypted: Boolean,
-                                           val requestMetadata: RequestMetadata.Hashed<*>,
+                                           val requestMetadata: RequestMetadata.Hashed,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
                                            val expiryDate: Date? = null)

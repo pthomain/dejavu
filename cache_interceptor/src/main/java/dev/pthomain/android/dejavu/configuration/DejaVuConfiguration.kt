@@ -66,7 +66,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val requestTimeOutInSeconds: Int,
                                                        val connectivityTimeoutInMillis: Long,
                                                        val cacheDurationInMillis: Long,
-                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean)
+                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -92,19 +92,17 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         private var encryptData: Boolean = false
         private var mergeOnNextOnError: Boolean = false
         private var allowNonFinalForSingle: Boolean = false
-        private var cachePredicate: (Class<*>, RequestMetadata<*>) -> Boolean = { _, _ -> false }
+        private var cachePredicate: (Class<*>, RequestMetadata) -> Boolean = { _, _ -> false }
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
          */
         fun noLog() = logger(getSilentLogger())
 
-        private fun getSilentLogger(): Logger {
-            return object : Logger {
-                override fun d(tagOrCaller: Any, message: String) = Unit
-                override fun e(tagOrCaller: Any, message: String) = Unit
-                override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
-            }
+        private fun getSilentLogger() = object : Logger {
+            override fun d(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
         }
 
         /**
@@ -263,7 +261,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * @see cacheAllByDefault
          */
         fun cachePredicate(predicate: (responseClass: Class<*>,
-                                       metadata: RequestMetadata<*>) -> Boolean) =
+                                       metadata: RequestMetadata) -> Boolean) =
                 apply { this.cachePredicate = predicate }
 
         /**

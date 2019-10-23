@@ -27,7 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
@@ -41,8 +41,8 @@ class FileStore private constructor(
         private val fileOutputStreamFactory: (File) -> OutputStream,
         private val fileReader: (InputStream) -> ByteArray,
         private val fileNameSerialiser: FileNameSerialiser,
-        val cacheDirectory: File
-) : KeyValueStore<String, String, CacheDataHolder.Incomplete> {
+        private val cacheDirectory: File
+) : KeyValueStore<String, String, Incomplete> {
 
     init {
         cacheDirectory.mkdirs()
@@ -78,7 +78,7 @@ class FileStore private constructor(
      * @param key the key to save the entry under
      * @param value the value to associate with the key
      */
-    override fun save(key: String, value: CacheDataHolder.Incomplete) {
+    override fun save(key: String, value: Incomplete) {
         val file = fileFactory(cacheDirectory, key)
         fileOutputStreamFactory(file).useAndLogError(
                 {

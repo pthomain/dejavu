@@ -34,6 +34,7 @@ import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import io.reactivex.Observable
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -49,7 +50,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
     override fun getResponseObservable(isRefresh: Boolean,
                                        encrypt: Boolean,
                                        compress: Boolean,
-                                       freshOnly: Boolean) =
+                                       freshOnly: Boolean): Observable<CatFactResponse> =
             getObservableForOperation(when {
                 isRefresh -> Refresh(freshOnly = freshOnly)
                 else -> Cache(
@@ -59,7 +60,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                 )
             })
 
-    private fun getObservableForOperation(cacheOperation: Operation) =
+    private fun getObservableForOperation(cacheOperation: Operation): Observable<CatFactResponse> =
             RequestMetadata.UnHashed(responseClass, URL).let {
                 VolleyObservable.createDefault(
                         requestQueue,

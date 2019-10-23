@@ -64,7 +64,7 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockRequest: Request
     private lateinit var mockDejaVuTransformer: DejaVuInterceptor<Glitch>
     private lateinit var mockTestResponse: TestResponse
-    private lateinit var requestMetadata: RequestMetadata.UnHashed<TestResponse>
+    private lateinit var requestMetadata: RequestMetadata.UnHashed
     private lateinit var mockRequestBodyConverter: (Request) -> String?
     private lateinit var configuration: DejaVuConfiguration<Glitch>
 
@@ -90,7 +90,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun getTarget(hasInstruction: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean,
+                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean): RetrofitCallAdapter<Glitch> {
         whenever(mockCall.request()).thenReturn(mockRequest)
@@ -139,7 +139,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun testAdapt(hasInstruction: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata<*>) -> Boolean,
+                          cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean) {
         sequenceOf(
@@ -209,7 +209,7 @@ class RetrofitCallAdapterUnitTest {
             val context = "For rxType == $rxType"
 
             if (rxType == null) {
-                verify(mockDejaVuFactory, never()).create<TestResponse>(
+                verify(mockDejaVuFactory, never()).create(
                         any(),
                         any()
                 )

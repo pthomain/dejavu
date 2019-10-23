@@ -21,29 +21,42 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
+package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
-import android.util.LruCache
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BaseKeyValueStoreUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
+import org.junit.Before
 
-internal class MemoryStoreUnitTest : BaseKeyValueStoreUnitTest<MemoryStore>() {
 
-    private lateinit var mockLruCache: LruCache<String, Incomplete>
-    private lateinit var mockLruCacheFactory: (Int) -> LruCache<String, Incomplete>
+abstract class BaseKeyValueStoreUnitTest<S : KeyValueStore<String, String, Incomplete>> {
 
-    override fun setUpTarget(): MemoryStore {
-        mockLruCache = mock()
-        mockLruCacheFactory = mock()
+    private lateinit var target: S
 
-        whenever(mockLruCacheFactory.invoke(eq(20))).thenReturn(mockLruCache)
-
-        return MemoryStore.Factory(mockLruCacheFactory).create(20)
+    @Before
+    fun setUp() {
+//        target = setUpTarget()
     }
 
-    //TODO + integration
+    abstract fun setUpTarget(): S
+
+//    fun testFindPartialKey() {
+//
+//
+//    }
+//
+//    abstract fun testFindPartialKey()
+
+    fun get() {
+
+    }
+
+//    abstract fun get(hasResult: Boolean)
+
+//    fun save()
+//
+//    fun values(): Map<K, V>
+//
+//    fun delete(key: K)
+//
+//    fun rename(oldKey: K, newKey: K)
 
 }

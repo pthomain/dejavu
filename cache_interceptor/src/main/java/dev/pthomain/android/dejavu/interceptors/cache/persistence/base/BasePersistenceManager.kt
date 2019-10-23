@@ -89,7 +89,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
     protected fun serialise(response: ResponseWrapper<E>,
-                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete? {
+                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Expiring
@@ -161,7 +161,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
      * @return the cached data as a CacheDataHolder
      */
     protected abstract fun getCacheDataHolder(instructionToken: CacheToken,
-                                              requestMetadata: RequestMetadata.Hashed<*>): CacheDataHolder?
+                                              requestMetadata: RequestMetadata.Hashed): CacheDataHolder?
 
     /**
      * Deserialises the cached data

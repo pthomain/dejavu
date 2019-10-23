@@ -184,8 +184,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected abstract fun getResponseObservable(isRefresh: Boolean,
                                                  encrypt: Boolean,
                                                  compress: Boolean,
-                                                 freshOnly: Boolean)
-            : Observable<out CatFactResponse>
+                                                 freshOnly: Boolean): Observable<CatFactResponse>
 
     protected abstract fun getOfflineSingle(freshOnly: Boolean): Single<out CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): Completable

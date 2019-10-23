@@ -30,6 +30,7 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
@@ -57,19 +58,20 @@ internal class SerialisationManagerIntegrationTest
         wrapper = getStubbedTestResponse(instructionToken)
     }
 
+    //FIXME use cases
+
     @Test
     @Throws(Exception::class)
     fun testCompress() {
         val compressed = target.serialise(
                 wrapper,
-                false,
-                true
+                SerialisationDecorationMetadata(true, false)
         )
 
         assertEquals(
                 "Wrong compressed size",
                 2566,
-                compressed!!.size
+                compressed.size
         )
     }
 
@@ -78,21 +80,18 @@ internal class SerialisationManagerIntegrationTest
     fun testUncompressSuccess() {
         val compressed = target.serialise(
                 wrapper,
-                false,
-                true
-        )!!
+                SerialisationDecorationMetadata(true, false)
+        )
 
         val uncompressed = target.deserialise(
                 instructionToken,
                 compressed,
-                false,
-                true,
-                mockErrorCallback
+                SerialisationDecorationMetadata(true, false)
         )
 
         assertResponseWrapperWithContext(
                 wrapper,
-                uncompressed!!,
+                uncompressed,
                 "Response wrapper didn't match"
         )
 
@@ -104,9 +103,8 @@ internal class SerialisationManagerIntegrationTest
     fun testUncompressFailure() {
         val compressed = target.serialise(
                 wrapper,
-                false,
-                true
-        )!!
+                SerialisationDecorationMetadata(true, false)
+        )
 
         for (i in 0..49) {
             compressed[i] = 0
@@ -115,9 +113,7 @@ internal class SerialisationManagerIntegrationTest
         target.deserialise(
                 instructionToken,
                 compressed,
-                false,
-                true,
-                mockErrorCallback
+                SerialisationDecorationMetadata(true, false)
         )
 
         verify(mockErrorCallback).invoke()

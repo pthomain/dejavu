@@ -24,12 +24,15 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.file
 
 import com.nhaarman.mockitokotlin2.mock
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BaseKeyValueStoreUnitTest
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
-internal class FileStoreUnitTest {
+internal class FileStoreUnitTest : BaseKeyValueStoreUnitTest<FileStore>() {
 
     private lateinit var mockCacheDirectory: File
     private lateinit var mockFileFactory: (File, String) -> File
@@ -44,8 +47,10 @@ internal class FileStoreUnitTest {
     private lateinit var mockFileReader: (InputStream) -> ByteArray
     private lateinit var mockOutputStream: OutputStream
     private lateinit var mockInputStream: InputStream
+    private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
+    private lateinit var mockFileNameSerialiser: FileNameSerialiser
 
-    override fun setUpSerialisationPersistenceManager(): FilePersistenceManager<Glitch> {
+    override fun setUpTarget(): FileStore {
         mockCacheDirectory = mock()
         mockFileFactory = mock()
         mockFileOfRightType = mock()
@@ -60,16 +65,18 @@ internal class FileStoreUnitTest {
         mockInvalidatedFile = mock()
         mockFileToDelete = mock()
 
-        return FilePersistenceManager.Factory(
-                mockHasher,
-                mockDejaVuConfiguration,
-                mockSerialisationManagerFactory,
-                mockDateFactory,
+        mockConfiguration = mock()
+        mockFileNameSerialiser = mock()
+
+        return FileStore.Factory(
+                mock(),
+                mockConfiguration,
                 mockFileNameSerialiser
-        ).create(mockCacheDirectory) as FilePersistenceManager<Glitch>
+        ).create(mockCacheDirectory)
     }
 
 
+    //TODO + integration
 }
 
 
