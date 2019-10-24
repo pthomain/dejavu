@@ -27,7 +27,7 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -94,7 +94,7 @@ internal class NetworkInterceptor<E>(private val context: Context,
      */
     private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
             instructionToken.instruction.operation.let {
-                if (it is CacheInstruction.Operation.Expiring) {
+                if (it is Operation.Expiring) {
                     val timeOut = it.connectivityTimeoutInMillis ?: 0L
                     if (timeOut > 0L)
                         upstream.waitForNetwork(context, logger)

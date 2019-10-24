@@ -26,12 +26,15 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.SINGLE
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -52,8 +55,7 @@ import java.util.*
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  * @param instructionToken the instruction cache token
- * @param isSingle whether or not the response will be delivered via a Single
- * @param isCompletable whether or not the method returns a Completable
+ * @param rxType the returned RxJava type
  * @param start the time the call started
  * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An error is emitted otherwise.
  */
@@ -63,8 +65,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val configuration: DejaVuConfiguration<E>,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
                                       private val instructionToken: CacheToken,
-                                      private val isSingle: Boolean,
-                                      private val isCompletable: Boolean,
+                                      private val rxType: RxType,
                                       private val start: Long,
                                       private val mergeOnNextOnError: Boolean)
     : ObservableTransformer<ResponseWrapper<E>, Any>
@@ -80,7 +81,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             val filterFinal = status.isFinal || !operation.filterFinal
 
             if (filterFresh && filterFinal) {
-                if (isSingle) {
+                if (rxType == SINGLE) {
                     status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
                 } else true
             } else false
@@ -140,7 +141,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             ) ?: response
         }.let {
             when {
-                isCompletable && metadata.exception != null -> {
+                rxType == COMPLETABLE && metadata.exception != null -> {
                     if (metadata.exception.cause.let { it is EmptyResponseException || it is DoneException }) {
                         logger.d(this, "Returning empty response for Completable: $metadata")
                         Observable.empty<Any>()
@@ -170,7 +171,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       responseClass: Class<*>,
                                       metadata: CacheMetadata<E>,
                                       mergeOnNextOnError: Boolean): CacheException? {
-        return if (!isCompletable) {
+        return if (rxType != COMPLETABLE) {
             val holder = response as? CacheMetadata.Holder<E>
             if (holder == null) {
                 checkForError(
@@ -199,7 +200,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                 " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
                 " that do not support cache metadata."
 
-        return if (!isCompletable && mergeOnNextOnError)
+        return if (rxType != COMPLETABLE && mergeOnNextOnError)
             CacheException(CacheException.Type.METADATA, message)
         else null
     }

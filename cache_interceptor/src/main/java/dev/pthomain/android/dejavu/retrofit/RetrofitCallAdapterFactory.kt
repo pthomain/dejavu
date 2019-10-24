@@ -26,7 +26,8 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.DoNotCache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
@@ -54,7 +55,7 @@ import java.util.*
  * @param logger the logger
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
-                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction<out Any>?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
+                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val annotationProcessor: AnnotationProcessor<E>,
@@ -110,10 +111,10 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                         annotations,
                         rxType,
                         responseClass
-                ).let { instruction ->
+                ).let { operation ->
                     val methodDescription = "method returning " + rxType.getTypedName(responseClass)
 
-                    if (instruction == null) {
+                    if (operation == null) {
                         logger.d(
                                 this,
                                 "Annotation processor for $methodDescription"
@@ -123,8 +124,8 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                         logger.d(
                                 this,
                                 "Annotation processor for $methodDescription"
-                                        + " returned the following instruction "
-                                        + instruction
+                                        + " returned the following cache operation "
+                                        + operation
                         )
                     }
 
@@ -133,7 +134,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                             logger,
                             methodDescription,
                             responseClass,
-                            instruction,
+                            operation,
                             defaultCallAdapter
                     )
                 }

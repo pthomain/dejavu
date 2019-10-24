@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -53,7 +53,7 @@ class ProcessingErrorAdapterUnitTest {
 
     private lateinit var mockDefaultAdapter: CallAdapter<Any, Any>
     private lateinit var mockErrorInterceptorFactory: (CacheToken) -> ErrorInterceptor<Glitch>
-    private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<Glitch>
+    private lateinit var mockResponseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<Glitch>
     private lateinit var mockCacheToken: CacheToken
     private lateinit var mockException: CacheException
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
@@ -101,15 +101,14 @@ class ProcessingErrorAdapterUnitTest {
         )
     }
 
-    private fun createTarget(mockRxType: AnnotationProcessor.RxType): CallAdapter<Any, Any> {
+    private fun createTarget(mockRxType: RxType): CallAdapter<Any, Any> {
         whenever(mockErrorInterceptorFactory.invoke(
                 eq(mockCacheToken)
         )).thenReturn(mockErrorInterceptor)
 
         whenever(mockResponseInterceptorFactory.invoke(
                 eq(mockCacheToken),
-                eq(false),
-                eq(false),
+                eq(mockRxType),
                 eq(mockStart)
         )).thenReturn(mockResponseInterceptor)
 
@@ -132,7 +131,7 @@ class ProcessingErrorAdapterUnitTest {
         testAdapt(SINGLE)
     }
 
-    private fun testAdapt(rxType: AnnotationProcessor.RxType) {
+    private fun testAdapt(rxType: RxType) {
         whenever(mockErrorInterceptor.apply(any())).thenReturn(Observable.just(mockResponseWrapper))
         whenever(mockResponseInterceptor.apply(any())).thenReturn(Observable.just(mockResponseWrapper))
 

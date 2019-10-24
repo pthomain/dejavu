@@ -31,8 +31,8 @@ import dev.pthomain.android.dejavu.BuildConfig
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent

@@ -23,22 +23,23 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 
-class CacheInstructionSerialiserUnitTest {
+class CacheOperationSerialiserUnitTest {
 
     private fun getMap(targetClass: Class<*>) = targetClass.name.let {
-        fun newCacheInstruction(operation: CacheInstruction.Operation) = CacheInstruction(targetClass, operation)
+        fun newCacheInstruction(operation: Operation) = CacheInstruction(targetClass, operation)
 
-        LinkedHashMap<String, CacheInstruction<*>>().apply {
+        LinkedHashMap<String, CacheInstruction>().apply {
             put("$it:DO_NOT_CACHE:", newCacheInstruction(DoNotCache))
-            put("$it:INVALIDATE:", newCacheInstruction(Invalidate))
-            put("$it:CLEAR:$it:true", newCacheInstruction(Clear(targetClass, true)))
-            put("$it:CLEAR:$it:false", newCacheInstruction(Clear(targetClass)))
+            put("$it:INVALIDATE:", newCacheInstruction(Invalidate()))//TODO serialise null as Any
+            put("$it:INVALIDATE:$it", newCacheInstruction(Invalidate(targetClass))) //TODO serialise null as Any
+            put("$it:CLEAR:$it:true", newCacheInstruction(Clear(targetClass, true)))//TODO serialise null as Any
+            put("$it:CLEAR:$it:false", newCacheInstruction(Clear(targetClass)))//TODO serialise null as Any
             put("$it:CLEAR:null:false", newCacheInstruction(Clear()))
             put("$it:CACHE:1234:4321:true:true:true:true:true", newCacheInstruction(Cache(1234L, 4321L, true, true, true, true, true)))
             put("$it:CACHE:1234:4321:true:true:true:true:false", newCacheInstruction(Cache(1234L, 4321L, true, true, true, true)))
@@ -98,7 +99,7 @@ class CacheInstructionSerialiserUnitTest {
         getMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
                     "${entry.value.operation.type} at position $index could not be deserialised",
-                    CacheInstructionSerialiser().deserialise(entry.key),
+                    CacheOperationSerialiser().deserialise(entry.key),
                     entry.value
             )
         }

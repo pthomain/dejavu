@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
 
 /**
  * Retrofit annotation for calls made with an associated CLEAR directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
+ * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
  *
  * @param typeToClear the response type to clear (use Any to clear all the entries)
  * @param clearStaleEntriesOnly whether or not to clear only the stale entries

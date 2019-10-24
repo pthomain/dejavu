@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.Function3
-import dev.pthomain.android.dejavu.injection.Function4
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
@@ -41,6 +40,7 @@ import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
@@ -107,11 +107,10 @@ internal abstract class InterceptorModule<E>
                                    dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>) =
-            object : Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>> {
+            object : Function3<CacheToken, RxType, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
-                                 t2: Boolean,
-                                 t3: Boolean,
-                                 t4: Long) = ResponseInterceptor(
+                                 t2: RxType,
+                                 t3: Long) = ResponseInterceptor(
                         logger,
                         dateFactory::get,
                         emptyResponseFactory,
@@ -120,7 +119,6 @@ internal abstract class InterceptorModule<E>
                         t1,
                         t2,
                         t3,
-                        t4,
                         configuration.mergeOnNextOnError
                 )
             }
@@ -138,14 +136,14 @@ internal abstract class InterceptorModule<E>
                                         networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
                                         errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
-                                        responseInterceptor: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
+                                        responseInterceptorFactory: Function3<CacheToken, RxType, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     dateFactory::get,
                     errorInterceptorFactory::get,
                     networkInterceptorFactory::get,
                     cacheInterceptorFactory::get,
-                    responseInterceptor::get,
+                    responseInterceptorFactory::get,
                     configuration
             )
 

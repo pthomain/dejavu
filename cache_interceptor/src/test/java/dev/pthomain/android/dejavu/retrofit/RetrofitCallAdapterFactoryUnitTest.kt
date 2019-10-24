@@ -26,7 +26,8 @@ package dev.pthomain.android.dejavu.retrofit
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.DoNotCache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -57,9 +58,9 @@ class RetrofitCallAdapterFactoryUnitTest {
     private lateinit var mockAnnotations: Array<Annotation>
     private lateinit var mockRetrofit: Retrofit
     private lateinit var mockReturnType: Type
-    private lateinit var mockCacheInstruction: CacheInstruction<*>
+    private lateinit var mockOperation: Operation
     private lateinit var mockException: CacheException
-    private lateinit var mockInnerFactory: Function6<DejaVuInterceptor.Factory<Glitch>, Logger, String, Class<*>, CacheInstruction<*>?, CallAdapter<Any, Any>, CallAdapter<*, *>>
+    private lateinit var mockInnerFactory: Function6<DejaVuInterceptor.Factory<Glitch>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>, CallAdapter<*, *>>
     private lateinit var mockReturnedAdapter: CallAdapter<*, *>
 
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
@@ -74,7 +75,7 @@ class RetrofitCallAdapterFactoryUnitTest {
         mockProcessingErrorAdapterFactory = mock()
         mockDefaultCallAdapter = mock()
         mockRetrofit = mock()
-        mockCacheInstruction = instructionToken().instruction
+        mockOperation = instructionToken().instruction.operation
         mockException = mock()
         mockInnerFactory = mock()
         mockReturnedAdapter = mock()
@@ -117,7 +118,7 @@ class RetrofitCallAdapterFactoryUnitTest {
             if (throwAnnotationException)
                 it.thenThrow(mockException)
             else
-                it.thenReturn(mockCacheInstruction)
+                it.thenReturn(mockOperation)
         }
 
         val cacheTokenCaptor = argumentCaptor<CacheToken>()
@@ -136,7 +137,7 @@ class RetrofitCallAdapterFactoryUnitTest {
                     any(),
                     eq("method returning " + rxType.getTypedName(responseClass)),
                     eq(responseClass),
-                    eq(mockCacheInstruction),
+                    eq(mockOperation),
                     eq(mockDefaultCallAdapter)
             )).thenReturn(mockReturnedAdapter)
         }

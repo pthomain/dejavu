@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.cache
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Offline
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken

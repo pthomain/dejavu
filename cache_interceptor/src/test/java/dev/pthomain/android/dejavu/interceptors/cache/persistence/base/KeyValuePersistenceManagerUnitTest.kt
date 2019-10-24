@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Complete
@@ -66,7 +66,7 @@ internal class KeyValuePersistenceManagerUnitTest
     override fun setUp(instructionToken: CacheToken,
                        encryptDataGlobally: Boolean,
                        compressDataGlobally: Boolean,
-                       cacheInstruction: CacheInstruction<*>?): KeyValuePersistenceManager<Glitch> {
+                       cacheInstruction: CacheInstruction?): KeyValuePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(

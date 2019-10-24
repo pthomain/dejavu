@@ -23,14 +23,14 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 
 /**
  * Class in charge of operating a simple serialisation of CacheInstruction
  */
-internal class CacheInstructionSerialiser {
+internal class CacheOperationSerialiser {
 
     private companion object {
         private const val separator = ":"
@@ -69,7 +69,7 @@ internal class CacheInstructionSerialiser {
                             when (params[1]) {
                                 DO_NOT_CACHE.name -> DoNotCache
 
-                                INVALIDATE.name -> Invalidate
+                                INVALIDATE.name -> getInvalidateOperation(params)
 
                                 CLEAR.name -> getClearOperation(params)
 
@@ -78,8 +78,6 @@ internal class CacheInstructionSerialiser {
                                 OFFLINE.name -> getExpiringOperation(params)
 
                                 else -> null
-                            }?.let { operation ->
-                                getClassForName(params[0])?.let { operation.newInstruction(it) }
                             }
                         } catch (e: Exception) {
                             null
@@ -114,7 +112,18 @@ internal class CacheInstructionSerialiser {
      */
     private fun getClearOperation(params: List<String>) =
             if (params.size == 4) {
-                Clear(getClassForName(params[2]), toBoolean(params[3]) ?: false)
+                Clear(
+                        getClassForName(params[2]),//TODO serialise null as Any
+                        toBoolean(params[3]) ?: false
+                )
+            } else null
+
+    /**
+     * Returns a Invalidate operation instance for the given list of parameters
+     */
+    private fun getInvalidateOperation(params: List<String>) =
+            if (params.size == 3) {
+                Invalidate(getClassForName(params[2])) //TODO serialise null as Any
             } else null
 
     /**

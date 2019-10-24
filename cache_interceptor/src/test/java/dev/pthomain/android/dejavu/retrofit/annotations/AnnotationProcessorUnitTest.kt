@@ -26,12 +26,16 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.OFFLINE
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.DO_NOT_CACHE
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
-import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.assertNullWithContext
+import dev.pthomain.android.dejavu.test.assertOperation
+import dev.pthomain.android.dejavu.test.expectException
+import dev.pthomain.android.dejavu.test.getAnnotation
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Before
 import org.junit.Test
@@ -120,16 +124,14 @@ class AnnotationProcessorUnitTest {
                         OptionalBoolean.TRUE,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                defaultCacheDuration,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Cache(
+                        defaultCacheDuration,
+                        defaultNetworkTimeOut,
+                        true,
+                        true,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -145,16 +147,14 @@ class AnnotationProcessorUnitTest {
                         OptionalBoolean.TRUE,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                4567L,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Cache(
+                        4567L,
+                        defaultNetworkTimeOut,
+                        true,
+                        true,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -170,16 +170,14 @@ class AnnotationProcessorUnitTest {
                         OptionalBoolean.TRUE,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                4567L,
-                                5678L,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Cache(
+                        4567L,
+                        5678L,
+                        true,
+                        true,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -193,14 +191,12 @@ class AnnotationProcessorUnitTest {
                         -1L,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                defaultCacheDuration,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Refresh(
+                        defaultCacheDuration,
+                        defaultNetworkTimeOut,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -214,14 +210,12 @@ class AnnotationProcessorUnitTest {
                         -1L,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                4567L,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Refresh(
+                        4567L,
+                        defaultNetworkTimeOut,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -235,14 +229,12 @@ class AnnotationProcessorUnitTest {
                         5678L,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                4567L,
-                                5678L,
-                                true,
-                                true,
-                                false
-                        )
+                Expiring.Refresh(
+                        4567L,
+                        5678L,
+                        true,
+                        true,
+                        false
                 )
         )
     }
@@ -251,9 +243,7 @@ class AnnotationProcessorUnitTest {
     fun testProcessOffline() {
         testProcessAnnotation(
                 getAnnotation<Offline>(listOf()),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Offline()
-                )
+                Expiring.Offline()
         )
     }
 
@@ -264,11 +254,9 @@ class AnnotationProcessorUnitTest {
                         true,
                         OptionalBoolean.TRUE
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Offline(
-                                true,
-                                true
-                        )
+                Expiring.Offline(
+                        true,
+                        true
                 )
         )
     }
@@ -277,9 +265,7 @@ class AnnotationProcessorUnitTest {
     fun testProcessInvalidate() {
         testProcessAnnotation(
                 getAnnotation<Invalidate>(listOf(responseKClass)),
-                cacheInstruction(
-                        CacheInstruction.Operation.Invalidate
-                )
+                Operation.Invalidate() //TODO response class
         )
     }
 
@@ -287,9 +273,7 @@ class AnnotationProcessorUnitTest {
     fun testProcessDoNotCache() {
         testProcessAnnotation(
                 getAnnotation<DoNotCache>(listOf()),
-                cacheInstruction(
-                        CacheInstruction.Operation.DoNotCache
-                )
+                Operation.DoNotCache
         )
     }
 
@@ -300,9 +284,7 @@ class AnnotationProcessorUnitTest {
                         responseKClass,
                         false
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(responseClass)
-                )
+                Operation.Clear(responseClass)
         )
     }
 
@@ -313,26 +295,24 @@ class AnnotationProcessorUnitTest {
                         responseKClass,
                         true
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(
-                                responseClass,
-                                true
-                        )
+                Operation.Clear(
+                        responseClass,
+                        true
                 )
         )
     }
 
     private fun testProcessAnnotation(annotation: Annotation,
-                                      expectedInstruction: CacheInstruction<*>) {
-        val actualInstruction = target.process(
+                                      expectedOperation: Operation) {
+        val actualOperation = target.process(
                 arrayOf(annotation),
                 OBSERVABLE,
                 responseClass
-        )
+        )!!
 
-        assertInstruction(
-                expectedInstruction,
-                actualInstruction,
+        assertOperation(
+                expectedOperation,
+                actualOperation,
                 "Failed processing annotation $annotation"
         )
     }

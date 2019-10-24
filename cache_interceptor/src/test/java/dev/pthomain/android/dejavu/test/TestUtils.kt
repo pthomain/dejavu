@@ -28,10 +28,9 @@ import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
@@ -289,8 +288,9 @@ fun instructionToken(operation: Operation = Cache()) = CacheToken(
 
 inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(
-            Operation.DoNotCache,
-            Invalidate,
+            DoNotCache,
+            Invalidate(),
+            Invalidate(TestResponse::class.java),
             Clear(),
             Clear(null, true),
             Clear(TestResponse::class.java),
@@ -339,7 +339,7 @@ inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
 
-    is Operation.Expiring.Offline -> if (operation.freshOnly) {
+    is Offline -> if (operation.freshOnly) {
         listOf(
                 NETWORK,
                 EMPTY
@@ -352,7 +352,7 @@ fun isStatusValid(cacheStatus: CacheStatus,
         )
     }.contains(cacheStatus)
 
-    is Operation.Expiring -> if (operation.freshOnly) {
+    is Expiring -> if (operation.freshOnly) {
         listOf(
                 NETWORK,
                 FRESH,
@@ -368,9 +368,9 @@ fun isStatusValid(cacheStatus: CacheStatus,
         )
     }.contains(cacheStatus)
 
-    Operation.DoNotCache -> cacheStatus == NOT_CACHED
+    DoNotCache -> cacheStatus == NOT_CACHED
 
-    Invalidate,
+    is Invalidate,
     is Clear -> cacheStatus == EMPTY
 }
 

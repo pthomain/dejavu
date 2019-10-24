@@ -31,10 +31,9 @@ import dev.pthomain.android.boilerplate.core.mvp.MvpPresenter
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
@@ -126,7 +125,7 @@ internal abstract class BaseDemoPresenter protected constructor(
         subscribe(getInvalidateCompletable())
     }
 
-    final override fun getCacheInstruction(): CacheInstruction<CatFactResponse> =
+    final override fun getCacheOperation() =
             with(dejaVu.configuration) {
                 when (instructionType) {
                     CACHE -> Cache(
@@ -146,13 +145,13 @@ internal abstract class BaseDemoPresenter protected constructor(
                             false
                     )
                     DO_NOT_CACHE -> DoNotCache
-                    INVALIDATE -> Invalidate
+                    INVALIDATE -> Invalidate(CatFactResponse::class.java)
                     OFFLINE -> Offline(
                             freshOnly,
                             mergeOnNextOnError
                     )
                     CLEAR -> Clear(clearStaleEntriesOnly = false)
-                }.newInstruction()
+                }
             }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =

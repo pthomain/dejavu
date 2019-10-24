@@ -28,16 +28,17 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperationSerialiser
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.injection.Function4
+import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.injection.Function6
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import retrofit2.CallAdapter
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.util.*
@@ -56,19 +57,19 @@ internal abstract class RetrofitModule<E>
     @Provides
     @Singleton
     fun provideRetrofitCallAdapterInnerFactory(configuration: DejaVuConfiguration<E>) =
-            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction<out Any>?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
+            object : Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>> {
                 override fun get(
                         t1: DejaVuInterceptor.Factory<E>,
                         t2: Logger,
                         t3: String,
                         t4: Class<*>,
-                        t5: CacheInstruction<out Any>?,
+                        t5: Operation?,
                         t6: CallAdapter<Any, Any>
                 ) = RetrofitCallAdapter(
                         configuration,
                         t4,
                         t1,
-                        CacheInstructionSerialiser(),
+                        CacheOperationSerialiser(),
                         RequestBodyConverter(),
                         t2,
                         t3,
@@ -81,7 +82,7 @@ internal abstract class RetrofitModule<E>
     @Singleton
     fun provideRetrofitCallAdapterFactory(dateFactory: Function1<Long?, Date>,
                                           logger: Logger,
-                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, CacheInstruction<out Any>?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
+                                          innerFactory: Function6<DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>, RetrofitCallAdapter<E>>,
                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
                                           dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                           processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
@@ -100,7 +101,7 @@ internal abstract class RetrofitModule<E>
     @Singleton
     fun provideProcessingErrorAdapterFactory(errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                              dateFactory: Function1<Long?, Date>,
-                                             responseInterceptorFactory: Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<E>>) =
+                                             responseInterceptorFactory: Function3<CacheToken, RxType, Long, ResponseInterceptor<E>>) =
             ProcessingErrorAdapter.Factory(
                     errorInterceptorFactory::get,
                     responseInterceptorFactory::get,

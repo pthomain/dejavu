@@ -26,14 +26,18 @@ package dev.pthomain.android.dejavu.interceptors.response
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -186,6 +190,12 @@ class ResponseInterceptorUnitTest {
                 { _, _ -> false }
         )
 
+        val rxType = ifElse(
+                isSingle,
+                RxType.SINGLE,
+                ifElse(isCompletable, COMPLETABLE, OBSERVABLE)
+        )
+
         val target = ResponseInterceptor(
                 mock(),
                 mockDateFactory,
@@ -193,8 +203,7 @@ class ResponseInterceptorUnitTest {
                 mockConfiguration,
                 mockMetadataSubject,
                 mockInstructionToken,
-                isSingle,
-                isCompletable,
+                rxType,
                 start,
                 mergeOnNextOnError
         )

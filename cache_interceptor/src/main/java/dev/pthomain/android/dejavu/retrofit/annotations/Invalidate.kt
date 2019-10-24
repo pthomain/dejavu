@@ -29,10 +29,10 @@ import kotlin.reflect.KClass
 
 /**
  * Retrofit annotation for calls made with an associated INVALIDATE directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
+ * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
  *
- * @param typeToInvalidate the response type to invalidate
+ * @param typeToInvalidate the response type to invalidate (use Any to invalidate all the entries)
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Invalidate(val typeToInvalidate: KClass<*>)
+annotation class Invalidate(val typeToInvalidate: KClass<*> = Any::class)

@@ -24,9 +24,8 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -75,6 +74,6 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
         override fun invalidate() = singleClient.invalidate()
         override fun offline() = singleClient.offline()
         override fun offlineFreshOnly() = singleClient.offlineFreshOnly()
-        override fun instruct(instruction: CacheInstruction<CatFactResponse>) = singleClient.instruct(instruction).toObservable()
+        override fun execute(operation: Operation) = singleClient.execute(operation).toObservable()
     }
 }

@@ -27,8 +27,8 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken

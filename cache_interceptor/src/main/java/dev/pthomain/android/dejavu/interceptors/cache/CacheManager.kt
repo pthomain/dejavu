@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager

@@ -56,7 +56,7 @@ class SerialisationManagerUnitTest {
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
     private lateinit var mockOnError: Action
     private lateinit var mockInstructionToken: CacheToken
-    private lateinit var mockInstruction: CacheInstruction<*>
+    private lateinit var mockInstruction: CacheInstruction
     private lateinit var mockResponse: TestResponse
 
     private val mockStringResponse = "mockStringResponse"

@@ -28,8 +28,8 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstructionSerialiser
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperationSerialiser
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import io.reactivex.Completable
@@ -49,11 +49,11 @@ import java.lang.reflect.Type
 internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                       private val responseClass: Class<*>,
                                       private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                      private val serialiser: CacheInstructionSerialiser,
+                                      private val serialiser: CacheOperationSerialiser,
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
-                                      private val instruction: CacheInstruction<out Any>?,
+                                      private val operation: Operation?,
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
         where E : Exception,
@@ -65,7 +65,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
     override fun responseType(): Type = rxCallAdapter.responseType()
 
     /**
-     * Adapts the call by composing it with a DejaVuInterceptor if a cache instruction is provided
+     * Adapts the call by composing it with a DejaVuInterceptor if a cache operation is provided
      * or via the default RxJava call adapter otherwise.
      *
      * @return the call adapted to RxJava type
@@ -74,16 +74,16 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         val header = call.request().header(DejaVuHeader)
 
         return when {
-            instruction != null -> {
+            operation != null -> {
                 if (header != null) adaptedByHeader(
                         call,
                         header,
                         true
                 )
-                else adaptedWithInstruction(
+                else adaptedWithOperation(
                         call,
-                        instruction,
-                        "Using an instruction defined by a call annotation"
+                        operation,
+                        "Using an operation defined by a call annotation"
                 )
             }
 
@@ -103,9 +103,9 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
     private fun adaptedByDefault(call: Call<Any>): Any? {
         val metadata = getRequestMetadata(call)
         return if (dejaVuConfiguration.cachePredicate(responseClass, metadata)) {
-            CacheInstruction(
-                    responseClass,
-                    CacheInstruction.Operation.Expiring.Cache(
+            adaptedWithOperation(
+                    call,
+                    Operation.Expiring.Cache(
                             dejaVuConfiguration.cacheDurationInMillis,
                             dejaVuConfiguration.connectivityTimeoutInMillis,
                             false,
@@ -113,51 +113,46 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                             dejaVuConfiguration.encrypt,
                             dejaVuConfiguration.compress,
                             false
-                    )
-            ).let {
-                adaptedWithInstruction(
-                        call,
-                        it,
-                        "Using default caching for call with no instruction by annotation or header but matching the defined caching predicate"
-                )
-            }
+                    ),
+                    "Using default caching for call with no operation by annotation or header but matching the defined caching predicate"
+            )
         } else null
     }
 
     /**
-     * Returns the adapted call composed with a DejaVuInterceptor with a given cache instruction,
-     * either processed by the annotation processor or set on the call as a header instruction.
+     * Returns the adapted call composed with a DejaVuInterceptor with a given cache operation,
+     * either processed by the annotation processor or set on the call as a header operation.
      *
      * @param call the call to adapt
-     * @param instruction the cache instruction
-     * @param isFromHeader whether or not the instruction was processed from annotations or header
+     * @param operation the cache operation
+     * @param source the operation's source
      *
      * @see dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
      * @see DejaVu.DejaVuHeader
      *
      * @return the call adapted to RxJava type
      */
-    private fun adaptedWithInstruction(call: Call<Any>,
-                                       instruction: CacheInstruction<out Any>,
-                                       source: String): Any {
+    private fun adaptedWithOperation(call: Call<Any>,
+                                     operation: Operation,
+                                     source: String): Any {
         logger.d(
                 this,
-                "$source for $methodDescription: $instruction"
+                "$source for $methodDescription: $operation"
         )
 
         return adaptRxCall(
                 call,
-                instruction,
+                operation,
                 rxCallAdapter.adapt(call)
         )
     }
 
     /**
-     * Returns the adapted call composed with a DejaVuInterceptor with a given header instruction.
+     * Returns the adapted call composed with a DejaVuInterceptor with a given header operation.
      *
      * @param call the call to adapt
      * @param header the serialised header
-     * @param isOverridingAnnotation whether or not the call also had annotations, in which case the header instruction takes precedence over them.
+     * @param isOverridingAnnotation whether or not the call also had annotations, in which case the header operation takes precedence over them.
      *
      * @return the call adapted to RxJava type
      */
@@ -169,41 +164,41 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         if (isOverridingAnnotation) {
             logger.e(
                     this,
-                    "WARNING: $methodDescription contains a cache instruction defined BOTH by annotation and by header."
-                            + " The header instruction will take precedence."
+                    "WARNING: $methodDescription contains a cache operation defined BOTH by annotation and by header."
+                            + " The header operation will take precedence."
             )
         }
 
         /**
-         * Called if the header deserialisation fails, will try to fall back to annotation instruction
+         * Called if the header deserialisation fails, will try to fall back to annotation operation
          * if present or to the default adapter otherwise.
          */
         fun deserialisationFailed() =
-                if (instruction != null) {
+                if (operation != null) {
                     logger.e(
                             this,
-                            "Found a header cache instruction on $methodDescription but it could not be deserialised."
-                                    + " The annotation instruction will be used instead."
+                            "Found a header cache operation on $methodDescription but it could not be deserialised."
+                                    + " The annotation operation will be used instead."
                     )
-                    adaptedWithInstruction(
+                    adaptedWithOperation(
                             call,
-                            instruction,
-                            "Using an instruction defined by a call annotation"
+                            operation,
+                            "Using an operation defined by a call annotation"
                     )
                 } else {
                     logger.e(
                             this,
-                            "Found a header cache instruction on $methodDescription but it could not be deserialised."
+                            "Found a header cache operation on $methodDescription but it could not be deserialised."
                     )
                     defaultAdaptation(call)
                 }
 
         return try {
             serialiser.deserialise(header)?.let {
-                adaptedWithInstruction(
+                adaptedWithOperation(
                         call,
                         it,
-                        "Using an instruction defined by a call header"
+                        "Using an operation defined by a call header"
                 )
             } ?: deserialisationFailed()
         } catch (e: Exception) {
@@ -212,22 +207,22 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
     }
 
     /**
-     * Composes the call with DejaVuInterceptor with a given cache instruction if possible.
+     * Composes the call with DejaVuInterceptor with a given cache operation if possible.
      * Otherwise returns the call adapted with the default RxJava call adapter.
      *
      * @param call the call to be adapted
-     * @param instruction the cache instruction
+     * @param operation the cache operation
      * @param adapted the call adapted via the default RxJava call adapter
      *
-     * @return the call adapted according to the cache instruction
+     * @return the call adapted according to the cache operation
      */
     private fun adaptRxCall(call: Call<Any>,
-                            instruction: CacheInstruction<out Any>,
+                            operation: Operation,
                             adapted: Any) =
             when (adapted) {
-                is Observable<*> -> adapted.compose(getDejaVuInterceptor(call, instruction))
-                is Single<*> -> adapted.compose(getDejaVuInterceptor(call, instruction))
-                is Completable -> adapted.compose(getDejaVuInterceptor(call, instruction))
+                is Observable<*> -> adapted.compose(getDejaVuInterceptor(call, operation))
+                is Single<*> -> adapted.compose(getDejaVuInterceptor(call, operation))
+                is Completable -> adapted.compose(getDejaVuInterceptor(call, operation))
                 else -> adapted
             }
 
@@ -241,24 +236,24 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
     private fun adaptedByDefaultRxJavaAdapter(call: Call<Any>): Any {
         logger.d(
                 this,
-                "No annotation or header cache instruction found for $methodDescription,"
+                "No annotation or header cache operation found for $methodDescription,"
                         + " the call will be adapted with the default RxJava 2 adapter."
         )
         return rxCallAdapter.adapt(call)
     }
 
     /**
-     * Returns a DejaVuInterceptor for the given cache instruction.
+     * Returns a DejaVuInterceptor for the given cache operation.
      *
      * @param call the call to adapt
-     * @param instruction the cache instruction
+     * @param operation the cache operation
      *
      * @return the resulting DejaVuInterceptor
      */
     private fun getDejaVuInterceptor(call: Call<Any>,
-                                     instruction: CacheInstruction<out Any>) =
+                                     operation: Operation) =
             dejaVuFactory.create(
-                    instruction,
+                    operation,
                     getRequestMetadata(call)
             )
 

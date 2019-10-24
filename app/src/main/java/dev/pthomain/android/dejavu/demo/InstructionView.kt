@@ -32,15 +32,14 @@ import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.AttributeSet
-import android.widget.TextView
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
+import androidx.appcompat.widget.AppCompatTextView
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 
 class InstructionView @JvmOverloads constructor(context: Context,
                                                 attrs: AttributeSet? = null,
                                                 defStyleAttr: Int = 0)
-    : TextView(context, attrs, defStyleAttr) {
+    : AppCompatTextView(context, attrs, defStyleAttr) {
 
     private val orange = Color.parseColor("#CC7832")
     private val purple = Color.parseColor("#9876AA")
@@ -49,14 +48,15 @@ class InstructionView @JvmOverloads constructor(context: Context,
     private val blue = Color.parseColor("#467CDA")
     private val white = Color.parseColor("#A9B7C6")
 
-    fun setInstruction(useSingle: Boolean,
-                       instruction: CacheInstruction<*>) {
-        text = instruction.operation.type.annotationName.let {
+    fun setOperation(useSingle: Boolean,
+                     operation: Operation,
+                     responseClass: Class<*>) {
+        text = operation.type.annotationName.let {
             TextUtils.concat(
-                    getRestMethod(instruction.operation),
+                    getRestMethod(operation),
                     applyOperationStyle(it),
-                    getDirectives(it.length + 1, instruction.operation),
-                    getMethod(useSingle, instruction)
+                    getDirectives(it.length + 1, operation),
+                    getMethod(useSingle, operation, responseClass)
             )
         }
     }
@@ -82,7 +82,8 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             CACHE -> (operation as Operation.Expiring.Cache).let { cacheOperation ->
                                 arrayOf(
                                         "freshOnly = ${cacheOperation.freshOnly}",
-                                        "durationInMillis = ${cacheOperation.durationInMillis ?: "-1L"}",
+                                        "durationInMillis = ${cacheOperation.durationInMillis
+                                                ?: "-1L"}",
                                         "mergeOnNextOnError = ${getOptionalBoolean(cacheOperation.mergeOnNextOnError)}",
                                         "encrypt = ${getOptionalBoolean(cacheOperation.encrypt)}",
                                         "compress = ${getOptionalBoolean(cacheOperation.compress)}"
@@ -92,7 +93,8 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             REFRESH -> (operation as Operation.Expiring.Refresh).let { refreshOperation ->
                                 arrayOf(
                                         "freshOnly = ${refreshOperation.freshOnly}",
-                                        "durationInMillis = ${refreshOperation.durationInMillis ?: "-1L"}",
+                                        "durationInMillis = ${refreshOperation.durationInMillis
+                                                ?: "-1L"}",
                                         "mergeOnNextOnError = ${getOptionalBoolean(refreshOperation.mergeOnNextOnError)}"
                                 )
                             }
@@ -220,13 +222,14 @@ class InstructionView @JvmOverloads constructor(context: Context,
             )
 
     private fun getMethod(useSingle: Boolean,
-                          instruction: CacheInstruction<*>): CharSequence =
-            ("\nfun call(): " + when (instruction.operation.type) {
+                          operation: Operation,
+                          responseClass: Class<*>): CharSequence =
+            ("\nfun call(): " + when (operation.type) {
                 CACHE,
-                REFRESH -> "${if (useSingle) "Single" else "Observable"}<${instruction.responseClass.simpleName}>"
+                REFRESH -> "${if (useSingle) "Single" else "Observable"}<${responseClass.simpleName}>"
 
                 DO_NOT_CACHE,
-                OFFLINE -> "Single<${instruction.responseClass.simpleName}>"
+                OFFLINE -> "Single<${responseClass.simpleName}>"
 
                 INVALIDATE,
                 CLEAR -> "Completable"

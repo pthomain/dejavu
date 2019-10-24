@@ -32,8 +32,8 @@ import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import dev.pthomain.android.cache_interceptor.demo.R
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
@@ -53,7 +53,7 @@ internal class ExpandableListAdapter(context: Context)
     private var callStart = 0L
 
     fun onStart(useSingle: Boolean,
-                instruction: CacheInstruction<*>) {
+                operation: Operation) {
         headers.clear()
         children.clear()
         logs.clear()
@@ -62,7 +62,7 @@ internal class ExpandableListAdapter(context: Context)
 
         val header = "Retrofit Call"
         headers.add(header)
-        children[header] = listOf(Pair(useSingle, instruction))
+        children[header] = listOf(Pair(useSingle, operation))
 
         notifyDataSetChanged()
     }
@@ -180,9 +180,10 @@ internal class ExpandableListAdapter(context: Context)
                         } else if (child is Pair<*, *>) {
                             text.visibility = View.GONE
                             instruction.visibility = View.VISIBLE
-                            instruction.setInstruction(
+                            instruction.setOperation(
                                     child.first as Boolean,
-                                    child.second as CacheInstruction<*>
+                                    child.second as Operation,
+                                    CatFactResponse::class.java
                             )
                         }
                     }

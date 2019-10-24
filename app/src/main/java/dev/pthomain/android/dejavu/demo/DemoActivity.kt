@@ -148,7 +148,7 @@ internal class DemoActivity
             setButtonsEnabled(false)
             listAdapter.onStart(
                     presenter.useSingle,
-                    presenter.getCacheInstruction()
+                    presenter.getCacheOperation()
             )
         }
     }

@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.DONE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
@@ -85,5 +85,5 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
             } else null
 
     object EmptyResponseException : NoSuchElementException("The response was empty")
-    class DoneException(operation: CacheInstruction.Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
+    class DoneException(operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
 }

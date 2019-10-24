@@ -29,10 +29,10 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 
 /**
  * Retrofit annotation for calls made with an associated REFRESH directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Refresh
+ * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Refresh
  *
  * @param freshOnly whether this call should only return FRESH data (either via the network or cached)
- * @see dev.pthomain.android.dejavu.interceptors.internal.cache.token.CacheStatus.isFresh
+ * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.isFresh
  *
  * @param durationInMillis period during which the data is still considered fresh from the time it has been cached
  * @param connectivityTimeoutInMillis maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)

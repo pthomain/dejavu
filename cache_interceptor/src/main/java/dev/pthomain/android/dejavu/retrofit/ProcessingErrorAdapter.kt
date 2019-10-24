@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Completable
@@ -50,11 +50,11 @@ import java.util.*
  */
 internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: CallAdapter<Any, Any>,
                                                              errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                                             responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
+                                                             responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>,
                                                              private val dateFactory: (Long?) -> Date,
                                                              cacheToken: CacheToken,
                                                              start: Long,
-                                                             private val rxType: AnnotationProcessor.RxType,
+                                                             private val rxType: RxType,
                                                              exception: CacheException)
     : CallAdapter<Any, Any> by defaultAdapter
         where E : Exception,
@@ -64,8 +64,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
 
     private val responseInterceptor = responseInterceptorFactory(
             cacheToken,
-            false,
-            false,
+            rxType,
             start
     )
 
@@ -96,7 +95,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             }!!
 
     class Factory<E>(private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                     private val responseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ResponseInterceptor<E>,
+                     private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>,
                      private val dateFactory: (Long?) -> Date)
             where E : Exception,
                   E : NetworkErrorPredicate {
@@ -104,7 +103,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
         fun create(defaultAdapter: CallAdapter<Any, Any>,
                    cacheToken: CacheToken,
                    start: Long,
-                   rxType: AnnotationProcessor.RxType,
+                   rxType: RxType,
                    exception: CacheException) =
                 ProcessingErrorAdapter(
                         defaultAdapter,

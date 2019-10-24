@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
@@ -66,7 +66,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptor.create(
-                                cacheOperation.newInstruction(responseClass),
+                                cacheOperation,
                                 it
                         ),
                         it
@@ -80,6 +80,6 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             getObservableForOperation(Clear()).ignoreElements()!!
 
     override fun getInvalidateCompletable() =
-            getObservableForOperation(Invalidate).ignoreElements()!!
+            getObservableForOperation(Invalidate()).ignoreElements()!!
 
 }

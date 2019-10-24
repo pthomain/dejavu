@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.retrofit.annotations.*
@@ -121,6 +121,6 @@ internal interface SingleCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun instruct(@Header(DejaVuHeader) instruction: CacheInstruction<CatFactResponse>): Single<CatFactResponse>
+    fun execute(@Header(DejaVuHeader) operation: Operation): Single<CatFactResponse>
 
 }

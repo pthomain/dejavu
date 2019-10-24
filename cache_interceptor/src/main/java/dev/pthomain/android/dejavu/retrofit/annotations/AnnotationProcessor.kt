@@ -27,8 +27,8 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -53,13 +53,13 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
      * @param rxType the type of RxJava operation for this call
      * @param responseClass the target response class
      *
-     * @return the processed CacheInstruction if applicable
+     * @return the processed cache operation if applicable
      */
     @Throws(CacheException::class)
-    fun <T : Any> process(annotations: Array<Annotation>,
-                          rxType: RxType,
-                          responseClass: Class<T>): CacheInstruction<T>? {
-        var instruction: CacheInstruction<T>? = null
+    fun process(annotations: Array<Annotation>,
+                rxType: RxType,
+                responseClass: Class<*>): Operation? {
+        var operation: Operation? = null
 
         annotations.forEach { annotation ->
             when (annotation) {
@@ -70,18 +70,18 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
                 is Offline -> OFFLINE
                 is Clear -> CLEAR
                 else -> null
-            }?.let { operation ->
-                instruction = getInstruction(
-                        instruction,
+            }?.let {
+                operation = getOperation(
+                        operation,
                         rxType,
                         responseClass,
-                        operation,
+                        it,
                         annotation
                 )
             }
         }
 
-        return instruction
+        return operation
     }
 
     @Throws(CacheException::class)
@@ -91,82 +91,64 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     }
 
     /**
-     * Returns a cache instructions for the given annotation and checks for duplicate annotations
+     * Returns a cache operation for the given annotation and checks for duplicate annotations
      * on the same call.
      *
-     * @param currentInstruction the previous existing annotation if found, to detect duplicates
+     * @param currentOperation the previous existing annotation if found, to detect duplicates
      * @param rxType the RxJava type
      * @param responseClass the targeted response class for this call
      * @param foundOperation the operation type associated with the given annotation
      * @param annotation the annotation being processed
-     * @return the processed cache instruction for the given annotation
+     * @return the processed cache operation for the given annotation
      */
     @Throws(CacheException::class)
-    private fun <T : Any> getInstruction(currentInstruction: CacheInstruction<T>?,
-                                         rxType: RxType,
-                                         responseClass: Class<T>,
-                                         foundOperation: Operation.Type,
-                                         annotation: Annotation): CacheInstruction<T>? {
-        if (currentInstruction != null) {
+    private fun getOperation(currentOperation: Operation?,
+                             rxType: RxType,
+                             responseClass: Class<*>,
+                             foundOperation: Operation.Type,
+                             annotation: Annotation): Operation? {
+        if (currentOperation != null) {
             CacheException(
                     ANNOTATION,
                     "More than one cache annotation defined for method returning"
                             + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
-                            + " after existing annotation ${currentInstruction.operation.type.annotationName}."
+                            + " after existing annotation ${currentOperation.type.annotationName}."
                             + " Only one annotation can be used for this method."
             ).logAndThrow()
         }
 
         return when (annotation) {
-            is Cache -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Cache(
-                            annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it },
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value,
-                            annotation.encrypt.value,
-                            annotation.compress.value
-                    )
+            is Cache -> Operation.Expiring.Cache(
+                    annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it },
+                    annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
+                    annotation.freshOnly,
+                    annotation.mergeOnNextOnError.value,
+                    annotation.encrypt.value,
+                    annotation.compress.value
             )
 
-            is Refresh -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Refresh(
-                            annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value
-                    )
+            is Refresh -> Operation.Expiring.Refresh(
+                    annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
+                    annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
+                    annotation.freshOnly,
+                    annotation.mergeOnNextOnError.value
             )
 
-            is Offline -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Offline(
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value
-                    )
+            is Offline -> Operation.Expiring.Offline(
+                    annotation.freshOnly,
+                    annotation.mergeOnNextOnError.value
             )
 
-            is Invalidate -> CacheInstruction(
-                    annotation.typeToInvalidate.java as Class<T>, //TODO validation
-                    Operation.Invalidate
+            is Invalidate -> Operation.Invalidate(
+                    annotation.typeToInvalidate.java.let { ifElse(it == Any::class.java, null, it) }
             )
 
-            is Clear -> {
-                CacheInstruction(
-                        annotation.typeToClear.java as Class<T>, //TODO validation
-                        Operation.Clear(
-                                annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
-                                annotation.clearStaleEntriesOnly
-                        )
-                )
-            }
-
-            is DoNotCache -> CacheInstruction(
-                    responseClass,
-                    Operation.DoNotCache
+            is Clear -> Operation.Clear(
+                    annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
+                    annotation.clearStaleEntriesOnly
             )
+
+            is DoNotCache -> Operation.DoNotCache
 
             else -> null
         }

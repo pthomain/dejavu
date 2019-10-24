@@ -79,5 +79,5 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
         presenter.offline()
     }
 
-    override fun getCacheInstruction() = presenter.getCacheInstruction()
+    override fun getCacheOperation() = presenter.getCacheOperation()
 }

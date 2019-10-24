@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager

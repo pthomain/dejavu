@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.error
 
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken

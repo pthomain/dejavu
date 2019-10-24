@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode
@@ -69,7 +69,7 @@ internal class ProcessingErrorAdapterIntegrationTest
                 "error"
         )
 
-        cacheToken = instructionToken(CacheInstruction.Operation.DoNotCache)
+        cacheToken = instructionToken(Operation.DoNotCache)
 
         targetAdapter = target.create(
                 defaultAdapter,

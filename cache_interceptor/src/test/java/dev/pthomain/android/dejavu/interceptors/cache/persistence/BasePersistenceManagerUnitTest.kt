@@ -27,11 +27,11 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
@@ -71,7 +71,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected fun setUpConfiguration(encryptDataGlobally: Boolean,
                                      compressDataGlobally: Boolean,
-                                     cacheInstruction: CacheInstruction<*>?): DejaVuConfiguration<Glitch> {
+                                     cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
         mockHasher = mock()
@@ -106,7 +106,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected abstract fun setUp(instructionToken: CacheToken,
                                  encryptDataGlobally: Boolean,
                                  compressDataGlobally: Boolean,
-                                 cacheInstruction: CacheInstruction<*>?): T
+                                 cacheInstruction: CacheInstruction?): T
 
     @Test
     fun testClearCache() {
@@ -309,7 +309,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                     target,
                     context
             ).invalidateIfNeeded(eq(instructionToken.copy(
-                    instruction = instructionToken.instruction.copy(operation = Invalidate)
+                    instruction = instructionToken.instruction.copy(operation = Invalidate()) //TODO class
             )))
         }
     }

@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
 import dev.pthomain.android.dejavu.demo.DemoActivity
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
@@ -54,10 +54,10 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     .ignoreElements()!!
 
     override fun getInvalidateCompletable() =
-            executeOperation(Invalidate)
+            executeOperation(Invalidate())
                     .ignoreElements()!!
 
     private fun executeOperation(cacheOperation: Operation) =
-            catFactClient().instruct(cacheOperation.newInstruction())
+            catFactClient().execute(cacheOperation)
 
 }

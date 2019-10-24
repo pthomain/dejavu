@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -223,7 +223,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
     final override fun invalidate(instructionToken: CacheToken) =
             with(instructionToken) {
                 invalidateIfNeeded(
-                        copy(instruction = instruction.copy(operation = Invalidate))
+                        copy(instruction = instruction.copy(operation = Invalidate(instructionToken.requestMetadata.responseClass)))
                 )
             }
 

@@ -24,32 +24,15 @@
 package dev.pthomain.android.dejavu.test
 
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance
 
-fun assertInstruction(expectedInstruction: CacheInstruction<*>,
-                      actualInstruction: CacheInstruction<*>?,
-                      context: String? = null) {
-    assertEqualsWithContext(
-            expectedInstruction.responseClass,
-            actualInstruction?.responseClass,
-            "Instruction response class didn't match",
-            context
-    )
-
-    assertInstruction(
-            expectedInstruction.operation,
-            actualInstruction,
-            context
-    )
-}
-
 fun assertInstruction(expectedOperation: Operation,
-                      actualInstruction: CacheInstruction<*>?,
+                      actualInstruction: CacheInstruction?,
                       context: String? = null) {
     TestCase.assertNotNull(
             withContext("Instruction shouldn't be null", context),
