@@ -57,7 +57,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
               E : NetworkErrorPredicate {
 
     private val defaultDuration = Duration(0, 0, 0)
-    private val responseClass = instructionToken.instruction.responseClass
+    private val responseClass = instructionToken.instruction.requestMetadata.responseClass
 
     /**
      * The composition method converting an upstream response Observable to an Observable emitting

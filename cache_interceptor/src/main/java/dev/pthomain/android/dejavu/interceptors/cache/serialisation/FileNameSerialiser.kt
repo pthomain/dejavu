@@ -95,11 +95,10 @@ internal class FileNameSerialiser {
                     fileName: String) =
             with(deserialise(fileName)) {
                 CacheDataHolder.Complete(
-                        requestMetadata,
+                        requestMetadata, //TODO verify that responseClassHash matches the hash on the metadata
                         cacheDate,
                         expiryDate,
                         data,
-                        responseClassHash,
                         isCompressed,
                         isEncrypted
                 )

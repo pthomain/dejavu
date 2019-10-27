@@ -93,7 +93,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Expiring
-        val simpleName = instruction.responseClass.simpleName
+        val simpleName = instruction.requestMetadata.responseClass.simpleName
         val durationInMillis = operation.durationInMillis ?: durationInMillis
 
         logger.d(this, "Caching $simpleName")
@@ -111,11 +111,10 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
         val now = dateFactory(null).time
 
         return CacheDataHolder.Complete(
-                instructionToken.requestMetadata,
+                instructionToken.instruction.requestMetadata,
                 now,
                 now + durationInMillis,
                 serialised,
-                instructionToken.requestMetadata.classHash,
                 metadata.isCompressed,
                 metadata.isEncrypted
         )
@@ -130,13 +129,15 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
      */
     final override fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
-        logger.d(this, "Checking for cached ${instruction.responseClass.simpleName}")
+        val requestMetadata = instruction.requestMetadata
+
+        logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
 
         invalidateIfNeeded(instructionToken)
 
         val serialised = getCacheDataHolder(
                 instructionToken,
-                instructionToken.requestMetadata
+                requestMetadata
         )
 
         return with(serialised) {
@@ -181,7 +182,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
                             localData: ByteArray): ResponseWrapper<E>? {
-        val simpleName = instructionToken.instruction.responseClass.simpleName
+        val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
 
         return try {
             serialisationManager.deserialise(
@@ -223,7 +224,9 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
     final override fun invalidate(instructionToken: CacheToken) =
             with(instructionToken) {
                 invalidateIfNeeded(
-                        copy(instruction = instruction.copy(operation = Invalidate(instructionToken.requestMetadata.responseClass)))
+                        copy(instruction = instruction.copy(
+                                operation = Invalidate(instructionToken.instruction.requestMetadata.responseClass)
+                        ))
                 )
             }
 

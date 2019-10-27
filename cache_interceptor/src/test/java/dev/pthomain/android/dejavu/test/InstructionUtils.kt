@@ -41,7 +41,7 @@ fun assertInstruction(expectedOperation: Operation,
 
     actualInstruction?.apply {
         assertEqualsWithContext(
-                responseClass,
+                requestMetadata.responseClass,
                 TestResponse::class.java,
                 "Response class should be TestResponse",
                 context
@@ -150,9 +150,6 @@ private fun assertClear(expectedOperation: Clear,
             context
     )
 }
-
-fun cacheInstruction(operation: Operation) =
-        CacheInstruction(TestResponse::class.java, operation)
 
 inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>?) =
         if (args == null) emptyMap()

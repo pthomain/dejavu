@@ -89,14 +89,13 @@ sealed class CacheDataHolder(
             override val cacheDate: Long,
             override val expiryDate: Long,
             override val data: ByteArray,
-            override val responseClassHash: String,
             override val isCompressed: Boolean,
             override val isEncrypted: Boolean
     ) : CacheDataHolder(
             cacheDate,
             expiryDate,
             data,
-            responseClassHash,
+            requestMetadata.classHash,
             isCompressed,
             isEncrypted
     ) {

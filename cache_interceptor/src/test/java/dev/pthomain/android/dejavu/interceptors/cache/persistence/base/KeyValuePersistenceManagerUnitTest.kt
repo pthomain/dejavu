@@ -28,6 +28,7 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Complete
@@ -37,7 +38,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSeri
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
@@ -82,11 +82,10 @@ internal class KeyValuePersistenceManagerUnitTest
 
         mockCompleteCacheDataHolder = with(mockIncompleteCacheDataHolder) {
             Complete(
-                    instructionToken.requestMetadata,
+                    instructionToken.instruction.requestMetadata,
                     cacheDate,
                     expiryDate,
                     data,
-                    responseClassHash,
                     isCompressed,
                     isEncrypted
             )
@@ -211,7 +210,7 @@ internal class KeyValuePersistenceManagerUnitTest
                                       instructionToken: CacheToken,
                                       dataHolder: Complete) {
         assertEqualsWithContext(
-                instructionToken.requestMetadata,
+                instructionToken.instruction.requestMetadata,
                 dataHolder.requestMetadata,
                 "RequestMetadata didn't match",
                 context
@@ -244,7 +243,7 @@ internal class KeyValuePersistenceManagerUnitTest
         )
 
         whenever(mockFileNameSerialiser.deserialise(
-                eq(instructionToken.requestMetadata),
+                eq(instructionToken.instruction.requestMetadata),
                 eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder)
 
@@ -313,7 +312,7 @@ internal class KeyValuePersistenceManagerUnitTest
 //        whenever(mockFileReader.invoke(eq(mockInputStream))).thenReturn(mockBlob)
 
         whenever(mockFileNameSerialiser.deserialise(
-                eq(instructionToken.requestMetadata),
+                eq(instructionToken.instruction.requestMetadata),
                 eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder.copy(
                 cacheDate = cacheDateTimeStamp,

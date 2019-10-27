@@ -53,7 +53,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
     fun emptyResponseWrapperSingle(instructionToken: CacheToken) =
             instructionToken.instruction.operation.type.isCompletable.let { isDone ->
                 Single.just(ResponseWrapper(
-                        instructionToken.instruction.responseClass,
+                        instructionToken.instruction.requestMetadata.responseClass,
                         null,
                         CacheMetadata(
                                 instructionToken.copy(status = if (isDone) DONE else EMPTY),

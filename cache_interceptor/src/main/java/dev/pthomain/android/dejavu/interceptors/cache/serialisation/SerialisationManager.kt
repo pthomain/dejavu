@@ -105,7 +105,7 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
                     metadata: SerialisationDecorationMetadata): ResponseWrapper<E> {
-        val responseClass = instructionToken.instruction.responseClass
+        val responseClass = instructionToken.instruction.requestMetadata.responseClass
         var deserialised = data
 
         reversedDecoratorList.forEach {

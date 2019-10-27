@@ -140,8 +140,10 @@ class KeyValuePersistenceManager<E> internal constructor(private val hasher: Has
     @Throws(SerialisationException::class)
     override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
         if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
-            findPartialKey(instructionToken.requestMetadata.urlHash)?.also { oldName ->
-                fileNameSerialiser.deserialise(instructionToken.requestMetadata, oldName).let {
+            val requestMetadata = instructionToken.instruction.requestMetadata
+
+            findPartialKey(requestMetadata.urlHash)?.also { oldName ->
+                fileNameSerialiser.deserialise(requestMetadata, oldName).let {
                     if (it.expiryDate != 0L) {
                         val newName = fileNameSerialiser.serialise(it.copy(expiryDate = 0L))
                         rename(oldName, newName)

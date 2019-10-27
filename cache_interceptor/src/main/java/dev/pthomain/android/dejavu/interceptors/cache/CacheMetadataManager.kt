@@ -112,7 +112,6 @@ internal class CacheMetadataManager<E>(
                 status,
                 compressData,
                 encryptData,
-                instructionToken.requestMetadata,
                 fetchDate,
                 ifElse(status == EMPTY, null, cacheDate),
                 ifElse(status == EMPTY, null, expiryDate)

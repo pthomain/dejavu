@@ -142,7 +142,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         database.query(query)
                 .useAndLogError(
                         { cursor ->
-                            val simpleName = instructionToken.instruction.responseClass.simpleName
+                            val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
                             if (cursor.count != 0 && cursor.moveToNext()) {
                                 logger.d(this, "Found a cached $simpleName")
 
@@ -153,12 +153,13 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
                                 val responseClassHash = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
 
+                                //TODO verify the class hash is the same as the one the request metadata
+
                                 return CacheDataHolder.Complete(
                                         requestMetadata,
                                         cacheDate.time,
                                         expiryDate.time,
                                         localData,
-                                        responseClassHash,
                                         isCompressed,
                                         isEncrypted
                                 )
@@ -185,7 +186,8 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
             if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"
-                val selectionArgs = arrayOf(instructionToken.requestMetadata.urlHash)
+                val requestMetadata = instructionToken.instruction.requestMetadata
+                val selectionArgs = arrayOf(requestMetadata.urlHash)
 
                 database.update(
                         TABLE_DEJA_VU,
@@ -197,7 +199,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                     val foundIt = it > 0
                     logger.d(
                             this,
-                            "Invalidating cache for ${instructionToken.instruction.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
+                            "Invalidating cache for ${requestMetadata.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
                     )
                     foundIt
                 }

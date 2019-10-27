@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.interceptors.cache.metadata.token
 
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import java.util.*
 
 /**
@@ -34,7 +33,6 @@ import java.util.*
  * @param status the cache status of the response
  * @param isCompressed whether or not the response was cached compressed
  * @param isEncrypted whether or not the response was cached encrypted
- * @param requestMetadata the hashed request metadata to be used for the unique cache key
  * @param fetchDate the optional date at which the request was made
  * @param cacheDate the optional date at which the response was cached
  * @param expiryDate the optional date at which the response will expire
@@ -43,7 +41,6 @@ data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
                                            val isCompressed: Boolean,
                                            val isEncrypted: Boolean,
-                                           val requestMetadata: RequestMetadata.Hashed,
                                            val fetchDate: Date? = null,
                                            val cacheDate: Date? = null,
                                            val expiryDate: Date? = null)

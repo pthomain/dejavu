@@ -23,24 +23,17 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+
 /**
  * Contains the cache operation, target response class and call-specific directives.
  * Those directives take precedence over the ones defined in the global configuration, if applicable.
  *
- * @param responseClass the target response class
+ * @param requestMetadata the request metadata
  * @param operation the cache operation with call-specific directives
  */
 data class CacheInstruction internal constructor(
-        @Deprecated(message = "Replace this field with request metadata")
-        val responseClass: Class<*>,
+        val requestMetadata: RequestMetadata.Hashed,
         val operation: Operation
-) {
-
-    override fun equals(other: Any?) =
-            other is CacheInstruction && other.toString() == toString()
-
-    override fun hashCode() =
-            toString().hashCode()
-
-}
+)
 

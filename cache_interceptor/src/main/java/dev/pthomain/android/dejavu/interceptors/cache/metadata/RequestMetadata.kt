@@ -60,14 +60,40 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
      * @param urlHash the hash of the URL and its alphabetically sorted query parameters
      * @param classHash the response class' hash
      */
-    data class Hashed internal constructor(override val responseClass: Class<*>,
-                                           override val url: String,
-                                           override val requestBody: String?,
-                                           val urlHash: String,
-                                           val classHash: String) : RequestMetadata(
+    sealed class Hashed(override val responseClass: Class<*>,
+                        override val url: String,
+                        override val requestBody: String?,
+                        open val urlHash: String,
+                        open val classHash: String) : RequestMetadata(
             responseClass,
             url,
             requestBody
-    )
+    ) {
+
+        data class Valid(override val responseClass: Class<*>,
+                         override val url: String,
+                         override val requestBody: String?,
+                         override val urlHash: String,
+                         override val classHash: String) : Hashed(
+                responseClass,
+                url,
+                requestBody,
+                urlHash,
+                classHash
+        )
+
+        data class Invalid(override val responseClass: Class<*>) : Hashed(
+                responseClass,
+                DEFAULT_URL,
+                null,
+                INVALID_HASH,
+                INVALID_HASH
+        )
+    }
+
+    internal companion object {
+        const val DEFAULT_URL = "http://127.0.0.1"
+        const val INVALID_HASH = "no_hash"
+    }
 
 }

@@ -212,7 +212,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         val (firstResponseToken, secondResponseToken) = cacheTwoResponses(firstResponse, secondResponse)
 
         assertTrueWithContext(
-                firstResponseToken.requestMetadata != secondResponseToken.requestMetadata,
+                firstResponseToken.instruction.requestMetadata != secondResponseToken.instruction.requestMetadata,
                 "Request metadata for 2 responses of the same type with different URLs should be different"
         )
 

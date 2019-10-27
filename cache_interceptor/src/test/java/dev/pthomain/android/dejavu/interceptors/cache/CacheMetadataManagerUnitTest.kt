@@ -235,8 +235,8 @@ class CacheMetadataManagerUnitTest {
             )
 
             assertEqualsWithContext(
-                    instructionToken.requestMetadata,
-                    requestMetadata,
+                    instructionToken.instruction.requestMetadata,
+                    instruction.requestMetadata,
                     "requestMetadata didn't match",
                     context
             )

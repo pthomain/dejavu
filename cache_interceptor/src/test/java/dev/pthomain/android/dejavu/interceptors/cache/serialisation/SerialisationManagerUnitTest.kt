@@ -27,6 +27,7 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
@@ -91,8 +92,11 @@ class SerialisationManagerUnitTest {
         mockCompressionSerialisationDecorator = mock()
         mockEncryptionSerialisationDecorator = mock()
 
+        val mockRequestMetadata = mock<RequestMetadata.Hashed>()
+
         whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
-        whenever(mockInstruction.responseClass).thenReturn(TestResponse::class.java)
+        whenever(mockInstruction.requestMetadata).thenReturn(mockRequestMetadata)
+        whenever(mockRequestMetadata.responseClass).thenReturn(TestResponse::class.java)
         whenever(mockEncryptionManager.isEncryptionAvailable).thenReturn(isEncryptionSupported)
 
         mockWrapper = ResponseWrapper(

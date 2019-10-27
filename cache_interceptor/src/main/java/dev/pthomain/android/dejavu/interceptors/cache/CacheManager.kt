@@ -111,7 +111,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
         require(cacheOperation is Expiring) { "Wrong cache operation: $cacheOperation" }
 
         val instruction = instructionToken.instruction
-        val simpleName = instruction.responseClass.simpleName
+        val simpleName = instruction.requestMetadata.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
         val cachedResponse = persistenceManager.getCachedResponse(instructionToken)
@@ -148,7 +148,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                                     diskDuration: Int) = Observable.defer<ResponseWrapper<E>> {
         val cachedResponseToken = cachedResponse?.metadata?.cacheToken
         val status = cachedResponseToken?.status
-        val simpleName = instructionToken.instruction.responseClass.simpleName
+        val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
 
         if (cachedResponse == null || status == STALE) {
             val fetchAndCache = fetchAndCache(
@@ -176,7 +176,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                               instructionToken: CacheToken,
                               diskDuration: Int) =
             Observable.defer<ResponseWrapper<E>> {
-                val simpleName = instructionToken.instruction.responseClass.simpleName
+                val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
                 logger.d(this, "$simpleName is STALE, attempting to refresh")
 
                 upstream

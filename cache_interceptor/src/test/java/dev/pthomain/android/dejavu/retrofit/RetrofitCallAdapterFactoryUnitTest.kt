@@ -29,9 +29,9 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -165,7 +165,7 @@ class RetrofitCallAdapterFactoryUnitTest {
             val token = cacheTokenCaptor.firstValue
 
             assertEqualsWithContext(
-                    CacheInstruction(responseClass, DoNotCache),
+                    CacheInstruction(token.instruction.requestMetadata, DoNotCache),
                     token.instruction,
                     "Exception cache token instruction didn't match"
             )
@@ -182,7 +182,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
             assertEqualsWithContext(
                     DEFAULT_URL,
-                    token.requestMetadata.url,
+                    token.instruction.requestMetadata.url,
                     "Exception cache token URL should be empty"
             )
         } else {

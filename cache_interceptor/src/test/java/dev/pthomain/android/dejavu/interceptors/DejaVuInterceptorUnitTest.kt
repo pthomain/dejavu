@@ -207,7 +207,7 @@ class DejaVuInterceptorUnitTest {
 
                 assertEqualsWithContext(
                         mockHashedMetadata,
-                        errorToken.requestMetadata,
+                        errorToken.instruction.requestMetadata,
                         "Request metadata didn't match",
                         context
                 )

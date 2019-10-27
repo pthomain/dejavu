@@ -171,7 +171,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
             val values = mapCaptor.firstValue
 
             assertEqualsWithContext(
-                    instructionToken.requestMetadata.urlHash,
+                    instructionToken.instruction.requestMetadata.urlHash,
                     values[TOKEN.columnName],
                     "Cache key didn't match",
                     context
@@ -195,7 +195,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                     context
             )
             assertEqualsWithContext(
-                    instructionToken.requestMetadata.classHash,
+                    instructionToken.instruction.requestMetadata.classHash,
                     values[CLASS.columnName],
                     "Cached data response class didn't match",
                     context
@@ -280,7 +280,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
             )
 
             assertEqualsWithContext(
-                    arrayOf(instructionToken.requestMetadata.urlHash),
+                    arrayOf(instructionToken.instruction.requestMetadata.urlHash),
                     selectionArgsCaptor.firstValue,
                     "Selection args didn't match",
                     context

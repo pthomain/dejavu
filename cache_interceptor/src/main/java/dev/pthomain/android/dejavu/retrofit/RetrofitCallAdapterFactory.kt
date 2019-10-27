@@ -139,20 +139,17 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                     )
                 }
             } catch (cacheException: CacheException) {
+                val requestMetadata = RequestMetadata.Hashed.Invalid(responseClass)
                 processingErrorAdapterFactory.create(
                         defaultCallAdapter,
                         CacheToken(
-                                CacheInstruction(responseClass, DoNotCache),
+                                CacheInstruction(
+                                        requestMetadata,
+                                        DoNotCache
+                                ),
                                 NOT_CACHED,
                                 false,
-                                false,
-                                RequestMetadata.Hashed(
-                                        responseClass,
-                                        DEFAULT_URL,
-                                        null,
-                                        INVALID_HASH,
-                                        INVALID_HASH
-                                )
+                                false
                         ),
                         dateFactory(null).time,
                         rxType,
@@ -167,8 +164,4 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
         }
     }
 
-    companion object {
-        internal const val DEFAULT_URL = "http://127.0.0.1"
-        internal const val INVALID_HASH = "no_hash"
-    }
 }

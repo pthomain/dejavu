@@ -154,22 +154,23 @@ internal abstract class BaseIntegrationTest<T : Any>(
     protected fun getStubbedUserResponseWrapper(instructionToken: CacheToken = instructionToken(responseClass = User::class.java),
                                                 url: String = "http://test.com/userResponse") =
             getStubbedTestResponse(instructionToken).let {
+                val requestMetadata = instructionToken.instruction.requestMetadata
+
                 with(it.metadata) {
                     ResponseWrapper(
-                            instructionToken.requestMetadata.responseClass,
+                            requestMetadata.responseClass,
                             (it.response as TestResponse).first(),
                             copy(
                                     cacheToken = cacheToken.copy(
                                             CacheInstruction(
-                                                    instructionToken.requestMetadata.responseClass,
+                                                    cacheComponent.hasher().hash(
+                                                            RequestMetadata.Plain(
+                                                                    requestMetadata.responseClass,
+                                                                    url
+                                                            )
+                                                    )!!,
                                                     cacheToken.instruction.operation
-                                            ),
-                                            requestMetadata = cacheComponent.hasher().hash(
-                                                    RequestMetadata.Plain(
-                                                            instructionToken.requestMetadata.responseClass,
-                                                            url
-                                                    )
-                                            )!!
+                                            )
                                     )
                             )
                     )
@@ -201,7 +202,6 @@ internal abstract class BaseIntegrationTest<T : Any>(
                         expectedStatus,
                         configuration.compress,
                         configuration.encrypt,
-                        stubbedResponse.metadata.cacheToken.requestMetadata,
                         fetchDate,
                         cacheDate,
                         expiryDate
@@ -213,21 +213,21 @@ internal abstract class BaseIntegrationTest<T : Any>(
 
     protected fun instructionToken(operation: Operation = Cache(durationInMillis = 3600_000),
                                    responseClass: Class<*> = TestResponse::class.java,
-                                   url: String = "http://test.com/testResponse") = CacheToken(
-            CacheInstruction(
+                                   url: String = "http://test.com/testResponse") =
+            cacheComponent.hasher().hash(RequestMetadata.Plain(
                     responseClass,
-                    operation
-            ),
-            CacheStatus.INSTRUCTION,
-            true,
-            true,
-            cacheComponent.hasher().hash(
-                    RequestMetadata.Plain(
-                            responseClass,
-                            url
-                    )
-            )!!
-    )
+                    url
+            )).let {
+                CacheToken(
+                        CacheInstruction(
+                                it!!,
+                                operation
+                        ),
+                        CacheStatus.INSTRUCTION,
+                        true,
+                        true
+                )
+            }
 
 }
 

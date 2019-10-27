@@ -33,6 +33,7 @@ import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidat
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -223,7 +224,9 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 isSerialisationSuccess
         )
 
-        whenever(mockResponseWrapper.metadata.cacheToken.requestMetadata).thenReturn(instructionToken.requestMetadata)
+        whenever(mockResponseWrapper.metadata.cacheToken.instruction.requestMetadata)
+                .thenReturn(instructionToken.instruction.requestMetadata)
+
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
 
         val duration = operation.durationInMillis ?: durationInMillis
@@ -390,7 +393,11 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     private fun instructionTokenWithHash(operation: Operation): CacheToken {
         val defaultToken = instructionToken(operation)
         return defaultToken.copy(
-                requestMetadata = defaultToken.requestMetadata.copy(urlHash = mockHash)
+                instruction = defaultToken.instruction.copy(
+                        requestMetadata = RequestMetadata.Hashed.Invalid(
+                                defaultToken.instruction.requestMetadata.responseClass
+                        )
+                )
         )
     }
 

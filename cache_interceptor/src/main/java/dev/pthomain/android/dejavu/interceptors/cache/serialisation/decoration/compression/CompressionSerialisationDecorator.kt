@@ -85,7 +85,7 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
-                            instructionToken.instruction.responseClass.simpleName,
+                            instructionToken.instruction.requestMetadata.responseClass.simpleName,
                             it
                     )
                 }

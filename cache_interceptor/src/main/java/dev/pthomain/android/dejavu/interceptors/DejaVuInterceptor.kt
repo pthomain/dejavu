@@ -38,7 +38,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import io.reactivex.*
@@ -116,38 +115,32 @@ class DejaVuInterceptor<E> private constructor(private val operation: Operation,
      */
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: RxType): Observable<Any> {
-        val (hashedRequestMetadata, isHashed) = hasher.hash(requestMetadata).let {
-            ifElse(it == null,
-                    RequestMetadata.Hashed(
-                            requestMetadata.responseClass,
-                            requestMetadata.url,
-                            requestMetadata.requestBody,
-                            INVALID_HASH,
-                            INVALID_HASH
-                    ) to false,
-                    it!! to true
+        val hashedRequestMetadata: RequestMetadata.Hashed = hasher.hash(requestMetadata).let {
+            ifElse(
+                    it == null,
+                    RequestMetadata.Hashed.Invalid(requestMetadata.responseClass),
+                    it!!
             )
         }
 
         val instruction = CacheInstruction(
-                requestMetadata.responseClass,
-                operation
+                hashedRequestMetadata,
+                ifElse(configuration.isCacheEnabled, operation, DoNotCache)
         )
 
         val instructionToken = CacheToken(
-                if (configuration.isCacheEnabled) instruction else instruction.copy(operation = DoNotCache),
+                instruction,
                 INSTRUCTION,
                 (instruction.operation as? Expiring)?.compress ?: configuration.compress,
-                (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt,
-                hashedRequestMetadata
+                (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt
         )
 
         val start = dateFactory(null).time
 
-        val observable = if (isHashed) upstream
+        val observable = if (hashedRequestMetadata !is RequestMetadata.Hashed.Invalid) upstream
         else Observable.error<Any>(IllegalStateException("The request could not be hashed"))
 
-        val errorInterceptor = errorInterceptorFactory(instructionToken) as ErrorInterceptor<E>
+        val errorInterceptor = errorInterceptorFactory(instructionToken)
 
         return observable
                 .compose(networkInterceptorFactory(errorInterceptor, instructionToken, start))

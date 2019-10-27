@@ -33,13 +33,12 @@ import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.*
@@ -271,19 +270,12 @@ fun defaultRequestMetadata() = RequestMetadata.Plain(
 
 fun instructionToken(operation: Operation = Cache()) = CacheToken(
         CacheInstruction(
-                TestResponse::class.java,
+                RequestMetadata.Hashed.Invalid(TestResponse::class.java),
                 operation
         ),
         INSTRUCTION,
         true,
-        true,
-        RequestMetadata.Hashed(
-                TestResponse::class.java,
-                DEFAULT_URL,
-                null,
-                INVALID_HASH,
-                INVALID_HASH
-        )
+        true
 )
 
 inline fun operationSequence(action: (Operation) -> Unit) {

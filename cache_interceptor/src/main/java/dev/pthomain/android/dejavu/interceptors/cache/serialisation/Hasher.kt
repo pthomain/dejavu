@@ -66,7 +66,7 @@ internal class Hasher(private val logger: Logger,
         }
 
         return if (urlHash == null || classHash == null) null
-        else RequestMetadata.Hashed(
+        else RequestMetadata.Hashed.Valid(
                 requestMetadata.responseClass,
                 requestMetadata.url,
                 requestMetadata.requestBody,
