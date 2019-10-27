@@ -27,11 +27,11 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperationSerialiser
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -59,11 +59,11 @@ class RetrofitCallAdapterUnitTest {
     private lateinit var mockLogger: Logger
     private lateinit var mockRxCallAdapter: CallAdapter<Any, Any>
     private lateinit var mockCall: Call<Any>
-    private lateinit var mockCacheOperationSerialiser: CacheOperationSerialiser
+    private lateinit var mockOperationSerialiser: OperationSerialiser
     private lateinit var mockRequest: Request
     private lateinit var mockDejaVuTransformer: DejaVuInterceptor<Glitch>
     private lateinit var mockTestResponse: TestResponse
-    private lateinit var requestMetadata: RequestMetadata.UnHashed
+    private lateinit var requestMetadata: RequestMetadata.Plain
     private lateinit var mockRequestBodyConverter: (Request) -> String?
     private lateinit var configuration: DejaVuConfiguration<Glitch>
 
@@ -79,7 +79,7 @@ class RetrofitCallAdapterUnitTest {
         mockLogger = mock()
         mockRxCallAdapter = mock()
         mockCall = mock()
-        mockCacheOperationSerialiser = mock()
+        mockOperationSerialiser = mock()
         mockRequest = mock()
         mockDejaVuTransformer = mock()
         mockTestResponse = mock()
@@ -97,7 +97,7 @@ class RetrofitCallAdapterUnitTest {
 
         if (hasHeader) {
             whenever(mockRequest.header(eq(DejaVuHeader))).thenReturn(mockHeader)
-            whenever(mockCacheOperationSerialiser.deserialise(eq(mockHeader))).apply {
+            whenever(mockOperationSerialiser.deserialise(eq(mockHeader))).apply {
                 if (isHeaderDeserialisationException)
                     thenThrow(RuntimeException("error"))
                 else
@@ -128,7 +128,7 @@ class RetrofitCallAdapterUnitTest {
                 configuration,
                 responseClass,
                 mockDejaVuFactory,
-                mockCacheOperationSerialiser,
+                mockOperationSerialiser,
                 mockRequestBodyConverter,
                 mockLogger,
                 mockMethodDescription,
@@ -178,7 +178,7 @@ class RetrofitCallAdapterUnitTest {
 
             whenever(mockRequestBodyConverter.invoke(eq(mockRequest))).thenReturn(mockBodyString)
 
-            requestMetadata = RequestMetadata.UnHashed(
+            requestMetadata = RequestMetadata.Plain(
                     responseClass,
                     DEFAULT_URL,
                     mockBodyString

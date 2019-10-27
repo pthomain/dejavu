@@ -61,7 +61,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             })
 
     private fun getObservableForOperation(cacheOperation: Operation): Observable<CatFactResponse> =
-            RequestMetadata.UnHashed(responseClass, URL).let {
+            RequestMetadata.Plain(responseClass, URL).let {
                 VolleyObservable.createDefault(
                         requestQueue,
                         gson,

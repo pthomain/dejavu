@@ -28,8 +28,8 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperationSerialiser
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import io.reactivex.Completable
@@ -49,7 +49,7 @@ import java.lang.reflect.Type
 internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                       private val responseClass: Class<*>,
                                       private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                      private val serialiser: CacheOperationSerialiser,
+                                      private val serialiser: OperationSerialiser,
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
@@ -265,7 +265,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the request metadata
      */
     private fun getRequestMetadata(call: Call<Any>) =
-            RequestMetadata.UnHashed(
+            RequestMetadata.Plain(
                     responseClass,
                     call.request().url().toString(),
                     requestBodyConverter(call.request())

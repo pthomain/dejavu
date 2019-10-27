@@ -204,13 +204,13 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
 
     private fun getRequestMetadata(url: String,
                                    index: Int,
-                                   context: String): RequestMetadata.UnHashed {
+                                   context: String): RequestMetadata.Plain {
         val params = getParams(url, index)
         val urlAndParams = if (params == null) url else "$url?$params"
 
         checkParamsInOrder(urlAndParams, index, context)
 
-        return RequestMetadata.UnHashed(
+        return RequestMetadata.Plain(
                 String::class.java,
                 urlAndParams,
                 null//TODO body

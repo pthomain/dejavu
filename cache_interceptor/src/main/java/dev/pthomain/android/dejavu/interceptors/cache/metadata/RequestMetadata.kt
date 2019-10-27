@@ -42,9 +42,9 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
      * @param url the full URL of the request including query parameters
      * @param requestBody the optional body of the request
      */
-    data class UnHashed(override val responseClass: Class<*>,
-                        override val url: String,
-                        override val requestBody: String? = null) : RequestMetadata(
+    data class Plain(override val responseClass: Class<*>,
+                     override val url: String,
+                     override val requestBody: String? = null) : RequestMetadata(
             responseClass,
             url,
             requestBody

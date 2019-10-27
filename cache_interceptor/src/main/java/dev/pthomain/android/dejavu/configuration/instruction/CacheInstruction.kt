@@ -30,12 +30,11 @@ package dev.pthomain.android.dejavu.configuration.instruction
  * @param responseClass the target response class
  * @param operation the cache operation with call-specific directives
  */
-@Deprecated(replaceWith = ReplaceWith("CacheInstruction.Operation::class"),
-        message = "The response class is now derived from either the Operation or the request metadata")
 data class CacheInstruction internal constructor(
-        @Deprecated(message = "Use response class defined in the operation or the request metadata")
+        @Deprecated(message = "Replace this field with request metadata")
         val responseClass: Class<*>,
-        val operation: Operation) {
+        val operation: Operation
+) {
 
     override fun equals(other: Any?) =
             other is CacheInstruction && other.toString() == toString()

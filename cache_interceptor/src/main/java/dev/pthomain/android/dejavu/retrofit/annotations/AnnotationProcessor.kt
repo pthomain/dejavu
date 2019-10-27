@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
@@ -117,40 +116,42 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
             ).logAndThrow()
         }
 
-        return when (annotation) {
-            is Cache -> Operation.Expiring.Cache(
-                    annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it },
-                    annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
-                    annotation.freshOnly,
-                    annotation.mergeOnNextOnError.value,
-                    annotation.encrypt.value,
-                    annotation.compress.value
-            )
+        return with(annotation) {
+            when (this) {
+                is Cache -> Operation.Expiring.Cache(
+                        durationInMillis.swapWhenDefaultLong(dejaVuConfiguration.cacheDurationInMillis),
+                        connectivityTimeoutInMillis.swapWhenDefaultLong(dejaVuConfiguration.connectivityTimeoutInMillis),
+                        freshOnly,
+                        mergeOnNextOnError.value,
+                        encrypt.value,
+                        compress.value
+                )
 
-            is Refresh -> Operation.Expiring.Refresh(
-                    annotation.durationInMillis.let { if (it == -1L) dejaVuConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
-                    annotation.connectivityTimeoutInMillis.let { if (it == -1L) dejaVuConfiguration.connectivityTimeoutInMillis else it },
-                    annotation.freshOnly,
-                    annotation.mergeOnNextOnError.value
-            )
+                is Refresh -> Operation.Expiring.Refresh(
+                        durationInMillis.swapWhenDefaultLong(dejaVuConfiguration.cacheDurationInMillis), //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
+                        connectivityTimeoutInMillis.swapWhenDefaultLong(dejaVuConfiguration.connectivityTimeoutInMillis),
+                        freshOnly,
+                        mergeOnNextOnError.value
+                )
 
-            is Offline -> Operation.Expiring.Offline(
-                    annotation.freshOnly,
-                    annotation.mergeOnNextOnError.value
-            )
+                is Offline -> Operation.Expiring.Offline(
+                        freshOnly,
+                        mergeOnNextOnError.value
+                )
 
-            is Invalidate -> Operation.Invalidate(
-                    annotation.typeToInvalidate.java.let { ifElse(it == Any::class.java, null, it) }
-            )
+                is Invalidate -> Operation.Invalidate(
+                        typeToInvalidate.java.swapWhenDefaultClass()
+                )
 
-            is Clear -> Operation.Clear(
-                    annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
-                    annotation.clearStaleEntriesOnly
-            )
+                is Clear -> Operation.Clear(
+                        typeToClear.java.swapWhenDefaultClass(),
+                        clearStaleEntriesOnly
+                )
 
-            is DoNotCache -> Operation.DoNotCache
+                is DoNotCache -> Operation.DoNotCache
 
-            else -> null
+                else -> null
+            }
         }
     }
 
@@ -171,3 +172,13 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     }
 
 }
+
+fun <T, S : T> T?.swapWhen(ifTrue: S?,
+                           condition: (T?) -> Boolean?) =
+        if (condition(this) == true) ifTrue else this
+
+private fun Long.swapWhenDefaultLong(ifDefault: Long) =
+        swapWhen(ifDefault) { it == -1L }
+
+private fun Class<*>.swapWhenDefaultClass() =
+        swapWhen(null) { it == Any::class.java }

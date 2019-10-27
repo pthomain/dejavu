@@ -28,8 +28,8 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperationSerialiser
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.injection.Function6
@@ -69,7 +69,7 @@ internal abstract class RetrofitModule<E>
                         configuration,
                         t4,
                         t1,
-                        CacheOperationSerialiser(),
+                        OperationSerialiser(),
                         RequestBodyConverter(),
                         t2,
                         t3,

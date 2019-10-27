@@ -38,7 +38,7 @@ import io.reactivex.Observer
 
 class VolleyObservable<E, R : Any> private constructor(private val requestQueue: RequestQueue,
                                                        private val gson: Gson,
-                                                       private val requestMetadata: RequestMetadata.UnHashed)
+                                                       private val requestMetadata: RequestMetadata.Plain)
     : Observable<R>()
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -69,21 +69,20 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
         fun <E, R : Any> create(requestQueue: RequestQueue,
                                 gson: Gson,
                                 dejaVuInterceptor: DejaVuInterceptor<E>,
-                                requestMetadata: RequestMetadata.UnHashed): Observable<R>
+                                requestMetadata: RequestMetadata.Plain): Observable<R>
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
                         requestQueue,
                         gson,
                         requestMetadata
-                ).cast(Any::class.java)
-                        .compose(dejaVuInterceptor)
+                ).compose(dejaVuInterceptor)
                         .cast(requestMetadata.responseClass as Class<R>)!!
 
         fun <R : Any> createDefault(requestQueue: RequestQueue,
                                     gson: Gson,
                                     dejaVuInterceptor: DejaVuInterceptor<Glitch>,
-                                    requestMetadata: RequestMetadata.UnHashed) =
+                                    requestMetadata: RequestMetadata.Plain) =
                 create<Glitch, R>(
                         requestQueue,
                         gson,

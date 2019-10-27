@@ -264,7 +264,7 @@ internal fun defaultResponseWrapper(metadata: CacheMetadata<Glitch>,
         metadata
 )
 
-fun defaultRequestMetadata() = RequestMetadata.UnHashed(
+fun defaultRequestMetadata() = RequestMetadata.Plain(
         TestResponse::class.java,
         DEFAULT_URL
 )

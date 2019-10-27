@@ -165,7 +165,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                                                     cacheToken.instruction.operation
                                             ),
                                             requestMetadata = cacheComponent.hasher().hash(
-                                                    RequestMetadata.UnHashed(
+                                                    RequestMetadata.Plain(
                                                             instructionToken.requestMetadata.responseClass,
                                                             url
                                                     )
@@ -222,7 +222,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             true,
             true,
             cacheComponent.hasher().hash(
-                    RequestMetadata.UnHashed(
+                    RequestMetadata.Plain(
                             responseClass,
                             url
                     )

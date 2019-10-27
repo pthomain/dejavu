@@ -44,10 +44,10 @@ internal class Hasher(private val logger: Logger,
     /**
      * Hashes a RequestMetadata
      *
-     * @param requestMetadata the unhashed metadata
+     * @param requestMetadata the plain metadata
      * @return the hashed metadata or null if the hashing of the URL or class name failed.
      */
-    fun hash(requestMetadata: RequestMetadata.UnHashed): RequestMetadata.Hashed? {
+    fun hash(requestMetadata: RequestMetadata.Plain): RequestMetadata.Hashed? {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 

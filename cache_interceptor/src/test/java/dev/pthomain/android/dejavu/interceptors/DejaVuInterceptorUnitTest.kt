@@ -58,7 +58,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockResponseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed
+    private lateinit var mockRequestMetadata: RequestMetadata.Plain
     private lateinit var mockHashedMetadata: RequestMetadata.Hashed
     private lateinit var mockNetworkInterceptor: NetworkInterceptor<Glitch>
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>

@@ -43,13 +43,17 @@ sealed class Operation(val type: Type) {
      * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
      * @param type the operation type
      */
-    sealed class Expiring(val durationInMillis: Long?,
-                          val connectivityTimeoutInMillis: Long?,
-                          val freshOnly: Boolean,
-                          val mergeOnNextOnError: Boolean?,
-                          val encrypt: Boolean?,
-                          val compress: Boolean?,
-                          val filterFinal: Boolean,
+    //TODO replace flags with CachePriority and merge all Expiring operations in one (rename to Get)
+    sealed class Expiring(open val durationInMillis: Long?,
+                          open val connectivityTimeoutInMillis: Long?,
+                          @Deprecated("Replace with CachePriority")
+                          open val freshOnly: Boolean,
+                          @Deprecated("This adds unnecessary complexity")
+                          open val mergeOnNextOnError: Boolean?,
+                          open val encrypt: Boolean?,
+                          open val compress: Boolean?,
+                          @Deprecated("Replace with CachePriority")
+                          open val filterFinal: Boolean,
                           type: Type) : Operation(type) {
 
         /**
@@ -58,7 +62,7 @@ sealed class Operation(val type: Type) {
          * If no FRESH data is found locally a network call is made and the result is returned then cached
          * for the duration defined by durationInMillis.
          *
-         * This instruction is overridden by the cachePredicate. TODO check this
+         * This instruction is overridden by the cachePredicate. TODO check this, cache predicate should take precedence
          * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.cachePredicate
          *
          * @param durationInMillis duration of the cache for this specific call in milliseconds, during which the data is considered FRESH
@@ -69,13 +73,13 @@ sealed class Operation(val type: Type) {
          * @param compress whether the cached data should be compressed, useful for large responses
          * @param filterFinal whether this operation should return data in a transient state (i.e. STALE and awaiting refresh). Singles will always return final data unless the global allowNonFinalForSingle directive is set to true.
          */
-        class Cache(durationInMillis: Long? = null,
-                    connectivityTimeoutInMillis: Long? = null,
-                    freshOnly: Boolean = false,
-                    mergeOnNextOnError: Boolean? = null,
-                    encrypt: Boolean? = null,
-                    compress: Boolean? = null,
-                    filterFinal: Boolean = false)
+        data class Cache(override val durationInMillis: Long? = null,
+                         override val connectivityTimeoutInMillis: Long? = null,
+                         override val freshOnly: Boolean = false,
+                         override val mergeOnNextOnError: Boolean? = null,
+                         override val encrypt: Boolean? = null,
+                         override val compress: Boolean? = null,
+                         override val filterFinal: Boolean = false)
             : Expiring(
                 durationInMillis,
                 connectivityTimeoutInMillis,
@@ -85,7 +89,9 @@ sealed class Operation(val type: Type) {
                 compress,
                 filterFinal,
                 CACHE
-        )
+        ) {
+            override fun toString() = super.toString()
+        }
 
         /**
          * REFRESH instructions will invalidate the data currently cached for the call
@@ -101,11 +107,12 @@ sealed class Operation(val type: Type) {
          *
          * @see Invalidate
          * */
-        class Refresh(durationInMillis: Long? = null,
-                      connectivityTimeoutInMillis: Long? = null,
-                      freshOnly: Boolean = false,
-                      mergeOnNextOnError: Boolean? = null,
-                      filterFinal: Boolean = false)
+        //FIXME merge this with CACHE and add a refresh parameter. This is to prevent conflicting values defined in both.
+        data class Refresh(override val durationInMillis: Long? = null,
+                           override val connectivityTimeoutInMillis: Long? = null,
+                           override val freshOnly: Boolean = false,
+                           override val mergeOnNextOnError: Boolean? = null,
+                           override val filterFinal: Boolean = false)
             : Expiring(
                 durationInMillis,
                 connectivityTimeoutInMillis,
@@ -115,7 +122,9 @@ sealed class Operation(val type: Type) {
                 null,
                 filterFinal,
                 REFRESH
-        )
+        ) {
+            override fun toString() = super.toString()
+        }
 
         /**
          * OFFLINE instructions will only return cached data if available or an empty response
@@ -125,8 +134,8 @@ sealed class Operation(val type: Type) {
          * @param freshOnly whether or not the operation allows STALE data to be returned from the cache
          * @param mergeOnNextOnError allows exceptions to be intercepted and treated as an empty response metadata and delivered as such via onNext. Only used if the the response implements CacheMetadata.Holder. An exception is thrown otherwise.
          */
-        class Offline(freshOnly: Boolean = false,
-                      mergeOnNextOnError: Boolean? = null)
+        data class Offline(override val freshOnly: Boolean = false,
+                           override val mergeOnNextOnError: Boolean? = null)
             : Expiring(
                 null,
                 null,
@@ -136,7 +145,9 @@ sealed class Operation(val type: Type) {
                 null,
                 false,
                 OFFLINE
-        )
+        ) {
+            override fun toString() = super.toString()
+        }
 
         override fun toString() = SERIALISER.serialise(
                 type,
@@ -164,7 +175,13 @@ sealed class Operation(val type: Type) {
      * They should usually be used with a Completable. However, if used with a Single or Observable,
      * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
      */
-    data class Invalidate(val typeToInvalidate: Class<*>? = null) : Operation(INVALIDATE) //TODO invalidate by hash rather than class
+    data class Invalidate(val typeToInvalidate: Class<*>? = null) : Operation(INVALIDATE) { //TODO invalidate by hash rather than class
+
+        override fun toString() = SERIALISER.serialise(
+                type,
+                typeToInvalidate
+        )
+    }
 
     /**
      * CLEAR instructions clear the cached data for this call if present and do not return any data.
@@ -186,6 +203,13 @@ sealed class Operation(val type: Type) {
 
     override fun toString() = SERIALISER.serialise(type)
 
+    companion object {
+        @JvmStatic
+        private val SERIALISER = OperationSerialiser()
+
+        fun fromString(string: String) = SERIALISER.deserialise(string)
+    }
+
     /**
      * The operation's type.
      *
@@ -201,6 +225,5 @@ sealed class Operation(val type: Type) {
         INVALIDATE("@Invalidate", true),
         CLEAR("@Clear", true)
     }
-}
 
-private val SERIALISER: CacheOperationSerialiser = CacheOperationSerialiser()
+}

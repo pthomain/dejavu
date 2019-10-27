@@ -64,7 +64,7 @@ import java.util.*
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
 class DejaVuInterceptor<E> private constructor(private val operation: Operation,
-                                               private val requestMetadata: RequestMetadata.UnHashed,
+                                               private val requestMetadata: RequestMetadata.Plain,
                                                private val configuration: DejaVuConfiguration<E>,
                                                private val hasher: Hasher,
                                                private val dateFactory: (Long?) -> Date,
@@ -188,7 +188,7 @@ class DejaVuInterceptor<E> private constructor(private val operation: Operation,
          * @param requestMetadata the associated request metadata
          */
         fun create(operation: Operation,
-                   requestMetadata: RequestMetadata.UnHashed) =
+                   requestMetadata: RequestMetadata.Plain) =
                 DejaVuInterceptor(
                         operation,
                         requestMetadata,
