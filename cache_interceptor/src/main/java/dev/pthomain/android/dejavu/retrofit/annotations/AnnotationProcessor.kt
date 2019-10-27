@@ -29,6 +29,8 @@ import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
+import dev.pthomain.android.dejavu.utils.swapWhenDefaultClass
+import dev.pthomain.android.dejavu.utils.swapWhenDefaultLong
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -172,13 +174,3 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     }
 
 }
-
-fun <T, S : T> T?.swapWhen(ifTrue: S?,
-                           condition: (T?) -> Boolean?) =
-        if (condition(this) == true) ifTrue else this
-
-private fun Long.swapWhenDefaultLong(ifDefault: Long) =
-        swapWhen(ifDefault) { it == -1L }
-
-private fun Class<*>.swapWhenDefaultClass() =
-        swapWhen(null) { it == Any::class.java }

@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
@@ -52,6 +53,7 @@ import java.util.*
  *
  * @param logger the logger
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
+ * @param emptyResponseFactory factory providing empty response wrappers
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  * @param instructionToken the instruction cache token
@@ -96,7 +98,9 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      */
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             upstream.filter(responseFilter)
-                    .switchIfEmpty(emptyResponseFactory.emptyResponseWrapperSingle(instructionToken).toObservable())
+                    .switchIfEmpty(Observable.defer {
+                        emptyResponseFactory.emptyResponseWrapper(instructionToken).observable()
+                    })
                     .flatMap(this::intercept)!!
 
     /**

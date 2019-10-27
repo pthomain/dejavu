@@ -39,7 +39,6 @@ import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.observers.TestObserver
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
@@ -114,9 +113,9 @@ class CacheManagerUnitTest {
         val instructionToken = instructionToken()
         val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
 
-        whenever(mockEmptyResponseFactory.emptyResponseWrapperSingle(
+        whenever(mockEmptyResponseFactory.emptyResponseWrapper(
                 eq(instructionToken)
-        )).thenReturn(Single.just(mockResponseWrapper))
+        )).thenReturn(mockResponseWrapper)
 
         val actualResponseWrapper = target.clearCache(
                 instructionToken,
@@ -143,9 +142,9 @@ class CacheManagerUnitTest {
         val instructionToken = instructionToken()
         val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
 
-        whenever(mockEmptyResponseFactory.emptyResponseWrapperSingle(
+        whenever(mockEmptyResponseFactory.emptyResponseWrapper(
                 eq(instructionToken)
-        )).thenReturn(Single.just(mockResponseWrapper))
+        )).thenReturn(mockResponseWrapper)
 
         val actualResponseWrapper = target.invalidate(instructionToken).blockingFirst()
 
@@ -241,9 +240,9 @@ class CacheManagerUnitTest {
 
         if (operation is Offline) {
             if (!hasCachedResponse) {
-                whenever(mockEmptyResponseFactory.emptyResponseWrapperSingle(
+                whenever(mockEmptyResponseFactory.emptyResponseWrapper(
                         eq(instructionToken)
-                )).thenReturn(Single.just(mockEmptyResponseWrapper))
+                )).thenReturn(mockEmptyResponseWrapper)
             }
         } else if (!hasCachedResponse || isResponseStaleOverall) {
             prepareFetchAndCache(

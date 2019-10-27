@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import io.reactivex.Single
 
 /**
  * Provides empty responses for operations that do not return data (e.g. INVALIDATE or CLEAR), for
@@ -50,9 +49,9 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
      * @param instructionToken the instruction token for this call
      * @return an empty ResponseWrapper emitting Single
      */
-    fun emptyResponseWrapperSingle(instructionToken: CacheToken) =
+    fun emptyResponseWrapper(instructionToken: CacheToken) =
             instructionToken.instruction.operation.type.isCompletable.let { isDone ->
-                Single.just(ResponseWrapper(
+                ResponseWrapper(
                         instructionToken.instruction.requestMetadata.responseClass,
                         null,
                         CacheMetadata(
@@ -62,8 +61,8 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                                         else EmptyResponseException
                                 )
                         )
-                ))
-            }!!
+                )
+            }
 
     /**
      * Creates an empty response to be returned in lieu of an exception if the mergeOnNextOnError
@@ -85,5 +84,5 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
             } else null
 
     object EmptyResponseException : NoSuchElementException("The response was empty")
-    class DoneException(operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
+    data class DoneException(val operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
 }

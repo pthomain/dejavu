@@ -54,12 +54,14 @@ internal abstract class InterceptorModule<E>
     @Singleton
     fun provideErrorInterceptorFactory(configuration: DejaVuConfiguration<E>,
                                        context: Context,
+                                       emptyResponseFactory: EmptyResponseFactory<E>,
                                        logger: Logger,
                                        dateFactory: Function1<Long?, Date>) =
             object : Function1<CacheToken, ErrorInterceptor<E>> {
                 override fun get(t1: CacheToken) = ErrorInterceptor(
                         context,
                         configuration.errorFactory,
+                        emptyResponseFactory,
                         logger,
                         dateFactory::get,
                         t1

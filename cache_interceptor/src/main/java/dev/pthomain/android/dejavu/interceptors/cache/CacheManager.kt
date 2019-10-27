@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.boilerplate.core.utils.rx.single
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
@@ -91,7 +92,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
     private fun emptyResponseObservable(instructionToken: CacheToken,
                                         action: () -> Unit = {}) =
             Observable.fromCallable(action::invoke).flatMapSingle {
-                emptyResponseFactory.emptyResponseWrapperSingle(instructionToken)
+                emptyResponseFactory.emptyResponseWrapper(instructionToken).single()
             }!!
 
     /**

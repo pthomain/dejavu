@@ -42,7 +42,6 @@ import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.observers.TestObserver
 import io.reactivex.subjects.PublishSubject
 import org.junit.Before
@@ -223,9 +222,9 @@ class ResponseInterceptorUnitTest {
         val expectedMergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
                 ?: mergeOnNextOnError
 
-        whenever(mockEmptyResponseFactory.emptyResponseWrapperSingle(
+        whenever(mockEmptyResponseFactory.emptyResponseWrapper(
                 eq(mockInstructionToken)
-        )).thenReturn(Single.just(mockEmptyResponseWrapper))
+        )).thenReturn(mockEmptyResponseWrapper)
 
         val mockEmptyResponse = if (responseClass == String::class.java) "" else TestResponse()
 
