@@ -23,10 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
@@ -52,12 +49,10 @@ class CacheInterceptorUnitTest {
     private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<Glitch>
     private lateinit var mockReturnedResponseWrapper: ResponseWrapper<Glitch>
     private lateinit var mockReturnedObservable: Observable<ResponseWrapper<Glitch>>
+    private lateinit var mockCacheManager: CacheManager<Glitch>
 
     private val mockStart = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
-
-    private lateinit var mockCacheManager: CacheManager<Glitch>
-
 
     private fun getTarget(isCacheEnabled: Boolean,
                           operation: Operation): CacheInterceptor<Glitch> {
@@ -77,7 +72,7 @@ class CacheInterceptorUnitTest {
         mockReturnedResponseWrapper = mock()
         mockReturnedObservable = Observable.just(mockReturnedResponseWrapper)
 
-        whenever(mockErrorInterceptor.apply(eq(mockReturnedObservable) as Observable<Any>)).thenReturn(mockReturnedObservable)
+        whenever(mockErrorInterceptor.apply(any())).thenReturn(mockReturnedObservable)
 
         return CacheInterceptor(
                 mockErrorInterceptor,
@@ -114,7 +109,12 @@ class CacheInterceptorUnitTest {
                 }
             }
 
-            val responseWrapper = target.apply(mockUpstream).blockingFirst()
+            target.apply(mockUpstream).blockingFirst()
+
+            val responseCaptor = argumentCaptor<Observable<Any>>()
+            verify(mockErrorInterceptor).apply(responseCaptor.capture())
+
+            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<Glitch>
 
             if (isCacheEnabled) {
                 when (operation) {
@@ -141,8 +141,6 @@ class CacheInterceptorUnitTest {
                 )
             }
         }
-
-        verify(mockErrorInterceptor).apply(eq(mockReturnedObservable) as Observable<Any>)
     }
 
     private fun prepareGetCachedResponse(operation: Expiring) {
@@ -173,8 +171,8 @@ class CacheInterceptorUnitTest {
         assertEqualsWithContext(
                 mockMetadata.copy(cacheToken = mockInstructionToken.copy(
                         status = NOT_CACHED,
-                        cacheDate = Date(1234L),
-                        fetchDate = null,
+                        fetchDate = Date(1234L),
+                        cacheDate = null,
                         expiryDate = null
                 )),
                 responseWrapper.metadata,

@@ -102,6 +102,5 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
                                 expiryDate = null
                         )
                 )
-            }.compose(errorInterceptor)
-
+            }
 }
