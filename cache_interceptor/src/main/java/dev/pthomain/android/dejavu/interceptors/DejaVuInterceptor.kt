@@ -52,6 +52,7 @@ import java.util.*
  * @param configuration the global cache configuration
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
+ * @param hashingErrorObservableFactory the factory used to create a hashing error observable
  * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
  * @param errorInterceptorFactory the factory providing ErrorInterceptors dealing with network error handling
  * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
@@ -62,15 +63,16 @@ import java.util.*
  * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
-class DejaVuInterceptor<E> private constructor(private val operation: Operation,
-                                               private val requestMetadata: RequestMetadata.Plain,
-                                               private val configuration: DejaVuConfiguration<E>,
-                                               private val hasher: Hasher,
-                                               private val dateFactory: (Long?) -> Date,
-                                               private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                               private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> NetworkInterceptor<E>,
-                                               private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
-                                               private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>)
+class DejaVuInterceptor<E> internal constructor(private val operation: Operation,
+                                                private val requestMetadata: RequestMetadata.Plain,
+                                                private val configuration: DejaVuConfiguration<E>,
+                                                private val hasher: Hasher,
+                                                private val dateFactory: (Long?) -> Date,
+                                                private val hashingErrorObservableFactory: () -> Observable<Any>,
+                                                private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
+                                                private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> NetworkInterceptor<E>,
+                                                private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
+                                                private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>)
     : ObservableTransformer<Any, Any>,
         SingleTransformer<Any, Any>,
         CompletableTransformer
@@ -115,13 +117,7 @@ class DejaVuInterceptor<E> private constructor(private val operation: Operation,
      */
     private fun composeInternal(upstream: Observable<Any>,
                                 rxType: RxType): Observable<Any> {
-        val hashedRequestMetadata: RequestMetadata.Hashed = hasher.hash(requestMetadata).let {
-            ifElse(
-                    it == null,
-                    RequestMetadata.Hashed.Invalid(requestMetadata.responseClass),
-                    it!!
-            )
-        }
+        val hashedRequestMetadata: RequestMetadata.Hashed = hasher.hash(requestMetadata)
 
         val instruction = CacheInstruction(
                 hashedRequestMetadata,
@@ -138,7 +134,7 @@ class DejaVuInterceptor<E> private constructor(private val operation: Operation,
         val start = dateFactory(null).time
 
         val observable = if (hashedRequestMetadata !is RequestMetadata.Hashed.Invalid) upstream
-        else Observable.error<Any>(IllegalStateException("The request could not be hashed"))
+        else hashingErrorObservableFactory()
 
         val errorInterceptor = errorInterceptorFactory(instructionToken)
 
@@ -188,6 +184,7 @@ class DejaVuInterceptor<E> private constructor(private val operation: Operation,
                         configuration,
                         hasher,
                         dateFactory,
+                        { Observable.error<Any>(IllegalStateException("The request could not be hashed")) },
                         errorInterceptorFactory,
                         networkInterceptorFactory,
                         cacheInterceptorFactory,

@@ -54,7 +54,7 @@ class SqlOpenHelperCallbackUnitTest {
     private fun verifyOnCreate(inOrder: InOrder = inOrder(mockSupportSQLiteDatabase)) {
         inOrder.apply {
             verify(mockSupportSQLiteDatabase).execSQL(
-                    eq("CREATE TABLE IF NOT EXISTS dejavu(token TEXT UNIQUE, cache_date INTEGER, expiry_date INTEGER, data NONE, class TEXT, is_encrypted INTEGER, is_compressed INTEGER)")
+                    eq("CREATE TABLE IF NOT EXISTS dejavu (token TEXT UNIQUE, cache_date INTEGER, expiry_date INTEGER, data NONE, class TEXT, is_encrypted INTEGER, is_compressed INTEGER)")
             )
             verify(mockSupportSQLiteDatabase).execSQL(
                     eq("CREATE INDEX IF NOT EXISTS token_index ON dejavu(token)")

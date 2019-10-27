@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
@@ -59,7 +60,8 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: RequestMetadata.Plain
-    private lateinit var mockHashedMetadata: RequestMetadata.Hashed
+    private lateinit var mockValidHashedMetadata: RequestMetadata.Hashed.Valid
+    private lateinit var mockInvalidHashedMetadata: RequestMetadata.Hashed.Invalid
     private lateinit var mockNetworkInterceptor: NetworkInterceptor<Glitch>
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
     private lateinit var mockCacheInterceptor: CacheInterceptor<Glitch>
@@ -67,16 +69,19 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockInstructionToken: CacheToken
     private lateinit var mockUpstreamObservable: Observable<Any>
     private lateinit var mockNetworkObservable: Observable<ResponseWrapper<Glitch>>
-    private lateinit var mockErrorResponseObservable: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockResponseObservable: Observable<Any>
+    private lateinit var mockHashingErrorObservable: Observable<Any>
     private lateinit var errorTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var cacheTokenCaptor: KArgumentCaptor<CacheToken>
+    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<CacheToken>
+    private lateinit var networkCacheTokenCaptor: KArgumentCaptor<CacheToken>
     private lateinit var responseTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var targetFactory: DejaVuInterceptor.Factory<Glitch>
+
+    private val mockException = IllegalStateException("test")
 
     private fun setUp(operation: Operation,
-                      rxType: RxType): DejaVuInterceptor<Glitch> {
+                      rxType: RxType,
+                      isHashingSuccess: Boolean): DejaVuInterceptor<Glitch> {
         mockErrorInterceptorFactory = mock()
         mockCacheInterceptorFactory = mock()
         mockResponseInterceptorFactory = mock()
@@ -90,37 +95,37 @@ class DejaVuInterceptorUnitTest {
         mockNetworkInterceptor = mock()
 
         mockRequestMetadata = defaultRequestMetadata()
-        mockHashedMetadata = mock()
+        mockValidHashedMetadata = mock()
+        mockInvalidHashedMetadata = mock()
 
         mockInstructionToken = instructionToken(operation)
-        mockUpstreamObservable = Observable.just("" as Any)
-        mockErrorResponseObservable = Observable.just(mock())
-        mockCacheResponseObservable = Observable.just(mock())
-        mockResponseObservable = Observable.just("" as Any)
+
+        mockUpstreamObservable = mock()
+        mockNetworkObservable = mock()
+        mockCacheResponseObservable = mock()
+        mockResponseObservable = mock()
+        mockHashingErrorObservable = Observable.error(mockException)
 
         whenever(mockHasher.hash(eq(mockRequestMetadata))).thenReturn(mock())
 
-        targetFactory = DejaVuInterceptor.Factory(
-                mockHasher,
-                mockDateFactory,
-                mockErrorInterceptorFactory,
-                mockNetworkInterceptorFactory,
-                mockCacheInterceptorFactory,
-                mockResponseInterceptorFactory,
-                mockConfiguration
-        )
-
         errorTokenCaptor = argumentCaptor()
-        cacheTokenCaptor = argumentCaptor()
+        cacheCacheTokenCaptor = argumentCaptor()
+        networkCacheTokenCaptor = argumentCaptor()
         responseTokenCaptor = argumentCaptor()
 
         whenever(mockErrorInterceptorFactory.invoke(
                 errorTokenCaptor.capture()
         )).thenReturn(mockErrorInterceptor)
 
+        whenever(mockNetworkInterceptorFactory.invoke(
+                eq(mockErrorInterceptor),
+                networkCacheTokenCaptor.capture(),
+                eq(start)
+        )).thenReturn(mockNetworkInterceptor)
+
         whenever(mockCacheInterceptorFactory.invoke(
                 eq(mockErrorInterceptor),
-                cacheTokenCaptor.capture(),
+                cacheCacheTokenCaptor.capture(),
                 eq(start)
         )).thenReturn(mockCacheInterceptor)
 
@@ -130,23 +135,34 @@ class DejaVuInterceptorUnitTest {
                 eq(start)
         )).thenReturn(mockResponseInterceptor)
 
-        whenever(mockNetworkInterceptorFactory.invoke(
-                eq(mockErrorInterceptor),
-                eq(mockInstructionToken),
-                eq(start)
-        )).thenReturn(mockNetworkInterceptor)
+        if (isHashingSuccess) {
+            whenever(mockUpstreamObservable.compose(eq(mockNetworkInterceptor))).thenReturn(mockNetworkObservable)
+            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
+            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockResponseObservable)
+        } else {
+            whenever(mockNetworkInterceptor.apply(eq(mockHashingErrorObservable))).thenReturn(mockNetworkObservable)
+            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
+            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockHashingErrorObservable)
+        }
 
-        whenever(mockNetworkInterceptor.apply(eq(mockUpstreamObservable))).thenReturn(mockNetworkObservable)
-        whenever(mockErrorInterceptor.apply(eq(mockNetworkObservable as Observable<Any>))).thenReturn(mockErrorResponseObservable)
-
-        whenever(mockHasher.hash(mockRequestMetadata)).thenReturn(mockHashedMetadata)
+        whenever(mockHasher.hash(mockRequestMetadata)).thenReturn(
+                ifElse(isHashingSuccess, mockValidHashedMetadata, mockInvalidHashedMetadata)
+        )
 
         whenever(mockConfiguration.compress).thenReturn(true)
         whenever(mockConfiguration.encrypt).thenReturn(true)
 
-        return targetFactory.create(
-                mockInstructionToken.instruction.operation,
-                mockRequestMetadata
+        return DejaVuInterceptor(
+                operation,
+                mockRequestMetadata,
+                mockConfiguration,
+                mockHasher,
+                mockDateFactory,
+                { mockHashingErrorObservable },
+                mockErrorInterceptorFactory,
+                mockNetworkInterceptorFactory,
+                mockCacheInterceptorFactory,
+                mockResponseInterceptorFactory
         )
     }
 
@@ -168,92 +184,129 @@ class DejaVuInterceptorUnitTest {
     private fun testApply(rxType: RxType) {
         operationSequence { operation ->
             trueFalseSequence { isCacheEnabled ->
-                val target = setUp(operation, rxType)
-                val testObserver = TestObserver<Any>()
+                trueFalseSequence { isHashingSuccess ->
 
-                val context = "Operation = $operation,\nisCacheEnabled = $isCacheEnabled"
-
-                when (rxType) {
-                    OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
-                    SINGLE -> target.apply(Single.just("" as Any)).subscribe(testObserver)
-                    COMPLETABLE -> target.apply(Completable.complete()).subscribe(testObserver)
-                }
-
-                val errorToken = errorTokenCaptor.firstValue
-                val cacheToken = cacheTokenCaptor.firstValue
-                val responseToken = responseTokenCaptor.firstValue
-
-                assertEqualsWithContext(
-                        errorToken,
-                        cacheToken,
-                        "Error token and cache token should be the same",
-                        context
-                )
-
-                assertEqualsWithContext(
-                        cacheToken,
-                        responseToken,
-                        "Response token and cache token should be the same",
-                        context
-                )
-
-                if (!isCacheEnabled) {
-                    assertTrueWithContext(
-                            errorToken.instruction.operation.type == DO_NOT_CACHE,
-                            "Cache token should be DO_NOT_CACHE when isCacheEnabled == false",
-                            context
+                    val target = setUp(
+                            operation,
+                            rxType,
+                            isHashingSuccess
                     )
-                }
+                    val testObserver = TestObserver<Any>()
 
-                assertEqualsWithContext(
-                        mockHashedMetadata,
-                        errorToken.instruction.requestMetadata,
-                        "Request metadata didn't match",
-                        context
-                )
+                    val context = "Operation = $operation," +
+                            "\nisCacheEnabled = $isCacheEnabled," +
+                            "\nisHashingSuccess = $isHashingSuccess"
 
-                if (operation is Expiring) {
-                    if (operation.compress == null) {
+                    val mockSingle = mock<Single<Any>>()
+                    whenever(mockSingle.toObservable()).thenReturn(mockUpstreamObservable)
+                    whenever(mockResponseObservable.firstOrError()).thenReturn(mockSingle)
+
+                    val mockCompletable = mock<Completable>()
+                    whenever(mockCompletable.toObservable<Any>()).thenReturn(mockUpstreamObservable)
+                    whenever(mockResponseObservable.ignoreElements()).thenReturn(mockCompletable)
+
+                    when (rxType) {
+                        OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
+                        SINGLE -> target.apply(mockSingle).subscribe(testObserver)
+                        COMPLETABLE -> target.apply(mockCompletable).subscribe(testObserver)
+                    }
+
+                    val errorToken = errorTokenCaptor.firstValue
+                    val cacheCacheToken = cacheCacheTokenCaptor.firstValue
+                    val networkCacheToken = networkCacheTokenCaptor.firstValue
+                    val responseToken = responseTokenCaptor.firstValue
+
+                    if (!isHashingSuccess) {
                         assertTrueWithContext(
-                                errorToken.isCompressed,
-                                "Token value for isCompressed should be true",
-                                context
+                                testObserver.errorCount() == 1,
+                                "A hashing error should have been emitted"
+                        )
+
+                        assertTrueWithContext(
+                                testObserver.errors().first() == mockException,
+                                "The wrong exception was emitted"
                         )
                     } else {
                         assertEqualsWithContext(
-                                operation.compress,
-                                errorToken.isCompressed,
-                                "Token value for isCompressed didn't match operation's value",
+                                cacheCacheToken,
+                                networkCacheToken,
+                                "Cache tokens for cache and network interceptors didn't match",
                                 context
                         )
-                    }
 
-                    if (operation.encrypt == null) {
-                        assertTrueWithContext(
-                                errorToken.isEncrypted,
-                                "Token value for isEncrypted should be true",
-                                context
-                        )
-                    } else {
                         assertEqualsWithContext(
-                                operation.encrypt,
-                                errorToken.isEncrypted,
-                                "Token value for isEncrypted didn't match operation's value",
+                                errorToken,
+                                cacheCacheToken,
+                                "Error token and cache token should be the same",
                                 context
                         )
-                    }
-                } else {
-                    assertTrueWithContext(
-                            errorToken.isCompressed,
-                            "Token value for isCompressed should be true",
-                            context
 
-                    )
-                    assertTrueWithContext(
-                            errorToken.isEncrypted,
-                            "Token value for isEncrypted should be true",
-                            context
-                    )
+                        assertEqualsWithContext(
+                                cacheCacheToken,
+                                responseToken,
+                                "Response token and cache token should be the same",
+                                context
+                        )
+
+                        if (!isCacheEnabled) {
+                            assertTrueWithContext(
+                                    errorToken.instruction.operation.type == DO_NOT_CACHE,
+                                    "Cache token should be DO_NOT_CACHE when isCacheEnabled == false",
+                                    context
+                            )
+                        }
+
+                        assertEqualsWithContext(
+                                mockValidHashedMetadata,
+                                errorToken.instruction.requestMetadata,
+                                "Request metadata didn't match",
+                                context
+                        )
+
+                        if (operation is Expiring) {
+                            if (operation.compress == null) {
+                                assertTrueWithContext(
+                                        errorToken.isCompressed,
+                                        "Token value for isCompressed should be true",
+                                        context
+                                )
+                            } else {
+                                assertEqualsWithContext(
+                                        operation.compress,
+                                        errorToken.isCompressed,
+                                        "Token value for isCompressed didn't match operation's value",
+                                        context
+                                )
+                            }
+
+                            if (operation.encrypt == null) {
+                                assertTrueWithContext(
+                                        errorToken.isEncrypted,
+                                        "Token value for isEncrypted should be true",
+                                        context
+                                )
+                            } else {
+                                assertEqualsWithContext(
+                                        operation.encrypt,
+                                        errorToken.isEncrypted,
+                                        "Token value for isEncrypted didn't match operation's value",
+                                        context
+                                )
+                            }
+                        } else {
+                            assertTrueWithContext(
+                                    errorToken.isCompressed,
+                                    "Token value for isCompressed should be true",
+                                    context
+
+                            )
+                            assertTrueWithContext(
+                                    errorToken.isEncrypted,
+                                    "Token value for isEncrypted should be true",
+                                    context
+                            )
+                        }
+                    }
                 }
             }
         }
