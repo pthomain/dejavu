@@ -25,9 +25,11 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Wipe
 import dev.pthomain.android.dejavu.demo.DemoActivity
+import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
@@ -38,24 +40,22 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                        compress: Boolean,
                                        freshOnly: Boolean) =
             executeOperation(when {
-                isRefresh -> Expiring.Refresh(freshOnly = freshOnly)
-                else -> Expiring.Cache(
+                isRefresh -> Refresh(freshOnly = freshOnly)
+                else -> Cache(
                         encrypt = encrypt,
                         compress = compress,
                         freshOnly = freshOnly
                 )
-            })
+            }).map { it.response as CatFactResponse }
 
     override fun getOfflineSingle(freshOnly: Boolean) =
-            executeOperation(Offline(freshOnly)).firstOrError()
+            executeOperation(Offline(freshOnly))
 
     override fun getClearEntriesCompletable() =
-            executeOperation(Clear())
-                    .ignoreElements()!!
+            executeOperation(Wipe)
 
     override fun getInvalidateCompletable() =
             executeOperation(Invalidate())
-                    .ignoreElements()!!
 
     private fun executeOperation(cacheOperation: Operation) =
             catFactClient().execute(cacheOperation)

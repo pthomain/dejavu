@@ -29,6 +29,7 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
@@ -38,7 +39,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersi
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
@@ -50,14 +50,12 @@ import java.util.*
  * Provides a PersistenceManager implementation saving the responses to a SQLite database.
  *
  * @param database the opened database
- * @param hasher the class handling the request hashing for unicity
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  * @param dejaVuConfiguration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
 class DatabasePersistenceManager<E> internal constructor(private val database: SupportSQLiteDatabase,
-                                                         private val hasher: Hasher,
                                                          serialisationManager: SerialisationManager<E>,
                                                          dejaVuConfiguration: DejaVuConfiguration<E>,
                                                          dateFactory: (Long?) -> Date,
@@ -73,40 +71,41 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
      * Both parameters work in conjunction to form an intersection of entries to be cleared.
      *
-     * @param typeToClear type of entries to clear (or all the entries if this parameter is null)
-     * @param clearStaleEntriesOnly only clear STALE entries if set to true (or all otherwise)
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun clearCache(typeToClear: Class<*>?,
-                            clearStaleEntriesOnly: Boolean) {
-        val olderEntriesClause = ifElse(
-                clearStaleEntriesOnly,
-                "${EXPIRY_DATE.columnName} < ?",
-                null
-        )
+    override fun clearCache(instructionToken: CacheToken) {
+        val instruction = instructionToken.instruction
 
-        val typeClause = typeToClear?.let { "${CLASS.columnName} = ?" }
+        with(instruction.operation) {
+            if (this is Clear) { //TODO handle Wipe
+                val olderEntriesClause = ifElse(
+                        clearStaleEntriesOnly,
+                        "${EXPIRY_DATE.columnName} < ?",
+                        null
+                )
 
-        val args = arrayListOf<String>().apply {
-            if (clearStaleEntriesOnly) add(dateFactory(null).time.toString())
+                val requestMetadata = instruction.requestMetadata
+                val typeClause = "${CLASS.columnName} = ?"
 
-            if (typeToClear != null) {
-                val classHash = hasher.hash(typeToClear.name)
-                add(classHash)
-            }
-        }
+                val args = arrayListOf<String>().apply {
+                    if (clearStaleEntriesOnly) add(dateFactory(null).time.toString())
+                    add(requestMetadata.classHash) //TODO requestHash
+                }
 
-        database.delete(
-                TABLE_DEJA_VU,
-                arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
-                args.toArray()
-        ).let { deleted ->
-            val entryType = typeToClear?.simpleName?.let { " $it" } ?: ""
-            if (clearStaleEntriesOnly) {
-                logger.d(this, "Deleted old$entryType entries from cache: $deleted found")
-            } else {
-                logger.d(this, "Deleted all existing$entryType entries from cache: $deleted found")
+                database.delete(
+                        TABLE_DEJA_VU,
+                        arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
+                        args.toArray()
+                ).let { deleted ->
+                    val entryType = requestMetadata.responseClass.simpleName
+                    if (clearStaleEntriesOnly) {
+                        logger.d(this, "Deleted old $entryType entries from cache: $deleted found")
+                    } else {
+                        logger.d(this, "Deleted all existing $entryType entries from cache: $deleted found")
+                    }
+                }
             }
         }
     }
@@ -135,7 +134,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         val query = """
             SELECT ${projection.joinToString(", ")}
             FROM $TABLE_DEJA_VU
-            WHERE ${TOKEN.columnName} = '${requestMetadata.urlHash}'
+            WHERE ${TOKEN.columnName} = '${requestMetadata.requestHash}'
             LIMIT 1
             """
 
@@ -187,7 +186,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"
                 val requestMetadata = instructionToken.instruction.requestMetadata
-                val selectionArgs = arrayOf(requestMetadata.urlHash)
+                val selectionArgs = arrayOf(requestMetadata.requestHash)
 
                 database.update(
                         TABLE_DEJA_VU,
@@ -219,7 +218,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         serialise(responseWrapper, previousCachedResponse)?.let {
             with(it) {
                 val values = HashMap<String, Any>()
-                values[TOKEN.columnName] = requestMetadata.urlHash
+                values[TOKEN.columnName] = requestMetadata.requestHash
                 values[DATE.columnName] = cacheDate
                 values[EXPIRY_DATE.columnName] = expiryDate
                 values[DATA.columnName] = data
@@ -242,7 +241,6 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
     //TODO remove this
     class Factory<E> internal constructor(private val database: SupportSQLiteDatabase,
-                                          private val hasher: Hasher,
                                           private val serialisationManagerFactory: SerialisationManager.Factory<E>,
                                           private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                           private val dateFactory: (Long?) -> Date,
@@ -252,7 +250,6 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
         fun create(): PersistenceManager<E> = DatabasePersistenceManager(
                 database,
-                hasher,
                 serialisationManagerFactory.create(DATABASE),
                 dejaVuConfiguration,
                 dateFactory,

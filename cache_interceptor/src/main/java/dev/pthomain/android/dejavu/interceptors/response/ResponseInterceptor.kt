@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OPERATION
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.SINGLE
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
@@ -145,7 +145,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             ) ?: response
         }.let {
             when {
-                rxType == COMPLETABLE && metadata.exception != null -> {
+                rxType == OPERATION && metadata.exception != null -> {
                     if (metadata.exception.cause.let { it is EmptyResponseException || it is DoneException }) {
                         logger.d(this, "Returning empty response for Completable: $metadata")
                         Observable.empty<Any>()
@@ -175,7 +175,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       responseClass: Class<*>,
                                       metadata: CacheMetadata<E>,
                                       mergeOnNextOnError: Boolean): CacheException? {
-        return if (rxType != COMPLETABLE) {
+        return if (rxType != OPERATION) {
             val holder = response as? CacheMetadata.Holder<E>
             if (holder == null) {
                 checkForError(
@@ -204,7 +204,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                 " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
                 " that do not support cache metadata."
 
-        return if (rxType != COMPLETABLE && mergeOnNextOnError)
+        return if (rxType != OPERATION && mergeOnNextOnError)
             CacheException(CacheException.Type.METADATA, message)
         else null
     }

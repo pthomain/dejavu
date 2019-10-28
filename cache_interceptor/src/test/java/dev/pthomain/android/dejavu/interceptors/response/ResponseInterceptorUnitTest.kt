@@ -36,8 +36,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.COMPLETABLE
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OPERATION
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -192,7 +192,7 @@ class ResponseInterceptorUnitTest {
         val rxType = ifElse(
                 isSingle,
                 RxType.SINGLE,
-                ifElse(isCompletable, COMPLETABLE, OBSERVABLE)
+                ifElse(isCompletable, OPERATION, OBSERVABLE)
         )
 
         val target = ResponseInterceptor(

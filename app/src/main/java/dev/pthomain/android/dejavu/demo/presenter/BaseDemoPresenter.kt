@@ -31,6 +31,7 @@ import dev.pthomain.android.boilerplate.core.mvp.MvpPresenter
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
@@ -45,7 +46,6 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Single
 
 internal abstract class BaseDemoPresenter protected constructor(
         private val demoActivity: DemoActivity,
@@ -102,27 +102,29 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = if (isRefresh) REFRESH else CACHE
-        subscribe(getResponseObservable(
-                isRefresh,
-                encrypt,
-                compress,
-                freshOnly
-        ))
+        subscribe(
+                getResponseObservable(
+                        isRefresh,
+                        encrypt,
+                        compress,
+                        freshOnly
+                ).ignoreElements()
+        )
     }
 
     final override fun offline() {
         instructionType = OFFLINE
-        subscribe(getOfflineSingle(freshOnly).toObservable())
+        subscribe(getOfflineSingle(freshOnly).map { it.response as CatFactResponse })
     }
 
     final override fun clearEntries() {
         instructionType = CLEAR
-        subscribe(getClearEntriesCompletable())
+        subscribe(getClearEntriesCompletable().ignoreElements())
     }
 
     final override fun invalidate() {
         instructionType = INVALIDATE
-        subscribe(getInvalidateCompletable())
+        subscribe(getInvalidateCompletable().ignoreElements())
     }
 
     final override fun getCacheOperation() =
@@ -145,12 +147,12 @@ internal abstract class BaseDemoPresenter protected constructor(
                             false
                     )
                     DO_NOT_CACHE -> DoNotCache
-                    INVALIDATE -> Invalidate(CatFactResponse::class.java)
+                    INVALIDATE -> Invalidate()
                     OFFLINE -> Offline(
                             freshOnly,
                             mergeOnNextOnError
                     )
-                    CLEAR -> Clear(clearStaleEntriesOnly = false)
+                    CLEAR -> Wipe
                 }
             }
 
@@ -185,9 +187,9 @@ internal abstract class BaseDemoPresenter protected constructor(
                                                  compress: Boolean,
                                                  freshOnly: Boolean): Observable<CatFactResponse>
 
-    protected abstract fun getOfflineSingle(freshOnly: Boolean): Single<out CatFactResponse>
-    protected abstract fun getClearEntriesCompletable(): Completable
-    protected abstract fun getInvalidateCompletable(): Completable
+    protected abstract fun getOfflineSingle(freshOnly: Boolean): CacheOperation<CatFactResponse>
+    protected abstract fun getClearEntriesCompletable(): CacheOperation<CatFactResponse>
+    protected abstract fun getInvalidateCompletable(): CacheOperation<CatFactResponse>
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

@@ -146,7 +146,7 @@ class RetrofitCallAdapterUnitTest {
                 null,
                 OBSERVABLE,
                 SINGLE,
-                COMPLETABLE
+                OPERATION
         ).forEach { rxType ->
             setUp() //reset mocks
 
@@ -161,7 +161,7 @@ class RetrofitCallAdapterUnitTest {
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)
                 SINGLE -> Single.just(mockTestResponse)
-                COMPLETABLE -> Completable.complete()
+                OPERATION -> Completable.complete()
                 else -> mockTestResponse
             }
 
@@ -200,7 +200,7 @@ class RetrofitCallAdapterUnitTest {
                 when (rxType) {
                     OBSERVABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Observable<Any>))).thenReturn(rxCall.map { it })
                     SINGLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Single<Any>))).thenReturn(rxCall.map { it })
-                    COMPLETABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Completable))).thenReturn(rxCall.andThen(Completable.complete()))
+                    OPERATION -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Completable))).thenReturn(rxCall.andThen(Completable.complete()))
                 }
             }
 
@@ -309,7 +309,7 @@ class RetrofitCallAdapterUnitTest {
                             context
                     )
 
-                    COMPLETABLE -> assertTrueWithContext(
+                    OPERATION -> assertTrueWithContext(
                             Completable::class.java.isAssignableFrom(actualAdapted.javaClass),
                             "Adapted result should be of type Completable",
                             context

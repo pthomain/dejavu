@@ -26,12 +26,11 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
-import dev.pthomain.android.dejavu.utils.swapWhenDefaultClass
 import dev.pthomain.android.dejavu.utils.swapWhenDefaultLong
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -141,13 +140,11 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
                         mergeOnNextOnError.value
                 )
 
-                is Invalidate -> Operation.Invalidate(
-                        typeToInvalidate.java.swapWhenDefaultClass()
-                )
+                is Invalidate -> Operation.Invalidate(useRequestParameters)
 
                 is Clear -> Operation.Clear(
-                        typeToClear.java.swapWhenDefaultClass(),
-                        clearStaleEntriesOnly
+                        clearStaleEntriesOnly,
+                        useRequestParameters
                 )
 
                 is DoNotCache -> Operation.DoNotCache
@@ -163,14 +160,13 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     enum class RxType(val rxClass: Class<*>) {
         OBSERVABLE(Observable::class.java),
         SINGLE(Single::class.java),
-        COMPLETABLE(Completable::class.java);
+        OPERATION(CacheOperation::class.java);
 
         /**
          * @return a String representation of the typed Rx object
          */
         fun getTypedName(responseClass: Class<*>) =
-                if (this == COMPLETABLE) rxClass.simpleName
-                else "${rxClass.simpleName}<${responseClass.simpleName}>"
+                "${rxClass.simpleName}<${responseClass.simpleName}>"
     }
 
 }

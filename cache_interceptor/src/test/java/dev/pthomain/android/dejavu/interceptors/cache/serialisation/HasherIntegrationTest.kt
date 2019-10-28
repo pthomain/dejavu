@@ -184,19 +184,19 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
         for (i in strings.indices) {
             assertEqualsWithContext(
                     sha1Hashes[i],
-                    sha1Hasher.hash(getRequestMetadata(strings[i], i, "SHA-1 hashing failed"))!!.urlHash,
+                    sha1Hasher.hash(getRequestMetadata(strings[i], i, "SHA-1 hashing failed"))!!.requestHash,
                     "SHA-1 hash failed at position $i"
             )
 
             assertEqualsWithContext(
                     md5Hashes[i],
-                    md5Hasher.hash(getRequestMetadata(strings[i], i, "MD5 hashing failed"))!!.urlHash,
+                    md5Hasher.hash(getRequestMetadata(strings[i], i, "MD5 hashing failed"))!!.requestHash,
                     "MD5 hash failed at position $i"
             )
 
             assertEqualsWithContext(
                     defaultHashes[i],
-                    defaultHasher.hash(getRequestMetadata(strings[i], i, "Default hashing failed"))!!.urlHash,
+                    defaultHasher.hash(getRequestMetadata(strings[i], i, "Default hashing failed"))!!.requestHash,
                     "Default hash failed at position $i"
             )
         }

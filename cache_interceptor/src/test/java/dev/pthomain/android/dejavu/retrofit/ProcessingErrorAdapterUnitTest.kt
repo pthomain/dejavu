@@ -140,7 +140,7 @@ class ProcessingErrorAdapterUnitTest {
         val wrapper = when (rxType) {
             OBSERVABLE -> (adapted as Observable<Any>).blockingFirst()
             SINGLE -> (adapted as Single<Any>).blockingGet()
-            COMPLETABLE -> (adapted as Completable).blockingAwait()
+            OPERATION -> (adapted as Completable).blockingAwait()
         }
 
         assertEqualsWithContext(

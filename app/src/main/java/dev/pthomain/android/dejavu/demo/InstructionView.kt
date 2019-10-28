@@ -34,6 +34,8 @@ import android.text.style.StyleSpan
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 
 class InstructionView @JvmOverloads constructor(context: Context,
@@ -79,7 +81,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
             "".padStart(length, ' ')
                     .let { padding ->
                         when (operation.type) {
-                            CACHE -> (operation as Operation.Expiring.Cache).let { cacheOperation ->
+                            CACHE -> (operation as Cache).let { cacheOperation ->
                                 arrayOf(
                                         "freshOnly = ${cacheOperation.freshOnly}",
                                         "durationInMillis = ${cacheOperation.durationInMillis
@@ -90,7 +92,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                                 )
                             }
 
-                            REFRESH -> (operation as Operation.Expiring.Refresh).let { refreshOperation ->
+                            REFRESH -> (operation as Refresh).let { refreshOperation ->
                                 arrayOf(
                                         "freshOnly = ${refreshOperation.freshOnly}",
                                         "durationInMillis = ${refreshOperation.durationInMillis
@@ -99,7 +101,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                                 )
                             }
 
-                            OFFLINE -> (operation as Operation.Expiring.Offline).let { offlineOperation ->
+                            OFFLINE -> (operation as Offline).let { offlineOperation ->
                                 arrayOf(
                                         "freshOnly = ${offlineOperation.freshOnly}",
                                         "mergeOnNextOnError = ${getOptionalBoolean(offlineOperation.mergeOnNextOnError)}"
@@ -107,7 +109,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
                             }
 
                             CLEAR -> arrayOf(
-                                    "typeToClear = ${(operation as Operation.Clear).typeToClear}",
+                                    "useRequestParameters = ${(operation as Clear).useRequestParameters}",
                                     "clearStaleEntriesOnly = ${operation.clearStaleEntriesOnly}"
                             )
 

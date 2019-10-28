@@ -104,7 +104,7 @@ class CacheInterceptorUnitTest {
             if (isCacheEnabled) {
                 when (operation) {
                     is Expiring -> prepareGetCachedResponse(operation)
-                    is Clear -> prepareClearCache(operation)
+                    is Clear -> prepareClearCache()
                     is Invalidate -> prepareInvalidate()
                 }
             }
@@ -151,11 +151,9 @@ class CacheInterceptorUnitTest {
         )).thenReturn(mockReturnedObservable)
     }
 
-    private fun prepareClearCache(operation: Clear) {
+    private fun prepareClearCache() {
         whenever(mockCacheManager.clearCache(
-                eq(mockInstructionToken),
-                eq(operation.typeToClear),
-                eq(operation.clearStaleEntriesOnly)
+                eq(mockInstructionToken)
         )).thenReturn(mockReturnedObservable)
     }
 

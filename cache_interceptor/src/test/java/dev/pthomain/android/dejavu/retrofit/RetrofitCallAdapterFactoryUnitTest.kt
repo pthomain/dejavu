@@ -107,7 +107,7 @@ class RetrofitCallAdapterFactoryUnitTest {
             mockDefaultCallAdapter
         }
 
-        val responseClass = if (rxType == COMPLETABLE) Any::class.java
+        val responseClass = if (rxType == OPERATION) Any::class.java
         else TestResponse::class.java
 
         whenever(mockAnnotationProcessor.process(
@@ -208,7 +208,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     @Test
     fun testGetCompletable() {
-        testFactory(COMPLETABLE)
+        testFactory(OPERATION)
     }
 
     @Test
@@ -223,7 +223,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     @Test
     fun testGetCompletableWithAnnotationException() {
-        testFactory(COMPLETABLE, true)
+        testFactory(OPERATION, true)
     }
 
 }

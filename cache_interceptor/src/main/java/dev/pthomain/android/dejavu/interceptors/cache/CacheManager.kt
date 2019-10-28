@@ -57,16 +57,12 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * Handles the CLEAR operation
      *
      * @param instructionToken the original request's instruction token
-     * @param typeToClear the optional class type to be used as a filter for the CLEAR operation
-     * @param clearStaleEntriesOnly whether or not the cache should only be cleared of the STALE entries
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun clearCache(instructionToken: CacheToken,
-                   typeToClear: Class<*>?,
-                   clearStaleEntriesOnly: Boolean) =
+    fun clearCache(instructionToken: CacheToken) =
             emptyResponseObservable(instructionToken) {
-                persistenceManager.clearCache(typeToClear, clearStaleEntriesOnly)
+                persistenceManager.clearCache(instructionToken)
             }
 
     /**

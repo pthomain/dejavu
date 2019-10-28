@@ -37,7 +37,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -72,12 +71,8 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                 cacheInstruction
         )
 
-        whenever(mockSerialisationManagerFactory.create(eq(DATABASE))).thenReturn(mockSerialisationManager)
-
-
         return DatabasePersistenceManager(
                 mockDatabase,
-                mockHasher,
                 mockSerialisationManager,
                 mockConfiguration,
                 mockDateFactory,
@@ -171,7 +166,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
             val values = mapCaptor.firstValue
 
             assertEqualsWithContext(
-                    instructionToken.instruction.requestMetadata.urlHash,
+                    instructionToken.instruction.requestMetadata.requestHash,
                     values[TOKEN.columnName],
                     "Cache key didn't match",
                     context
@@ -280,7 +275,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
             )
 
             assertEqualsWithContext(
-                    arrayOf(instructionToken.instruction.requestMetadata.urlHash),
+                    arrayOf(instructionToken.instruction.requestMetadata.requestHash),
                     selectionArgsCaptor.firstValue,
                     "Selection args didn't match",
                     context

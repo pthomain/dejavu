@@ -106,7 +106,7 @@ internal class ProcessingErrorAdapterIntegrationTest
 
     @Test
     fun testAdaptCompletable() {
-        setUp(Completable::class.java, COMPLETABLE)
+        setUp(Completable::class.java, OPERATION)
 
         val adapted = targetAdapter.adapt(mock()) as Completable
 

@@ -37,22 +37,20 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 import org.junit.Test
 import java.util.*
 
 internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Glitch>> {
 
     protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
-    protected lateinit var mockSerialisationManagerFactory: SerialisationManager.Factory<Glitch>
     protected lateinit var mockDateFactory: (Long?) -> Date
-    protected lateinit var mockHasher: Hasher
     protected lateinit var mockCacheToken: CacheToken
     protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
     protected lateinit var mockMetadata: CacheMetadata<Glitch>
@@ -75,7 +73,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                                      cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
-        mockHasher = mock()
         mockCacheToken = mock()
         mockResponseWrapper = mock()
         mockMetadata = mock()
@@ -111,44 +108,64 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     @Test
     fun testClearCache() {
+        var index = 0
         trueFalseSequence { useTypeToClear ->
-            trueFalseSequence { clearStaleEntriesOnly ->
-                testClearCache(
-                        useTypeToClear,
-                        clearStaleEntriesOnly
-                )
+            trueFalseSequence { useRequestParameters ->
+                trueFalseSequence { clearStaleEntriesOnly ->
+                    testClearCache(
+                            index++,
+                            useTypeToClear,
+                            useRequestParameters,
+                            clearStaleEntriesOnly
+                    )
+                }
             }
         }
     }
 
-    private fun testClearCache(useTypeToClear: Boolean,
+    private fun testClearCache(index: Int,
+                               useTypeToClear: Boolean,
+                               useRequestParameters: Boolean,
                                clearStaleEntriesOnly: Boolean) {
-        val context = "useTypeToClear = $useTypeToClear\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
-        val typeToClearClass: Class<*>? = if (useTypeToClear) TestResponse::class.java else null
+        val context = "index = $index," +
+                "\nuseTypeToClear = $useTypeToClear" +
+                "\nuseRequestParameters = $useRequestParameters" +
+                "\nclearStaleEntriesOnly = $clearStaleEntriesOnly"
+
+        val operation = Operation.Clear(
+                useRequestParameters,
+                clearStaleEntriesOnly
+        )
+
+        val targetClass = ifElse(
+                useTypeToClear,
+                TestResponse::class.java,
+                Any::class.java
+        )
+
         val mockClassHash = "mockHash"
 
+        val instructionToken = instructionToken(operation).swapLambdaWhen(useTypeToClear) {
+            it?.copy(
+                    instruction = it.instruction.copy(
+                            requestMetadata = it.instruction.requestMetadata.valid().copy(
+                                    responseClass = targetClass
+                            )))
+        }!!
+
         val target = setUp(
-                instructionToken(Operation.Clear(typeToClearClass, clearStaleEntriesOnly)),
+                instructionToken,
                 true,
                 true,
                 null
         )
 
-        if (typeToClearClass != null) {
-            whenever(mockHasher.hash(eq(typeToClearClass.name))).thenReturn(mockClassHash)
-        }
-
         prepareClearCache(
                 context,
-                useTypeToClear,
-                clearStaleEntriesOnly,
-                mockClassHash
+                instructionToken
         )
 
-        target.clearCache(
-                typeToClearClass,
-                clearStaleEntriesOnly
-        )
+        target.clearCache(instructionToken)
 
         verifyClearCache(
                 context,
@@ -159,9 +176,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     protected open fun prepareClearCache(context: String,
-                                         useTypeToClear: Boolean,
-                                         clearStaleEntriesOnly: Boolean,
-                                         mockClassHash: String) = Unit
+                                         instructionToken: CacheToken) = Unit
 
     protected abstract fun verifyClearCache(context: String,
                                             useTypeToClear: Boolean,
@@ -223,9 +238,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 hasPreviousResponse,
                 isSerialisationSuccess
         )
-
-        whenever(mockResponseWrapper.metadata.cacheToken.instruction.requestMetadata)
-                .thenReturn(instructionToken.instruction.requestMetadata)
 
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
 
@@ -312,7 +324,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                     target,
                     context
             ).invalidateIfNeeded(eq(instructionToken.copy(
-                    instruction = instructionToken.instruction.copy(operation = Invalidate()) //TODO class
+                    instruction = instructionToken.instruction.copy(operation = Invalidate())
             )))
         }
     }
@@ -447,15 +459,15 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         )
 
         val metadata = SerialisationDecorationMetadata(
-                eq(isCompressed == 1),
-                eq(isEncrypted == 1)
+                isCompressed == 1,
+                isEncrypted == 1
         )
 
         whenever(mockSerialisationManager.deserialise(
                 eq(instructionToken),
                 eq(mockBlob),
                 eq(metadata)
-        )).thenReturn(if (hasResponse) mockResponseWrapper else null)
+        )).thenReturn(ifElse(hasResponse, mockResponseWrapper, null))
 
         prepareGetCachedResponse(
                 context,
@@ -484,6 +496,12 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         )
 
         if (hasResponse) {
+            assertNotNullWithContext(
+                    cachedResponse,
+                    "Cachec response should not be null",
+                    context
+            )
+
             val actualMetadata = cachedResponse!!.metadata
 
             assertEqualsWithContext(
@@ -513,10 +531,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 eq(metadata)
         )
 
-        verifyWithContext(target, context).clearCache(
-                isNull(),
-                eq(false)
-        )
+        verifyWithContext(target, context).clearCache(eq(instructionToken))
 
         //TODO test clear cache onError
     }

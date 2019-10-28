@@ -118,15 +118,10 @@ class CacheManagerUnitTest {
         )).thenReturn(mockResponseWrapper)
 
         val actualResponseWrapper = target.clearCache(
-                instructionToken,
-                typeToClear,
-                clearStaleEntriesOnly
+                instructionToken
         ).blockingFirst()
 
-        verifyWithContext(mockPersistenceManager, context).clearCache(
-                typeToClear,
-                clearStaleEntriesOnly
-        )
+        verifyWithContext(mockPersistenceManager, context).clearCache(eq(instructionToken))
 
         assertEqualsWithContext(
                 mockResponseWrapper,

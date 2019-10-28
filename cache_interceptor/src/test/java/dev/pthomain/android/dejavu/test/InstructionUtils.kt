@@ -142,13 +142,6 @@ private fun assertClear(expectedOperation: Clear,
             "clearStaleEntriesOnly didn't match",
             context
     )
-
-    assertEqualsWithContext(
-            expectedOperation.typeToClear,
-            actualOperation.typeToClear,
-            "typeToClear didn't match",
-            context
-    )
 }
 
 inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>?) =

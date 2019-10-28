@@ -26,14 +26,16 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Wipe
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import io.reactivex.Observable
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
@@ -58,11 +60,11 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         compress = compress,
                         freshOnly = freshOnly
                 )
-            })
+            }).map { it.response as CatFactResponse }
 
-    private fun getObservableForOperation(cacheOperation: Operation): Observable<CatFactResponse> =
+    private fun getObservableForOperation(cacheOperation: Operation): CacheOperation<CatFactResponse> =
             RequestMetadata.Plain(responseClass, URL).let {
-                VolleyObservable.createDefault(
+                VolleyObservable.createDefault<CatFactResponse>(
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptor.create(
@@ -70,16 +72,22 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                 it
                         ),
                         it
-                )
+                ).map {
+                    CacheOperation<CatFactResponse>(ResponseWrapper(
+                            CatFactResponse::class.java,
+                            it,
+                            it.metadata
+                    ))
+                } as CacheOperation<CatFactResponse>
             }
 
     override fun getOfflineSingle(freshOnly: Boolean) =
-            getObservableForOperation(Offline(freshOnly)).firstOrError()!!
+            getObservableForOperation(Offline(freshOnly))
 
     override fun getClearEntriesCompletable() =
-            getObservableForOperation(Clear()).ignoreElements()!!
+            getObservableForOperation(Wipe)
 
     override fun getInvalidateCompletable() =
-            getObservableForOperation(Invalidate()).ignoreElements()!!
+            getObservableForOperation(Invalidate())
 
 }

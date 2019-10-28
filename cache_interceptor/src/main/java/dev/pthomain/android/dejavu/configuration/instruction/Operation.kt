@@ -174,12 +174,13 @@ sealed class Operation(val type: Type) {
      * INVALIDATE instructions invalidate the currently cached data if present and do not return any data.
      * They should usually be used with a Completable. However, if used with a Single or Observable,
      * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
+     *
+     * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to invalidate
      */
-    data class Invalidate(val typeToInvalidate: Class<*>? = null) : Operation(INVALIDATE) { //TODO invalidate by hash rather than class
-
+    data class Invalidate(val useRequestParameters: Boolean = false) : Operation(INVALIDATE) {
         override fun toString() = SERIALISER.serialise(
                 type,
-                typeToInvalidate
+                useRequestParameters
         )
     }
 
@@ -188,17 +189,25 @@ sealed class Operation(val type: Type) {
      * They should usually be used with a Completable. However, if used with a Single or Observable,
      * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
      *
-     * @param typeToClear the response type to clear. When provided, only cached responses of the given type will be cleared. If left null, the entire cache will be cleared.
+     * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to clear
      * @param clearStaleEntriesOnly whether or not to clear the STALE data only. When set to true, only expired data is cleared, otherwise STALE and FRESH data is cleared.
      */
-    data class Clear(val typeToClear: Class<*>? = null,
-                     val clearStaleEntriesOnly: Boolean = false) : Operation(CLEAR) { //TODO clear by hash rather than class
-
+    data class Clear(val useRequestParameters: Boolean = false,
+                     val clearStaleEntriesOnly: Boolean = false) : Operation(CLEAR) {
         override fun toString() = SERIALISER.serialise(
                 type,
-                typeToClear,
+                useRequestParameters,
                 clearStaleEntriesOnly
         )
+    }
+
+    /**
+     * Wipes clean the entire cache.
+     * Should usually be used with a Completable. However, if used with a Single or Observable,
+     * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
+     */
+    object Wipe : Operation(CLEAR) {
+        override fun toString() = SERIALISER.serialise(type)
     }
 
     override fun toString() = SERIALISER.serialise(type)

@@ -39,7 +39,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOp
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import java.util.*
 import javax.inject.Singleton
@@ -88,13 +87,11 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Singleton
     fun provideMemoryPersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
                                                fileStoreFactory: FileStore.Factory<E>,
-                                               hasher: Hasher,
                                                serialisationManagerFactory: SerialisationManager.Factory<E>,
                                                dateFactory: Function1<Long?, Date>,
                                                fileNameSerialiser: FileNameSerialiser) =
             KeyValuePersistenceManager.FileFactory(
                     fileStoreFactory,
-                    hasher,
                     serialisationManagerFactory,
                     configuration,
                     dateFactory::get,
@@ -105,13 +102,11 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Singleton
     fun provideFilePersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
                                              memoryStoreFactory: MemoryStore.Factory,
-                                             hasher: Hasher,
                                              serialisationManagerFactory: SerialisationManager.Factory<E>,
                                              dateFactory: Function1<Long?, Date>,
                                              fileNameSerialiser: FileNameSerialiser) =
             KeyValuePersistenceManager.MemoryFactory(
                     memoryStoreFactory,
-                    hasher,
                     serialisationManagerFactory,
                     configuration,
                     dateFactory::get,
@@ -121,14 +116,12 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Provides
     @Singleton
     fun provideDatabasePersistenceManagerFactory(configuration: DejaVuConfiguration<E>,
-                                                 hasher: Hasher,
                                                  database: SupportSQLiteDatabase?,
                                                  dateFactory: Function1<Long?, Date>,
                                                  serialisationManagerFactory: SerialisationManager.Factory<E>) =
             if (database != null)
                 DatabasePersistenceManager.Factory(
                         database,
-                        hasher,
                         serialisationManagerFactory,
                         configuration,
                         dateFactory::get,

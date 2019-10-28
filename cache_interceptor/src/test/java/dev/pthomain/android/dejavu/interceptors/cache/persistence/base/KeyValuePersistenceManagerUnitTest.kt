@@ -35,11 +35,11 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheData
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
 
@@ -74,11 +74,16 @@ internal class KeyValuePersistenceManagerUnitTest
                 mockExpiryDateTime,
                 mockBlob,
                 INVALID_HASH,
+                INVALID_HASH,
                 true,
                 true
         )
 
-        whenever(mockSerialisationManagerFactory.create(eq(FILE))).thenReturn(mockSerialisationManager)
+        mockDejaVuConfiguration = setUpConfiguration(
+                encryptDataGlobally,
+                compressDataGlobally,
+                cacheInstruction
+        )
 
         mockCompleteCacheDataHolder = with(mockIncompleteCacheDataHolder) {
             Complete(
@@ -91,12 +96,6 @@ internal class KeyValuePersistenceManagerUnitTest
             )
         }
 
-        mockDejaVuConfiguration = setUpConfiguration(
-                encryptDataGlobally,
-                compressDataGlobally,
-                cacheInstruction
-        )
-
         mockKeyValueStore = mock()
 
         mockWrongCacheDataHolder1 = mock()
@@ -104,7 +103,6 @@ internal class KeyValuePersistenceManagerUnitTest
         mockRightCacheDataHolder = mock()
 
         return KeyValuePersistenceManager(
-                mockHasher,
                 mockDejaVuConfiguration,
                 mockDateFactory,
                 mockFileNameSerialiser,
@@ -114,9 +112,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     override fun prepareClearCache(context: String,
-                                   useTypeToClear: Boolean,
-                                   clearStaleEntriesOnly: Boolean,
-                                   mockClassHash: String) {
+                                   instructionToken: CacheToken) {
         val entryList = arrayOf(entryOfWrongType1, entryOfRightType, entryOfWrongType2)
 
         whenever(mockKeyValueStore.values()).thenReturn(mapOf(
@@ -129,8 +125,9 @@ internal class KeyValuePersistenceManagerUnitTest
         whenever(mockFileNameSerialiser.deserialise(eq(entryOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
         whenever(mockFileNameSerialiser.deserialise(eq(entryOfRightType))).thenReturn(mockRightCacheDataHolder)
 
-        if (useTypeToClear) {
-            whenever(mockRightCacheDataHolder.responseClassHash).thenReturn(mockClassHash)
+        val requestMetadata = instructionToken.instruction.requestMetadata
+        if (requestMetadata.responseClass == TestResponse::class.java) {
+            whenever(mockRightCacheDataHolder.responseClassHash).thenReturn(requestMetadata.classHash)
             whenever(mockWrongCacheDataHolder1.responseClassHash).thenReturn("wrong1")
             whenever(mockWrongCacheDataHolder2.responseClassHash).thenReturn("wrong2")
         }

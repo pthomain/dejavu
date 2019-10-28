@@ -25,14 +25,12 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
-import kotlin.reflect.KClass
 
 /**
  * Retrofit annotation for calls made with an associated INVALIDATE directive.
- * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Invalidate
- *
- * @param typeToInvalidate the response type to invalidate (use Any to invalidate all the entries)
+ * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+ * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to invalidate
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Invalidate(val typeToInvalidate: KClass<*> = Any::class)
+annotation class Invalidate(val useRequestParameters: Boolean = false)

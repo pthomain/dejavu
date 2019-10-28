@@ -32,6 +32,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
  * @param expiryDate the optional date at which the response will expire
  * @param data the serialised response payload
  * @param responseClassHash the hash of the response class
+ * @param requestHash the hash of the request's URL, parameters and body
  * @param isCompressed whether or not the response was cached compressed
  * @param isEncrypted whether or not the response was cached encrypted
  */
@@ -40,6 +41,7 @@ sealed class CacheDataHolder(
         open val expiryDate: Long,
         open val data: ByteArray,
         open val responseClassHash: String,
+        open val requestHash: String,
         open val isCompressed: Boolean,
         open val isEncrypted: Boolean
 ) {
@@ -51,6 +53,7 @@ sealed class CacheDataHolder(
      * @param expiryDate the optional date at which the response will expire
      * @param data the serialised response payload
      * @param responseClassHash the hash of the response class
+     * @param requestHash the hash of the request's URL, parameters and body
      * @param isCompressed whether or not the response was cached compressed
      * @param isEncrypted whether or not the response was cached encrypted
      */
@@ -59,6 +62,7 @@ sealed class CacheDataHolder(
             override val expiryDate: Long,
             override val data: ByteArray,
             override val responseClassHash: String,
+            override val requestHash: String,
             override val isCompressed: Boolean,
             override val isEncrypted: Boolean
     ) : CacheDataHolder(
@@ -66,6 +70,7 @@ sealed class CacheDataHolder(
             expiryDate,
             data,
             responseClassHash,
+            requestHash,
             isCompressed,
             isEncrypted
     ) {
@@ -80,7 +85,6 @@ sealed class CacheDataHolder(
      * @param cacheDate the optional date at which the response was cached
      * @param expiryDate the optional date at which the response will expire
      * @param data the serialised response payload
-     * @param responseClassHash the hash of the response class
      * @param isCompressed whether or not the response was cached compressed
      * @param isEncrypted whether or not the response was cached encrypted
      */
@@ -96,6 +100,7 @@ sealed class CacheDataHolder(
             expiryDate,
             data,
             requestMetadata.classHash,
+            requestMetadata.requestHash,
             isCompressed,
             isEncrypted
     ) {
@@ -105,6 +110,7 @@ sealed class CacheDataHolder(
                 expiryDate,
                 data,
                 responseClassHash,
+                requestHash,
                 isCompressed,
                 isEncrypted
         )

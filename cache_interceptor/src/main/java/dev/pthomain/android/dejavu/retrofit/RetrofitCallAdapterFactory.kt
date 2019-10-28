@@ -26,6 +26,7 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
@@ -35,7 +36,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.CallAdapter
@@ -88,18 +88,13 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
         return when (getRawType(returnType)) {
             Single::class.java -> SINGLE
             Observable::class.java -> OBSERVABLE
-            Completable::class.java -> COMPLETABLE
+            CacheOperation::class.java -> OPERATION
             else -> null
         }?.let { rxType ->
-            val responseClass = when (rxType) {
-                OBSERVABLE,
-                SINGLE -> {
-                    if (returnType is ParameterizedType)
-                        getRawType(getParameterUpperBound(0, returnType))
-                    else null
-                }
-                else -> null
-            } ?: Any::class.java
+
+            val responseClass = if (returnType is ParameterizedType)
+                getRawType(getParameterUpperBound(0, returnType))
+            else Any::class.java //TODO throw exception
 
             logger.d(
                     this,

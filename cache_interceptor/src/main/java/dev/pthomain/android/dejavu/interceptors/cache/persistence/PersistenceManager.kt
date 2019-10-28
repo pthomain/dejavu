@@ -41,13 +41,11 @@ interface PersistenceManager<E>
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
      * Both parameters work in conjunction to form an intersection of entries to be cleared.
      *
-     * @param typeToClear type of entries to clear (or all the entries if this parameter is null)
-     * @param clearStaleEntriesOnly only clear STALE entries if set to true (or all otherwise)
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun clearCache(typeToClear: Class<*>?,
-                   clearStaleEntriesOnly: Boolean)
+    fun clearCache(instructionToken: CacheToken)
 
     /**
      * Returns a cached entry if available
@@ -72,7 +70,7 @@ interface PersistenceManager<E>
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
      *
-     * @param instructionToken the INVALIDATE instruction token for the desired entry.
+     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      * @throws SerialisationException in case the deserialisation failed

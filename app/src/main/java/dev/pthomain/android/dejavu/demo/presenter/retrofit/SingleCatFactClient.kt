@@ -24,12 +24,12 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.retrofit.annotations.*
 import dev.pthomain.android.dejavu.retrofit.annotations.OptionalBoolean.TRUE
-import io.reactivex.Completable
 import io.reactivex.Single
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -99,14 +99,14 @@ internal interface SingleCatFactClient {
     // CLEAR
 
     @DELETE(ENDPOINT)
-    @Clear(typeToClear = CatFactResponse::class)
-    fun clearCache(): Completable
+    @Clear()
+    fun clearCache(): CacheOperation<CatFactResponse>
 
     // INVALIDATE
 
     @DELETE(ENDPOINT)
-    @Invalidate(typeToInvalidate = CatFactResponse::class)
-    fun invalidate(): Completable
+    @Invalidate()
+    fun invalidate(): CacheOperation<CatFactResponse>
 
     // OFFLINE
 
@@ -121,6 +121,6 @@ internal interface SingleCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun execute(@Header(DejaVuHeader) operation: Operation): Single<CatFactResponse>
+    fun execute(@Header(DejaVuHeader) operation: Operation): CacheOperation<CatFactResponse>
 
 }

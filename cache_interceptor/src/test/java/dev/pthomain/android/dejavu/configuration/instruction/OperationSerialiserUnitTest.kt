@@ -32,14 +32,17 @@ import org.junit.Test
 class OperationSerialiserUnitTest {
 
     private fun getMap(targetClass: Class<*>) = targetClass.name.let {
-        LinkedHashMap<String, Operation>().apply {
+        LinkedHashMap<String, Operation?>().apply {
             put("DO_NOT_CACHE", DoNotCache)
-            put("INVALIDATE", Invalidate())
-            put("INVALIDATE:$it", Invalidate(targetClass))
-            put("CLEAR:$it:true", Clear(targetClass, true))
-            put("CLEAR:$it:false", Clear(targetClass))
-            put("CLEAR::false", Clear())
-            put("CLEAR::true", Clear(clearStaleEntriesOnly = true))
+            put("INVALIDATE", null)
+            put("INVALIDATE:$it", Invalidate())
+            put("CLEAR", Clear(false, false))
+            put("CLEAR:false:false", Clear(false, false))
+            put("CLEAR:false", Clear(false, false))
+            put("CLEAR:true", Clear(true, false))
+            put("CLEAR:true:false", Clear(true, false))
+            put("CLEAR:true:true", Clear(true, true))
+//            put("CLEAR", Wipe) //FIXME there needs to be a flag for Wipe
             put("CACHE:1234:4321:true:true:true:true:true", Cache(1234L, 4321L, true, true, true, true, true))
             put("CACHE:1234:4321:true:true:true:true:false", Cache(1234L, 4321L, true, true, true, true))
             put("CACHE:1234:4321:true:true:true::false", Cache(1234L, 4321L, true, true, true))
@@ -87,7 +90,7 @@ class OperationSerialiserUnitTest {
     private fun serialise(targetClass: Class<*>) {
         getMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
-                    "${entry.value.type} at position $index could not be serialised",
+                    "${entry.value?.type} at position $index could not be serialised",
                     entry.key,
                     entry.value.toString()
             )
@@ -97,7 +100,7 @@ class OperationSerialiserUnitTest {
     private fun deserialise(targetClass: Class<*>) {
         getMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
-                    "${entry.value.type} at position $index could not be deserialised",
+                    "${entry.value?.type} at position $index could not be deserialised",
                     entry.value,
                     Operation.fromString(entry.key)
             )

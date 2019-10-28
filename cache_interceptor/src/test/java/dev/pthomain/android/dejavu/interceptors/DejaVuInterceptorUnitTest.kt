@@ -178,7 +178,7 @@ class DejaVuInterceptorUnitTest {
 
     @Test
     fun testApplyCompletable() {
-        testApply(COMPLETABLE)
+        testApply(OPERATION)
     }
 
     private fun testApply(rxType: RxType) {
@@ -208,7 +208,7 @@ class DejaVuInterceptorUnitTest {
                     when (rxType) {
                         OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
                         SINGLE -> target.apply(mockSingle).subscribe(testObserver)
-                        COMPLETABLE -> target.apply(mockCompletable).subscribe(testObserver)
+                        OPERATION -> target.apply(mockCompletable).subscribe(testObserver)
                     }
 
                     val errorToken = errorTokenCaptor.firstValue

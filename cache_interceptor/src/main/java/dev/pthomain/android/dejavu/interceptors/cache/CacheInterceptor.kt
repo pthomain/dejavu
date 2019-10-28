@@ -72,13 +72,9 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
                                 start
                         )
 
-                        is Clear -> cacheManager.clearCache(
-                                instructionToken,
-                                instruction.operation.typeToClear,
-                                instruction.operation.clearStaleEntriesOnly
-                        )
+                        is Clear -> cacheManager.clearCache(instructionToken) //TODO update request metadata with type defined in operation
 
-                        is Invalidate -> cacheManager.invalidate(instructionToken)
+                        is Invalidate -> cacheManager.invalidate(instructionToken) //TODO update request metadata with type defined in operation
 
                         else -> doNotCache(upstream)
                     }

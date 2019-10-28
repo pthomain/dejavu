@@ -57,28 +57,31 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
      * @param responseClass the response model's class
      * @param url the full URL of the request including query parameters
      * @param requestBody the optional body of the request
-     * @param urlHash the hash of the URL and its alphabetically sorted query parameters
+     * @param requestHash the hash of the URL and its alphabetically sorted query parameters
      * @param classHash the response class' hash
      */
     sealed class Hashed(override val responseClass: Class<*>,
                         override val url: String,
                         override val requestBody: String?,
-                        open val urlHash: String,
+                        open val requestHash: String,
                         open val classHash: String) : RequestMetadata(
             responseClass,
             url,
             requestBody
     ) {
 
+        fun valid() = this as Valid
+        fun invalid() = this as Invalid
+
         data class Valid(override val responseClass: Class<*>,
                          override val url: String,
                          override val requestBody: String?,
-                         override val urlHash: String,
+                         override val requestHash: String,
                          override val classHash: String) : Hashed(
                 responseClass,
                 url,
                 requestBody,
-                urlHash,
+                requestHash,
                 classHash
         )
 

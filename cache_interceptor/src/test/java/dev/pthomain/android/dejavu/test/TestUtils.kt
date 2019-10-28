@@ -282,11 +282,11 @@ inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(
             DoNotCache,
             Invalidate(),
-            Invalidate(TestResponse::class.java),
+            Invalidate(true),
+            Wipe,
             Clear(),
-            Clear(null, true),
-            Clear(TestResponse::class.java),
-            Clear(TestResponse::class.java, true),
+            Clear(true),
+            Clear(true, true),
             Offline(true, mergeOnNextOnError = null),
             Offline(false, mergeOnNextOnError = null),
             Offline(true, mergeOnNextOnError = false),
@@ -363,6 +363,7 @@ fun isStatusValid(cacheStatus: CacheStatus,
     DoNotCache -> cacheStatus == NOT_CACHED
 
     is Invalidate,
+    is Wipe,
     is Clear -> cacheStatus == EMPTY
 }
 

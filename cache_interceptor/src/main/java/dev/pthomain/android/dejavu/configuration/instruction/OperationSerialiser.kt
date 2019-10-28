@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
+import android.util.Log
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
@@ -82,18 +83,10 @@ internal class OperationSerialiser {
                         else -> null
                     }
                 } catch (e: Exception) {
+                    Log.e("OperationSerialiser", "Could not deserialise $serialised", e)
                     null
                 }
             }
-
-    /**
-     * Returns a class for the given name or null, without throwing an exception
-     */
-    private fun getClassForName(value: String): Class<*>? = try {
-        Class.forName(value)
-    } catch (e: Exception) {
-        null
-    }
 
     /**
      * Converts a given serialised input to a nullable Boolean
@@ -110,21 +103,20 @@ internal class OperationSerialiser {
     /**
      * Returns a Clear operation instance for the given list of parameters
      */
-    private fun getClearOperation(params: List<String>) =
-            if (params.size == 3) {
+    private fun getClearOperation(params: List<String>): Operation =
+            if (params.size > 1) {
                 Clear(
-                        getClassForName(params[1]),
-                        toBoolean(params[2]) ?: false
+                        toBoolean(params[1]) ?: false,
+                        if (params.size > 2) toBoolean(params[2]) ?: false else false
                 )
-            } else Clear()
+            } else Wipe
 
     /**
      * Returns a Invalidate operation instance for the given list of parameters
      */
-    private fun getInvalidateOperation(params: List<String>) =
-            if (params.size == 2) {
-                Invalidate(getClassForName(params[1]))
-            } else Invalidate()
+    private fun getInvalidateOperation(params: List<String>) = Invalidate(
+            if (params.size > 1) toBoolean(params[2]) ?: false else false
+    )
 
     /**
      * Returns an Expiring operation instance for the given list of parameters

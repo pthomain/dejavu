@@ -25,8 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -209,7 +208,9 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
             }
         } catch (e: SerialisationException) {
             logger.e(this, "Could not deserialise $simpleName: clearing the cache")
-            clearCache(null, false)
+            clearCache(instructionToken.copy(
+                    instruction = instructionToken.instruction.copy(operation = Wipe)
+            ))
             null
         }
     }
@@ -224,9 +225,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
     final override fun invalidate(instructionToken: CacheToken) =
             with(instructionToken) {
                 invalidateIfNeeded(
-                        copy(instruction = instruction.copy(
-                                operation = Invalidate(instructionToken.instruction.requestMetadata.responseClass)
-                        ))
+                        copy(instruction = instruction.copy(operation = Invalidate()))
                 )
             }
 

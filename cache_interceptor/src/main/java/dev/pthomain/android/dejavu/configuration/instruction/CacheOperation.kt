@@ -21,15 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.retrofit.annotations
+package dev.pthomain.android.dejavu.configuration.instruction
 
-import kotlin.annotation.AnnotationRetention.RUNTIME
-import kotlin.annotation.AnnotationTarget.FUNCTION
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import io.reactivex.Observable
+import io.reactivex.Observer
 
-/**
- * Retrofit annotation for calls made with an associated DO_NOT_CACHE directive.
- * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
- */
-@Target(FUNCTION)
-@Retention(RUNTIME)
-annotation class DoNotCache
+class CacheOperation<T>(responseWrapper: ResponseWrapper<*>) : Observable<ResponseWrapper<*>>() {
+    override fun subscribeActual(observer: Observer<in ResponseWrapper<*>>?) = Unit
+}

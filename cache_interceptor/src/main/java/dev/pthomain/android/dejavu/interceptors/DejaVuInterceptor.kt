@@ -105,7 +105,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
      * @return the call intercepted with the inner interceptors
      */
     override fun apply(upstream: Completable) =
-            composeInternal(upstream.toObservable(), COMPLETABLE)
+            composeInternal(upstream.toObservable(), OPERATION)
                     .ignoreElements()!!
 
     /**
@@ -130,6 +130,8 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
                 (instruction.operation as? Expiring)?.compress ?: configuration.compress,
                 (instruction.operation as? Expiring)?.encrypt ?: configuration.encrypt
         )
+
+        //TODO for CLEAR and INVALIDATE, use the type defined in the operation
 
         val start = dateFactory(null).time
 

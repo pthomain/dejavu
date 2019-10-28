@@ -74,6 +74,6 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
         override fun invalidate() = singleClient.invalidate()
         override fun offline() = singleClient.offline()
         override fun offlineFreshOnly() = singleClient.offlineFreshOnly()
-        override fun execute(operation: Operation) = singleClient.execute(operation).toObservable()
+        override fun execute(operation: Operation) = singleClient.execute(operation)
     }
 }

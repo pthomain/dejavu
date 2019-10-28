@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
@@ -155,7 +156,10 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         val (testResponseToken, userResponseToken) = cacheTwoResponses(stubbedResponse, userResponse)
 
-        target.clearCache(TestResponse::class.java, false)
+        target.clearCache(instructionToken(
+                Operation.Clear(),
+                TestResponse::class.java
+        ))
 
         val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
         val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)
@@ -179,7 +183,10 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         val (testResponseToken, userResponseToken) = cacheTwoResponses(stubbedResponse, userResponse)
 
-        target.clearCache(null, false)
+        target.clearCache(instructionToken(
+                Operation.Wipe,
+                Any::class.java
+        ))
 
         val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
         val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)
@@ -286,7 +293,10 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
                 secondResponseExpectedStatus = STALE
         )
 
-        target.clearCache(TestResponse::class.java, true)
+        target.clearCache(instructionToken(
+                Operation.Clear(clearStaleEntriesOnly = true),
+                TestResponse::class.java
+        ))
 
         val freshTestResponseAfterClear = target.getCachedResponse(freshResponseToken)
         val expiredUserResponseAfterClear = target.getCachedResponse(expiredResponseToken)
@@ -373,7 +383,10 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
                 STALE
         )
 
-        target.clearCache(null, true)
+        target.clearCache(instructionToken(
+                Operation.Clear(clearStaleEntriesOnly = true),
+                Any::class.java //TODO use Any for clearing all classes
+        ))
 
         val cachedTestResponseAfterClear = target.getCachedResponse(testResponseToken)
         val cachedUserResponseAfterClear = target.getCachedResponse(userResponseToken)

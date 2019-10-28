@@ -265,7 +265,7 @@ class AnnotationProcessorUnitTest {
     fun testProcessInvalidate() {
         testProcessAnnotation(
                 getAnnotation<Invalidate>(listOf(responseKClass)),
-                Operation.Invalidate() //TODO response class
+                Operation.Invalidate()
         )
     }
 
@@ -284,7 +284,7 @@ class AnnotationProcessorUnitTest {
                         responseKClass,
                         false
                 )),
-                Operation.Clear(responseClass)
+                Operation.Clear()
         )
     }
 
@@ -296,8 +296,7 @@ class AnnotationProcessorUnitTest {
                         true
                 )),
                 Operation.Clear(
-                        responseClass,
-                        true
+                        clearStaleEntriesOnly = true
                 )
         )
     }

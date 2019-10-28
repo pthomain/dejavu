@@ -87,7 +87,7 @@ internal class ProcessingErrorAdapter<E> private constructor(defaultAdapter: Cal
             when (rxType) {
                 OBSERVABLE -> errorObservable
                 SINGLE -> errorObservable.firstOrError()
-                COMPLETABLE -> errorObservable.flatMapCompletable {
+                OPERATION -> errorObservable.flatMapCompletable {
                     if (it is CacheMetadata.Holder<*> && it.metadata.exception != null) {
                         Completable.error(it.metadata.exception)
                     } else Completable.complete()

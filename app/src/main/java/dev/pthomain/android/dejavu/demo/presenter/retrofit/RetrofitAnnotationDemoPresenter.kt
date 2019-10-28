@@ -23,8 +23,12 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.demo.DemoActivity
+import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 
 internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
@@ -52,9 +56,18 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                 }
             }
 
-    override fun getOfflineSingle(freshOnly: Boolean) =
-            if (freshOnly) catFactClient().offlineFreshOnly()
-            else catFactClient().offline()
+    override fun getOfflineSingle(freshOnly: Boolean): CacheOperation<CatFactResponse> =
+            ifElse(
+                    freshOnly,
+                    catFactClient().offlineFreshOnly(),
+                    catFactClient().offline()
+            ).flatMapObservable {
+                CacheOperation<CatFactResponse>(ResponseWrapper( //FIXME simplify this
+                        CatFactResponse::class.java,
+                        it,
+                        it.metadata
+                ))
+            } as CacheOperation<CatFactResponse>
 
     override fun getClearEntriesCompletable() = catFactClient().clearCache()
 
