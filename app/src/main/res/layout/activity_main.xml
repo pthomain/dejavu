@@ -201,19 +201,6 @@
         android:orientation="horizontal">
 
         <CheckBox
-            android:id="@+id/checkbox_allow_non_final_for_single"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_allow_non_final_for_single"
-            android:text="Allow non-final for Singles" />
-
-        <CheckBox
             android:id="@+id/checkbox_connectivity_timeout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
