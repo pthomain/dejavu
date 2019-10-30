@@ -34,9 +34,11 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
-                            @Transient val exception: E? = null,
-                            @Transient val callDuration: Duration = Duration(0, 0, 0))
+//TODO add exceptionClass : Class<E> and link to ErrorFactory
+data class CacheMetadata<E>(val cacheToken: CacheToken,
+                            val exception: E? = null,
+                            val exceptionClass: Class<E>,
+                            val callDuration: Duration = Duration(0, 0, 0))
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -52,8 +54,8 @@ data class CacheMetadata<E>(@Transient val cacheToken: CacheToken,
                         val total: Int)
 
     /**
-     * Interface to be set on any response requiring cache metadata to be provided. Only responses
-     * implementing this interface can use the mergeOnNextOnError directive.
+     * Interface to be set on any response requiring cache metadata to be provided. This metadata
+     * contains information about the response's status, dates and serialisation methods.
      */
     interface Holder<E>
             where E : Exception,

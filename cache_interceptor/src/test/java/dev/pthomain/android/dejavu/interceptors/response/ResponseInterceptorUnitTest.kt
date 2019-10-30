@@ -29,7 +29,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
@@ -86,20 +86,17 @@ class ResponseInterceptorUnitTest {
             trueFalseSequence { hasResponse ->
                 trueFalseSequence { isEmptyObservable ->
                     trueFalseSequence { allowNonFinalForSingle ->
-                        trueFalseSequence { mergeOnNextOnError ->
-                            sequenceOf(TestResponse::class.java, String::class.java).forEach { responseClass ->
-                                testApplyWithVariants(
-                                        responseClass,
-                                        isSingle,
-                                        isCompletable,
-                                        hasResponse,
-                                        isEmptyObservable,
-                                        allowNonFinalForSingle,
-                                        mergeOnNextOnError,
-                                        cacheStatus,
-                                        operation
-                                )
-                            }
+                        sequenceOf(TestResponse::class.java, String::class.java).forEach { responseClass ->
+                            testApplyWithVariants(
+                                    responseClass,
+                                    isSingle,
+                                    isCompletable,
+                                    hasResponse,
+                                    isEmptyObservable,
+                                    allowNonFinalForSingle,
+                                    cacheStatus,
+                                    operation
+                            )
                         }
                     }
                 }
@@ -107,7 +104,7 @@ class ResponseInterceptorUnitTest {
         }
     }
 
-    private fun getExpiringDescription(operation: Expiring) =
+    private fun getExpiringDescription(operation: Cache) =
             ",\noperation.filterFinal = ${operation.filterFinal}," +
                     "\noperation.freshOnly = ${operation.freshOnly}," +
                     "\noperation.mergeOnNextOnError = ${operation.mergeOnNextOnError},"
@@ -118,7 +115,6 @@ class ResponseInterceptorUnitTest {
                                       hasResponse: Boolean,
                                       isEmptyUpstreamObservable: Boolean,
                                       allowNonFinalForSingle: Boolean,
-                                      mergeOnNextOnError: Boolean,
                                       cacheStatus: CacheStatus,
                                       operation: Operation) {
         val context = "Iteration ${num++}" +
@@ -130,7 +126,6 @@ class ResponseInterceptorUnitTest {
                 "\nhasResponse = $hasResponse," +
                 "\nisEmptyUpstreamObservable = $isEmptyUpstreamObservable," +
                 "\nallowNonFinalForSingle = $allowNonFinalForSingle," +
-                "\nconf.mergeOnNextOnError = $mergeOnNextOnError" +
                 (if (operation is Expiring) getExpiringDescription(operation) else "")
 
         setUp() //reset mocks

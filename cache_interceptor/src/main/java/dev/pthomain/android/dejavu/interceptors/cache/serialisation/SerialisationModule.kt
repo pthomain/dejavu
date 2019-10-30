@@ -114,6 +114,7 @@ internal abstract class SerialisationModule<E> where E : Exception,
                                            encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
             SerialisationManager.Factory(
                     configuration.serialiser,
+                    configuration.errorFactory,
                     byteToStringConverter::get,
                     fileSerialisationDecorator,
                     compressionSerialisationDecorator,

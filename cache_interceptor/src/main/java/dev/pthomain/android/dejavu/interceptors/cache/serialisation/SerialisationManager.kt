@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.dejavu.configuration.Serialiser
+import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -39,11 +40,13 @@ import java.util.*
 /**
  * Handles the different steps of the serialisation of the response.
  *
+ * @param errorFactory the factory converting throwables to custom exceptions
  * @param serialiser instance of Serialiser in charge of serialising a model to a String (typically JSON)
  * @param byteToStringConverter a factory converting a ByteArray to a String
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
-class SerialisationManager<E> private constructor(private val serialiser: Serialiser,
+class SerialisationManager<E> private constructor(private val errorFactory: ErrorFactory<E>,
+                                                  private val serialiser: Serialiser,
                                                   private val byteToStringConverter: (ByteArray) -> String,
                                                   private val decoratorList: List<SerialisationDecorator<E>>)
         where E : Exception,
@@ -122,13 +125,19 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
                     ResponseWrapper(
                             responseClass,
                             it,
-                            CacheMetadata<E>(instructionToken, null)
+                            CacheMetadata(
+                                    instructionToken,
+                                    null,
+                                    errorFactory.exceptionClass
+                            )
                     )
                 }
     }
 
     /**
      * Factory providing an instance of SerialisationManager
+     *
+     * @param errorFactory the factory converting throwables to custom exceptions
      * @param serialiser instance of Serialiser in charge of serialising a model to a String (typically JSON)
      * @param byteToStringConverter a factory converting a ByteArray to a String
      * @param fileSerialisationDecorator a SerialisationDecorator used specifically for file serialisation
@@ -136,6 +145,7 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
      * @param encryptionSerialisationDecorator a SerialisationDecorator used for payload encryption
      */
     class Factory<E> internal constructor(private val serialiser: Serialiser,
+                                          private val errorFactory: ErrorFactory<E>,
                                           private val byteToStringConverter: (ByteArray) -> String,
                                           private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                           private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
@@ -159,6 +169,7 @@ class SerialisationManager<E> private constructor(private val serialiser: Serial
             }
 
             return SerialisationManager(
+                    errorFactory,
                     serialiser,
                     byteToStringConverter,
                     decoratorList

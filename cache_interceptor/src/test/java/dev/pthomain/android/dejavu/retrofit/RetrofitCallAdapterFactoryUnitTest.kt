@@ -94,7 +94,10 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     private fun testFactory(rxType: AnnotationProcessor.RxType,
                             throwAnnotationException: Boolean = false) {
-        callAdapterFactory(rxType.rxClass, mockRetrofit) { returnType, annotations, _ ->
+        val responseClass = if (rxType == OPERATION) Any::class.java
+        else TestResponse::class.java
+
+        callAdapterFactory(rxType.rxClass, mockRetrofit, responseClass) { returnType, annotations, _ ->
             mockReturnType = returnType
             mockAnnotations = annotations
 
@@ -107,8 +110,6 @@ class RetrofitCallAdapterFactoryUnitTest {
             mockDefaultCallAdapter
         }
 
-        val responseClass = if (rxType == OPERATION) Any::class.java
-        else TestResponse::class.java
 
         whenever(mockAnnotationProcessor.process(
                 eq(mockAnnotations),

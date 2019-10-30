@@ -82,7 +82,7 @@ internal abstract class InterceptorModule<E>
                         dateFactory::get,
                         t2,
                         t3,
-                        configuration.connectivityTimeoutInMillis.toInt()
+                        configuration.requestTimeOutInSeconds
                 )
             }
 
@@ -120,8 +120,7 @@ internal abstract class InterceptorModule<E>
                         metadataSubject,
                         t1,
                         t2,
-                        t3,
-                        configuration.mergeOnNextOnError
+                        t3
                 )
             }
 

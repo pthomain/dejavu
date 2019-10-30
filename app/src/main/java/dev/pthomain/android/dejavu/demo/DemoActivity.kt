@@ -33,8 +33,11 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.cache_interceptor.demo.R
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference.DEFAULT
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
@@ -61,7 +64,6 @@ internal class DemoActivity
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val allowNonFinalForSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_allow_non_final_for_single)!! }
     private val connectivityTimeoutCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_connectivity_timeout)!! }
     private val useSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_use_single)!! }
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
@@ -116,10 +118,9 @@ internal class DemoActivity
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        allowNonFinalForSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.allowNonFinalForSingle = isChecked }
         connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }
         useSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.useSingle = isChecked }
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshOnly = isChecked }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.preference = ifElse(isChecked, FRESH_ONLY, DEFAULT) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 

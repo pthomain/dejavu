@@ -25,7 +25,9 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -41,11 +43,11 @@ import java.util.*
 /**
  * Provides a skeletal implementation of PersistenceManager
  *
- * @param dejaVuConfiguration the global cache configuration
+ * @param configuration the global cache configuration
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  * @param dateFactory class providing the time, for the purpose of testing
  */
-abstract class BasePersistenceManager<E> internal constructor(private val dejaVuConfiguration: DejaVuConfiguration<E>,
+abstract class BasePersistenceManager<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
                                                               private val serialisationManager: SerialisationManager<E>,
                                                               protected val dateFactory: (Long?) -> Date)
     : PersistenceManager<E>
@@ -53,8 +55,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
               E : NetworkErrorPredicate {
 
     private val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
-    protected val logger = dejaVuConfiguration.logger
-    protected val durationInMillis = dejaVuConfiguration.cacheDurationInMillis
+    protected val logger = configuration.logger
 
     /**
      * Indicates whether or not the entry should be compressed or encrypted based primarily
@@ -68,15 +69,15 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
      * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
     final override fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
-                                               cacheOperation: Expiring) =
+                                               cacheOperation: Cache) =
             previousCachedResponse?.metadata?.cacheToken?.let {
                 SerialisationDecorationMetadata(
                         it.isCompressed,
                         it.isEncrypted
                 )
             } ?: SerialisationDecorationMetadata(
-                    cacheOperation.compress ?: dejaVuConfiguration.compress,
-                    cacheOperation.encrypt ?: dejaVuConfiguration.encrypt
+                    cacheOperation.compress ?: false,
+                    cacheOperation.encrypt ?: false
             )
 
     /**
@@ -91,9 +92,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
                             previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
-        val operation = instruction.operation as Expiring
+        val operation = instruction.operation as Cache
         val simpleName = instruction.requestMetadata.responseClass.simpleName
-        val durationInMillis = operation.durationInMillis ?: durationInMillis
 
         logger.d(this, "Caching $simpleName")
 
@@ -112,7 +112,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
         return CacheDataHolder.Complete(
                 instructionToken.instruction.requestMetadata,
                 now,
-                now + durationInMillis,
+                now + operation.durationInSeconds * 1000L,
                 serialised,
                 metadata.isCompressed,
                 metadata.isEncrypted
@@ -202,16 +202,22 @@ abstract class BasePersistenceManager<E> internal constructor(private val dejaVu
                                     cacheDate = cacheDate,
                                     expiryDate = expiryDate
                             ),
-                            null
+                            null,
+                            configuration.errorFactory.exceptionClass
                     )
                 }
             }
         } catch (e: SerialisationException) {
             logger.e(this, "Could not deserialise $simpleName: clearing the cache")
-            clearCache(instructionToken.copy(
-                    instruction = instructionToken.instruction.copy(operation = Wipe)
-            ))
-            null
+            with(instructionToken) {
+                clearCache(copy(
+                        instruction = CacheInstruction(
+                                instruction.requestMetadata.copy(responseClass = Any::class.java),
+                                Invalidate()
+                        )
+                ))
+                null
+            }
         }
     }
 

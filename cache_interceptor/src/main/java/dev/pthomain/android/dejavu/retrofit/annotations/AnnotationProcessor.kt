@@ -24,13 +24,14 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
-import dev.pthomain.android.dejavu.utils.swapWhenDefaultLong
+import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -66,8 +67,6 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
                 is Cache -> CACHE
                 is DoNotCache -> DO_NOT_CACHE
                 is Invalidate -> INVALIDATE
-                is Refresh -> REFRESH
-                is Offline -> OFFLINE
                 is Clear -> CLEAR
                 else -> null
             }?.let {
@@ -119,25 +118,12 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
 
         return with(annotation) {
             when (this) {
-                is Cache -> Operation.Expiring.Cache(
-                        durationInMillis.swapWhenDefaultLong(dejaVuConfiguration.cacheDurationInMillis),
-                        connectivityTimeoutInMillis.swapWhenDefaultLong(dejaVuConfiguration.connectivityTimeoutInMillis),
-                        freshOnly,
-                        mergeOnNextOnError.value,
-                        encrypt.value,
-                        compress.value
-                )
-
-                is Refresh -> Operation.Expiring.Refresh(
-                        durationInMillis.swapWhenDefaultLong(dejaVuConfiguration.cacheDurationInMillis), //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
-                        connectivityTimeoutInMillis.swapWhenDefaultLong(dejaVuConfiguration.connectivityTimeoutInMillis),
-                        freshOnly,
-                        mergeOnNextOnError.value
-                )
-
-                is Offline -> Operation.Expiring.Offline(
-                        freshOnly,
-                        mergeOnNextOnError.value
+                is Cache -> Operation.Cache(
+                        priority,
+                        durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS),
+                        connectivityTimeoutInSeconds.swapWhenDefault(null),
+                        encrypt,
+                        compress
                 )
 
                 is Invalidate -> Operation.Invalidate(useRequestParameters)

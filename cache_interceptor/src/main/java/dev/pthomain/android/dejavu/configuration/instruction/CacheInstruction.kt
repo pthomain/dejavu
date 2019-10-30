@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
  * @param operation the cache operation with call-specific directives
  */
 data class CacheInstruction internal constructor(
-        val requestMetadata: RequestMetadata.Hashed,
+        val requestMetadata: RequestMetadata.Hashed.Valid,
         val operation: Operation
 )
 

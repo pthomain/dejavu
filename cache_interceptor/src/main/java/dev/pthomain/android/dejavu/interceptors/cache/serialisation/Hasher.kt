@@ -26,7 +26,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Hashed
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Plain
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 
@@ -47,7 +48,7 @@ internal class Hasher(private val logger: Logger,
      * @param requestMetadata the plain metadata
      * @return the hashed metadata or null if the hashing of the URL or class name failed.
      */
-    fun hash(requestMetadata: RequestMetadata.Plain): RequestMetadata.Hashed {
+    fun hash(requestMetadata: Plain): Hashed {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 
@@ -66,8 +67,8 @@ internal class Hasher(private val logger: Logger,
         }
 
         return if (urlHash == null || classHash == null)
-            RequestMetadata.Hashed.Invalid(requestMetadata.responseClass)
-        else RequestMetadata.Hashed.Valid(
+            Hashed.Invalid(requestMetadata.responseClass)
+        else Hashed.Valid(
                 requestMetadata.responseClass,
                 requestMetadata.url,
                 requestMetadata.requestBody,

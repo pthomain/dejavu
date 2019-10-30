@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.interceptors.cache
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.single
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -105,9 +105,10 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                           instructionToken: CacheToken,
                           start: Long) = Observable.defer<ResponseWrapper<E>> {
         val cacheOperation = instructionToken.instruction.operation
-        require(cacheOperation is Expiring) { "Wrong cache operation: $cacheOperation" }
+        require(cacheOperation is Cache) { "Wrong cache operation: $cacheOperation" }
 
         val instruction = instructionToken.instruction
+        val mode = cacheOperation.priority.mode
         val simpleName = instruction.requestMetadata.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
@@ -122,7 +123,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
 
         val diskDuration = (dateFactory(null).time - start).toInt()
 
-        if (cacheOperation is Offline) {
+        if (mode == OFFLINE) {
             if (cachedResponse == null)
                 emptyResponseObservable(instructionToken)
             else
@@ -137,10 +138,10 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
             )
     }!!
 
-    //TODO
+    //TODO JavaDoc
     private fun getOnlineObservable(cachedResponse: ResponseWrapper<E>?,
                                     upstream: Observable<ResponseWrapper<E>>,
-                                    cacheOperation: Expiring,
+                                    cacheOperation: Cache,
                                     instructionToken: CacheToken,
                                     diskDuration: Int) = Observable.defer<ResponseWrapper<E>> {
         val cachedResponseToken = cachedResponse?.metadata?.cacheToken
@@ -156,7 +157,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                     diskDuration
             )
 
-            if (status == STALE && !cacheOperation.freshOnly) {
+            if (status == STALE && cacheOperation.priority.emitsCachedStale) {
                 Observable.concat(
                         Observable.just(cachedResponse).doOnNext {
                             logger.d(this, "Delivering cached $simpleName, status: $status")
@@ -169,7 +170,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
 
     private fun fetchAndCache(previousCachedResponse: ResponseWrapper<E>?,
                               upstream: Observable<ResponseWrapper<E>>,
-                              cacheOperation: Expiring,
+                              cacheOperation: Cache,
                               instructionToken: CacheToken,
                               diskDuration: Int) =
             Observable.defer<ResponseWrapper<E>> {

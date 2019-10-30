@@ -25,11 +25,13 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
-import dev.pthomain.android.dejavu.retrofit.annotations.*
-import dev.pthomain.android.dejavu.retrofit.annotations.OptionalBoolean.TRUE
+import dev.pthomain.android.dejavu.retrofit.annotations.Cache
+import dev.pthomain.android.dejavu.retrofit.annotations.Clear
+import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import io.reactivex.Single
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -44,56 +46,56 @@ internal interface SingleCatFactClient {
     fun get(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
-    @Cache(compress = TRUE)
+    @Cache(compress = true)
     fun compressed(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
-    @Cache(encrypt = TRUE)
+    @Cache(encrypt = true)
     fun encrypted(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
-            compress = TRUE,
-            encrypt = TRUE
+            compress = true,
+            encrypt = true
     )
     fun compressedEncrypted(): Single<CatFactResponse>
 
     // GET freshOnly
 
     @GET(ENDPOINT)
-    @Cache(freshOnly = true)
+    @Cache(priority = FRESH_ONLY)
     fun freshOnly(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
-            freshOnly = true,
-            compress = TRUE
+            priority = FRESH_ONLY,
+            compress = true
     )
     fun freshOnlyCompressed(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
-            freshOnly = true,
-            encrypt = TRUE
+            priority = FRESH_ONLY,
+            encrypt = true
     )
     fun freshOnlyEncrypted(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(
-            freshOnly = true,
-            compress = TRUE,
-            encrypt = TRUE
+            priority = FRESH_ONLY,
+            compress = true,
+            encrypt = true
     )
     fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
 
     // REFRESH
 
     @GET(ENDPOINT)
-    @Refresh
+    @Cache(priority = REFRESH_FRESH_PREFERRED)
     fun refresh(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
-    @Refresh(freshOnly = true)
+    @Cache(priority = REFRESH_FRESH_ONLY)
     fun refreshFreshOnly(): Single<CatFactResponse>
 
     // CLEAR
@@ -105,17 +107,17 @@ internal interface SingleCatFactClient {
     // INVALIDATE
 
     @DELETE(ENDPOINT)
-    @Invalidate()
+    @Invalidate
     fun invalidate(): CacheOperation<CatFactResponse>
 
     // OFFLINE
 
     @GET(ENDPOINT)
-    @Offline
+    @Cache(priority = OFFLINE)
     fun offline(): Single<CatFactResponse>
 
     @GET(ENDPOINT)
-    @Offline(freshOnly = true)
+    @Cache(priority = OFFLINE_FRESH_ONLY)
     fun offlineFreshOnly(): Single<CatFactResponse>
 
     //HEADER

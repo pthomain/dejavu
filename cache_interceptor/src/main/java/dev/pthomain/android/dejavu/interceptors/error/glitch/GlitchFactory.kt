@@ -39,6 +39,8 @@ import java.util.concurrent.TimeoutException
  */
 open class GlitchFactory : ErrorFactory<Glitch> {
 
+    override val exceptionClass = Glitch::class.java
+
     /**
      * Converts a throwable to a Glitch, containing some metadata around the exception
      *
@@ -125,4 +127,5 @@ open class GlitchFactory : ErrorFactory<Glitch> {
                 500 -> SERVER_ERROR
                 else -> UNKNOWN
             }
+
 }

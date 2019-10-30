@@ -33,7 +33,7 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import dev.pthomain.android.cache_interceptor.demo.R
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
@@ -71,10 +71,10 @@ internal class ExpandableListAdapter(context: Context)
         val metadata = catFactResponse.metadata
         val cacheToken = metadata.cacheToken
         val exception = metadata.exception
-        val operation = cacheToken.instruction.operation.type
+        val operation = cacheToken.instruction.operation
         val callDuration = metadata.callDuration
 
-        val elapsed = "${operation.name} -> ${cacheToken.status} (${callDuration.total}ms)"
+        val elapsed = "${operation.type.name} -> ${cacheToken.status} (${callDuration.total}ms)"
         val duration = "Call duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms"
 
         val info = ArrayList<String>()
@@ -99,11 +99,11 @@ internal class ExpandableListAdapter(context: Context)
 
             info.add(duration)
 
-            if (operation is Expiring) {
+            if (operation is Cache) {
                 info.add("Cache token expiry date: "
                         + simpleDateFormat.format(cacheToken.expiryDate)
                         + " (TTL: "
-                        + (operation.durationInMillis?.times(1000)?.toInt() ?: "N/A")
+                        + operation.durationInSeconds
                         + "s)"
                 )
             }

@@ -23,43 +23,54 @@
 
 package dev.pthomain.android.dejavu.utils
 
-fun <T : Any> T?.isAnyNullable(predicate: (Any?) -> Boolean,
-                               vararg values: Any?): Boolean {
-    if (this != null) {
-        values.forEach {
-            if (predicate(it)) return true
+import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
+
+object Utils {
+
+    fun <T> T?.isAnyNullable(predicate: (Any?) -> Boolean,
+                             vararg values: Any?): Boolean {
+        if (this != null) {
+            values.forEach {
+                if (predicate(it)) return true
+            }
         }
+        return false
     }
-    return false
+
+    fun <T> T.isAny(predicate: (Any) -> Boolean,
+                    vararg values: Any) =
+            isAnyNullable(
+                    { it != null && predicate(it) },
+                    values
+            )
+
+    fun <T : Any> T?.isAnyInstance(vararg classes: Class<*>) =
+            this != null && isAny(
+                    { this::class.java.isAssignableFrom(it::class.java) },
+                    classes
+            )
+
+    fun <T> T?.swapLambdaWhen(condition: Boolean?,
+                              ifTrue: (T?) -> T?): T? =
+            swapLambdaWhen({ condition }, ifTrue)
+
+    fun <T> T?.swapLambdaWhen(condition: (T?) -> Boolean?,
+                              ifTrue: (T?) -> T?): T? =
+            if (condition(this) == true) ifTrue(this) else this
+
+    fun <T> T?.swapValueWhen(ifTrue: T?,
+                             condition: (T?) -> Boolean?): T? =
+            swapLambdaWhen(condition) { ifTrue }
+
+    fun Int?.swapWhenDefault(ifDefault: Int?) =
+            swapValueWhen(ifDefault) { it == null || it == -1 }!!
+
+    fun Class<*>.swapWhenDefault() =
+            swapValueWhen(null) { it == Any::class.java }!!
+
+    fun Operation.invalidatesExistingData() =
+            type == INVALIDATE || (this as? Cache)?.priority?.invalidatesExistingData == true
+
 }
-
-fun <T : Any> T.isAny(predicate: (Any) -> Boolean,
-                      vararg values: Any) =
-        isAnyNullable(
-                { it != null && predicate(it) },
-                values
-        )
-
-fun <T : Any> T.isAnyInstance(vararg classes: Class<*>) =
-        isAny(
-                { this::class.java.isAssignableFrom(it::class.java) },
-                classes
-        )
-
-fun <T : Any> T?.swapLambdaWhen(condition: Boolean?,
-                                ifTrue: (T?) -> T?): T? =
-        swapLambdaWhen({ condition }, ifTrue)
-
-fun <T : Any> T?.swapLambdaWhen(condition: (T?) -> Boolean?,
-                                ifTrue: (T?) -> T?): T? =
-        if (condition(this) == true) ifTrue(this) else this
-
-fun <T : Any> T?.swapValueWhen(ifTrue: T?,
-                               condition: (T?) -> Boolean?): T? =
-        swapLambdaWhen(condition) { ifTrue }
-
-fun Long?.swapWhenDefaultLong(ifDefault: Long) =
-        swapValueWhen(ifDefault) { it == null || it == -1L }!!
-
-fun Class<*>.swapWhenDefaultClass() =
-        swapValueWhen(null) { it == Any::class.java }!!

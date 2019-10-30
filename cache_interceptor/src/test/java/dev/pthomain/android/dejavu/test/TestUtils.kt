@@ -379,12 +379,13 @@ inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> 
 
 fun callAdapterFactory(rxClass: Class<*>,
                        retrofit: Retrofit,
-                       constructor: Function3<Type, Array<Annotation>, Retrofit, CallAdapter<Any, Any>>) =
+                       targetClass: Class<*>,
+                       constructor: (Type, Array<Annotation>, Retrofit) -> CallAdapter<Any, Any>) =
         constructor.invoke(
                 object : ParameterizedType {
                     override fun getRawType() = rxClass
                     override fun getOwnerType() = null
-                    override fun getActualTypeArguments() = arrayOf<Type>(TestResponse::class.java)
+                    override fun getActualTypeArguments() = arrayOf<Type>(targetClass)
                 },
                 arrayOf(
                         getAnnotation<GET>(listOf("/")),

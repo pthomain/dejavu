@@ -27,6 +27,7 @@ import dagger.Component
 import dev.pthomain.android.boilerplate.core.mvp.base.MvpContract.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
@@ -47,10 +48,9 @@ internal class DemoMvpContract {
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         var useSingle: Boolean
-        var allowNonFinalForSingle: Boolean
         var encrypt: Boolean
         var compress: Boolean
-        var freshOnly: Boolean
+        var preference: CachePreference
         var connectivityTimeoutOn: Boolean
 
         fun loadCatFact(isRefresh: Boolean)

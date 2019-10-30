@@ -52,7 +52,6 @@ internal abstract class CacheModule<E>
                     configuration.errorFactory,
                     persistenceManager,
                     dateFactory::get,
-                    configuration.cacheDurationInMillis,
                     logger
             )
 

@@ -30,8 +30,6 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -43,6 +41,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.utils.Utils.invalidatesExistingData
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
 
@@ -182,7 +181,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      */
     @Throws(SerialisationException::class)
     override fun invalidateIfNeeded(instructionToken: CacheToken) =
-            if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+            if (instructionToken.instruction.operation.invalidatesExistingData()) {
                 val map = mapOf(EXPIRY_DATE.columnName to 0)
                 val selection = "${TOKEN.columnName} = ?"
                 val requestMetadata = instructionToken.instruction.requestMetadata

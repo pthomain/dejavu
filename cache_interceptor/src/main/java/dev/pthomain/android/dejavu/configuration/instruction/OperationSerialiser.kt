@@ -23,10 +23,10 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
-import android.util.Log
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
 /**
  * Class in charge of operating a simple serialisation of Operation
@@ -44,20 +44,19 @@ internal class OperationSerialiser {
      * @param arguments all the associated operation's arguments
      * @return the serialised operation
      */
-    fun serialise(type: Type?,
+    fun serialise(type: Type,
                   vararg arguments: Any?) =
-            arguments.joinToString(separator = SEPARATOR) {
+            arguments.joinToString(SEPARATOR) {
                 when (it) {
                     null -> ""
+                    -1L -> ""
                     is Class<*> -> it.name
+                    is CachePriority -> it.name
                     else -> it.toString()
                 }
             }.let {
-                when {
-                    type == null -> it
-                    it.replace(":+", "").isBlank() -> type.name
-                    else -> type.name + SEPARATOR + it
-                }
+                if (it.replace(":+", "").isBlank()) type.name
+                else type.name + SEPARATOR + it
             }
 
     /**
@@ -68,23 +67,12 @@ internal class OperationSerialiser {
      */
     fun deserialise(serialised: String) =
             serialised.split(SEPARATOR).let { params ->
-                try {
-                    when (params[0]) {
-                        DO_NOT_CACHE.name -> DoNotCache
-
-                        INVALIDATE.name -> getInvalidateOperation(params)
-
-                        CLEAR.name -> getClearOperation(params)
-
-                        CACHE.name,
-                        REFRESH.name,
-                        OFFLINE.name -> getExpiringOperation(params)
-
-                        else -> null
-                    }
-                } catch (e: Exception) {
-                    Log.e("OperationSerialiser", "Could not deserialise $serialised", e)
-                    null
+                when (params[0]) {
+                    DO_NOT_CACHE.name -> DoNotCache
+                    INVALIDATE.name -> getInvalidateOperation(params)
+                    CLEAR.name -> getClearOperation(params)
+                    CACHE.name -> getCacheOperation(params)
+                    else -> null
                 }
             }
 
@@ -95,70 +83,56 @@ internal class OperationSerialiser {
             if (value == "") null else value == "true"
 
     /**
+     * Converts a given serialised input to a nullable Boolean
+     */
+    private fun toBoolean(params: List<String>,
+                          index: Int,
+                          defaultValue: Boolean = false) =
+            if (params.size > index)
+                toBoolean(params[index]) ?: defaultValue
+            else defaultValue
+
+    /**
      * Converts a given serialised input to a nullable Long
      */
-    private fun toLong(value: String) =
-            if (value == "") null else value.toLong()
+    private fun toInt(value: String,
+                      defaultValue: Int? = null) =
+            if (value == "") null
+            else value.toInt().swapWhenDefault(defaultValue)
 
     /**
      * Returns a Clear operation instance for the given list of parameters
      */
-    private fun getClearOperation(params: List<String>): Operation =
-            if (params.size > 1) {
-                Clear(
-                        toBoolean(params[1]) ?: false,
-                        if (params.size > 2) toBoolean(params[2]) ?: false else false
-                )
-            } else Wipe
+    private fun getClearOperation(params: List<String>) = Clear(
+            toBoolean(params, 1),
+            toBoolean(params, 2)
+    )
 
     /**
      * Returns a Invalidate operation instance for the given list of parameters
      */
     private fun getInvalidateOperation(params: List<String>) = Invalidate(
-            if (params.size > 1) toBoolean(params[2]) ?: false else false
+            toBoolean(params, 1)
     )
 
     /**
      * Returns an Expiring operation instance for the given list of parameters
      */
-    private fun getExpiringOperation(params: List<String>) =
-            if (params.size == 8) {
-                val durationInMillis = toLong(params[1])
-                val connectivityTimeoutInMillis = toLong(params[2])
-                val freshOnly = toBoolean(params[3]) ?: false
-                val mergeOnNextOnError = toBoolean(params[4])
-                val encrypt = toBoolean(params[5])
-                val compress = toBoolean(params[6])
-                val filterFinal = toBoolean(params[7]) ?: false
+    private fun getCacheOperation(params: List<String>) =
+            if (params.size == 6) {
+                val priority = CachePriority.valueOf(params[1])
+                val durationInSeconds = toInt(params[2], DEFAULT_CACHE_DURATION_IN_SECONDS)!!
+                val connectivityTimeoutInSeconds = toInt(params[3])
+                val encrypt = toBoolean(params, 4)
+                val compress = toBoolean(params, 5)
 
-                when (params[0]) {
-                    CACHE.name -> Cache(
-                            durationInMillis,
-                            connectivityTimeoutInMillis,
-                            freshOnly,
-                            mergeOnNextOnError,
-                            encrypt,
-                            compress,
-                            filterFinal
-                    )
-                    REFRESH.name -> Refresh(
-                            durationInMillis,
-                            connectivityTimeoutInMillis,
-                            freshOnly,
-                            mergeOnNextOnError,
-                            filterFinal
-                    )
-                    OFFLINE.name -> Offline(
-                            freshOnly,
-                            mergeOnNextOnError
-                    )
-                    else -> throw IllegalArgumentException("Unknown type")
-                }
-            } else when (params[0]) {
-                CACHE.name -> Cache()
-                REFRESH.name -> Refresh()
-                OFFLINE.name -> Offline()
-                else -> throw IllegalArgumentException("Unknown type")
-            }
+                Cache(
+                        priority,
+                        durationInSeconds,
+                        connectivityTimeoutInSeconds,
+                        encrypt,
+                        compress
+                )
+            } else Cache()
 
 }

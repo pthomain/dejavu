@@ -66,7 +66,7 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
             instructionToken.instruction.let { instruction ->
                 if (isCacheEnabled) {
                     when (instruction.operation) {
-                        is Expiring -> cacheManager.getCachedResponse(
+                        is Cache -> cacheManager.getCachedResponse(
                                 upstream,
                                 instructionToken,
                                 start

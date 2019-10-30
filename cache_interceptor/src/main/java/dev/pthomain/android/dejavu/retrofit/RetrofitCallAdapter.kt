@@ -53,7 +53,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
-                                      private val operation: Operation?,
+                                      private val annotationOperation: Operation?,
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
         where E : Exception,
@@ -74,7 +74,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         val header = call.request().header(DejaVuHeader)
 
         return when {
-            operation != null -> {
+            annotationOperation != null -> {
                 if (header != null) adaptedByHeader(
                         call,
                         header,
@@ -82,7 +82,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                 )
                 else adaptedWithOperation(
                         call,
-                        operation,
+                        annotationOperation,
                         "Using an operation defined by a call annotation"
                 )
             }
@@ -97,27 +97,21 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         }
     }
 
+    //TODO JavaDoc
     private fun defaultAdaptation(call: Call<Any>) =
             adaptedByDefault(call) ?: adaptedByDefaultRxJavaAdapter(call)
 
-    private fun adaptedByDefault(call: Call<Any>): Any? {
-        val metadata = getRequestMetadata(call)
-        return if (dejaVuConfiguration.cachePredicate(responseClass, metadata)) {
-            adaptedWithOperation(
-                    call,
-                    Operation.Expiring.Cache(
-                            dejaVuConfiguration.cacheDurationInMillis,
-                            dejaVuConfiguration.connectivityTimeoutInMillis,
-                            false,
-                            dejaVuConfiguration.mergeOnNextOnError,
-                            dejaVuConfiguration.encrypt,
-                            dejaVuConfiguration.compress,
-                            false
-                    ),
-                    "Using default caching for call with no operation by annotation or header but matching the defined caching predicate"
-            )
-        } else null
-    }
+    private fun adaptedByDefault(call: Call<Any>) =
+            dejaVuConfiguration.cachePredicate(
+                    responseClass,
+                    getRequestMetadata(call)
+            )?.let {
+                adaptedWithOperation(
+                        call,
+                        it,
+                        "Using default caching for call with no operation by annotation or header but matching the defined caching predicate"
+                )
+            }
 
     /**
      * Returns the adapted call composed with a DejaVuInterceptor with a given cache operation,
@@ -174,7 +168,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
          * if present or to the default adapter otherwise.
          */
         fun deserialisationFailed() =
-                if (operation != null) {
+                if (annotationOperation != null) {
                     logger.e(
                             this,
                             "Found a header cache operation on $methodDescription but it could not be deserialised."
@@ -182,7 +176,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                     )
                     adaptedWithOperation(
                             call,
-                            operation,
+                            annotationOperation,
                             "Using an operation defined by a call annotation"
                     )
                 } else {

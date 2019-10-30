@@ -27,7 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -43,14 +43,12 @@ import java.util.*
  * @param errorFactory the factory converting exceptions to the custom exception type
  * @param persistenceManager the object in charge of persisting the response
  * @param dateFactory a factory converting timestamps in Dates
- * @param defaultDurationInMillis the default cache duration as defined globally in DejaVuConfiguration
  * @param logger a Logger instance
  */
 internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager<E>,
         private val dateFactory: (Long?) -> Date,
-        private val defaultDurationInMillis: Long,
         private val logger: Logger
 ) where E : Exception,
         E : NetworkErrorPredicate {
@@ -67,7 +65,7 @@ internal class CacheMetadataManager<E>(
      * @return the ResponseWrapper updated with the new metadata
      */
     fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<E>,
-                               cacheOperation: Expiring,
+                               cacheOperation: Cache,
                                previousCachedResponse: ResponseWrapper<E>?,
                                instructionToken: CacheToken,
                                diskDuration: Int): ResponseWrapper<E> {
@@ -77,7 +75,7 @@ internal class CacheMetadataManager<E>(
         val hasCachedResponse = previousCachedResponse != null
 
         val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
-        val timeToLiveInMs = cacheOperation.durationInMillis ?: defaultDurationInMillis
+        val timeToLiveInSeconds = cacheOperation.durationInSeconds
         val fetchDate = dateFactory(null)
 
         val cacheDate = ifElse(
@@ -89,7 +87,7 @@ internal class CacheMetadataManager<E>(
         val expiryDate = ifElse(
                 hasError,
                 previousCacheToken?.expiryDate,
-                dateFactory(fetchDate.time + timeToLiveInMs)
+                dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
         )
 
         val (encryptData, compressData) = persistenceManager.shouldEncryptOrCompress(
@@ -100,7 +98,7 @@ internal class CacheMetadataManager<E>(
         val status = ifElse(
                 hasError,
                 ifElse(
-                        cacheOperation.freshOnly,
+                        cacheOperation.priority.hasSingleResponse,
                         EMPTY,
                         ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
                 ),

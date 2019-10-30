@@ -24,20 +24,18 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
+import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
 import io.reactivex.Single
+import okhttp3.Request
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -48,18 +46,22 @@ import java.util.*
 /**
  * Implements the call adapter factory for Retrofit composing the calls with DejaVuInterceptor.
  *
+ * @param configuration the global cache configuration
  * @param rxJava2CallAdapterFactory the default RxJava call adapter factory
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
- * @param dejaVuFactory the DejaVuInterceptor factory, as returned by DejaVu
+ * @param dejaVuFactory the DejaVuInterceptor factory
+ * @param serialiser an OperationSerialiser instance
+ * @param requestBodyConverter a factory converting a Request to String
  * @param annotationProcessor the Retrofit annotation processor
  * @param logger the logger
  */
-class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
-                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
+class RetrofitCallAdapterFactory<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
+                                                         private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
+                                                         private val serialiser: OperationSerialiser,
+                                                         private val requestBodyConverter: (Request) -> String?,
                                                          private val annotationProcessor: AnnotationProcessor<E>,
-                                                         private val processingErrorAdapterFactory: ProcessingErrorAdapter.Factory<E>,
                                                          private val logger: Logger)
     : CallAdapter.Factory()
         where E : Exception,
@@ -85,78 +87,63 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val rxJava2Call
                 retrofit
         ) as CallAdapter<Any, Any>
 
-        return when (getRawType(returnType)) {
+        val rawType = getRawType(returnType)
+
+        val rxType = when (rawType) {
             Single::class.java -> SINGLE
             Observable::class.java -> OBSERVABLE
             CacheOperation::class.java -> OPERATION
             else -> null
-        }?.let { rxType ->
+        } ?: throw IllegalArgumentException("Unsupported return type ${rawType.name}")
 
-            val responseClass = if (returnType is ParameterizedType)
-                getRawType(getParameterUpperBound(0, returnType))
-            else Any::class.java //TODO throw exception
+        val responseClass = if (returnType is ParameterizedType)
+            getRawType(getParameterUpperBound(0, returnType))
+        else Any::class.java //TODO throw exception, this shouldn't happen given the list checked above
 
-            logger.d(
-                    this,
-                    "Processing annotation for method returning " + rxType.getTypedName(responseClass)
+        logger.d(
+                this,
+                "Processing annotation for method returning " + rxType.getTypedName(responseClass)
+        )
+
+        val operation = try {
+            annotationProcessor.process(
+                    annotations,
+                    rxType,
+                    responseClass
             )
+        } catch (cacheException: CacheException) {
+            logger.e(this, cacheException, "The annotation cannot be processed, this call won't be cached")
+            DoNotCache
+        }
 
-            try {
-                annotationProcessor.process(
-                        annotations,
-                        rxType,
-                        responseClass
-                ).let { operation ->
-                    val methodDescription = "method returning " + rxType.getTypedName(responseClass)
+        val methodDescription = "method returning " + rxType.getTypedName(responseClass)
 
-                    if (operation == null) {
-                        logger.d(
-                                this,
-                                "Annotation processor for $methodDescription"
-                                        + " returned no instruction, checking cache header"
-                        )
-                    } else {
-                        logger.d(
-                                this,
-                                "Annotation processor for $methodDescription"
-                                        + " returned the following cache operation "
-                                        + operation
-                        )
-                    }
-
-                    innerFactory(
-                            dejaVuFactory,
-                            logger,
-                            methodDescription,
-                            responseClass,
-                            operation,
-                            defaultCallAdapter
-                    )
-                }
-            } catch (cacheException: CacheException) {
-                val requestMetadata = RequestMetadata.Hashed.Invalid(responseClass)
-                processingErrorAdapterFactory.create(
-                        defaultCallAdapter,
-                        CacheToken(
-                                CacheInstruction(
-                                        requestMetadata,
-                                        DoNotCache
-                                ),
-                                NOT_CACHED,
-                                false,
-                                false
-                        ),
-                        dateFactory(null).time,
-                        rxType,
-                        cacheException
-                )
-            }
-        } ?: defaultCallAdapter.also {
+        if (operation == null) {
             logger.d(
                     this,
-                    "Annotation processor did not return any instruction for call returning $returnType"
+                    "Annotation processor for $methodDescription"
+                            + " returned no instruction, checking cache header"
+            )
+        } else {
+            logger.d(
+                    this,
+                    "Annotation processor for $methodDescription"
+                            + " returned the following cache operation "
+                            + operation
             )
         }
+
+        return RetrofitCallAdapter(
+                configuration,
+                responseClass,
+                dejaVuFactory,
+                serialiser,
+                requestBodyConverter,
+                logger,
+                methodDescription,
+                operation,
+                defaultCallAdapter
+        )
     }
 
 }

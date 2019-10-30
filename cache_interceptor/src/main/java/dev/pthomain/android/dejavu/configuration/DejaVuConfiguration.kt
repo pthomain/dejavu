@@ -24,32 +24,31 @@
 package dev.pthomain.android.dejavu.configuration
 
 import android.content.Context
-import android.os.Looper
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
-import io.reactivex.android.plugins.RxAndroidPlugins
-import io.reactivex.android.schedulers.AndroidSchedulers
 
 /**
  * Class holding the global cache configuration. Values defined here are used by default
  * but (for some of them) can be overridden on a per-call basis via the use of arguments
  * passed to the call's CacheInstruction (and by extension in the Retrofit call's annotation).
  *
- * @see CacheInstruction
+ * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Clear
  * @see dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
- * @see dev.pthomain.android.dejavu.retrofit.annotations.Offline
- * @see dev.pthomain.android.dejavu.retrofit.annotations.Refresh
+ *
+ * TODO update JavaDoc
  */
 data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val logger: Logger,
@@ -59,16 +58,14 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val useDatabase: Boolean,
                                                        val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
                                                        val isCacheEnabled: Boolean,
-                                                       val encrypt: Boolean,
-                                                       val compress: Boolean,
-                                                       val mergeOnNextOnError: Boolean,
-                                                       val allowNonFinalForSingle: Boolean,
                                                        val requestTimeOutInSeconds: Int,
-                                                       val connectivityTimeoutInMillis: Long,
-                                                       val cacheDurationInMillis: Long,
-                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Boolean)
+                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Cache?)
         where E : Exception,
               E : NetworkErrorPredicate {
+
+    companion object {
+        const val DEFAULT_CACHE_DURATION_IN_SECONDS = 3600 //1h
+    }
 
     class Builder<E> internal constructor(
             private val errorFactory: ErrorFactory<E>,
@@ -83,16 +80,15 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         private var useDatabase = false
         private var persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)? = null
 
-        private var requestTimeOutInSeconds: Int = 15
-        private var connectivityTimeoutInMillis: Long = 0L
-        private var cacheDurationInMillis: Long = 60 * 60 * 1000 //1h
-
         private var isCacheEnabled = true
+        private var requestTimeOutInSeconds: Int = 15
+
+        private var durationInSeconds = DEFAULT_CACHE_DURATION_IN_SECONDS
+        private var connectivityTimeoutInSeconds: Int? = null
         private var compressData: Boolean = false
         private var encryptData: Boolean = false
-        private var mergeOnNextOnError: Boolean = false
-        private var allowNonFinalForSingle: Boolean = false
-        private var cachePredicate: (Class<*>, RequestMetadata) -> Boolean = { _, _ -> false }
+
+        private var cachePredicate: (Class<*>, RequestMetadata) -> Cache? = { _, _ -> null }
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -126,15 +122,15 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         /**
          *  Sets the maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
          */
-        fun connectivityTimeoutInMillis(connectivityTimeoutInMillis: Long) =
-                apply { this.connectivityTimeoutInMillis = connectivityTimeoutInMillis }
+        fun connectivityTimeoutInSeconds(connectivityTimeoutInSeconds: Int) =
+                apply { this.connectivityTimeoutInSeconds = connectivityTimeoutInSeconds }
 
         /**
          * Sets the global cache duration in milliseconds (used by default for all calls with no specific directive,
-         * see @Cache::durationInMillis for call-specific directive).
+         * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache.durationInSeconds for call-specific directive).
          */
-        fun cacheDurationInMillis(cacheDurationInMillis: Long) =
-                apply { this.cacheDurationInMillis = cacheDurationInMillis }
+        fun cacheDurationInSeconds(durationInSeconds: Int) =
+                apply { this.durationInSeconds = durationInSeconds }
 
         /**
          * Enables or disables cache globally, regardless of individual call setup.
@@ -210,45 +206,23 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                 }
 
         /**
-         * Sets response/error merging globally (used by default for all calls with no specific directive,
-         * see @Cache::mergeOnNextOnError for call-specific directive).
-         *
-         * When set to true, errors will be added as metadata to any call implementing
-         * the CacheMetadata.Holder interface. This means onError(t:Throwable) will never be called.
-         *
-         * Instead if an error occurs, an empty response is returned with the exception available as
-         * metadata. Special care must be taken to check if the response metadata contains an error
-         * before attempting to read any of its fields.
-         *
-         * When used by mistake on a call returning a response that does not implement
-         * CacheMetadata.Holder, this directive is ignored and the exception is delivered using the
-         * default RxJava mechanism which may cause a crash if no uncaught error handler
-         * is set and the onError(t:Throwable) callback is not provided.
-         */
-        fun mergeOnNextOnError(mergeOnNextOnError: Boolean) =
-                apply { this.mergeOnNextOnError = mergeOnNextOnError }
-
-        /**
-         * Allows Singles to return non-final responses. This means the call terminates earlier with
-         * the risk that the returned data might be STALE. The REFRESH call will still happen in
-         * the background but the result of it won't be delivered. Instead it will be available
-         * for the next call. By default, Singles will only return responses with final status.
-         * The 'filterFinal' directive on the cache instruction will take precedence if set.
-         *
-         * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-         * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction.Operation.Expiring.filterFinal
-         */
-        fun allowNonFinalForSingle(allowNonFinalForSingle: Boolean) =
-                apply { this.allowNonFinalForSingle = allowNonFinalForSingle }
-
-        /**
          * Sets data caching globally (used by default for all calls with no cache instruction) using
          * the default global values set in this configuration object. The default value is to false.
          * Overrides the value set in the cachePredicate() method.
          * @see cachePredicate
          */
         fun cacheAllByDefault(cacheAllByDefault: Boolean) =
-                apply { this.cachePredicate = { _, _ -> cacheAllByDefault } }
+                apply {
+                    this.cachePredicate = { _, _ ->
+                        Cache(
+                                DEFAULT,
+                                DEFAULT_CACHE_DURATION_IN_SECONDS,
+                                connectivityTimeoutInSeconds,
+                                encryptData,
+                                compressData
+                        )
+                    }
+                }
 
         /**
          * Sets a predicate for ad-hoc response caching. This predicate will be called for any
@@ -258,10 +232,11 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * response won't be cached. Otherwise, it will be cached using the global values defined
          * in this configuration object. The default behaviour is to return false.
          * Overrides the value set in the cacheAllByDefault() method.
+         *
+         * //TODO update JavaDoc
          * @see cacheAllByDefault
          */
-        fun cachePredicate(predicate: (responseClass: Class<*>,
-                                       metadata: RequestMetadata) -> Boolean) =
+        fun cachePredicate(predicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Cache?) =
                 apply { this.cachePredicate = predicate }
 
         /**
@@ -274,13 +249,10 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                   serialiser: Serialiser): DejaVu<E> {
             val logger = logger ?: getSilentLogger()
 
-            RxAndroidPlugins.setInitMainThreadSchedulerHandler {
-                AndroidSchedulers.from(Looper.getMainLooper(), true)
+            val encryptionManager = with(Mumbo(context, logger)) {
+                mumboPicker?.invoke(this)
+                        ?: defaultEncryptionManager(this, context)
             }
-
-            val mumbo = Mumbo(context, logger)
-            val encryptionManager = mumboPicker?.invoke(mumbo)
-                    ?: defaultEncryptionManager(mumbo, context)
 
             return DejaVu(
                     componentProvider(
@@ -293,13 +265,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                     useDatabase,
                                     persistenceManagerPicker,
                                     isCacheEnabled,
-                                    encryptData,
-                                    compressData,
-                                    mergeOnNextOnError,
-                                    allowNonFinalForSingle,
                                     requestTimeOutInSeconds,
-                                    connectivityTimeoutInMillis,
-                                    cacheDurationInMillis,
                                     cachePredicate
                             ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                     )

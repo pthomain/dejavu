@@ -33,4 +33,5 @@ interface NetworkErrorPredicate {
      * @return whether or not the class implementing this interface represents a network error
      */
     fun isNetworkError(): Boolean
+
 }

@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.metadata.token
 
 /**
+ * TODO update JavaDoc
  * Class representing the cache status of a response
  */
 enum class CacheStatus(
@@ -36,7 +37,7 @@ enum class CacheStatus(
          * the call's directives.
          *
          * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.allowNonFinalForSingle
-         * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.filterFinal
+         * @see dev.pthomain.android.dejavu.configuration.Operation.Expiring.filterFinal
          */
         isFinal: Boolean,
         /**

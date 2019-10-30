@@ -26,6 +26,10 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CacheMode.REFRESH
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -34,31 +38,32 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(isRefresh: Boolean,
+    override fun getResponseObservable(cachePriority: CachePriority,
                                        encrypt: Boolean,
-                                       compress: Boolean,
-                                       freshOnly: Boolean) =
-            if (isRefresh) {
-                when {
-                    freshOnly -> catFactClient().refreshFreshOnly()
-                    else -> catFactClient().refresh()
-                }
-            } else {
-                when {
-                    freshOnly && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
-                    freshOnly && compress -> catFactClient().freshOnlyCompressed()
-                    freshOnly && encrypt -> catFactClient().freshOnlyEncrypted()
-                    freshOnly -> catFactClient().freshOnly()
-                    compress && encrypt -> catFactClient().compressedEncrypted()
-                    compress -> catFactClient().compressed()
-                    encrypt -> catFactClient().encrypted()
-                    else -> catFactClient().get()
+                                       compress: Boolean) =
+            with(cachePriority) {
+                if (mode == REFRESH) {
+                    when (preference) {
+                        FRESH_ONLY -> catFactClient().refreshFreshOnly()
+                        else -> catFactClient().refresh()
+                    }
+                } else {
+                    when {
+                        preference == FRESH_ONLY && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
+                        preference == FRESH_ONLY && compress -> catFactClient().freshOnlyCompressed()
+                        preference == FRESH_ONLY && encrypt -> catFactClient().freshOnlyEncrypted()
+                        preference == FRESH_ONLY -> catFactClient().freshOnly()
+                        compress && encrypt -> catFactClient().compressedEncrypted()
+                        compress -> catFactClient().compressed()
+                        encrypt -> catFactClient().encrypted()
+                        else -> catFactClient().get()
+                    }
                 }
             }
 
-    override fun getOfflineSingle(freshOnly: Boolean): CacheOperation<CatFactResponse> =
+    override fun getOfflineSingle(preference: CachePreference) =
             ifElse(
-                    freshOnly,
+                    preference == FRESH_ONLY,
                     catFactClient().offlineFreshOnly(),
                     catFactClient().offline()
             ).flatMapObservable {
@@ -72,5 +77,4 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
     override fun getClearEntriesCompletable() = catFactClient().clearCache()
 
     override fun getInvalidateCompletable() = catFactClient().invalidate()
-
 }

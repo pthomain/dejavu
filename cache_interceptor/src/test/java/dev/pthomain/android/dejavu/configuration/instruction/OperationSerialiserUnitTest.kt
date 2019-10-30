@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.configuration.instruction
 
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -33,33 +33,33 @@ class OperationSerialiserUnitTest {
 
     private fun getMap(targetClass: Class<*>) = targetClass.name.let {
         LinkedHashMap<String, Operation?>().apply {
+            put("CACHE", Cache())
             put("DO_NOT_CACHE", DoNotCache)
-            put("INVALIDATE", null)
-            put("INVALIDATE:$it", Invalidate())
-            put("CLEAR", Clear(false, false))
+            put("INVALIDATE", Invalidate())
+            put("CLEAR", Clear())
+
+            put("INVALIDATE:false", Invalidate())
+            put("INVALIDATE:true", Invalidate(true))
+
+            put("CLEAR:false:false", Clear())
+            put("CLEAR:false:false", Clear(false))
             put("CLEAR:false:false", Clear(false, false))
-            put("CLEAR:false", Clear(false, false))
-            put("CLEAR:true", Clear(true, false))
             put("CLEAR:true:false", Clear(true, false))
             put("CLEAR:true:true", Clear(true, true))
-//            put("CLEAR", Wipe) //FIXME there needs to be a flag for Wipe
-            put("CACHE:1234:4321:true:true:true:true:true", Cache(1234L, 4321L, true, true, true, true, true))
-            put("CACHE:1234:4321:true:true:true:true:false", Cache(1234L, 4321L, true, true, true, true))
-            put("CACHE:1234:4321:true:true:true::false", Cache(1234L, 4321L, true, true, true))
-            put("CACHE:1234:4321:true:true:::false", Cache(1234L, 4321L, true, true))
-            put("CACHE:1234:4321:true::::false", Cache(1234L, 4321L, true))
-            put("CACHE:1234:4321:false::::false", Cache(1234L, 4321L))
-            put("CACHE:1234::false::::false", Cache(1234L))
-            put("CACHE:::false::::false", Cache())
-            put("REFRESH:1234:4321:true:true:::true", Refresh(1234L, 4321L, true, true, true))
-            put("REFRESH:1234:4321:true:true:::false", Refresh(1234L, 4321L, true, true))
-            put("REFRESH:1234:4321:true::::false", Refresh(1234L, 4321L, true))
-            put("REFRESH:1234:4321:false::::false", Refresh(1234L, 4321L))
-            put("REFRESH:1234::false::::false", Refresh(1234L))
-            put("REFRESH:::false::::false", Refresh())
-            put("OFFLINE:::true:true:::false", Offline(true, true))
-            put("OFFLINE:::true::::false", Offline(true))
-            put("OFFLINE:::false::::false", Offline())
+
+            put("CACHE:DEFAULT:1234:5678:false:false", Cache(DEFAULT, 1234L, 5678L, false, false))
+            put("CACHE:DEFAULT:1234:5678:false:true", Cache(DEFAULT, 1234L, 5678L, false, true))
+            put("CACHE:DEFAULT:1234:5678:true:true", Cache(DEFAULT, 1234L, 5678L, true, true))
+            put("CACHE:DEFAULT:1234:5678:true:false", Cache(DEFAULT, 1234L, 5678L, true, false))
+            put("CACHE:DEFAULT::5678:true:true", Cache(DEFAULT, -1L, 5678L, true, true))
+            put("CACHE:DEFAULT:::true:true", Cache(DEFAULT, -1L, -1L, true, true))
+
+            put("CACHE:FRESH_PREFERRED:1234:5678:true:true", Cache(FRESH_PREFERRED, 1234L, 5678L, true, true))
+            put("CACHE:FRESH_ONLY:1234:5678:true:true", Cache(FRESH_ONLY, 1234L, 5678L, true, true))
+            put("CACHE:INVALIDATED:1234:5678:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234L, 5678L, true, true))
+            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:true:true", Cache(REFRESH_FRESH_ONLY, 1234L, 5678L, true, true))
+            put("CACHE:OFFLINE:1234:5678:true:true", Cache(OFFLINE, 1234L, 5678L, true, true))
+            put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:true:true", Cache(OFFLINE_FRESH_ONLY, 1234L, 5678L, true, true))
         }
     }
 

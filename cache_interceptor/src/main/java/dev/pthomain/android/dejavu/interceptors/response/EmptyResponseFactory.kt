@@ -59,29 +59,11 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
                                 errorFactory(
                                         if (isDone) DoneException(instructionToken.instruction.operation)
                                         else EmptyResponseException
-                                )
+                                ),
+                                errorFactory.exceptionClass
                         )
                 )
             }
-
-    /**
-     * Creates an empty response to be returned in lieu of an exception if the mergeOnNextOnError
-     * is set to true and the response class implements CacheMetadata.Holder.
-     *
-     * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An exception is thrown otherwise.
-     * @param responseClass the target response class
-     *
-     * @return the empty response if possible
-     */
-    fun create(mergeOnNextOnError: Boolean,
-               responseClass: Class<*>) =
-            if (mergeOnNextOnError) {
-                try {
-                    responseClass.newInstance()
-                } catch (e: Exception) {
-                    null
-                }
-            } else null
 
     object EmptyResponseException : NoSuchElementException("The response was empty")
     data class DoneException(val operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")

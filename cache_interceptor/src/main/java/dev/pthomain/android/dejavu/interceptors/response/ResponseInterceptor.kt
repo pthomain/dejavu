@@ -27,7 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -36,7 +36,8 @@ import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.Em
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OPERATION
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.SINGLE
-import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
+import dev.pthomain.android.dejavu.utils.Utils.isAnyInstance
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Predicate
@@ -59,7 +60,6 @@ import java.util.*
  * @param instructionToken the instruction cache token
  * @param rxType the returned RxJava type
  * @param start the time the call started
- * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An error is emitted otherwise.
  */
 internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val dateFactory: (Long?) -> Date,
@@ -68,8 +68,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
                                       private val instructionToken: CacheToken,
                                       private val rxType: RxType,
-                                      private val start: Long,
-                                      private val mergeOnNextOnError: Boolean)
+                                      private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, Any>
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -78,13 +77,16 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         val status = it.metadata.cacheToken.status
         val operation = instructionToken.instruction.operation
 
-        if (operation is Expiring) {
-            val filterFresh = status.isFresh || !operation.freshOnly
-            val filterFinal = status.isFinal || !operation.filterFinal
+        if (operation is Cache) {
+            val priority = operation.priority
+
+            //TODO check this logic after priority refactoring
+            val filterFresh = status.isFresh || priority.emitsCachedStale || priority.emitsNetworkStale
+            val filterFinal = status.isFinal || !priority.hasSingleResponse
 
             if (filterFresh && filterFinal) {
                 if (rxType == SINGLE) {
-                    status.isFinal || (configuration.allowNonFinalForSingle && !operation.filterFinal)
+                    status.isFinal || priority.hasSingleResponse
                 } else true
             } else false
         } else true
@@ -111,101 +113,44 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
     private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
-        val responseClass = wrapper.responseClass
-        val operation = wrapper.metadata.cacheToken.instruction.operation
-        val mergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
-                ?: this.mergeOnNextOnError
+        val errorFactory = configuration.errorFactory
+
+        val exception = wrapper.metadata.exception.swapLambdaWhen({ it == null }) {
+            errorFactory(IllegalStateException("The response is null but no exception is present in the metadata"))
+        }
+
+        val callDuration = wrapper.metadata.callDuration.copy(
+                total = (dateFactory(null).time - start).toInt()
+        )
 
         val metadata = wrapper.metadata.copy(
-                callDuration = wrapper.metadata.callDuration.copy(
-                        total = (dateFactory(null).time - start).toInt()
-                )
+                exception = exception,
+                callDuration = callDuration
         )
 
-        val response = wrapper.response ?: emptyResponseFactory.create(
-                mergeOnNextOnError,
-                responseClass
-        )
+        val response = wrapper.response
 
         metadataSubject.onNext(metadata)
 
-        return if (response == null) {
-            checkForError(
-                    responseClass,
-                    mergeOnNextOnError
-            )
-                    ?: metadata.exception
-                    ?: IllegalStateException("Something went wrong")
-        } else {
-            addMetadataIfPossible(
-                    response,
-                    responseClass,
-                    metadata,
-                    mergeOnNextOnError
-            ) ?: response
-        }.let {
-            when {
-                rxType == OPERATION && metadata.exception != null -> {
-                    if (metadata.exception.cause.let { it is EmptyResponseException || it is DoneException }) {
-                        logger.d(this, "Returning empty response for Completable: $metadata")
-                        Observable.empty<Any>()
-                    } else {
-                        logger.d(this, "Returning exception for Completable: $metadata")
-                        Observable.error<Any>(metadata.exception)
-                    }
-                }
-                it is Throwable -> {
-                    logger.d(this, "Returning error: $it")
-                    Observable.error<Any>(it)
-                }
-                else -> {
-                    logger.d(this, "Returning response: $metadata")
-                    Observable.just<Any>(response)
-                }
+        if (response is CacheMetadata.Holder<*>
+                && response.metadata.exceptionClass.isAssignableFrom(errorFactory.exceptionClass)) {
+            @Suppress("UNCHECKED_CAST") // This is verified by the above check
+            (response as CacheMetadata.Holder<E>).metadata = metadata
+        }
+
+        return if (exception != null) {
+            if (rxType == OPERATION
+                    && exception.cause.isAnyInstance(EmptyResponseException::class.java, DoneException::class.java)) {
+                logger.d(this, "Returning empty response for Completable: $metadata")
+                Observable.empty<Any>()
+            } else {
+                logger.d(this, "Returning error: $exception")
+                Observable.error<Any>(exception)
             }
+        } else {
+            logger.d(this, "Returning response: $metadata")
+            Observable.just<Any>(response)
         }
     }
 
-    /**
-     * Adds metadata to any response implementing CacheMetadata.Holder, or throws an exception if the
-     * mergeOnNextOnError directive is used but the response does not implement CacheMetadata.Holder.
-     */
-    @Suppress("UNCHECKED_CAST")
-    private fun addMetadataIfPossible(response: Any,
-                                      responseClass: Class<*>,
-                                      metadata: CacheMetadata<E>,
-                                      mergeOnNextOnError: Boolean): CacheException? {
-        return if (rxType != OPERATION) {
-            val holder = response as? CacheMetadata.Holder<E>
-            if (holder == null) {
-                checkForError(
-                        responseClass,
-                        mergeOnNextOnError
-                )
-            } else {
-                holder.metadata = metadata
-                null
-            }
-        } else null
-    }
-
-    /**
-     * Returns an exception if the mergeOnNextOnError directive is set to true but the
-     * response class does not implement CacheMetadata.Holder.
-     *
-     * @param responseClass the target response class
-     * @param mergeOnNextOnError whether or not any exception should be added to the metadata on an empty response and delivered via onNext. This is only applied if the response implements CacheMetadata.Holder. An exception is thrown otherwise.
-     */
-    private fun checkForError(responseClass: Class<*>,
-                              mergeOnNextOnError: Boolean): CacheException? {
-        val message = "Could not add cache metadata to response '${responseClass.simpleName}'." +
-                " If you want to enable metadata for this class, it needs extend the" +
-                " 'CacheMetadata.Holder' interface." +
-                " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
-                " that do not support cache metadata."
-
-        return if (rxType != OPERATION && mergeOnNextOnError)
-            CacheException(CacheException.Type.METADATA, message)
-        else null
-    }
 }

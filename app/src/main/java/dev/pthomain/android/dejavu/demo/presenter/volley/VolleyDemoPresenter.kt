@@ -25,18 +25,18 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Wipe
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import io.reactivex.Observable
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -49,18 +49,11 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
         private const val URL = BASE_URL + ENDPOINT
     }
 
-    override fun getResponseObservable(isRefresh: Boolean,
+    override fun getResponseObservable(cachePriority: CachePriority,
                                        encrypt: Boolean,
-                                       compress: Boolean,
-                                       freshOnly: Boolean): Observable<CatFactResponse> =
-            getObservableForOperation(when {
-                isRefresh -> Refresh(freshOnly = freshOnly)
-                else -> Cache(
-                        encrypt = encrypt,
-                        compress = compress,
-                        freshOnly = freshOnly
-                )
-            }).map { it.response as CatFactResponse }
+                                       compress: Boolean) =
+            getObservableForOperation(Cache(priority = cachePriority))
+                    .map { it.response as CatFactResponse }
 
     private fun getObservableForOperation(cacheOperation: Operation): CacheOperation<CatFactResponse> =
             RequestMetadata.Plain(responseClass, URL).let {
@@ -81,11 +74,11 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                 } as CacheOperation<CatFactResponse>
             }
 
-    override fun getOfflineSingle(freshOnly: Boolean) =
-            getObservableForOperation(Offline(freshOnly))
+    override fun getOfflineSingle(preference: CachePreference) =
+            getObservableForOperation(Cache(ifElse(preference == CachePreference.FRESH_ONLY, OFFLINE_FRESH_ONLY, OFFLINE)))
 
     override fun getClearEntriesCompletable() =
-            getObservableForOperation(Wipe)
+            getObservableForOperation(Clear())
 
     override fun getInvalidateCompletable() =
             getObservableForOperation(Invalidate())

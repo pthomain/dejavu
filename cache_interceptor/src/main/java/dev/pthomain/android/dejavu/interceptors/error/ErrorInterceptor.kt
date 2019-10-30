@@ -78,9 +78,10 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     ResponseWrapper(
                             responseClass,
                             it,
-                            CacheMetadata<E>(
+                            CacheMetadata(
                                     instructionToken,
                                     null,
+                                    errorFactory.exceptionClass,
                                     defaultDuration
                             )
                     )
@@ -95,6 +96,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
                         CacheMetadata(
                                 instructionToken,
                                 errorFactory(it),
+                                errorFactory.exceptionClass,
                                 defaultDuration
                         )
                 ).observable()

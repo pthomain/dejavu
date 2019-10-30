@@ -26,9 +26,6 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Wipe
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -40,6 +37,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.MEMORY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.utils.Utils.invalidatesExistingData
 import java.util.*
 
 /**
@@ -113,20 +111,19 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
     override fun clearCache(instructionToken: CacheToken) {
         val now = dateFactory(null).time
         with(instructionToken.instruction) {
-
-            fun canClear(holder: CacheDataHolder.Incomplete) = when (operation) {
-                is Clear -> {
-                    val isRightType = holder.responseClassHash == requestMetadata.classHash //TODO populate request metadata with the type set on the operation
-                    val isRightRequest = !operation.useRequestParameters || holder.requestHash == requestMetadata.requestHash
-                    val isRightExpiry = !operation.clearStaleEntriesOnly || holder.expiryDate <= now
-                    isRightType && isRightRequest && isRightExpiry
-                }
-                is Wipe -> true
-                else -> throw SerialisationException("Wrong operation type: $operation")
-            }
+            if (operation !is Clear) throw SerialisationException("Wrong operation type: $operation")
 
             values().map { it.key to fileNameSerialiser.deserialise(it.key) }
-                    .filter { canClear(it.second) }
+                    .filter {
+                        val holder = it.second
+
+                        val isClearAll = requestMetadata.responseClass == Any::class.java
+                        val isRightType = isClearAll || holder.responseClassHash == requestMetadata.classHash
+                        val isRightRequest = !operation.useRequestParameters || holder.requestHash == requestMetadata.requestHash
+                        val isRightExpiry = !operation.clearStaleEntriesOnly || holder.expiryDate <= now
+
+                        isRightType && isRightRequest && isRightExpiry
+                    }
                     .forEach { delete(it.first) }
         }
     }
@@ -142,7 +139,9 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      */
     @Throws(SerialisationException::class)
     override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
-        if (instructionToken.instruction.operation.type.let { it == INVALIDATE || it == REFRESH }) {
+        val operation = instructionToken.instruction.operation
+
+        if (operation.invalidatesExistingData()) {
             val requestMetadata = instructionToken.instruction.requestMetadata
 
             findPartialKey(requestMetadata.requestHash)?.also { oldName ->

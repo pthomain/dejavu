@@ -24,10 +24,11 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CacheMode
+import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference
 import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Wipe
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 
@@ -35,24 +36,22 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(isRefresh: Boolean,
+    override fun getResponseObservable(cachePriority: CachePriority,
                                        encrypt: Boolean,
-                                       compress: Boolean,
-                                       freshOnly: Boolean) =
-            executeOperation(when {
-                isRefresh -> Refresh(freshOnly = freshOnly)
-                else -> Cache(
-                        encrypt = encrypt,
-                        compress = compress,
-                        freshOnly = freshOnly
-                )
-            }).map { it.response as CatFactResponse }
+                                       compress: Boolean) =
+            executeOperation(Cache(
+                    priority = cachePriority,
+                    encrypt = encrypt,
+                    compress = compress
+            )).map { it.response as CatFactResponse }
 
-    override fun getOfflineSingle(freshOnly: Boolean) =
-            executeOperation(Offline(freshOnly))
+    override fun getOfflineSingle(preference: CachePreference) =
+            executeOperation(
+                    Cache(priority = CachePriority.with(CacheMode.OFFLINE, preference))
+            )
 
     override fun getClearEntriesCompletable() =
-            executeOperation(Wipe)
+            executeOperation(Clear())
 
     override fun getInvalidateCompletable() =
             executeOperation(Invalidate())

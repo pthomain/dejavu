@@ -28,4 +28,6 @@ package dev.pthomain.android.dejavu.configuration.error
  */
 interface ErrorFactory<E> : (Throwable) -> E
         where E : Exception,
-              E : NetworkErrorPredicate
+              E : NetworkErrorPredicate {
+    val exceptionClass: Class<E>
+}

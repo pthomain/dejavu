@@ -27,15 +27,16 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.*
-import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 import kotlin.NoSuchElementException
 
@@ -93,15 +94,14 @@ internal class NetworkInterceptor<E>(private val context: Context,
      * @return the composed Observable optionally delayed for network availability
      */
     private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
-            instructionToken.instruction.operation.let {
-                if (it is Operation.Expiring) {
-                    val timeOut = it.connectivityTimeoutInMillis ?: 0L
-                    if (timeOut > 0L)
-                        upstream.waitForNetwork(context, logger)
-                                .timeout(timeOut, MILLISECONDS)
-                    else upstream
-                } else upstream
-            }
+            (instructionToken.instruction.operation as? Cache)?.let {
+                it.connectivityTimeoutInSeconds.swapWhenDefault(-1)
+            }?.let { timeOut ->
+                upstream.swapLambdaWhen(timeOut > 0L) {
+                    upstream.waitForNetwork(context, logger)
+                            .timeout(timeOut.toLong(), SECONDS)
+                }
+            } ?: upstream
 
     /**
      * @return a Duration metadata object holding the duration of the network call

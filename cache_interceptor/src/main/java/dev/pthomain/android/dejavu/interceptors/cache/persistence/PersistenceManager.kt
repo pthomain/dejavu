@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -101,7 +101,7 @@ interface PersistenceManager<E>
      * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
     fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
-                                cacheOperation: Expiring): SerialisationDecorationMetadata
+                                cacheOperation: Cache): SerialisationDecorationMetadata
 
     companion object {
         /**

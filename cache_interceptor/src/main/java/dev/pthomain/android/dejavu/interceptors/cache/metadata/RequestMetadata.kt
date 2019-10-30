@@ -70,9 +70,6 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
             requestBody
     ) {
 
-        fun valid() = this as Valid
-        fun invalid() = this as Invalid
-
         data class Valid(override val responseClass: Class<*>,
                          override val url: String,
                          override val requestBody: String?,

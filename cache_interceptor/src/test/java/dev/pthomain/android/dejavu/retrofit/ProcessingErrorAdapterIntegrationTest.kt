@@ -60,7 +60,7 @@ internal class ProcessingErrorAdapterIntegrationTest
 
     private fun setUp(rxClass: Class<*>,
                       rxType: AnnotationProcessor.RxType) {
-        val defaultAdapter = callAdapterFactory(rxClass, retrofit) { returnType, annotations, retrofit ->
+        val defaultAdapter = callAdapterFactory(rxClass, retrofit, TestResponse::class.java) { returnType, annotations, retrofit ->
             cacheComponent.defaultAdapterFactory().get(returnType, annotations, retrofit) as CallAdapter<Any, Any>
         }
 
