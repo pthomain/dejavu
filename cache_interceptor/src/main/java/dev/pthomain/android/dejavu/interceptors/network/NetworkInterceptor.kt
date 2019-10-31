@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.interceptors.network
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 import io.reactivex.Observable
@@ -62,7 +62,7 @@ internal class NetworkInterceptor<E>(private val context: Context,
                                      private val instructionToken: CacheToken,
                                      private val start: Long,
                                      private val requestTimeOutInSeconds: Int)
-    : ObservableTransformer<Any, ResponseWrapper<E>>
+    : ObservableTransformer<Any,ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 

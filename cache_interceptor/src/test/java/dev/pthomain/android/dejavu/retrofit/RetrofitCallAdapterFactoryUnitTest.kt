@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -53,14 +53,13 @@ class RetrofitCallAdapterFactoryUnitTest {
     private lateinit var mockRxJava2CallAdapterFactory: RxJava2CallAdapterFactory
     private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<Glitch>
     private lateinit var mockAnnotationProcessor: AnnotationProcessor<Glitch>
-    private lateinit var mockProcessingErrorAdapterFactory: ProcessingErrorAdapter.Factory<Glitch>
     private lateinit var mockDefaultCallAdapter: CallAdapter<Any, Any>
     private lateinit var mockAnnotations: Array<Annotation>
     private lateinit var mockRetrofit: Retrofit
     private lateinit var mockReturnType: Type
     private lateinit var mockOperation: Operation
     private lateinit var mockException: CacheException
-    private lateinit var mockInnerFactory: Function6<DejaVuInterceptor.Factory<Glitch>, Logger, String, Class<*>, Operation?, CallAdapter<Any, Any>, CallAdapter<*, *>>
+    private lateinit var mockInnerFactory: (DejaVuInterceptor.Factory<Glitch>, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>
     private lateinit var mockReturnedAdapter: CallAdapter<*, *>
 
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
@@ -72,7 +71,6 @@ class RetrofitCallAdapterFactoryUnitTest {
         mockRxJava2CallAdapterFactory = mock()
         mockDejaVuFactory = mock()
         mockAnnotationProcessor = mock()
-        mockProcessingErrorAdapterFactory = mock()
         mockDefaultCallAdapter = mock()
         mockRetrofit = mock()
         mockOperation = instructionToken().instruction.operation
@@ -81,12 +79,14 @@ class RetrofitCallAdapterFactoryUnitTest {
         mockReturnedAdapter = mock()
 
         targetFactory = RetrofitCallAdapterFactory(
+                mock(),
                 mockRxJava2CallAdapterFactory,
                 mockInnerFactory,
                 mockDateFactory,
                 mockDejaVuFactory,
-                mockAnnotationProcessor,
-                mockProcessingErrorAdapterFactory,
+                mock(),
+                mock(),
+                mock(),
                 mock()
         )
     }
@@ -110,7 +110,6 @@ class RetrofitCallAdapterFactoryUnitTest {
             mockDefaultCallAdapter
         }
 
-
         whenever(mockAnnotationProcessor.process(
                 eq(mockAnnotations),
                 eq(rxType),
@@ -124,27 +123,16 @@ class RetrofitCallAdapterFactoryUnitTest {
 
         val cacheTokenCaptor = argumentCaptor<CacheToken>()
 
-        if (throwAnnotationException) {
-            whenever(mockProcessingErrorAdapterFactory.create(
-                    eq(mockDefaultCallAdapter),
-                    cacheTokenCaptor.capture(),
-                    eq(mockDateFactory(null).time),
-                    eq(rxType),
-                    eq(mockException)
-            )).thenReturn(mockReturnedAdapter)
-        } else {
-            whenever(mockInnerFactory.invoke(
-                    eq(mockDejaVuFactory),
-                    any(),
-                    eq("method returning " + rxType.getTypedName(responseClass)),
-                    eq(responseClass),
-                    eq(mockOperation),
-                    eq(mockDefaultCallAdapter)
-            )).thenReturn(mockReturnedAdapter)
-        }
+        whenever(mockInnerFactory.invoke(
+                eq(mockDejaVuFactory),
+                eq("method returning " + rxType.getTypedName(responseClass)),
+                eq(responseClass),
+                eq(mockOperation),
+                eq(mockDefaultCallAdapter)
+        )).thenReturn(mockReturnedAdapter)
 
         assertEqualsWithContext(
-                mockReturnedAdapter,
+                ifElse(throwAnnotationException, mockDefaultCallAdapter, mockReturnedAdapter),
                 targetFactory.get(
                         mockReturnType,
                         mockAnnotations,
@@ -155,7 +143,6 @@ class RetrofitCallAdapterFactoryUnitTest {
 
         if (throwAnnotationException) {
             verify(mockInnerFactory, never()).invoke(
-                    any(),
                     any(),
                     any(),
                     any(),
@@ -185,14 +172,6 @@ class RetrofitCallAdapterFactoryUnitTest {
                     DEFAULT_URL,
                     token.instruction.requestMetadata.url,
                     "Exception cache token URL should be empty"
-            )
-        } else {
-            verify(mockProcessingErrorAdapterFactory, never()).create(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any()
             )
         }
     }

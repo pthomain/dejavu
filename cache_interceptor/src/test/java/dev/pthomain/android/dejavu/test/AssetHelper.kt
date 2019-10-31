@@ -25,29 +25,25 @@ package dev.pthomain.android.dejavu.test
 
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.reactivex.Observable
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
-                  private val gson: Gson) {
+                  private val gson: Gson,
+                  private val errorFactory: ErrorFactory<Glitch>) {
 
-    fun <E, R> observeStubbedResponse(fileName: String,
-                                      responseClass: Class<R>,
-                                      cacheToken: CacheToken)
-            : Observable<R> where E : Exception,
-                                  E : NetworkErrorPredicate,
-                                  R : CacheMetadata.Holder<E> =
+    fun <R> observeStubbedResponse(fileName: String,
+                                   responseClass: Class<R>,
+                                   cacheToken: CacheToken)
+            : Observable<R> where R : CacheMetadata.Holder<Glitch> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }
                     .doOnNext {
-                        it.metadata = CacheMetadata(
-                                cacheToken,
-                                null,
-                                CacheMetadata.Duration(0, 0, 0)
-                        )
+                        it.metadata = errorFactory.newMetadata(cacheToken)
                     }
 
     fun observeFile(fileName: String): Observable<String> =

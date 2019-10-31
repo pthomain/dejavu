@@ -28,8 +28,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
@@ -149,6 +149,7 @@ class ResponseInterceptorUnitTest {
 
         val mockUpstreamMetadata = CacheMetadata(
                 mockInstructionToken.copy(status = if (isEmptyUpstream) EMPTY else cacheStatus),
+                Glitch::class.java,
                 if (isEmptyUpstream) mockEmptyException else null
         )
 
@@ -214,7 +215,7 @@ class ResponseInterceptorUnitTest {
                 metadata = expectedMetadata
         )
 
-        val expectedMergeOnNextOnError = (operation as? Expiring)?.mergeOnNextOnError
+        val expectedMergeOnNextOnError = (operation as? Expiring).mergeOnNextOnError
                 ?: mergeOnNextOnError
 
         whenever(mockEmptyResponseFactory.emptyResponseWrapper(

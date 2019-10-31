@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
@@ -146,7 +146,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val mockClassHash = "mockHash"
 
         val instructionToken = instructionToken(operation).swapLambdaWhen(useTypeToClear) {
-            it?.copy(
+            it.copy(
                     instruction = it.instruction.copy(
                             requestMetadata = it.instruction.requestMetadata.valid().copy(
                                     responseClass = targetClass
@@ -244,8 +244,9 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val duration = operation.durationInMillis ?: durationInMillis
 
         if (mockPreviousResponse != null) {
-            val previousMetadata = CacheMetadata<Glitch>(
+            val previousMetadata = CacheMetadata(
                     instructionToken(),
+                    Glitch::class.java,
                     null,
                     CacheMetadata.Duration(0, 0, 0)
             )

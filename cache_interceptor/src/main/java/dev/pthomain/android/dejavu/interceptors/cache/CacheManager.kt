@@ -25,13 +25,13 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.single
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CacheMode.OFFLINE
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import io.reactivex.Observable
 import java.util.*
@@ -95,7 +95,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * Handles any operation extending of the Expiring type.
      *
      * @param upstream the Observable being composed, typically created by Retrofit and composed by an ErrorInterceptor
-     * @see dev.pthomain.android.dejavu.interceptors.internal.error.ErrorInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
      * @param instructionToken the original request's instruction token
      * @param start the time at which the request was made
      *
@@ -187,7 +187,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                                     diskDuration
                             )
                         }
-                        .map { wrapper ->
+                        .map { wrapper: ResponseWrapper<E> ->
                             if (wrapper.metadata.exception != null) {
                                 logger.e(
                                         this,

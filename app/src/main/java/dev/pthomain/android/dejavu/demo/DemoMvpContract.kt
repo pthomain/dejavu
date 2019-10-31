@@ -27,11 +27,11 @@ import dagger.Component
 import dev.pthomain.android.boilerplate.core.mvp.base.MvpContract.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import javax.inject.Named
 import javax.inject.Singleton
 

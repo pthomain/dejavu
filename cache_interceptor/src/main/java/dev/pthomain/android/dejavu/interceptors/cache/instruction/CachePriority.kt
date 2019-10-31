@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.instruction
+package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*

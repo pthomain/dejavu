@@ -26,11 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.error
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata.Duration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -59,7 +57,6 @@ internal class ErrorInterceptor<E>(private val context: Context,
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    private val defaultDuration = Duration(0, 0, 0)
     private val responseClass = instructionToken.instruction.requestMetadata.responseClass
 
     /**
@@ -78,12 +75,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     ResponseWrapper(
                             responseClass,
                             it,
-                            CacheMetadata(
-                                    instructionToken,
-                                    null,
-                                    errorFactory.exceptionClass,
-                                    defaultDuration
-                            )
+                            errorFactory.newMetadata(instructionToken)
                     )
             }
             .switchIfEmpty(Observable.defer {
@@ -93,11 +85,9 @@ internal class ErrorInterceptor<E>(private val context: Context,
                 ResponseWrapper(
                         responseClass,
                         null,
-                        CacheMetadata(
+                        errorFactory.newMetadata(
                                 instructionToken,
-                                errorFactory(it),
-                                errorFactory.exceptionClass,
-                                defaultDuration
+                                errorFactory(it)
                         )
                 ).observable()
             })!!

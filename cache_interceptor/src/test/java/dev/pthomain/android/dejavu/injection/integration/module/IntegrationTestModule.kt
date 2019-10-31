@@ -28,6 +28,7 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import dev.pthomain.android.dejavu.test.AssetHelper
@@ -101,10 +102,12 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideAssetHelper(gson: Gson) =
+    fun provideAssetHelper(gson: Gson,
+                           errorFactory: ErrorFactory<Glitch>) =
             AssetHelper(
                     ASSETS_FOLDER,
-                    gson
+                    gson,
+                    errorFactory
             )
 
 }

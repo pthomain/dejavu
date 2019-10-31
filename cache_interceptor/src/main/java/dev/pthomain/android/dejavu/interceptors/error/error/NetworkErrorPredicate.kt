@@ -21,19 +21,17 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.instruction
-
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+package dev.pthomain.android.dejavu.interceptors.error.error
 
 /**
- * Contains the cache operation, target response class and call-specific directives.
- * Those directives take precedence over the ones defined in the global configuration, if applicable.
- *
- * @param requestMetadata the request metadata
- * @param operation the cache operation with call-specific directives
+ * Interface indicating whether a Throwable is a network error for the purpose of
+ * exponential backoff retries on failed calls
  */
-data class CacheInstruction internal constructor(
-        val requestMetadata: RequestMetadata.Hashed.Valid,
-        val operation: Operation
-)
+interface NetworkErrorPredicate {
 
+    /**
+     * @return whether or not the class implementing this interface represents a network error
+     */
+    fun isNetworkError(): Boolean
+
+}

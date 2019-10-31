@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.interceptors.error
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Wraps the call and associated metadata for internal use.
@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
  * @param response the call's response if available
  * @param metadata the call's metadata
  */
-//TODO add type T to this to handle CacheOperation<T>
 data class ResponseWrapper<E>(val responseClass: Class<*>,
                               val response: Any?,
                               @Transient override var metadata: CacheMetadata<E>)

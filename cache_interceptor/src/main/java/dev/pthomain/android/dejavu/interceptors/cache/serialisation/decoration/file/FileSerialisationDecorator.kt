@@ -23,12 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Optional file metadata step of the serialisation process (only affecting file persistence).
@@ -50,7 +50,7 @@ class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArra
      * @throws SerialisationException in case this step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
+    override fun decorateSerialisation(responseWrapper:ResponseWrapper<E>,
                                        metadata: SerialisationDecorationMetadata,
                                        payload: ByteArray) =
             responseWrapper.responseClass.name

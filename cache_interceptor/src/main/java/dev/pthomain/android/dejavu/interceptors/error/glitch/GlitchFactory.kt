@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.error.glitch
 
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.*
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException

@@ -27,10 +27,10 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import java.util.*
@@ -46,6 +46,7 @@ internal abstract class RetrofitModule<E>
     fun provideDefaultAdapterFactory() =
             RxJava2CallAdapterFactory.create()!!
 
+
     @Provides
     @Singleton
     fun provideRetrofitCallAdapterFactory(configuration: DejaVuConfiguration<E>,
@@ -57,6 +58,19 @@ internal abstract class RetrofitModule<E>
             RetrofitCallAdapterFactory(
                     configuration,
                     defaultAdapterFactory,
+                    { dejaVuFactory, methodDescription, responseClass, operation, rxCallAdapter ->
+                        RetrofitCallAdapter(
+                                configuration,
+                                responseClass,
+                                dejaVuFactory,
+                                OperationSerialiser(),
+                                RequestBodyConverter(),
+                                logger,
+                                methodDescription,
+                                operation,
+                                rxCallAdapter
+                        )
+                    },
                     dateFactory::get,
                     dejaVuInterceptorFactory,
                     OperationSerialiser(),

@@ -25,15 +25,16 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Offline
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Offline
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.test.*
@@ -178,7 +179,7 @@ class CacheManagerUnitTest {
     }
 
     private fun testGetCachedResponse(iteration: Int,
-                                      operation: Expiring,
+                                      operation: Operation.Cache,
                                       hasCachedResponse: Boolean,
                                       networkCallFails: Boolean,
                                       serialisationFails: Boolean,
@@ -195,15 +196,15 @@ class CacheManagerUnitTest {
         val instructionToken = instructionToken(operation)
         val isResponseStaleOverall = isResponseStale || operation is Refresh
 
-        val mockPreviousCacheMetadata = CacheMetadata<Glitch>(
+        val mockPreviousCacheMetadata = CacheMetadata(
                 instructionToken.copy(status = ifElse(isResponseStaleOverall, STALE, FRESH)),
-                null
+                Glitch::class.java
         )
 
         val mockNetworkSuccessResponseWrapper = defaultResponseWrapper(
                 CacheMetadata(
                         instructionToken.copy(status = NETWORK),
-                        null
+                        Glitch::class.java
                 ),
                 mock()
         )

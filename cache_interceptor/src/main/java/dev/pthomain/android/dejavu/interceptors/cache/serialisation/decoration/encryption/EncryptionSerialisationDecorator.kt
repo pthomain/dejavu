@@ -23,12 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
 /**
@@ -52,7 +52,7 @@ internal class EncryptionSerialisationDecorator<E>(private val encryptionManager
      * @throws SerialisationException in case this encryption step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: ResponseWrapper<E>,
+    override fun decorateSerialisation(responseWrapper:ResponseWrapper<E>,
                                        metadata: SerialisationDecorationMetadata,
                                        payload: ByteArray) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {

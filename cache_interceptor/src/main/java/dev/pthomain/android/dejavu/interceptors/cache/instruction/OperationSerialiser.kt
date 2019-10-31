@@ -21,11 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.instruction
+package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
 /**

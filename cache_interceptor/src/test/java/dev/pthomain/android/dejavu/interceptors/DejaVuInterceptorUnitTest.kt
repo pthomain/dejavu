@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.interceptors
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
@@ -149,9 +149,6 @@ class DejaVuInterceptorUnitTest {
                 ifElse(isHashingSuccess, mockValidHashedMetadata, mockInvalidHashedMetadata)
         )
 
-        whenever(mockConfiguration.compress).thenReturn(true)
-        whenever(mockConfiguration.encrypt).thenReturn(true)
-
         return DejaVuInterceptor(
                 operation,
                 mockRequestMetadata,
@@ -263,36 +260,20 @@ class DejaVuInterceptorUnitTest {
                                 context
                         )
 
-                        if (operation is Expiring) {
-                            if (operation.compress == null) {
-                                assertTrueWithContext(
-                                        errorToken.isCompressed,
-                                        "Token value for isCompressed should be true",
-                                        context
-                                )
-                            } else {
-                                assertEqualsWithContext(
-                                        operation.compress,
-                                        errorToken.isCompressed,
-                                        "Token value for isCompressed didn't match operation's value",
-                                        context
-                                )
-                            }
+                        if (operation is Operation.Cache) {
+                            assertEqualsWithContext(
+                                    operation.compress,
+                                    errorToken.isCompressed,
+                                    "Token value for isCompressed didn't match operation's value",
+                                    context
+                            )
 
-                            if (operation.encrypt == null) {
-                                assertTrueWithContext(
-                                        errorToken.isEncrypted,
-                                        "Token value for isEncrypted should be true",
-                                        context
-                                )
-                            } else {
-                                assertEqualsWithContext(
-                                        operation.encrypt,
-                                        errorToken.isEncrypted,
-                                        "Token value for isEncrypted didn't match operation's value",
-                                        context
-                                )
-                            }
+                            assertEqualsWithContext(
+                                    operation.encrypt,
+                                    errorToken.isEncrypted,
+                                    "Token value for isEncrypted didn't match operation's value",
+                                    context
+                            )
                         } else {
                             assertTrueWithContext(
                                     errorToken.isCompressed,

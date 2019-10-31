@@ -24,7 +24,4 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression
 
 //TODO
-class CompressionSerialisationDecoratorUnitTest{
-
-
-}
+class CompressionSerialisationDecoratorUnitTest

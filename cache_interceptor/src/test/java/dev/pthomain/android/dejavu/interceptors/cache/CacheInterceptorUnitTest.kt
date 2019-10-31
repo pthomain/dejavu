@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -59,7 +59,7 @@ class CacheInterceptorUnitTest {
         mockCacheManager = mock()
 
         mockInstructionToken = instructionToken(operation)
-        mockMetadata = CacheMetadata(mockInstructionToken)
+        mockMetadata = CacheMetadata(mockInstructionToken, Glitch::class.java)
         mockErrorInterceptor = mock()
 
         mockUpstreamResponseWrapper = ResponseWrapper(
@@ -103,7 +103,7 @@ class CacheInterceptorUnitTest {
 
             if (isCacheEnabled) {
                 when (operation) {
-                    is Expiring -> prepareGetCachedResponse(operation)
+                    is Cache -> prepareGetCachedResponse(operation)
                     is Clear -> prepareClearCache()
                     is Invalidate -> prepareInvalidate()
                 }
@@ -118,7 +118,7 @@ class CacheInterceptorUnitTest {
 
             if (isCacheEnabled) {
                 when (operation) {
-                    is Expiring,
+                    is Cache,
                     is Clear,
                     is Invalidate -> assertEqualsWithContext(
                             mockReturnedResponseWrapper,
@@ -143,7 +143,7 @@ class CacheInterceptorUnitTest {
         }
     }
 
-    private fun prepareGetCachedResponse(operation: Expiring) {
+    private fun prepareGetCachedResponse(operation: Cache) {
         whenever(mockCacheManager.getCachedResponse(
                 eq(mockUpstream),
                 eq(mockInstructionToken.copy(instruction = mockInstructionToken.instruction.copy(operation = operation))),

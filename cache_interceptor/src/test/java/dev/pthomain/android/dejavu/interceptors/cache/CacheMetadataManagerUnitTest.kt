@@ -28,14 +28,15 @@ import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
@@ -144,6 +145,7 @@ class CacheMetadataManagerUnitTest {
 
         val metadata = CacheMetadata(
                 instructionToken,
+                Glitch::class.java,
                 ifElse(networkCallFails, networkGlitch, null),
                 CacheMetadata.Duration(diskDuration, networkDuration, 0)
         )
@@ -160,10 +162,10 @@ class CacheMetadataManagerUnitTest {
                 expiryDate = previousExpiryDate
         )
 
-        val previousWrapper = ResponseWrapper<Glitch>(
+        val previousWrapper = ResponseWrapper(
                 TestResponse::class.java,
                 mock<TestResponse>(),
-                CacheMetadata(previousToken)
+                CacheMetadata(previousToken, Glitch::class.java)
         )
 
         val previousCachedResponse = ifElse(
@@ -323,7 +325,7 @@ class CacheMetadataManagerUnitTest {
     }
 
     private fun testSetSerialisationFailedMetadata(iteration: Int,
-                                                   operation: Expiring) {
+                                                   operation: Operation.Cache) {
         setUp()
         val context = "iteration = $iteration,\n" +
                 "operation = ${operation.type}"
@@ -336,9 +338,9 @@ class CacheMetadataManagerUnitTest {
         val cause = NotSerializableException()
         val mockGlitch = Glitch(cause)
 
-        val metadata = CacheMetadata<Glitch>(
+        val metadata = CacheMetadata(
                 instructionToken,
-                null
+                Glitch::class.java
         )
 
         val responseWrapper = ResponseWrapper(

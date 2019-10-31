@@ -29,9 +29,10 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -66,10 +67,10 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
 
     companion object {
 
-        fun <E, R : Any> create(requestQueue: RequestQueue,
-                                gson: Gson,
-                                dejaVuInterceptor: DejaVuInterceptor<E>,
-                                requestMetadata: RequestMetadata.Plain): Observable<R>
+        fun <R : Any, E> observable(requestQueue: RequestQueue,
+                                    gson: Gson,
+                                    dejaVuInterceptor: DejaVuInterceptor<E>,
+                                    requestMetadata: RequestMetadata.Plain): Observable<R>
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
@@ -79,15 +80,24 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                 ).compose(dejaVuInterceptor)
                         .cast(requestMetadata.responseClass as Class<R>)!!
 
-        fun <R : Any> createDefault(requestQueue: RequestQueue,
-                                    gson: Gson,
-                                    dejaVuInterceptor: DejaVuInterceptor<Glitch>,
-                                    requestMetadata: RequestMetadata.Plain) =
-                create<Glitch, R>(
+        fun <R : Any, E> cacheOperation(requestQueue: RequestQueue,
+                                        gson: Gson,
+                                        dejaVuInterceptor: DejaVuInterceptor<E>,
+                                        requestMetadata: RequestMetadata.Plain): CacheOperation<R>
+                where E : Exception,
+                      E : NetworkErrorPredicate =
+                observable<R, E>(
                         requestQueue,
                         gson,
                         dejaVuInterceptor,
                         requestMetadata
-                )
+                ).let {
+                    //FIXME
+                    CacheOperation.Resolved<R, E>(
+                            Observable.empty(),
+                            Glitch::class.java as Class<E>
+                    )
+                }
+
     }
 }

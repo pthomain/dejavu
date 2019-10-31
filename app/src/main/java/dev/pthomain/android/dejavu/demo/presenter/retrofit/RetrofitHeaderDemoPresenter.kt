@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CacheMode
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.CachePreference
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
@@ -47,8 +47,8 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
 
     override fun getOfflineSingle(preference: CachePreference) =
             executeOperation(
-                    Cache(priority = CachePriority.with(CacheMode.OFFLINE, preference))
-            )
+                    Cache(priority = CachePriority.with(OFFLINE, preference))
+            ).map { it.response as CatFactResponse }.firstOrError()
 
     override fun getClearEntriesCompletable() =
             executeOperation(Clear())

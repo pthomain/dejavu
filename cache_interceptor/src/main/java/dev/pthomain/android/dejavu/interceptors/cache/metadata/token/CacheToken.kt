@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.metadata.token
 
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import java.util.*
 
 /**

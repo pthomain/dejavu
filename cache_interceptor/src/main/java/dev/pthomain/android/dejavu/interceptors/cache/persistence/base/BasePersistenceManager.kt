@@ -24,11 +24,9 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -37,6 +35,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -68,7 +67,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
-    final override fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
+    final override fun shouldEncryptOrCompress(previousCachedResponse:ResponseWrapper<E>?,
                                                cacheOperation: Cache) =
             previousCachedResponse?.metadata?.cacheToken?.let {
                 SerialisationDecorationMetadata(
@@ -76,8 +75,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                         it.isEncrypted
                 )
             } ?: SerialisationDecorationMetadata(
-                    cacheOperation.compress ?: false,
-                    cacheOperation.encrypt ?: false
+                    cacheOperation.compress,
+                    cacheOperation.encrypt
             )
 
     /**
@@ -88,8 +87,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response: ResponseWrapper<E>,
-                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete {
+    protected fun serialise(response:ResponseWrapper<E>,
+                            previousCachedResponse:ResponseWrapper<E>?): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Cache
@@ -126,7 +125,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a cached entry if available, or null otherwise
      */
-    final override fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>? {
+    final override fun getCachedResponse(instructionToken: CacheToken):ResponseWrapper<E>? {
         val instruction = instructionToken.instruction
         val requestMetadata = instruction.requestMetadata
 
@@ -180,7 +179,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                             expiryDate: Date,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
-                            localData: ByteArray): ResponseWrapper<E>? {
+                            localData: ByteArray):ResponseWrapper<E>? {
         val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
 
         return try {
@@ -193,7 +192,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                 logger.d(this, "Returning cached $simpleName cached until $formattedDate")
 
                 wrapper.apply {
-                    metadata = CacheMetadata(
+                    metadata = configuration.errorFactory.newMetadata(
                             instructionToken.copy(
                                     status = dateFactory.getCacheStatus(expiryDate),
                                     isCompressed = isCompressed,
@@ -201,9 +200,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                                     fetchDate = cacheDate, //TODO check this
                                     cacheDate = cacheDate,
                                     expiryDate = expiryDate
-                            ),
-                            null,
-                            configuration.errorFactory.exceptionClass
+                            )
                     )
                 }
             }

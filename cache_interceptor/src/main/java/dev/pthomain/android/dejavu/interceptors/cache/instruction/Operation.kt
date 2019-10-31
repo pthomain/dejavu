@@ -21,11 +21,11 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.instruction
+package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.DEFAULT
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 
 /**
  * Represent a cache operation. Directives defined here take precedence over global config.
@@ -124,7 +124,8 @@ sealed class Operation(val type: Type) {
      * The operation's type.
      *
      * @param annotationName the associated annotation name.
-     * @param isCompletable whether or not this operation returns data and as such can be used with a Completable.
+     * @param isCompletable whether or not this operation returns data and as such can be only used with a CacheOperation.
+     * @see CacheOperation
      */
     enum class Type(val annotationName: String,
                     val isCompletable: Boolean = false) {

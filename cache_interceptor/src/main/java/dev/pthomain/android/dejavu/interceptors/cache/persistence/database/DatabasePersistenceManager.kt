@@ -28,8 +28,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -41,6 +40,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.utils.Utils.invalidatesExistingData
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
@@ -212,9 +212,9 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: ResponseWrapper<E>,
-                       previousCachedResponse: ResponseWrapper<E>?) {
-        serialise(responseWrapper, previousCachedResponse)?.let {
+    override fun cache(responseWrapper:ResponseWrapper<E>,
+                       previousCachedResponse:ResponseWrapper<E>?) {
+        serialise(responseWrapper, previousCachedResponse).let {
             with(it) {
                 val values = HashMap<String, Any>()
                 values[TOKEN.columnName] = requestMetadata.requestHash

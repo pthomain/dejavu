@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import io.reactivex.Observable
@@ -56,7 +56,7 @@ class DejaVu<E> internal constructor(private val component: DejaVuComponent<E>)
     /**
      * Provides a generic DejaVuInterceptor factory to use with any Observable/Single/Completable
      */
-    val dejaVuInterceptor: DejaVuInterceptor.Factory<E> = component.dejaVuInterceptorFactory()
+    val dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E> = component.dejaVuInterceptorFactory()
 
     /**
      * Provides an observable emitting the responses metadata, for logging/stats purposes or to use

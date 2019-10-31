@@ -21,10 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.instruction
+package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -47,19 +47,19 @@ class OperationSerialiserUnitTest {
             put("CLEAR:true:false", Clear(true, false))
             put("CLEAR:true:true", Clear(true, true))
 
-            put("CACHE:DEFAULT:1234:5678:false:false", Cache(DEFAULT, 1234L, 5678L, false, false))
-            put("CACHE:DEFAULT:1234:5678:false:true", Cache(DEFAULT, 1234L, 5678L, false, true))
-            put("CACHE:DEFAULT:1234:5678:true:true", Cache(DEFAULT, 1234L, 5678L, true, true))
-            put("CACHE:DEFAULT:1234:5678:true:false", Cache(DEFAULT, 1234L, 5678L, true, false))
-            put("CACHE:DEFAULT::5678:true:true", Cache(DEFAULT, -1L, 5678L, true, true))
-            put("CACHE:DEFAULT:::true:true", Cache(DEFAULT, -1L, -1L, true, true))
+            put("CACHE:DEFAULT:1234:5678:false:false", Cache(DEFAULT, 1234, 5678, false, false))
+            put("CACHE:DEFAULT:1234:5678:false:true", Cache(DEFAULT, 1234, 5678, false, true))
+            put("CACHE:DEFAULT:1234:5678:true:true", Cache(DEFAULT, 1234, 5678, true, true))
+            put("CACHE:DEFAULT:1234:5678:true:false", Cache(DEFAULT, 1234, 5678, true, false))
+            put("CACHE:DEFAULT::5678:true:true", Cache(DEFAULT, -1, 5678, true, true))
+            put("CACHE:DEFAULT:::true:true", Cache(DEFAULT, -1, -1, true, true))
 
-            put("CACHE:FRESH_PREFERRED:1234:5678:true:true", Cache(FRESH_PREFERRED, 1234L, 5678L, true, true))
-            put("CACHE:FRESH_ONLY:1234:5678:true:true", Cache(FRESH_ONLY, 1234L, 5678L, true, true))
-            put("CACHE:INVALIDATED:1234:5678:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234L, 5678L, true, true))
-            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:true:true", Cache(REFRESH_FRESH_ONLY, 1234L, 5678L, true, true))
-            put("CACHE:OFFLINE:1234:5678:true:true", Cache(OFFLINE, 1234L, 5678L, true, true))
-            put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:true:true", Cache(OFFLINE_FRESH_ONLY, 1234L, 5678L, true, true))
+            put("CACHE:FRESH_PREFERRED:1234:5678:true:true", Cache(FRESH_PREFERRED, 1234, 5678, true, true))
+            put("CACHE:FRESH_ONLY:1234:5678:true:true", Cache(FRESH_ONLY, 1234, 5678, true, true))
+            put("CACHE:INVALIDATED:1234:5678:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234, 5678, true, true))
+            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:true:true", Cache(REFRESH_FRESH_ONLY, 1234, 5678, true, true))
+            put("CACHE:OFFLINE:1234:5678:true:true", Cache(OFFLINE, 1234, 5678, true, true))
+            put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:true:true", Cache(OFFLINE_FRESH_ONLY, 1234, 5678, true, true))
         }
     }
 

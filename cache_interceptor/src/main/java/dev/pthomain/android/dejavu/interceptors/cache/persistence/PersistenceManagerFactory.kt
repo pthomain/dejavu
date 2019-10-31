@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Holder wrapping the available factory implementations of PersistenceManager

@@ -23,22 +23,24 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.metadata
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Contains cache metadata for the given call. This metadata is used on the ResponseWrapper and is added
  * to the target response if it implements CacheMetadata.Holder.
  *
+ * This object is constructed via the ErrorFactory.
+ * @see dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+ *
  * @param cacheToken the cache token, containing information about the cache state of this response
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-//TODO add exceptionClass : Class<E> and link to ErrorFactory
-data class CacheMetadata<E>(val cacheToken: CacheToken,
-                            val exception: E? = null,
-                            val exceptionClass: Class<E>,
-                            val callDuration: Duration = Duration(0, 0, 0))
+data class CacheMetadata<E> internal constructor(val cacheToken: CacheToken,
+                                                 val exceptionClass: Class<E>,
+                                                 val exception: E? = null,
+                                                 val callDuration: Duration = Duration(0, 0, 0))
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -74,6 +76,7 @@ data class CacheMetadata<E>(val cacheToken: CacheToken,
         other as CacheMetadata<*>
 
         if (cacheToken != other.cacheToken) return false
+        if (exceptionClass != other.exceptionClass) return false
         if (exception != other.exception) return false
 
         return true
@@ -82,6 +85,7 @@ data class CacheMetadata<E>(val cacheToken: CacheToken,
     override fun hashCode(): Int {
         var result = cacheToken.hashCode()
         result = 31 * result + (exception?.hashCode() ?: 0)
+        result = 31 * result + exceptionClass.hashCode()
         return result
     }
 

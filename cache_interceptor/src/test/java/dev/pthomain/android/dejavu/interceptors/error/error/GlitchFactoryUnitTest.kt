@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.configuration.error
+package dev.pthomain.android.dejavu.interceptors.error.error
 
 import com.google.gson.stream.MalformedJsonException
 import com.nhaarman.mockitokotlin2.whenever

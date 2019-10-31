@@ -25,18 +25,17 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -52,35 +51,45 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
     override fun getResponseObservable(cachePriority: CachePriority,
                                        encrypt: Boolean,
                                        compress: Boolean) =
-            getObservableForOperation(Cache(priority = cachePriority))
-                    .map { it.response as CatFactResponse }
+            newObservable(Cache(priority = cachePriority))
 
-    private fun getObservableForOperation(cacheOperation: Operation): CacheOperation<CatFactResponse> =
-            RequestMetadata.Plain(responseClass, URL).let {
-                VolleyObservable.createDefault<CatFactResponse>(
+    private fun newObservable(operation: Operation) =
+            with(RequestMetadata.Plain(responseClass, URL)) {
+                VolleyObservable.observable<CatFactResponse, Glitch>(
                         requestQueue,
                         gson,
-                        dejaVu.dejaVuInterceptor.create(
-                                cacheOperation,
-                                it
+                        dejaVu.dejaVuInterceptorFactory.create(
+                                operation,
+                                this
                         ),
-                        it
-                ).map {
-                    CacheOperation<CatFactResponse>(ResponseWrapper(
-                            CatFactResponse::class.java,
-                            it,
-                            it.metadata
-                    ))
-                } as CacheOperation<CatFactResponse>
+                        this
+                )
+            }
+
+    private fun newCacheOperation(operation: Operation) =
+            with(RequestMetadata.Plain(responseClass, URL)) {
+                VolleyObservable.cacheOperation<CatFactResponse, Glitch>(
+                        requestQueue,
+                        gson,
+                        dejaVu.dejaVuInterceptorFactory.create(
+                                operation,
+                                this
+                        ),
+                        this
+                )
             }
 
     override fun getOfflineSingle(preference: CachePreference) =
-            getObservableForOperation(Cache(ifElse(preference == CachePreference.FRESH_ONLY, OFFLINE_FRESH_ONLY, OFFLINE)))
+            getResponseObservable(
+                    CachePriority.with(CacheMode.OFFLINE, preference),
+                    false,
+                    false
+            ).firstOrError()
 
     override fun getClearEntriesCompletable() =
-            getObservableForOperation(Clear())
+            newCacheOperation(Clear())
 
     override fun getInvalidateCompletable() =
-            getObservableForOperation(Invalidate())
+            newCacheOperation(Invalidate())
 
 }

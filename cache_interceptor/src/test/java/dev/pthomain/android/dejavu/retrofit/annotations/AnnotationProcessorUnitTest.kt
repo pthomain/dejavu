@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.DO_NOT_CACHE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.test.assertNullWithContext

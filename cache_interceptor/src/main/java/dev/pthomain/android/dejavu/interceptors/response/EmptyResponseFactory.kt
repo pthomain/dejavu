@@ -23,14 +23,13 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.DONE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Provides empty responses for operations that do not return data (e.g. INVALIDATE or CLEAR), for
@@ -50,19 +49,20 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
      * @return an empty ResponseWrapper emitting Single
      */
     fun emptyResponseWrapper(instructionToken: CacheToken) =
-            instructionToken.instruction.operation.type.isCompletable.let { isDone ->
-                ResponseWrapper(
-                        instructionToken.instruction.requestMetadata.responseClass,
-                        null,
-                        CacheMetadata(
-                                instructionToken.copy(status = if (isDone) DONE else EMPTY),
-                                errorFactory(
-                                        if (isDone) DoneException(instructionToken.instruction.operation)
-                                        else EmptyResponseException
-                                ),
-                                errorFactory.exceptionClass
-                        )
-                )
+            with(instructionToken) {
+                instruction.operation.type.isCompletable.let { isDone ->
+                    ResponseWrapper(
+                            instruction.requestMetadata.responseClass,
+                            null,
+                            errorFactory.newMetadata(
+                                    copy(status = if (isDone) DONE else EMPTY),
+                                    errorFactory(
+                                            if (isDone) DoneException(instruction.operation)
+                                            else EmptyResponseException
+                                    )
+                            )
+                    )
+                }
             }
 
     object EmptyResponseException : NoSuchElementException("The response was empty")

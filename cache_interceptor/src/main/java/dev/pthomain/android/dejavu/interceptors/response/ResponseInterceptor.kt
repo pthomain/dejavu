@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
@@ -112,7 +112,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      *
      * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
-    private fun intercept(wrapper: ResponseWrapper<E>): Observable<Any> {
+    private fun intercept(wrapper:ResponseWrapper<E>): Observable<Any> {
         val errorFactory = configuration.errorFactory
 
         val exception = wrapper.metadata.exception.swapLambdaWhen({ it == null }) {

@@ -24,14 +24,14 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import java.util.*
 
 interface PersistenceManager<E>
@@ -56,7 +56,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun getCachedResponse(instructionToken: CacheToken): ResponseWrapper<E>?
+    fun getCachedResponse(instructionToken: CacheToken):ResponseWrapper<E>?
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
@@ -86,8 +86,8 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun cache(responseWrapper: ResponseWrapper<E>,
-              previousCachedResponse: ResponseWrapper<E>?)
+    fun cache(responseWrapper:ResponseWrapper<E>,
+              previousCachedResponse:ResponseWrapper<E>?)
 
     /**
      * Indicates whether or not the entry should be compressed or encrypted based primarily
@@ -100,7 +100,7 @@ interface PersistenceManager<E>
      *
      * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
      */
-    fun shouldEncryptOrCompress(previousCachedResponse: ResponseWrapper<E>?,
+    fun shouldEncryptOrCompress(previousCachedResponse:ResponseWrapper<E>?,
                                 cacheOperation: Cache): SerialisationDecorationMetadata
 
     companion object {

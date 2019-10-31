@@ -24,9 +24,6 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.configuration.error.ErrorFactory
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
@@ -35,6 +32,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.c
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import java.util.*
 
 /**
@@ -107,7 +106,7 @@ class SerialisationManager<E> private constructor(private val errorFactory: Erro
     @Throws(SerialisationException::class)
     fun deserialise(instructionToken: CacheToken,
                     data: ByteArray,
-                    metadata: SerialisationDecorationMetadata): ResponseWrapper<E> {
+                    metadata: SerialisationDecorationMetadata):ResponseWrapper<E> {
         val responseClass = instructionToken.instruction.requestMetadata.responseClass
         var deserialised = data
 
@@ -125,11 +124,7 @@ class SerialisationManager<E> private constructor(private val errorFactory: Erro
                     ResponseWrapper(
                             responseClass,
                             it,
-                            CacheMetadata(
-                                    instructionToken,
-                                    null,
-                                    errorFactory.exceptionClass
-                            )
+                            errorFactory.newMetadata(instructionToken)
                     )
                 }
     }

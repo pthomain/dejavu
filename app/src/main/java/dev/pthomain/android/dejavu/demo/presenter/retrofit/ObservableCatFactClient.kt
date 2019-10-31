@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate

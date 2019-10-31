@@ -30,14 +30,14 @@ import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.BuildConfig
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.instruction.Operation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -168,7 +168,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                                                                     requestMetadata.responseClass,
                                                                     url
                                                             )
-                                                    )!!,
+                                                    ),
                                                     cacheToken.instruction.operation
                                             )
                                     )
@@ -220,7 +220,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             )).let {
                 CacheToken(
                         CacheInstruction(
-                                it!!,
+                                it,
                                 operation
                         ),
                         CacheStatus.INSTRUCTION,

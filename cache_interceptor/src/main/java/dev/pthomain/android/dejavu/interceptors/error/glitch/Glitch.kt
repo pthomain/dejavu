@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.error.glitch
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.NETWORK
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.UNKNOWN
 

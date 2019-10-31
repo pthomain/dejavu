@@ -23,12 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.*
@@ -53,7 +53,7 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
                                    private val isCacheEnabled: Boolean,
                                    private val instructionToken: CacheToken,
                                    private val start: Long)
-    : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
+    : ObservableTransformer<ResponseWrapper<E>,ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 

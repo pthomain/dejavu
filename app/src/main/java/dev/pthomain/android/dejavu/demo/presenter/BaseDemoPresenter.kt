@@ -32,22 +32,23 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority
-import dev.pthomain.android.dejavu.configuration.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 
 internal abstract class BaseDemoPresenter protected constructor(
         private val demoActivity: DemoActivity,
@@ -110,7 +111,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override fun offline() {
         instructionType = CACHE
         cacheMode = CacheMode.OFFLINE
-        subscribe(getOfflineSingle(preference).map { it.response as CatFactResponse })
+        subscribe(getOfflineSingle(preference).toObservable())
     }
 
     final override fun clearEntries() {
@@ -186,7 +187,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                                                  encrypt: Boolean,
                                                  compress: Boolean): Observable<CatFactResponse>
 
-    protected abstract fun getOfflineSingle(preference: CachePreference): CacheOperation<CatFactResponse>
+    protected abstract fun getOfflineSingle(preference: CachePreference): Single<CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): CacheOperation<CatFactResponse>
     protected abstract fun getInvalidateCompletable(): CacheOperation<CatFactResponse>
 

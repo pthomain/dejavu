@@ -76,7 +76,6 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>
     fun responseInterceptorFactory(): Function3<CacheToken, RxType, Long, ResponseInterceptor<Glitch>>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
-    fun processingErrorAdapterFactory(): ProcessingErrorAdapter.Factory<Glitch>
     fun cacheMetadataSubject(): PublishSubject<CacheMetadata<Glitch>>
     fun annotationProcessor(): AnnotationProcessor<Glitch>
     fun emptyResponseFactory(): EmptyResponseFactory<Glitch>

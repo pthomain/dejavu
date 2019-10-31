@@ -25,11 +25,11 @@ package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.configuration.instruction.CacheOperation
-import dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
-import dev.pthomain.android.dejavu.configuration.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -57,6 +57,7 @@ import java.util.*
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
                                                          private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
+                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val serialiser: OperationSerialiser,
@@ -113,7 +114,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
             )
         } catch (cacheException: CacheException) {
             logger.e(this, cacheException, "The annotation cannot be processed, this call won't be cached")
-            DoNotCache
+            return defaultCallAdapter
         }
 
         val methodDescription = "method returning " + rxType.getTypedName(responseClass)
@@ -122,7 +123,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
             logger.d(
                     this,
                     "Annotation processor for $methodDescription"
-                            + " returned no instruction, checking cache header"
+                            + " returned no instruction, will check cache header"
             )
         } else {
             logger.d(
@@ -133,14 +134,10 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
             )
         }
 
-        return RetrofitCallAdapter(
-                configuration,
-                responseClass,
+        return innerFactory(
                 dejaVuFactory,
-                serialiser,
-                requestBodyConverter,
-                logger,
                 methodDescription,
+                responseClass,
                 operation,
                 defaultCallAdapter
         )
