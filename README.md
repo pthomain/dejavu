@@ -42,11 +42,12 @@ Update your Retrofit setup:
 ```kotlin
 val retrofit = Retrofit.Builder()
                      /** Usual setup goes here **/
-                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory) // Swap your default RxJava call adapter factory
+                    // Swap your default RxJava call adapter factory
+                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory) 
                     .build()
 ```
 
-Update you existing Retrofit client by adding an annotation to the call you want to cache:
+Update your existing Retrofit client by adding an annotation to the call you want to cache:
 
 ```kotlin
 interface UserClient {
