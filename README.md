@@ -8,10 +8,11 @@ TL;DR
 -----
 
 DéjàVu provides a locally controlled cache for API responses. 
+
 It is used to:
-- reduce the need for unnecessary network calls
-- speed up UI loading by displaying previous data while new data is being fetched
-- provide offline data when the network is unavailable
+    ✅ reduce the need for unnecessary network calls
+    ✅ speed up UI loading by displaying previous data while new data is being fetched
+    ✅ provide offline data when the network is unavailable
 
 It is fully customisable and supports compression / encryption. 
 
