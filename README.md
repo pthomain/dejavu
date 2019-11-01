@@ -57,7 +57,7 @@ interface UserClient {
     fun getUsers(
         status: UserStatus = ACTIVE,
         limit : Int = 20    
-    ): Single<CatFactResponse>
+    ): Single<UserResponse>
 
 }
 ```
