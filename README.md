@@ -26,7 +26,49 @@ This is achieved by swapping the default RxJava call adapter factory on Retrofit
 
 There is support for customisable encryption (choice of JetPack Security on 23+, Facebook Conceal on 16+ or any preferred custom implementation) and Snappy compression (https://github.com/google/snappy).
 
-<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
+Show me the code!
+-----------------
+
+Set the library up, here with encryption:
+
+```kotlin
+val dejaVu = DejaVu.builder()
+                   .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
+                   .build(demoActivity, GsonSerialiser(gson))
+```
+
+Update your Retrofit setup:
+
+```kotlin
+val retrofit = Retrofit.Builder()
+                     /** Usual setup goes here **/
+                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory) // Swap your default RxJava call adapter factory
+                    .build()
+```
+
+Update you existing Retrofit client by adding an annotation to the call you want to cache:
+
+```kotlin
+interface UserClient {
+
+    @GET("users")
+    @Cache(durationInSeconds = 300) // DéjàVu cache annotation 
+    fun getUsers(
+        status: UserStatus = ACTIVE,
+        limit : Int = 20    
+    ): Single<CatFactResponse>
+
+}
+```
+
+That's all Folks! 🥕
+
+(Actually there's a lot more you can do, doc coming soon...)
+
+Demo
+----
+
+<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="200"/></a>
 
 About v2.0
 ----------
