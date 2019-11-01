@@ -1,15 +1,14 @@
 # DéjàVu <img src="https://github.com/pthomain/dejavu/blob/master/github/logo.svg" width="100"/>
 
-**Annotation-driven, encrypted and customisable Retrofit/RxJava HTTP cache**
+**Dead simple RxJava / Retrofit API response cache**
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6a6b118c66d4887b3ebbb3dfd7e6f64)](https://app.codacy.com/app/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Settings) [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu) [![Known Vulnerabilities](https://snyk.io/test/github/pthomain/dejavu/badge.svg)](https://snyk.io/test/github/pthomain/dejavu)
 
-TL;DR
------
+Haven't I seen that somewhere?
+------------------------------
 
-DéjàVu provides a locally controlled cache for API responses. 
+DéjàVu provides a locally controlled cache for API responses. It is used to:
 
-It is used to:
 - reduce the need for unnecessary network calls
 - speed up UI loading by displaying previous data while new data is being fetched
 - provide offline data when the network is unavailable
