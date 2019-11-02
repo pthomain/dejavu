@@ -21,18 +21,19 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics
+package dev.pthomain.android.dejavu.interceptors
 
-import io.reactivex.Single
+import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
+import okhttp3.Interceptor
 
-/**
- * Provides statistics reflecting the current state of the cache
- */
-interface StatisticsCompiler {
+class HeaderInterceptor : Interceptor {
 
-    /**
-     * @return a Single emitting cache statistics
-     */
-    fun getStatistics(): Single<CacheStatistics>
+    override fun intercept(chain: Interceptor.Chain) =
+            chain.proceed(
+                    chain.request()
+                            .newBuilder()
+                            .removeHeader(DejaVuHeader)
+                            .build()
+            )!!
 
 }

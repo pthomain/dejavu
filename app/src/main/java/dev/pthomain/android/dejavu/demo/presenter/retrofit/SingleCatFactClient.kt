@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
@@ -102,13 +102,13 @@ internal interface SingleCatFactClient {
 
     @DELETE(ENDPOINT)
     @Clear()
-    fun clearCache(): CacheOperation<CatFactResponse>
+    fun clearCache(): DejaVuCall<CatFactResponse>
 
     // INVALIDATE
 
     @DELETE(ENDPOINT)
     @Invalidate
-    fun invalidate(): CacheOperation<CatFactResponse>
+    fun invalidate(): DejaVuCall<CatFactResponse>
 
     // OFFLINE
 
@@ -123,6 +123,6 @@ internal interface SingleCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun execute(@Header(DejaVuHeader) operation: Operation): CacheOperation<CatFactResponse>
+    fun execute(@Header(DejaVuHeader) operation: Operation): DejaVuCall<CatFactResponse>
 
 }

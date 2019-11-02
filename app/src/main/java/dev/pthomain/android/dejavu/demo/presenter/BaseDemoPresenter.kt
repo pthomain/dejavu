@@ -37,9 +37,9 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
@@ -177,7 +177,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     private fun onCallComplete() {
         mvpView.onCallComplete()
-        dejaVu.statistics().ioUi()
+        dejaVu.getStatistics().ioUi()
                 .doOnSuccess { it.log(uiLogger) }
                 .doOnError { uiLogger.e(this, it, "Could not show stats") }
                 .autoSubscribe()
@@ -188,8 +188,8 @@ internal abstract class BaseDemoPresenter protected constructor(
                                                  compress: Boolean): Observable<CatFactResponse>
 
     protected abstract fun getOfflineSingle(preference: CachePreference): Single<CatFactResponse>
-    protected abstract fun getClearEntriesCompletable(): CacheOperation<CatFactResponse>
-    protected abstract fun getInvalidateCompletable(): CacheOperation<CatFactResponse>
+    protected abstract fun getClearEntriesCompletable(): DejaVuCall<CatFactResponse>
+    protected abstract fun getInvalidateCompletable(): DejaVuCall<CatFactResponse>
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

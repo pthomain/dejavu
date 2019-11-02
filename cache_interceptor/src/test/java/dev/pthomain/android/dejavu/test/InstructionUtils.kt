@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.test
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance
@@ -72,16 +72,16 @@ fun assertOperation(expectedOperation: Operation,
                 context
         )
 
-        is Expiring -> assertExpiring(
+        is Cache -> assertExpiring(
                 expectedOperation,
-                actualOperation as Expiring,
+                actualOperation as Cache,
                 context
         )
     }
 }
 
-private fun assertExpiring(expectedOperation: Expiring,
-                           actualOperation: Expiring,
+private fun assertExpiring(expectedOperation: Cache,
+                           actualOperation: Cache,
                            context: String? = null) {
     assertEqualsWithContext(
             expectedOperation.durationInMillis,

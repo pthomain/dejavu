@@ -28,12 +28,14 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 import okhttp3.Request
 import retrofit2.Call
@@ -44,7 +46,7 @@ import java.lang.reflect.Type
  * Retrofit call adapter composing with DejaVuInterceptor. It takes a type {@code E} for the exception
  * used in generic error handling.
  *
- * @see dev.pthomain.android.dejavu.configuration.error.ErrorFactory
+ * @see dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
  */
 internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                       private val responseClass: Class<*>,
@@ -210,14 +212,20 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      *
      * @return the call adapted according to the cache operation
      */
+    @Suppress("UNCHECKED_CAST")
     private fun adaptRxCall(call: Call<Any>,
                             operation: Operation,
                             adapted: Any) =
-            when (adapted) {
-                is Observable<*> -> adapted.compose(getDejaVuInterceptor(call, operation))
-                is Single<*> -> adapted.compose(getDejaVuInterceptor(call, operation))
-                is Completable -> adapted.compose(getDejaVuInterceptor(call, operation))
-                else -> adapted
+            getDejaVuInterceptor(call, operation).let { interceptor ->
+                when (adapted) {
+                    is Single<*> -> adapted.compose(interceptor)
+                    is Observable<*> -> adapted.compose(interceptor)
+                    is DejaVuCall<*> -> adapted.compose(ObservableTransformer<ResponseWrapper<*>, DejaVuCall<*>> {
+                        interceptor.apply(it as Observable<Any>)
+                                .map { it as DejaVuCall<*> }
+                    })
+                    else -> adapted
+                }
             }
 
     /**

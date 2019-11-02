@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.error.error
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata.Duration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -51,7 +51,7 @@ interface ErrorFactory<E> : (Throwable) -> E
     fun <R : Any> newCacheOperation(
             observable: Observable<ResponseWrapper<E>>,
             responseClass: Class<R>
-    ) = CacheOperation.Resolved<R, E>(
+    ) = DejaVuCall.Resolved<R, E>(
             observable.map {
                 ResponseWrapper(
                         responseClass,

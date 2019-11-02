@@ -26,9 +26,10 @@ package dev.pthomain.android.dejavu.interceptors
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -38,10 +39,7 @@ import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.test.*
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.observers.TestObserver
@@ -198,14 +196,12 @@ class DejaVuInterceptorUnitTest {
                     whenever(mockSingle.toObservable()).thenReturn(mockUpstreamObservable)
                     whenever(mockResponseObservable.firstOrError()).thenReturn(mockSingle)
 
-                    val mockCompletable = mock<Completable>()
-                    whenever(mockCompletable.toObservable<Any>()).thenReturn(mockUpstreamObservable)
-                    whenever(mockResponseObservable.ignoreElements()).thenReturn(mockCompletable)
+                    val mockCacheOperation = mock<DejaVuCall<*>>()
 
                     when (rxType) {
                         OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
                         SINGLE -> target.apply(mockSingle).subscribe(testObserver)
-                        OPERATION -> target.apply(mockCompletable).subscribe(testObserver)
+                        OPERATION -> target.apply(mockCacheOperation).subscribe(testObserver)
                     }
 
                     val errorToken = errorTokenCaptor.firstValue

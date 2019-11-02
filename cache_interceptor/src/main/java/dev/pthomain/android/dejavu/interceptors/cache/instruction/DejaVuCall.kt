@@ -29,18 +29,19 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
 import io.reactivex.Observable
 import io.reactivex.Observer
 
-sealed class CacheOperation<R>(
-        private val observable: Observable<ResponseWrapper<CacheOperationException>>,
+sealed class DejaVuCall<R>(
+        private val observable: Observable<ResponseWrapper<DejaVuCallException>>,
         val exceptionClass: Class<*>
-) : Observable<ResponseWrapper<CacheOperationException>>() {
-    override fun subscribeActual(observer: Observer<in ResponseWrapper<CacheOperationException>>) {
+) : Observable<ResponseWrapper<DejaVuCallException>>() {
+    
+    override fun subscribeActual(observer: Observer<in ResponseWrapper<DejaVuCallException>>) {
         observable.subscribe(observer)
     }
 
     class Resolved<R, E>(
             observable: Observable<ResponseWrapper<E>>,
             exceptionClass: Class<E>
-    ) : CacheOperation<R>(
+    ) : DejaVuCall<R>(
             observable.map(::mapToOperationException),
             exceptionClass
     ) where E : Exception, E : NetworkErrorPredicate
@@ -48,7 +49,7 @@ sealed class CacheOperation<R>(
 }
 
 private fun <E> mapToOperationException(originalWrapper:ResponseWrapper<E>)
-        : ResponseWrapper<CacheOperationException>
+        : ResponseWrapper<DejaVuCallException>
         where E : Exception, E : NetworkErrorPredicate = with(originalWrapper) {
     ResponseWrapper(
             responseClass,
@@ -56,15 +57,15 @@ private fun <E> mapToOperationException(originalWrapper:ResponseWrapper<E>)
             with(metadata) {
                 CacheMetadata(
                         cacheToken,
-                        CacheOperationException::class.java,
-                        exception?.let { CacheOperationException(it, it) },
+                        DejaVuCallException::class.java,
+                        exception?.let { DejaVuCallException(it, it) },
                         callDuration
                 )
             }
     )
 }
 
-class CacheOperationException internal constructor(
+class DejaVuCallException internal constructor(
         originalException: Exception,
         originalPredicate: NetworkErrorPredicate
 ) : Exception(originalException.message, originalException.cause),

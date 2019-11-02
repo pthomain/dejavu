@@ -53,6 +53,11 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
+    fun provideErrorFactory() =
+            dejaVu.configuration.errorFactory
+
+    @Provides
+    @Singleton
     fun provideRetrofitCacheAdapterFactory(dejaVu: DejaVu<Glitch>) =
             dejaVu.retrofitCallAdapterFactory
 

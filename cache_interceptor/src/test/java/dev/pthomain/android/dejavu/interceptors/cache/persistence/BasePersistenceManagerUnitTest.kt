@@ -27,13 +27,12 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -43,7 +42,7 @@ import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import org.junit.Test
 import java.util.*
 
@@ -62,15 +61,12 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected val mockFetchDateTime = 1000L
     protected val mockCacheDateTime = 100L
     protected val mockExpiryDateTime = 10L
-    protected val durationInMillis = 5L
     protected val mockCurrentDate = Date(currentDateTime)
     protected val mockFetchDate = Date(mockFetchDateTime)
     protected val mockCacheDate = Date(mockCacheDateTime)
     protected val mockExpiryDate = Date(mockExpiryDateTime)
 
-    protected fun setUpConfiguration(encryptDataGlobally: Boolean,
-                                     compressDataGlobally: Boolean,
-                                     cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
+    protected fun setUpConfiguration(cacheInstruction: CacheInstruction?): DejaVuConfiguration<Glitch> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
         mockCacheToken = mock()
@@ -93,9 +89,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
 
         val mockConfiguration = mock<DejaVuConfiguration<Glitch>>()
-        whenever(mockConfiguration.compress).thenReturn(compressDataGlobally)
-        whenever(mockConfiguration.encrypt).thenReturn(encryptDataGlobally)
-        whenever(mockConfiguration.cacheDurationInMillis).thenReturn(durationInMillis)
         whenever(mockConfiguration.logger).thenReturn(mock())
 
         return mockConfiguration
@@ -146,9 +139,9 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val mockClassHash = "mockHash"
 
         val instructionToken = instructionToken(operation).swapLambdaWhen(useTypeToClear) {
-            it.copy(
+            it!!.copy(
                     instruction = it.instruction.copy(
-                            requestMetadata = it.instruction.requestMetadata.valid().copy(
+                            requestMetadata = it.instruction.requestMetadata.copy(
                                     responseClass = targetClass
                             )))
         }!!
@@ -187,7 +180,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     fun testCache() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Expiring) {
+            if (operation is Cache) {
                 trueFalseSequence { encryptDataGlobally ->
                     trueFalseSequence { compressDataGlobally ->
                         trueFalseSequence { hasPreviousResponse ->
@@ -209,7 +202,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     private fun testCache(iteration: Int,
-                          operation: Expiring,
+                          operation: Cache,
                           encryptDataGlobally: Boolean,
                           compressDataGlobally: Boolean,
                           hasPreviousResponse: Boolean,
@@ -240,8 +233,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         )
 
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
-
-        val duration = operation.durationInMillis ?: durationInMillis
 
         if (mockPreviousResponse != null) {
             val previousMetadata = CacheMetadata(
@@ -281,13 +272,12 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 encryptData,
                 compressData,
                 hasPreviousResponse,
-                isSerialisationSuccess,
-                duration
+                isSerialisationSuccess
         )
     }
 
     protected open fun prepareCache(iteration: Int,
-                                    operation: Expiring,
+                                    operation: Cache,
                                     encryptDataGlobally: Boolean,
                                     compressDataGlobally: Boolean,
                                     hasPreviousResponse: Boolean,
@@ -296,12 +286,11 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected abstract fun verifyCache(context: String,
                                        iteration: Int,
                                        instructionToken: CacheToken,
-                                       operation: Expiring,
+                                       operation: Cache,
                                        encryptData: Boolean,
                                        compressData: Boolean,
                                        hasPreviousResponse: Boolean,
-                                       isSerialisationSuccess: Boolean,
-                                       duration: Long)
+                                       isSerialisationSuccess: Boolean)
 
     @Test
     fun testInvalidate() {
@@ -388,7 +377,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     fun testGetCachedResponse() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Expiring) {
+            if (operation is Cache) {
                 trueFalseSequence { hasResults ->
                     trueFalseSequence { isStale ->
                         testGetCachedResponse(
@@ -403,19 +392,19 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         }
     }
 
-    private fun instructionTokenWithHash(operation: Operation): CacheToken {
-        val defaultToken = instructionToken(operation)
-        return defaultToken.copy(
-                instruction = defaultToken.instruction.copy(
-                        requestMetadata = RequestMetadata.Hashed.Invalid(
-                                defaultToken.instruction.requestMetadata.responseClass
+    private fun instructionTokenWithHash(operation: Operation) =
+            with(instructionToken(operation)) {
+                copy(
+                        instruction = instruction.copy(
+                                requestMetadata = instruction.requestMetadata.copy(
+                                        responseClass = instruction.requestMetadata.responseClass
+                                )
                         )
                 )
-        )
-    }
+            }
 
     private fun testGetCachedResponse(iteration: Int,
-                                      operation: Expiring,
+                                      operation: Cache,
                                       hasResponse: Boolean,
                                       isStale: Boolean) {
         val context = "iteration = $iteration,\n" +
@@ -435,7 +424,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 instructionToken.instruction
         ))
 
-        val isDataStale = isStale || operation.type == REFRESH || operation.type == INVALIDATE
+        val isDataStale = isStale || operation.priority.mode == REFRESH || operation.type == INVALIDATE
         val cacheDateTimeStamp = 98765L
 
         val expiryDateTime = ifElse(
@@ -538,7 +527,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     protected open fun prepareGetCachedResponse(context: String,
-                                                operation: Expiring,
+                                                operation: Cache,
                                                 instructionToken: CacheToken,
                                                 hasResponse: Boolean,
                                                 isStale: Boolean,
@@ -548,10 +537,9 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                                                 expiryDate: Long) = Unit
 
     protected abstract fun verifyGetCachedResponse(context: String,
-                                                   operation: Expiring,
+                                                   operation: Cache,
                                                    instructionToken: CacheToken,
                                                    hasResponse: Boolean,
                                                    isStale: Boolean,
                                                    cachedResponse: ResponseWrapper<Glitch>?)
-
 }

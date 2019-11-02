@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Offline
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -157,7 +157,7 @@ class CacheManagerUnitTest {
     fun testGetCachedResponse() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Expiring) {
+            if (operation is Cache) {
                 trueFalseSequence { hasCachedResponse ->
                     trueFalseSequence { networkCallFails ->
                         trueFalseSequence { serialisationFails ->
@@ -179,7 +179,7 @@ class CacheManagerUnitTest {
     }
 
     private fun testGetCachedResponse(iteration: Int,
-                                      operation: Operation.Cache,
+                                      operation: Cache,
                                       hasCachedResponse: Boolean,
                                       networkCallFails: Boolean,
                                       serialisationFails: Boolean,
@@ -187,14 +187,14 @@ class CacheManagerUnitTest {
         setUp()
         val context = "iteration = $iteration,\n" +
                 "operation = ${operation.type},\n" +
-                "operation.freshOnly = ${operation.freshOnly},\n" +
+                "operation.priority = ${operation.priority},\n" +
                 "hasCachedResponse = $hasCachedResponse\n" +
                 "isResponseStale = $isResponseStale\n" +
                 "networkCallFails = $networkCallFails\n" +
                 "serialisationFails = $serialisationFails\n"
 
         val instructionToken = instructionToken(operation)
-        val isResponseStaleOverall = isResponseStale || operation is Refresh
+        val isResponseStaleOverall = isResponseStale || operation.priority.mode == REFRESH
 
         val mockPreviousCacheMetadata = CacheMetadata(
                 instructionToken.copy(status = ifElse(isResponseStaleOverall, STALE, FRESH)),
@@ -234,7 +234,7 @@ class CacheManagerUnitTest {
 
         whenever(mockDateFactory.invoke(isNull())).thenReturn(now)
 
-        if (operation is Offline) {
+        if (operation.priority.mode == OFFLINE) {
             if (!hasCachedResponse) {
                 whenever(mockEmptyResponseFactory.emptyResponseWrapper(
                         eq(instructionToken)
@@ -257,7 +257,7 @@ class CacheManagerUnitTest {
                 start
         ).subscribe(testObserver)
 
-        if (operation is Offline) {
+        if (operation.priority.mode == OFFLINE) {
             if (hasCachedResponse) {
                 assertEqualsWithContext(
                         mockCachedResponseWrapper,
@@ -334,7 +334,7 @@ class CacheManagerUnitTest {
         return Pair(testObserver.values()[0], secondResponse)
     }
 
-    private fun prepareFetchAndCache(operation: Expiring,
+    private fun prepareFetchAndCache(operation: Cache,
                                      instructionToken: CacheToken,
                                      hasCachedResponse: Boolean,
                                      serialisationFails: Boolean) {
@@ -376,13 +376,13 @@ class CacheManagerUnitTest {
 
     private fun verifyFetchAndCache(testObserver: TestObserver<ResponseWrapper<Glitch>>,
                                     context: String,
-                                    operation: Expiring,
+                                    operation: Cache,
                                     hasCachedResponse: Boolean,
                                     isResponseStale: Boolean,
                                     networkCallFails: Boolean,
                                     serialisationFails: Boolean) {
 
-        val hasSingleResponse = (isResponseStale && operation.freshOnly)
+        val hasSingleResponse = (isResponseStale && operation.priority.preference == FRESH_ONLY)
                 || !hasCachedResponse
                 || !isResponseStale
 

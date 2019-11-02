@@ -30,7 +30,7 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -83,7 +83,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
         fun <R : Any, E> cacheOperation(requestQueue: RequestQueue,
                                         gson: Gson,
                                         dejaVuInterceptor: DejaVuInterceptor<E>,
-                                        requestMetadata: RequestMetadata.Plain): CacheOperation<R>
+                                        requestMetadata: RequestMetadata.Plain): DejaVuCall<R>
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 observable<R, E>(
@@ -93,7 +93,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                         requestMetadata
                 ).let {
                     //FIXME
-                    CacheOperation.Resolved<R, E>(
+                    DejaVuCall.Resolved<R, E>(
                             Observable.empty(),
                             Glitch::class.java as Class<E>
                     )

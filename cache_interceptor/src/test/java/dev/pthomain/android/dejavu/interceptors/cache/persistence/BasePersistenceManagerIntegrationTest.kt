@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Refresh
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
@@ -74,7 +74,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
     @Test
     fun `GIVEN that a response has expired THEN it should have a STALE status`() {
         val stubbedResponse = getStubbedTestResponse(instructionToken(
-                Cache(durationInMillis = -1L)
+                Cache(durationInSeconds = -1)
         ))
 
         val instructionToken = stubbedResponse.metadata.cacheToken
@@ -123,7 +123,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
                 FRESH
         )
 
-        val refreshToken = instructionToken(Refresh())
+        val refreshToken = instructionToken(Cache(REFRESH))
         val refreshResponse = target.getCachedResponse(refreshToken)
 
         assertResponse(
@@ -157,7 +157,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         val (testResponseToken, userResponseToken) = cacheTwoResponses(stubbedResponse, userResponse)
 
         target.clearCache(instructionToken(
-                Operation.Clear(),
+                Clear(),
                 TestResponse::class.java
         ))
 
@@ -184,7 +184,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         val (testResponseToken, userResponseToken) = cacheTwoResponses(stubbedResponse, userResponse)
 
         target.clearCache(instructionToken(
-                Operation.Wipe,
+                Clear(),
                 Any::class.java
         ))
 
@@ -281,7 +281,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         val expiredStubbedResponse = freshStubbedResponse.copy(
                 metadata = freshStubbedResponse.metadata.copy(
                         cacheToken = instructionToken(
-                                Cache(durationInMillis = -1L),
+                                Cache(durationInSeconds = -1),
                                 url = "http://test.com/testResponse2"
                         )
                 )
@@ -294,7 +294,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         )
 
         target.clearCache(instructionToken(
-                Operation.Clear(clearStaleEntriesOnly = true),
+                Clear(clearStaleEntriesOnly = true),
                 TestResponse::class.java
         ))
 
@@ -325,13 +325,13 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         )
 
         val expiredTestResponse = getStubbedTestResponse(instructionToken(
-                Cache(durationInMillis = -1),
+                Cache(durationInSeconds = -1),
                 url = "http://test.com/testResponse2"
         ))
 
         val expiredUserResponse = getStubbedUserResponseWrapper(
                 instructionToken(
-                        Cache(durationInMillis = -1),
+                        Cache(durationInSeconds = -1),
                         url = "http://test.com/userResponse2",
                         responseClass = User::class.java
                 ),
@@ -366,7 +366,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         assertResponse(
                 testResponse.copy(metadata = testResponse.metadata.copy(cacheToken = instructionToken(
-                        Cache(durationInMillis = -1),
+                        Cache(durationInSeconds = -1),
                         url = "http://test.com/testResponse2"
                 ))),
                 cachedExpiredTestResponse,
@@ -375,7 +375,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
 
         assertResponse(
                 userResponse.copy(metadata = userResponse.metadata.copy(cacheToken = instructionToken(
-                        Cache(durationInMillis = -1),
+                        Cache(durationInSeconds = -1),
                         responseClass = User::class.java,
                         url = "http://test.com/userResponse2"
                 ))),
@@ -384,7 +384,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
         )
 
         target.clearCache(instructionToken(
-                Operation.Clear(clearStaleEntriesOnly = true),
+                Clear(clearStaleEntriesOnly = true),
                 Any::class.java //TODO use Any for clearing all classes
         ))
 

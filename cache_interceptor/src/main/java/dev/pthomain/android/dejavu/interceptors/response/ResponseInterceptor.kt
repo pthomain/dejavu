@@ -23,9 +23,14 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.RxType
+import dev.pthomain.android.dejavu.interceptors.RxType.OPERATION
+import dev.pthomain.android.dejavu.interceptors.RxType.SINGLE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -33,9 +38,6 @@ import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OPERATION
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.SINGLE
 import dev.pthomain.android.dejavu.utils.Utils.isAnyInstance
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
@@ -77,19 +79,15 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         val status = it.metadata.cacheToken.status
         val operation = instructionToken.instruction.operation
 
-        if (operation is Cache) {
-            val priority = operation.priority
-
-            //TODO check this logic after priority refactoring
-            val filterFresh = status.isFresh || priority.emitsCachedStale || priority.emitsNetworkStale
-            val filterFinal = status.isFinal || !priority.hasSingleResponse
-
-            if (filterFresh && filterFinal) {
-                if (rxType == SINGLE) {
-                    status.isFinal || priority.hasSingleResponse
-                } else true
-            } else false
-        } else true
+        ifElse(
+                operation is Cache,
+                ifElse(
+                        rxType == SINGLE,
+                        status.isFinal,
+                        true
+                ),
+                true
+        )
     }
 
     /**
@@ -101,7 +99,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             upstream.filter(responseFilter)
                     .switchIfEmpty(Observable.defer {
-                        emptyResponseFactory.emptyResponseWrapper(instructionToken).observable()
+                        emptyResponseFactory.emptyResponseWrapper(instructionToken).observable() //TODO this should not happen
                     })
                     .flatMap(this::intercept)!!
 
@@ -138,18 +136,29 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             (response as CacheMetadata.Holder<E>).metadata = metadata
         }
 
-        return if (exception != null) {
-            if (rxType == OPERATION
-                    && exception.cause.isAnyInstance(EmptyResponseException::class.java, DoneException::class.java)) {
-                logger.d(this, "Returning empty response for Completable: $metadata")
-                Observable.empty<Any>()
-            } else {
+        val isEmptyException = exception?.cause.isAnyInstance(
+                EmptyResponseException::class.java,
+                DoneException::class.java
+        )
+
+        return when {
+            rxType == OPERATION -> {
+                @Suppress("UNCHECKED_CAST")
+                DejaVuCall.Resolved<Any, E>(
+                        wrapper.observable(),
+                        errorFactory.exceptionClass
+                ) as Observable<Any>
+            }
+
+            exception != null -> {
                 logger.d(this, "Returning error: $exception")
                 Observable.error<Any>(exception)
             }
-        } else {
-            logger.d(this, "Returning response: $metadata")
-            Observable.just<Any>(response)
+
+            else -> {
+                logger.d(this, "Returning response: $metadata")
+                Observable.just<Any>(response)
+            }
         }
     }
 

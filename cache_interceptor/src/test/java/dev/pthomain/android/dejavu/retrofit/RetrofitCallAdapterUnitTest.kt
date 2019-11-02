@@ -28,15 +28,13 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.Refresh
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertTrueWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

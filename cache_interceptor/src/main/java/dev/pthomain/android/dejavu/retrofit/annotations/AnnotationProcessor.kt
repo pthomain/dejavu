@@ -25,15 +25,13 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
+import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
-import io.reactivex.Observable
-import io.reactivex.Single
 
 /**
  * Processes Retrofit annotations and generates a CacheInstruction if needed.
@@ -110,8 +108,8 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
             CacheException(
                     ANNOTATION,
                     "More than one cache annotation defined for method returning"
-                            + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
-                            + " after existing annotation ${currentOperation.type.annotationName}."
+                            + " ${rxType.getTypedName(responseClass)}, found ${getAnnotationName(foundOperation)}"
+                            + " after existing annotation ${getAnnotationName(currentOperation.type)}."
                             + " Only one annotation can be used for this method."
             ).logAndThrow()
         }
@@ -141,18 +139,17 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
     }
 
     /**
-     * Represents a RxJava type
+     * Converts the operation type into a String annotation
+     *
+     * @param type the operation's type.
+     * @return the String representation of the type's annotation
      */
-    enum class RxType(val rxClass: Class<*>) {
-        OBSERVABLE(Observable::class.java),
-        SINGLE(Single::class.java),
-        OPERATION(CacheOperation::class.java);
-
-        /**
-         * @return a String representation of the typed Rx object
-         */
-        fun getTypedName(responseClass: Class<*>) =
-                "${rxClass.simpleName}<${responseClass.simpleName}>"
-    }
+    private fun getAnnotationName(type: Operation.Type) =
+            when (type) {
+                CACHE -> "@Cache"
+                DO_NOT_CACHE -> "@DoNotCache"
+                INVALIDATE -> "@Invalidate"
+                CLEAR -> "@Clear"
+            }
 
 }

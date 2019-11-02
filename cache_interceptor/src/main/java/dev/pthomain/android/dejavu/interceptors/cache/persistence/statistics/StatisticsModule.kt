@@ -34,6 +34,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.dat
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.file.FileStatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import io.reactivex.Single
 import java.util.*
 import javax.inject.Singleton
 
@@ -78,6 +79,11 @@ internal abstract class StatisticsModule<E>
     @Singleton
     fun provideStatisticsCompiler(fileStatisticsCompiler: FileStatisticsCompiler?,
                                   databaseStatisticsCompiler: DatabaseStatisticsCompiler?): StatisticsCompiler =
-            databaseStatisticsCompiler ?: fileStatisticsCompiler!!
+            //databaseStatisticsCompiler ?: fileStatisticsCompiler!!
+            object : StatisticsCompiler { //FIXME
+                override fun getStatistics() = Single.error<CacheStatistics>(
+                        IllegalStateException("Cache statistics are not supported at the moment")
+                )
+            }
 
 }

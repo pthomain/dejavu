@@ -40,7 +40,6 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
@@ -128,6 +127,12 @@ internal abstract class InterceptorModule<E>
     @Singleton
     fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>) =
             EmptyResponseFactory(configuration.errorFactory)
+
+
+    @Provides
+    @Singleton
+    fun provideOkHttpHeaderInterceptor() =
+            HeaderInterceptor()
 
     @Provides
     @Singleton

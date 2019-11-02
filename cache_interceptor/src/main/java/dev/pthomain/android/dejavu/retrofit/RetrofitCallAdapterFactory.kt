@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheOperation
+import dev.pthomain.android.dejavu.interceptors.RxType.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -93,7 +93,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
         val rxType = when (rawType) {
             Single::class.java -> SINGLE
             Observable::class.java -> OBSERVABLE
-            CacheOperation::class.java -> OPERATION
+            DejaVuCall::class.java -> OPERATION
             else -> null
         } ?: throw IllegalArgumentException("Unsupported return type ${rawType.name}")
 

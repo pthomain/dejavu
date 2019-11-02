@@ -21,18 +21,23 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics
+package dev.pthomain.android.dejavu.interceptors
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
+import io.reactivex.Observable
 import io.reactivex.Single
 
 /**
- * Provides statistics reflecting the current state of the cache
+ * Represents a RxJava type
  */
-interface StatisticsCompiler {
+enum class RxType(val rxClass: Class<*>) {
+    OBSERVABLE(Observable::class.java),
+    SINGLE(Single::class.java),
+    OPERATION(DejaVuCall::class.java);
 
     /**
-     * @return a Single emitting cache statistics
+     * @return a String representation of the typed Rx object
      */
-    fun getStatistics(): Single<CacheStatistics>
-
+    fun getTypedName(responseClass: Class<*>) =
+            "${rxClass.simpleName}<${responseClass.simpleName}>"
 }

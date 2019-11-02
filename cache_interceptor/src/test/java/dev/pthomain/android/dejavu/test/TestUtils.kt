@@ -30,7 +30,7 @@ import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.*
+
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
@@ -270,7 +270,7 @@ fun defaultRequestMetadata() = RequestMetadata.Plain(
 
 fun instructionToken(operation: Operation = Cache()) = CacheToken(
         CacheInstruction(
-                RequestMetadata.Hashed.Invalid(TestResponse::class.java),
+                RequestMetadata.Hashed.Valid(TestResponse::class.java),
                 operation
         ),
         INSTRUCTION,

@@ -50,7 +50,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
      */
     fun emptyResponseWrapper(instructionToken: CacheToken) =
             with(instructionToken) {
-                instruction.operation.type.isCompletable.let { isDone ->
+                instruction.operation.type.isCacheOperation.let { isDone ->
                     ResponseWrapper(
                             instruction.requestMetadata.responseClass,
                             null,

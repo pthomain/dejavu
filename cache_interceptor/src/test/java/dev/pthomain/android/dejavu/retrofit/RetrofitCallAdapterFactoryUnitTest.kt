@@ -26,6 +26,8 @@ package dev.pthomain.android.dejavu.retrofit
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.RxType
+import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.DoNotCache
@@ -33,7 +35,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.C
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertFalseWithContext
@@ -92,7 +93,7 @@ class RetrofitCallAdapterFactoryUnitTest {
     }
 
 
-    private fun testFactory(rxType: AnnotationProcessor.RxType,
+    private fun testFactory(rxType: RxType,
                             throwAnnotationException: Boolean = false) {
         val responseClass = if (rxType == OPERATION) Any::class.java
         else TestResponse::class.java

@@ -42,7 +42,7 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * but (for some of them) can be overridden on a per-call basis via the use of arguments
  * passed to the call's CacheInstruction (and by extension in the Retrofit call's annotation).
  *
- * @see dev.pthomain.android.dejavu.configuration.instruction.CacheInstruction
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Clear
  * @see dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache

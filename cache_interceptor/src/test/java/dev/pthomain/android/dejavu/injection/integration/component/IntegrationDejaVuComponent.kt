@@ -31,6 +31,7 @@ import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
+import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
@@ -47,7 +48,6 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import io.reactivex.subjects.PublishSubject
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory

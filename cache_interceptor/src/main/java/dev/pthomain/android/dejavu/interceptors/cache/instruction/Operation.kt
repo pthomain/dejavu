@@ -78,7 +78,7 @@ sealed class Operation(val type: Type) {
      * This operation will clear entries of the type defined in the associated RequestMetadata.
      * In order to clear all entries, use Any as the response class.
      * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.responseClass
-     * @see CacheOperation
+     * @see DejaVuCall
      *
      * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to invalidate
      */
@@ -97,7 +97,7 @@ sealed class Operation(val type: Type) {
      * This operation will clear entries of the type defined in the associated RequestMetadata.
      * In order to clear all entries, use Any as the response class.
      * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.responseClass
-     * @see CacheOperation
+     * @see DejaVuCall
      *
      * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to clear
      * @param clearStaleEntriesOnly whether or not to clear the STALE data only. When set to true, only expired data is cleared, otherwise STALE and FRESH data is cleared.
@@ -123,16 +123,14 @@ sealed class Operation(val type: Type) {
     /**
      * The operation's type.
      *
-     * @param annotationName the associated annotation name.
-     * @param isCompletable whether or not this operation returns data and as such can be only used with a CacheOperation.
-     * @see CacheOperation
+     * @param isCacheOperation whether or not this operation returns data and as such can be only used with a CacheOperation.
+     * @see DejaVuCall
      */
-    enum class Type(val annotationName: String,
-                    val isCompletable: Boolean = false) {
-        CACHE("@Cache"),
-        DO_NOT_CACHE("@DoNotCache"),
-        INVALIDATE("@Invalidate", true),
-        CLEAR("@Clear", true)
+    enum class Type(val isCacheOperation: Boolean = false) {
+        CACHE,
+        DO_NOT_CACHE,
+        INVALIDATE(true),
+        CLEAR(true)
     }
 
 }

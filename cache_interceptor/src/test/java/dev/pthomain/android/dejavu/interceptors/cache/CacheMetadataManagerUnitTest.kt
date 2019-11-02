@@ -28,9 +28,9 @@ import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Expiring.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -56,8 +56,7 @@ class CacheMetadataManagerUnitTest {
     private val now = 321L
     private val diskDuration = 5
     private val networkDuration = 20
-    private val defaultDurationInMillis = 12345L
-    private val operationDurationInMillis = 78988L
+    private val operationDuration = 78988
     private val previousCacheDate = Date(456L)
     private val previousExpiryDate = Date(567L)
 
@@ -72,7 +71,6 @@ class CacheMetadataManagerUnitTest {
                 mockErrorFactory,
                 mockPersistenceManager,
                 mockDateFactory,
-                defaultDurationInMillis,
                 mock()
         )
     }
@@ -81,8 +79,7 @@ class CacheMetadataManagerUnitTest {
     fun testSetNetworkCallMetadata() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Expiring && operation !is Offline) {
-                trueFalseSequence { hasOperationDuration ->
+            if (operation is Cache && operation.priority.mode != OFFLINE) {
                     trueFalseSequence { hasCachedResponse ->
                         trueFalseSequence { networkCallFails ->
                             trueFalseSequence { encryptData ->
@@ -90,14 +87,12 @@ class CacheMetadataManagerUnitTest {
                                     testSetNetworkCallMetadata(
                                             iteration++,
                                             operation,
-                                            hasOperationDuration,
                                             hasCachedResponse,
                                             networkCallFails,
                                             encryptData,
                                             compressData
                                     )
                                 }
-                            }
                         }
                     }
                 }
@@ -106,8 +101,7 @@ class CacheMetadataManagerUnitTest {
     }
 
     private fun testSetNetworkCallMetadata(iteration: Int,
-                                           operation: Expiring,
-                                           hasOperationDuration: Boolean,
+                                           operation: Cache,
                                            hasCachedResponse: Boolean,
                                            networkCallFails: Boolean,
                                            encryptData: Boolean,
@@ -115,31 +109,12 @@ class CacheMetadataManagerUnitTest {
         setUp()
         val context = "iteration = $iteration,\n" +
                 "operation = ${operation.type},\n" +
-                "hasOperationDuration = $hasOperationDuration\n" +
                 "hasCachedResponse = $hasCachedResponse\n" +
                 "networkCallFails = $networkCallFails\n" +
                 "encryptData = $encryptData\n" +
                 "compressData = $compressData\n"
 
-        val operationWithDuration = when (operation) {
-            is Cache -> Cache(
-                    freshOnly = operation.freshOnly,
-                    filterFinal = operation.filterFinal,
-                    mergeOnNextOnError = operation.mergeOnNextOnError,
-                    durationInMillis = ifElse(hasOperationDuration, operationDurationInMillis, null)
-            )
-
-            is Refresh -> Refresh(
-                    freshOnly = operation.freshOnly,
-                    filterFinal = operation.filterFinal,
-                    mergeOnNextOnError = operation.mergeOnNextOnError,
-                    durationInMillis = ifElse(hasOperationDuration, operationDurationInMillis, null)
-            )
-
-            else -> throw IllegalStateException("Missing case for operation $operation")
-        }
-
-        val instructionToken = instructionToken(operationWithDuration)
+        val instructionToken = instructionToken()
 
         val networkGlitch = Glitch(IOException("Network"))
 
@@ -174,23 +149,18 @@ class CacheMetadataManagerUnitTest {
                 null
         )
 
-        val expectedDuration = ifElse(
-                hasOperationDuration,
-                operationDurationInMillis,
-                defaultDurationInMillis
-        )
-
         whenever(mockDateFactory.invoke(isNull())).thenReturn(Date(now))
-        whenever(mockDateFactory.invoke(eq(now + expectedDuration))).thenReturn(Date(now + expectedDuration))
+        whenever(mockDateFactory.invoke(eq(now + operationDuration)))
+                .thenReturn(Date(now + operationDuration))
 
         whenever(mockPersistenceManager.shouldEncryptOrCompress(
                 if (hasCachedResponse) eq(previousCachedResponse) else isNull(),
-                eq(operationWithDuration)
+                eq(operation)
         )).thenReturn(SerialisationDecorationMetadata(compressData, encryptData))
 
         val actualWrapper = target.setNetworkCallMetadata(
                 responseWrapper,
-                operationWithDuration,
+                operation,
                 previousCachedResponse,
                 instructionToken,
                 diskDuration
@@ -199,7 +169,7 @@ class CacheMetadataManagerUnitTest {
         val expectedStatus = ifElse(
                 networkCallFails,
                 ifElse(
-                        operation.freshOnly,
+                        operation.priority.preference == FRESH_ONLY,
                         EMPTY,
                         ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
                 ),
@@ -266,7 +236,7 @@ class CacheMetadataManagerUnitTest {
             val expectedExpiryDate = ifElse(
                     networkCallFails,
                     ifElse(hasCachedResponse, previousExpiryDate, null),
-                    Date(now + expectedDuration)
+                    Date(now + operationDuration)
             )
 
             assertEqualsWithContext(
@@ -315,7 +285,7 @@ class CacheMetadataManagerUnitTest {
     fun testSetSerialisationFailedMetadata() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Expiring && operation !is Offline) {
+            if (operation is Cache && operation.priority.mode != OFFLINE) {
                 testSetSerialisationFailedMetadata(
                         iteration++,
                         operation
@@ -325,7 +295,7 @@ class CacheMetadataManagerUnitTest {
     }
 
     private fun testSetSerialisationFailedMetadata(iteration: Int,
-                                                   operation: Operation.Cache) {
+                                                   operation: Cache) {
         setUp()
         val context = "iteration = $iteration,\n" +
                 "operation = ${operation.type}"

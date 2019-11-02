@@ -25,8 +25,10 @@ package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.DoNotCache
@@ -39,10 +41,10 @@ import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
-import io.reactivex.*
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
+import io.reactivex.Single
+import io.reactivex.SingleTransformer
 import java.util.*
 
 /**
@@ -75,8 +77,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
                                                 private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
                                                 private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>)
     : ObservableTransformer<Any, Any>,
-        SingleTransformer<Any, Any>,
-        CompletableTransformer
+        SingleTransformer<Any, Any>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -100,14 +101,14 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
                     .firstOrError()!!
 
     /**
-     * Composes Completables with the wrapped interceptors
+     * Composes CacheOperation with the wrapped interceptors
      *
      * @param upstream the call to intercept
      * @return the call intercepted with the inner interceptors
      */
-    override fun apply(upstream: Completable) =
-            composeInternal(upstream.toObservable(), OPERATION)
-                    .ignoreElements()!!
+    @Suppress("UNCHECKED_CAST")
+    fun apply(upstream: DejaVuCall<*>) =
+            composeInternal(upstream as Observable<Any>, OPERATION)
 
     /**
      * Deals with the internal composition.
