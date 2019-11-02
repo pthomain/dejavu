@@ -1,4 +1,4 @@
-# DéjàVu <img src="https://github.com/pthomain/dejavu/blob/master/github/logo.svg" width="100"/>
+<img src="https://github.com/pthomain/dejavu/blob/master/github/dejavu-header.png" height="256"/>
 
 **Dead simple RxJava / Retrofit API response cache**
 
