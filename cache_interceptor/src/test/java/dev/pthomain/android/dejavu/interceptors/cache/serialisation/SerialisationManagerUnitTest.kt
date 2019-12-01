@@ -92,7 +92,7 @@ class SerialisationManagerUnitTest {
         mockCompressionSerialisationDecorator = mock()
         mockEncryptionSerialisationDecorator = mock()
 
-        val mockRequestMetadata = mock<RequestMetadata.Hashed>()
+        val mockRequestMetadata = mock<RequestMetadata.Hashed.Valid>()
 
         whenever(mockInstructionToken.instruction).thenReturn(mockInstruction)
         whenever(mockInstruction.requestMetadata).thenReturn(mockRequestMetadata)
@@ -107,6 +107,7 @@ class SerialisationManagerUnitTest {
 
         target = SerialisationManager.Factory(
                 mock(), //FIXME test serialiser
+                mock(), //FIXME test errorFactory
                 mockByteToStringConverter,
                 mockFileSerialisationDecorator, //TODO move logic to separate tests
                 mockCompressionSerialisationDecorator,

@@ -76,15 +76,12 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVu.builder()
-            .requestTimeOutInSeconds(10)
-            .connectivityTimeoutInSeconds(ifElse(connectivityTimeoutOn, 30, 0))
-            .cacheDurationInSeconds(30)
-            .logger(uiLogger)
-            .persistenceManager(true, ::pickPersistenceMode)
-            .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
-            .errorFactory(GsonGlitchFactory())
-            .build(demoActivity, GsonSerialiser(gson))
+    private fun newDejaVu() = DejaVu.defaultBuilder(context(), GsonSerialiser(gson))
+            .withLogger(uiLogger)
+            .withPersistence(true, ::pickPersistenceMode)
+            .withEncryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
+            .withErrorFactory(GsonGlitchFactory())
+            .build()
 
     private fun pickPersistenceMode(persistenceManagerFactory: PersistenceManagerFactory<Glitch>) =
             with(persistenceManagerFactory) {

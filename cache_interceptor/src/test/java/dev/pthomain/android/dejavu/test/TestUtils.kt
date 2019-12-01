@@ -28,12 +28,13 @@ import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
-
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -270,7 +271,13 @@ fun defaultRequestMetadata() = RequestMetadata.Plain(
 
 fun instructionToken(operation: Operation = Cache()) = CacheToken(
         CacheInstruction(
-                RequestMetadata.Hashed.Valid(TestResponse::class.java),
+                RequestMetadata.Hashed.Valid(
+                        TestResponse::class.java,
+                        DEFAULT_URL,
+                        null,
+                        INVALID_HASH,
+                        INVALID_HASH
+                ),
                 operation
         ),
         INSTRUCTION,
@@ -283,41 +290,11 @@ inline fun operationSequence(action: (Operation) -> Unit) {
             DoNotCache,
             Invalidate(),
             Invalidate(true),
-            Wipe,
             Clear(),
             Clear(true),
-            Clear(true, true),
-            Offline(true, mergeOnNextOnError = null),
-            Offline(false, mergeOnNextOnError = null),
-            Offline(true, mergeOnNextOnError = false),
-            Offline(false, mergeOnNextOnError = false),
-            Offline(true, mergeOnNextOnError = true),
-            Offline(false, mergeOnNextOnError = true),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
-    ).forEach(action)
+            Clear(true, true)
+    ).plus(CachePriority.values().asSequence().map { Cache(it, encrypt = true, compress = true) })
+            .forEach(action)
 }
 
 inline fun trueFalseSequence(action: (Boolean) -> Unit) {
@@ -331,40 +308,12 @@ inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
 
-    is Offline -> if (operation.freshOnly) {
-        listOf(
-                NETWORK,
-                EMPTY
-        )
-    } else {
-        listOf(
-                NETWORK,
-                STALE,
-                EMPTY
-        )
-    }.contains(cacheStatus)
-
-    is Expiring -> if (operation.freshOnly) {
-        listOf(
-                NETWORK,
-                FRESH,
-                REFRESHED
-        )
-    } else {
-        listOf(
-                NETWORK,
-                FRESH,
-                STALE,
-                REFRESHED,
-                COULD_NOT_REFRESH
-        )
-    }.contains(cacheStatus)
+    is Cache -> operation.priority.returnedStatuses.contains(cacheStatus)
 
     DoNotCache -> cacheStatus == NOT_CACHED
 
     is Invalidate,
-    is Wipe,
-    is Clear -> cacheStatus == EMPTY
+    is Clear -> cacheStatus == DONE
 }
 
 inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {

@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
@@ -54,8 +55,7 @@ class CacheInterceptorUnitTest {
     private val mockStart = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
 
-    private fun getTarget(isCacheEnabled: Boolean,
-                          operation: Operation): CacheInterceptor<Glitch> {
+    private fun getTarget(operation: Operation): CacheInterceptor<Glitch> {
         mockCacheManager = mock()
 
         mockInstructionToken = instructionToken(operation)
@@ -78,7 +78,6 @@ class CacheInterceptorUnitTest {
                 mockErrorInterceptor,
                 mockCacheManager,
                 mockDateFactory,
-                isCacheEnabled,
                 mockInstructionToken,
                 mockStart
         )
@@ -97,8 +96,7 @@ class CacheInterceptorUnitTest {
     private fun testApply(isCacheEnabled: Boolean) {
         operationSequence { operation ->
             val target = getTarget(
-                    isCacheEnabled,
-                    operation
+                    ifElse(isCacheEnabled, operation, DoNotCache)
             )
 
             if (isCacheEnabled) {

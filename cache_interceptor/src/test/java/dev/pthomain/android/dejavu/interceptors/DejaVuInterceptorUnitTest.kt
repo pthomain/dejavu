@@ -30,6 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.DO_NOT_CACHE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -51,7 +52,7 @@ class DejaVuInterceptorUnitTest {
     private val start = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(start) }
 
-    private lateinit var mockNetworkInterceptorFactory: (ErrorInterceptor<Glitch>, CacheToken, Long) -> NetworkInterceptor<Glitch>
+    private lateinit var mockNetworkInterceptorFactory: (ErrorInterceptor<Glitch>, Cache?, Long) -> NetworkInterceptor<Glitch>
     private lateinit var mockErrorInterceptorFactory: (CacheToken) -> ErrorInterceptor<Glitch>
     private lateinit var mockCacheInterceptorFactory: (ErrorInterceptor<Glitch>, CacheToken, Long) -> CacheInterceptor<Glitch>
     private lateinit var mockResponseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<Glitch>
@@ -72,7 +73,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockHashingErrorObservable: Observable<Any>
     private lateinit var errorTokenCaptor: KArgumentCaptor<CacheToken>
     private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var networkCacheTokenCaptor: KArgumentCaptor<CacheToken>
+    private lateinit var networkOperationCaptor: KArgumentCaptor<Cache?>
     private lateinit var responseTokenCaptor: KArgumentCaptor<CacheToken>
 
     private val mockException = IllegalStateException("test")
@@ -108,7 +109,7 @@ class DejaVuInterceptorUnitTest {
 
         errorTokenCaptor = argumentCaptor()
         cacheCacheTokenCaptor = argumentCaptor()
-        networkCacheTokenCaptor = argumentCaptor()
+        networkOperationCaptor = argumentCaptor()
         responseTokenCaptor = argumentCaptor()
 
         whenever(mockErrorInterceptorFactory.invoke(
@@ -117,7 +118,7 @@ class DejaVuInterceptorUnitTest {
 
         whenever(mockNetworkInterceptorFactory.invoke(
                 eq(mockErrorInterceptor),
-                networkCacheTokenCaptor.capture(),
+                networkOperationCaptor.capture(),
                 eq(start)
         )).thenReturn(mockNetworkInterceptor)
 
@@ -206,7 +207,7 @@ class DejaVuInterceptorUnitTest {
 
                     val errorToken = errorTokenCaptor.firstValue
                     val cacheCacheToken = cacheCacheTokenCaptor.firstValue
-                    val networkCacheToken = networkCacheTokenCaptor.firstValue
+                    val networkOperation = networkOperationCaptor.firstValue
                     val responseToken = responseTokenCaptor.firstValue
 
                     if (!isHashingSuccess) {
@@ -221,8 +222,8 @@ class DejaVuInterceptorUnitTest {
                         )
                     } else {
                         assertEqualsWithContext(
-                                cacheCacheToken,
-                                networkCacheToken,
+                                cacheCacheToken.instruction.operation,
+                                networkOperation,
                                 "Cache tokens for cache and network interceptors didn't match",
                                 context
                         )
@@ -256,7 +257,7 @@ class DejaVuInterceptorUnitTest {
                                 context
                         )
 
-                        if (operation is Operation.Cache) {
+                        if (operation is Cache) {
                             assertEqualsWithContext(
                                     operation.compress,
                                     errorToken.isCompressed,

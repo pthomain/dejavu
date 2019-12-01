@@ -119,17 +119,19 @@ internal class OperationSerialiser {
      * Returns an Expiring operation instance for the given list of parameters
      */
     private fun getCacheOperation(params: List<String>) =
-            if (params.size == 6) {
+            if (params.size == 7) {
                 val priority = CachePriority.valueOf(params[1])
                 val durationInSeconds = toInt(params[2], DEFAULT_CACHE_DURATION_IN_SECONDS)!!
                 val connectivityTimeoutInSeconds = toInt(params[3])
-                val encrypt = toBoolean(params, 4)
-                val compress = toBoolean(params, 5)
+                val requestTimeOutInSeconds = toInt(params[4])
+                val encrypt = toBoolean(params, 5)
+                val compress = toBoolean(params, 6)
 
                 Cache(
                         priority,
                         durationInSeconds,
                         connectivityTimeoutInSeconds,
+                        requestTimeOutInSeconds,
                         encrypt,
                         compress
                 )

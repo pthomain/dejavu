@@ -28,7 +28,9 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
@@ -57,106 +59,68 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                                        val encryptionManager: EncryptionManager,
                                                        val useDatabase: Boolean,
                                                        val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-                                                       val isCacheEnabled: Boolean,
-                                                       val requestTimeOutInSeconds: Int,
-                                                       val cachePredicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Cache?)
+                                                       val cachePredicate: (metadata: RequestMetadata) -> Operation?)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     companion object {
         const val DEFAULT_CACHE_DURATION_IN_SECONDS = 3600 //1h
-    }
 
-    class Builder<E> internal constructor(
-            private val errorFactory: ErrorFactory<E>,
-            private val componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>
-    ) where E : Exception,
-            E : NetworkErrorPredicate {
+        sealed class CachePredicate(private val operation: Operation?)
+            : (RequestMetadata) -> Operation? {
 
-        private var logger: Logger? = null
-        private var customErrorFactory: ErrorFactory<E>? = null
-        private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
+            override fun invoke(requestMetadata: RequestMetadata) = operation
 
-        private var useDatabase = false
-        private var persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)? = null
+            object Inactive : CachePredicate(null)
+            object CacheNone : CachePredicate(DoNotCache)
+            object CacheAll : CachePredicate(Cache(DEFAULT, DEFAULT_CACHE_DURATION_IN_SECONDS))
+        }
 
-        private var isCacheEnabled = true
-        private var requestTimeOutInSeconds: Int = 15
-
-        private var durationInSeconds = DEFAULT_CACHE_DURATION_IN_SECONDS
-        private var connectivityTimeoutInSeconds: Int? = null
-        private var compressData: Boolean = false
-        private var encryptData: Boolean = false
-
-        private var cachePredicate: (Class<*>, RequestMetadata) -> Cache? = { _, _ -> null }
-
-        /**
-         * Disables log output (default log output is only enabled in DEBUG mode).
-         */
-        fun noLog() = logger(getSilentLogger())
-
-        private fun getSilentLogger() = object : Logger {
+        private val SILENT_LOGGER = object : Logger {
             override fun d(tagOrCaller: Any, message: String) = Unit
             override fun e(tagOrCaller: Any, message: String) = Unit
             override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
         }
 
+    }
+
+    class Builder<E> internal constructor(
+            private val errorFactory: ErrorFactory<E>,
+            private val context: Context,
+            private val serialiser: Serialiser,
+            private val componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>
+    ) where E : Exception,
+            E : NetworkErrorPredicate {
+
+        private var logger: Logger = SILENT_LOGGER
+        private var customErrorFactory: ErrorFactory<E>? = null
+        private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
+
+        private var useDatabase = false
+
+        private val defaultPersistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>) = {
+            it.filePersistenceManagerFactory.create()
+        }
+        private var persistenceManagerPicker = defaultPersistenceManagerPicker
+
+        private var cachePredicate: (RequestMetadata) -> Operation? = CachePredicate.Inactive
+
+        /**
+         * Disables log output (default log output is only enabled in DEBUG mode).
+         */
+        fun withoutLog() = withLogger(SILENT_LOGGER)
+
         /**
          * Sets custom logger.
          */
-        fun logger(logger: Logger) =
+        fun withLogger(logger: Logger) =
                 apply { this.logger = logger }
 
         /**
          * Sets a custom ErrorFactory implementation.
          */
-        fun errorFactory(errorFactory: ErrorFactory<E>) =
+        fun withErrorFactory(errorFactory: ErrorFactory<E>) =
                 apply { this.customErrorFactory = errorFactory }
-
-        /**
-         * Sets network call timeout in seconds globally (default is 15s).
-         */
-        fun requestTimeOutInSeconds(requestTimeOutInSeconds: Int) =
-                apply { this.requestTimeOutInSeconds = requestTimeOutInSeconds }
-
-        /**
-         *  Sets the maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
-         */
-        fun connectivityTimeoutInSeconds(connectivityTimeoutInSeconds: Int) =
-                apply { this.connectivityTimeoutInSeconds = connectivityTimeoutInSeconds }
-
-        /**
-         * Sets the global cache duration in milliseconds (used by default for all calls with no specific directive,
-         * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache.durationInSeconds for call-specific directive).
-         */
-        fun cacheDurationInSeconds(durationInSeconds: Int) =
-                apply { this.durationInSeconds = durationInSeconds }
-
-        /**
-         * Enables or disables cache globally, regardless of individual call setup.
-         * Error handling is still executing and errors will be delivered in 2 possible ways:
-         *
-         * - as metadata on the response if the response implements CacheMetadata.Holder and
-         * the mergeOnNextOnError directive is set to true for the call.
-         *
-         * - using the default RxJava error mechanism otherwise.
-         */
-        fun cacheEnabled(isCacheEnabled: Boolean) =
-                apply { this.isCacheEnabled = isCacheEnabled }
-
-        /**
-         * Sets the data compression globally (used by default for all calls with no specific directive,
-         * see @Cache::compress for call-specific directive).
-         */
-        fun compressByDefault(compressData: Boolean) =
-                apply { this.compressData = compressData }
-
-        /**
-         * Sets the data encryption globally (used by default for all calls with no specific directive,
-         * see @Cache::encrypt for call-specific directive).
-         */
-        fun encryptByDefault(encryptData: Boolean = false) =
-                apply { this.encryptData = encryptData }
 
         /**
          * Sets the EncryptionManager implementation. Can be used to provide a custom implementation
@@ -171,13 +135,11 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
          * However if your API level target is less than 23, using Tink will trigger a runtime exception.
          */
-        fun encryption(mumboPicker: (Mumbo) -> EncryptionManager) =
+        fun withEncryption(mumboPicker: (Mumbo) -> EncryptionManager) =
                 apply { this.mumboPicker = mumboPicker }
 
-        private fun defaultEncryptionManager(
-                mumbo: Mumbo,
-                context: Context
-        ) = with(mumbo) {
+        private fun defaultEncryptionManager(mumbo: Mumbo,
+                                             context: Context) = with(mumbo) {
             context.packageManager.getApplicationInfo(
                     context.packageName,
                     0
@@ -189,8 +151,8 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
 
         /**
          * Provide a different PersistenceManager to handle the persistence of the cached requests.
-         * The default implementation is DatabasePersistenceManager which saves the responses to
-         * an SQLite database (using requery). This takes precedence over useFileCaching().
+         * The default implementation is FilePersistenceManager which saves the responses to
+         * the filesystem.
          *
          * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
          * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
@@ -198,57 +160,37 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * @param enableDatabase whether or not to instantiate the classes related to database caching (this will give access to DatabasePersistenceManager.Factory)
          * @param persistenceManagerPicker a picker providing a PersistenceManagerFactory and returning the PersistenceManager implementation to override the default one
          */
-        fun persistenceManager(enableDatabase: Boolean,
-                               persistenceManagerPicker: (PersistenceManagerFactory<E>) -> PersistenceManager<E>) =
+        fun withPersistence(enableDatabase: Boolean,
+                            persistenceManagerPicker: (PersistenceManagerFactory<E>) -> PersistenceManager<E>) =
                 apply {
                     useDatabase = enableDatabase
                     this.persistenceManagerPicker = persistenceManagerPicker
                 }
 
         /**
-         * Sets data caching globally (used by default for all calls with no cache instruction) using
-         * the default global values set in this configuration object. The default value is to false.
-         * Overrides the value set in the cachePredicate() method.
-         * @see cachePredicate
-         */
-        fun cacheAllByDefault(cacheAllByDefault: Boolean) =
-                apply {
-                    this.cachePredicate = { _, _ ->
-                        Cache(
-                                DEFAULT,
-                                DEFAULT_CACHE_DURATION_IN_SECONDS,
-                                connectivityTimeoutInSeconds,
-                                encryptData,
-                                compressData
-                        )
-                    }
-                }
-
-        /**
-         * Sets a predicate for ad-hoc response caching. This predicate will be called for any
-         * request that does not have an associated cache instruction. It will be called
-         * with the target response class and associated request metadata before the call is made in
-         * order to establish whether or not the response should be cached. Returning false means the
-         * response won't be cached. Otherwise, it will be cached using the global values defined
-         * in this configuration object. The default behaviour is to return false.
-         * Overrides the value set in the cacheAllByDefault() method.
+         * Sets a predicate for ad-hoc response caching. This predicate will be called for every
+         * request and will always take precedence on directives set as annotation or header.
          *
-         * //TODO update JavaDoc
-         * @see cacheAllByDefault
+         * It will be called with the target response class and associated request metadata before
+         * the call is made in order to establish the operation to associate with that request.
+         * @see Operation
+         *
+         * Returning null means the cache will instead take into account the directives defined
+         * as annotation or header on that request (if present).
+         *
+         * To cache all response with default CACHE operation and expiration period, use CachePredicate.CacheAll.
+         * To disable any caching, use CachePredicate.CacheNone.
+         *
+         * Otherwise, you can implement your own predicate to return the appropriate operation base on
+         * the given RequestMetadata for the request being made.
          */
-        fun cachePredicate(predicate: (responseClass: Class<*>, metadata: RequestMetadata) -> Cache?) =
-                apply { this.cachePredicate = predicate }
+        fun withPredicate(predicate: (metadata: RequestMetadata) -> Operation?) =
+                apply { this.cachePredicate = predicate } //TODO implement predicate override for all calls
 
         /**
          * Returns an instance of DejaVu.
-         *
-         * @param context the Android context
-         * @param serialiser the mandatory custom Serialiser implementation
          */
-        fun build(context: Context,
-                  serialiser: Serialiser): DejaVu<E> {
-            val logger = logger ?: getSilentLogger()
-
+        fun build(): DejaVu<E> {
             val encryptionManager = with(Mumbo(context, logger)) {
                 mumboPicker?.invoke(this)
                         ?: defaultEncryptionManager(this, context)
@@ -264,8 +206,6 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
                                     encryptionManager,
                                     useDatabase,
                                     persistenceManagerPicker,
-                                    isCacheEnabled,
-                                    requestTimeOutInSeconds,
                                     cachePredicate
                             ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                     )

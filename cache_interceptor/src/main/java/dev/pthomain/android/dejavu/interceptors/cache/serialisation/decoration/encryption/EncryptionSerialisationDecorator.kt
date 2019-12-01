@@ -35,7 +35,7 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * Optional encryption step of the serialisation process
  *
  * @param encryptionManager an instance of EncryptionManager
- * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Builder.encryption
+ * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Builder.withEncryption
  */
 internal class EncryptionSerialisationDecorator<E>(private val encryptionManager: EncryptionManager)
     : SerialisationDecorator<E>

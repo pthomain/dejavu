@@ -47,19 +47,19 @@ class OperationSerialiserUnitTest {
             put("CLEAR:true:false", Clear(true, false))
             put("CLEAR:true:true", Clear(true, true))
 
-            put("CACHE:DEFAULT:1234:5678:false:false", Cache(DEFAULT, 1234, 5678, false, false))
-            put("CACHE:DEFAULT:1234:5678:false:true", Cache(DEFAULT, 1234, 5678, false, true))
-            put("CACHE:DEFAULT:1234:5678:true:true", Cache(DEFAULT, 1234, 5678, true, true))
-            put("CACHE:DEFAULT:1234:5678:true:false", Cache(DEFAULT, 1234, 5678, true, false))
-            put("CACHE:DEFAULT::5678:true:true", Cache(DEFAULT, -1, 5678, true, true))
-            put("CACHE:DEFAULT:::true:true", Cache(DEFAULT, -1, -1, true, true))
+            put("CACHE:DEFAULT:1234:5678:7654:false:false", Cache(DEFAULT, 1234, 5678, 7654, false, false))
+            put("CACHE:DEFAULT:1234:5678:7654:false:true", Cache(DEFAULT, 1234, 5678, 7654, false, true))
+            put("CACHE:DEFAULT:1234:5678:7654:true:true", Cache(DEFAULT, 1234, 5678, 7654, true, true))
+            put("CACHE:DEFAULT:1234:5678:7654:true:false", Cache(DEFAULT, 1234, 5678, 7654, true, false))
+            put("CACHE:DEFAULT::5678:7654:true:true", Cache(DEFAULT, -1, 5678, 7654, true, true))
+            put("CACHE:DEFAULT::::true:true", Cache(DEFAULT, -1, -1, -1, true, true))
 
-            put("CACHE:FRESH_PREFERRED:1234:5678:true:true", Cache(FRESH_PREFERRED, 1234, 5678, true, true))
-            put("CACHE:FRESH_ONLY:1234:5678:true:true", Cache(FRESH_ONLY, 1234, 5678, true, true))
-            put("CACHE:INVALIDATED:1234:5678:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234, 5678, true, true))
-            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:true:true", Cache(REFRESH_FRESH_ONLY, 1234, 5678, true, true))
-            put("CACHE:OFFLINE:1234:5678:true:true", Cache(OFFLINE, 1234, 5678, true, true))
-            put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:true:true", Cache(OFFLINE_FRESH_ONLY, 1234, 5678, true, true))
+            put("CACHE:FRESH_PREFERRED:1234:5678:7654:true:true", Cache(FRESH_PREFERRED, 1234, 5678, 7654, true, true))
+            put("CACHE:FRESH_ONLY:1234:5678:7654:true:true", Cache(FRESH_ONLY, 1234, 5678, 7654, true, true))
+            put("CACHE:INVALIDATED:1234:5678:7654:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234, 5678, 7654, true, true))
+            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:7654:true:true", Cache(REFRESH_FRESH_ONLY, 1234, 5678, 7654, true, true))
+            put("CACHE:OFFLINE:1234:5678:7654:true:true", Cache(OFFLINE, 1234, 5678, 7654, true, true))
+            put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:7654:true:true", Cache(OFFLINE_FRESH_ONLY, 1234, 5678, 7654, true, true))
         }
     }
 

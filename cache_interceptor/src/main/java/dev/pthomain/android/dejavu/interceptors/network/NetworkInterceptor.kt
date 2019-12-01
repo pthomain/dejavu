@@ -28,7 +28,6 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -51,17 +50,15 @@ import kotlin.NoSuchElementException
  * @param logger a Logger instance
  * @param errorInterceptor the interceptor dealing with network error handling
  * @param dateFactory a factory converting timestamps to Dates
- * @param instructionToken the original request's instruction token
+ * @param operation the original request cache operation
  * @param start the time at which the request started
- * @param requestTimeOutInSeconds the aforementioned network availability delay
  */
 internal class NetworkInterceptor<E>(private val context: Context,
                                      private val logger: Logger,
                                      private val errorInterceptor: ErrorInterceptor<E>,
                                      private val dateFactory: (Long?) -> Date,
-                                     private val instructionToken: CacheToken,
-                                     private val start: Long,
-                                     private val requestTimeOutInSeconds: Int)
+                                     private val operation: Cache?,
+                                     private val start: Long)
     : ObservableTransformer<Any,ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -78,9 +75,11 @@ internal class NetworkInterceptor<E>(private val context: Context,
                     .filter { it != null } //see https://github.com/square/retrofit/issues/2242
                     .defaultIfEmpty(Observable.error<Any>(NoSuchElementException("Response was empty")))
                     .compose {
-                        if (requestTimeOutInSeconds > 0)
-                            it.timeout(requestTimeOutInSeconds.toLong(), SECONDS) //fixing timeout not working in OkHttp
-                        else it
+                        with(operation?.requestTimeOutInSeconds) {
+                            if (this != null && this > 0)
+                                it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
+                            else it
+                        }
                     }
                     .compose(errorInterceptor)
                     .map { it.copy(metadata = it.metadata.copy(callDuration = getCallDuration())) }
@@ -89,19 +88,16 @@ internal class NetworkInterceptor<E>(private val context: Context,
     /**
      * Adds an optional delay for network availability (if the value is set as more than 0).
      *
-     * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.connectivityTimeoutInMillis
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable optionally delayed for network availability
      */
     private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
-            (instructionToken.instruction.operation as? Cache)?.let {
-                it.connectivityTimeoutInSeconds.swapWhenDefault(-1)
-            }?.let { timeOut ->
-                upstream.swapLambdaWhen(timeOut > 0L) {
+            with(operation?.connectivityTimeoutInSeconds.swapWhenDefault(-1)) {
+                upstream.swapLambdaWhen(this > 0L) {
                     upstream.waitForNetwork(context, logger)
-                            .timeout(timeOut.toLong(), SECONDS)
+                            .timeout(toLong(), SECONDS)
                 }
-            } ?: upstream
+            }!!
 
     /**
      * @return a Duration metadata object holding the duration of the network call

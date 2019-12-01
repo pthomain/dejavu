@@ -23,7 +23,9 @@
 
 package dev.pthomain.android.dejavu
 
+import android.content.Context
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
@@ -82,18 +84,27 @@ class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
         /**
          * @return Builder for DejaVuConfiguration
          */
-        fun <E> builder(errorFactory: ErrorFactory<E>,
-                        componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>) where E : Exception,
-                                                                                                 E : NetworkErrorPredicate =
-                DejaVuConfiguration.Builder(
+        fun <E> builder(context: Context,
+                        serialiser: Serialiser,
+                        errorFactory: ErrorFactory<E>,
+                        componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>)
+                where E : Exception,
+                      E : NetworkErrorPredicate = DejaVuConfiguration.Builder(
                         errorFactory,
+                context,
+                serialiser,
                         componentProvider
                 )
 
         /**
          * @return Builder for DejaVuConfiguration
          */
-        fun builder() = builder(GlitchFactory()) {
+        fun defaultBuilder(context: Context,
+                           serialiser: Serialiser) = builder(
+                context,
+                serialiser,
+                GlitchFactory()
+        ) {
             DaggerGlitchDejaVuComponent
                     .builder()
                     .glitchDejaVuModule(GlitchDejaVuModule(it))

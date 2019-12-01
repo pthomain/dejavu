@@ -37,7 +37,7 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
-internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>)
+internal class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -48,7 +48,7 @@ internal class EmptyResponseFactory<E>(private val errorFactory: ErrorFactory<E>
      * @param instructionToken the instruction token for this call
      * @return an empty ResponseWrapper emitting Single
      */
-    fun emptyResponseWrapper(instructionToken: CacheToken) =
+    fun create(instructionToken: CacheToken) =
             with(instructionToken) {
                 instruction.operation.type.isCacheOperation.let { isDone ->
                     ResponseWrapper(

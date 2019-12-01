@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.INVALID_HASH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
@@ -62,10 +62,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private val entryOfWrongType2 = "EntryOfWrongType2"
     private val invalidatedEntryName = "invalidatedEntryName"
 
-    override fun setUp(instructionToken: CacheToken,
-                       encryptDataGlobally: Boolean,
-                       compressDataGlobally: Boolean,
-                       cacheInstruction: CacheInstruction?): KeyValuePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: CacheToken): KeyValuePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(
@@ -78,11 +75,7 @@ internal class KeyValuePersistenceManagerUnitTest
                 true
         )
 
-        mockDejaVuConfiguration = setUpConfiguration(
-                encryptDataGlobally,
-                compressDataGlobally,
-                cacheInstruction
-        )
+        mockDejaVuConfiguration = setUpConfiguration(instructionToken.instruction)
 
         mockCompleteCacheDataHolder = with(mockIncompleteCacheDataHolder) {
             Complete(
@@ -148,9 +141,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     override fun prepareCache(iteration: Int,
-                              operation: Expiring,
-                              encryptDataGlobally: Boolean,
-                              compressDataGlobally: Boolean,
+                              operation: Cache,
                               hasPreviousResponse: Boolean,
                               isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
@@ -169,12 +160,11 @@ internal class KeyValuePersistenceManagerUnitTest
     override fun verifyCache(context: String,
                              iteration: Int,
                              instructionToken: CacheToken,
-                             operation: Expiring,
+                             operation: Cache,
                              encryptData: Boolean,
                              compressData: Boolean,
                              hasPreviousResponse: Boolean,
-                             isSerialisationSuccess: Boolean,
-                             duration: Long) {
+                             isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
             val dataHolderCaptor = argumentCaptor<Complete>()
             verifyWithContext(mockFileNameSerialiser, context).serialise(dataHolderCaptor.capture())
@@ -217,8 +207,11 @@ internal class KeyValuePersistenceManagerUnitTest
                 "Cache date didn't match",
                 context
         )
+
+        val operation = instructionToken.instruction.operation as Cache
+
         assertEqualsWithContext(
-                currentDateTime + durationInMillis,
+                currentDateTime + operation.durationInSeconds,
                 dataHolder.expiryDate,
                 "Expiry date didn't match",
                 context
@@ -287,7 +280,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     override fun prepareGetCachedResponse(context: String,
-                                          operation: Expiring,
+                                          operation: Cache,
                                           instructionToken: CacheToken,
                                           hasResponse: Boolean,
                                           isStale: Boolean,
@@ -319,7 +312,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     override fun verifyGetCachedResponse(context: String,
-                                         operation: Expiring,
+                                         operation: Cache,
                                          instructionToken: CacheToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,

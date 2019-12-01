@@ -37,6 +37,7 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaV
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -85,15 +86,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
             true,
             null,
-            true,
-            true,
-            true,
-            true,
-            false,
-            15,
-            15,
-            60000,
-            { _, _ -> false }
+            { _ -> null }
     )
 
     @Before
@@ -167,7 +160,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                                                                     requestMetadata.responseClass,
                                                                     url
                                                             )
-                                                    ),
+                                                    ) as RequestMetadata.Hashed.Valid,
                                                     cacheToken.instruction.operation
                                             )
                                     )
@@ -176,14 +169,12 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 }
             }
 
-    protected fun assertResponse(
-            stubbedResponse: ResponseWrapper<Glitch>,
-            actualResponse: ResponseWrapper<Glitch>?,
-            expectedStatus: CacheStatus,
-            fetchDate: Date? = NOW,
-            cacheDate: Date? = NOW,
-            expiryDate: Date? = Date(NOW.time + (stubbedResponse.metadata.cacheToken.instruction.operation as Operation.Expiring).durationInMillis!!)
-    ) {
+    protected fun assertResponse(stubbedResponse: ResponseWrapper<Glitch>,
+                                 actualResponse: ResponseWrapper<Glitch>?,
+                                 expectedStatus: CacheStatus,
+                                 fetchDate: Date? = NOW,
+                                 cacheDate: Date? = NOW,
+                                 expiryDate: Date? = Date(NOW.time + (stubbedResponse.metadata.cacheToken.instruction.operation as Cache).durationInSeconds * 1000)) {
         assertNotNullWithContext(
                 actualResponse,
                 "Actual response should not be null"
@@ -199,8 +190,8 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 CacheToken(
                         stubbedResponse.metadata.cacheToken.instruction,
                         expectedStatus,
-                        configuration.compress,
-                        configuration.encrypt,
+                        true,
+                        true,
                         fetchDate,
                         cacheDate,
                         expiryDate
@@ -210,7 +201,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
         )
     }
 
-    protected fun instructionToken(operation: Operation = Cache(durationInMillis = 3600_000),
+    protected fun instructionToken(operation: Operation = Cache(durationInSeconds = 3600),
                                    responseClass: Class<*> = TestResponse::class.java,
                                    url: String = "http://test.com/testResponse") =
             cacheComponent.hasher().hash(RequestMetadata.Plain(
@@ -219,7 +210,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             )).let {
                 CacheToken(
                         CacheInstruction(
-                                it,
+                                it as RequestMetadata.Hashed.Valid,
                                 operation
                         ),
                         CacheStatus.INSTRUCTION,

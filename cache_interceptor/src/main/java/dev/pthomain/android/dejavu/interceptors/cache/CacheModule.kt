@@ -31,7 +31,7 @@ import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
@@ -61,11 +61,11 @@ internal abstract class CacheModule<E>
                             persistenceManager: PersistenceManager<E>,
                             cacheMetadataManager: CacheMetadataManager<E>,
                             dateFactory: Function1<Long?, Date>,
-                            emptyResponseFactory: EmptyResponseFactory<E>) =
+                            emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
             CacheManager(
                     persistenceManager,
                     cacheMetadataManager,
-                    emptyResponseFactory,
+                    emptyResponseWrapperFactory,
                     dateFactory::get,
                     logger
             )

@@ -32,13 +32,14 @@ import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import io.reactivex.subjects.PublishSubject
 import java.util.*
@@ -53,14 +54,14 @@ internal abstract class InterceptorModule<E>
     @Singleton
     fun provideErrorInterceptorFactory(configuration: DejaVuConfiguration<E>,
                                        context: Context,
-                                       emptyResponseFactory: EmptyResponseFactory<E>,
+                                       emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                                        logger: Logger,
                                        dateFactory: Function1<Long?, Date>) =
             object : Function1<CacheToken, ErrorInterceptor<E>> {
                 override fun get(t1: CacheToken) = ErrorInterceptor(
                         context,
                         configuration.errorFactory,
-                        emptyResponseFactory,
+                        emptyResponseWrapperFactory,
                         logger,
                         dateFactory::get,
                         t1
@@ -69,19 +70,17 @@ internal abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    fun provideNetworkInterceptorFactory(configuration: DejaVuConfiguration<E>,
-                                         context: Context,
+    fun provideNetworkInterceptorFactory(context: Context,
                                          logger: Logger,
                                          dateFactory: Function1<Long?, Date>) =
-            object : Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>> {
-                override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = NetworkInterceptor(
+            object : Function3<ErrorInterceptor<E>, Cache?, Long, NetworkInterceptor<E>> {
+                override fun get(t1: ErrorInterceptor<E>, t2: Cache?, t3: Long) = NetworkInterceptor(
                         context,
                         logger,
                         t1,
                         dateFactory::get,
                         t2,
-                        t3,
-                        configuration.requestTimeOutInSeconds
+                        t3
                 )
             }
 
@@ -95,7 +94,6 @@ internal abstract class InterceptorModule<E>
                         t1,
                         cacheManager,
                         dateFactory::get,
-                        configuration.isCacheEnabled,
                         t2,
                         t3
                 )
@@ -107,14 +105,14 @@ internal abstract class InterceptorModule<E>
                                    logger: Logger,
                                    dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
-                                   emptyResponseFactory: EmptyResponseFactory<E>) =
+                                   emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
             object : Function3<CacheToken, RxType, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
                                  t2: RxType,
                                  t3: Long) = ResponseInterceptor(
                         logger,
                         dateFactory::get,
-                        emptyResponseFactory,
+                        emptyResponseWrapperFactory,
                         configuration,
                         metadataSubject,
                         t1,
@@ -126,7 +124,7 @@ internal abstract class InterceptorModule<E>
     @Provides
     @Singleton
     fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>) =
-            EmptyResponseFactory(configuration.errorFactory)
+            EmptyResponseWrapperFactory(configuration.errorFactory)
 
 
     @Provides
@@ -139,7 +137,7 @@ internal abstract class InterceptorModule<E>
     fun provideDejaVuInterceptorFactory(hasher: Hasher,
                                         configuration: DejaVuConfiguration<E>,
                                         dateFactory: Function1<Long?, Date>,
-                                        networkInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, NetworkInterceptor<E>>,
+                                        networkInterceptorFactory: Function3<ErrorInterceptor<E>, Cache?, Long, NetworkInterceptor<E>>,
                                         errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
                                         responseInterceptorFactory: Function3<CacheToken, RxType, Long, ResponseInterceptor<E>>) =

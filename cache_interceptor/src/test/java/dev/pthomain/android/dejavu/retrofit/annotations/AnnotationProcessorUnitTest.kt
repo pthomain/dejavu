@@ -25,11 +25,11 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.DEFAULT
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertNullWithContext
 import dev.pthomain.android.dejavu.test.assertOperation
@@ -41,8 +41,6 @@ import org.junit.Test
 
 class AnnotationProcessorUnitTest {
 
-    private val defaultCacheDuration = 4321L
-    private val defaultNetworkTimeOut = 1234L
     private val responseKClass = TestResponse::class
     private val responseClass = responseKClass.java
 
@@ -54,12 +52,6 @@ class AnnotationProcessorUnitTest {
         configuration = mock()
 
         whenever(configuration.logger).thenReturn(mock())
-        whenever(configuration.cachePredicate).thenReturn({ _, _ -> false })
-        whenever(configuration.cacheDurationInMillis).thenReturn(defaultCacheDuration)
-        whenever(configuration.connectivityTimeoutInMillis).thenReturn(defaultNetworkTimeOut)
-        whenever(configuration.mergeOnNextOnError).thenReturn(true)
-        whenever(configuration.encrypt).thenReturn(true)
-        whenever(configuration.compress).thenReturn(true)
 
         target = AnnotationProcessor(configuration)
     }
@@ -75,7 +67,8 @@ class AnnotationProcessorUnitTest {
     }
 
     private fun testProcessWithNoAnnotations(cacheAllByDefault: Boolean) {
-        whenever(configuration.cachePredicate).thenReturn({ _, _ -> cacheAllByDefault })
+        val operation = ifElse(cacheAllByDefault, Operation.Cache(), Operation.DoNotCache)
+        whenever(configuration.cachePredicate).thenReturn { _ -> operation }
 
         val instruction = target.process(
                 arrayOf(),
@@ -92,8 +85,7 @@ class AnnotationProcessorUnitTest {
     @Test
     fun testProcessWithTwoAnnotations() {
         val expectedErrorMessage = ("More than one cache annotation defined for method returning"
-                + " ${OBSERVABLE.getTypedName(responseClass)}, found ${OFFLINE.annotationName}"
-                + " after existing annotation ${DO_NOT_CACHE.annotationName}."
+                + " TestResponse, found @Cache after existing annotation @DoNotCache."
                 + " Only one annotation can be used for this method.")
 
         expectException(
@@ -103,7 +95,7 @@ class AnnotationProcessorUnitTest {
                     target.process(
                             arrayOf(
                                     getAnnotation<DoNotCache>(emptyList()),
-                                    getAnnotation<Offline>(emptyList())
+                                    getAnnotation<Cache>(emptyList())
                             ),
                             OBSERVABLE,
                             responseClass
@@ -116,21 +108,20 @@ class AnnotationProcessorUnitTest {
     fun testProcessCacheDefaultDurations() {
         testProcessAnnotation(
                 getAnnotation<Cache>(listOf(
+                        DEFAULT,
+                        -1,
+                        -1,
+                        -1,
                         true,
-                        -1L,
-                        -1L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
+                        true
                 )),
-                Expiring.Cache(
-                        defaultCacheDuration,
-                        defaultNetworkTimeOut,
+                Operation.Cache(
+                        DEFAULT,
+                        -1,
+                        -1,
+                        -1,
                         true,
-                        true,
-                        true,
-                        true,
-                        false
+                        true
                 )
         )
     }
@@ -139,121 +130,41 @@ class AnnotationProcessorUnitTest {
     fun testProcessCacheDefaultNetworkTimeout() {
         testProcessAnnotation(
                 getAnnotation<Cache>(listOf(
+                        DEFAULT,
+                        4567,
+                        -1,
+                        -1,
                         true,
-                        4567L,
-                        -1L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
+                        true
                 )),
-                Expiring.Cache(
-                        4567L,
-                        defaultNetworkTimeOut,
+                Operation.Cache(
+                        DEFAULT,
+                        4567,
+                        -1,
+                        -1,
                         true,
-                        true,
-                        true,
-                        true,
-                        false
+                        true
                 )
         )
     }
 
+    //TODO use a loop for this
     @Test
     fun testProcessCacheNoDefaultDurations() {
         testProcessAnnotation(
                 getAnnotation<Cache>(listOf(
+                        DEFAULT,
+                        4567,
+                        5678,
+                        -1,
                         true,
-                        4567L,
-                        5678L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
+                        true
                 )),
-                Expiring.Cache(
-                        4567L,
-                        5678L,
-                        true,
-                        true,
-                        true,
-                        true,
-                        false
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshDefaultDurations() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        -1L,
-                        -1L,
-                        OptionalBoolean.TRUE
-                )),
-                Expiring.Refresh(
-                        defaultCacheDuration,
-                        defaultNetworkTimeOut,
-                        true,
-                        true,
-                        false
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshDefaultNetworkTimeout() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        4567L,
-                        -1L,
-                        OptionalBoolean.TRUE
-                )),
-                Expiring.Refresh(
-                        4567L,
-                        defaultNetworkTimeOut,
-                        true,
-                        true,
-                        false
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshNoDefaultDurations() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        4567L,
-                        5678L,
-                        OptionalBoolean.TRUE
-                )),
-                Expiring.Refresh(
-                        4567L,
-                        5678L,
-                        true,
-                        true,
-                        false
-                )
-        )
-    }
-
-    @Test
-    fun testProcessOffline() {
-        testProcessAnnotation(
-                getAnnotation<Offline>(listOf()),
-                Expiring.Offline()
-        )
-    }
-
-    @Test
-    fun testProcessOfflineWithArgs() {
-        testProcessAnnotation(
-                getAnnotation<Offline>(listOf(
-                        true,
-                        OptionalBoolean.TRUE
-                )),
-                Expiring.Offline(
+                Operation.Cache(
+                        DEFAULT,
+                        4567,
+                        5678,
+                        -1,
                         true,
                         true
                 )

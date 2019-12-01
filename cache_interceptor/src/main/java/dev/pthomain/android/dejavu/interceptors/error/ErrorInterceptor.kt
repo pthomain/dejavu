@@ -29,7 +29,7 @@ import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.functions.Function
@@ -42,14 +42,14 @@ import java.util.*
  * @see ErrorFactory
  * @param context the application context
  * @param errorFactory the factory converting throwables to custom exceptions
- * @param emptyResponseFactory factory providing empty response wrappers
+ * @param emptyResponseWrapperFactory factory providing empty response wrappers
  * @param logger a Logger instance
  * @param dateFactory a factory converting timestamps to Dates
  * @param instructionToken the original request's instruction token
  */
 internal class ErrorInterceptor<E>(private val context: Context,
                                    private val errorFactory: ErrorFactory<E>,
-                                   private val emptyResponseFactory: EmptyResponseFactory<E>,
+                                   private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                                    private val logger: Logger,
                                    private val dateFactory: (Long?) -> Date,
                                    private val instructionToken: CacheToken)
@@ -79,7 +79,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     )
             }
             .switchIfEmpty(Observable.defer {
-                emptyResponseFactory.emptyResponseWrapper(instructionToken).observable()
+                emptyResponseWrapperFactory.create(instructionToken).observable()
             })
             .onErrorResumeNext(Function {
                 ResponseWrapper(

@@ -37,13 +37,13 @@ internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<Function3<E
 
     //TODO
 
-    private fun setUpConfiguration(isCacheEnabled: Boolean = true) {
-        setUpWithConfiguration(configuration.copy(isCacheEnabled = isCacheEnabled))
+    private fun setUpConfiguration() {
+        setUpWithConfiguration(configuration)
     }
 
     @Test
     fun `GIVEN that the cache is not enabled THEN the returned response has not been cached`() {
-        setUpConfiguration(false)
+        setUpConfiguration() //TODO DoNotCache on predicate
 
     }
 

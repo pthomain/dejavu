@@ -84,30 +84,30 @@ private fun assertExpiring(expectedOperation: Cache,
                            actualOperation: Cache,
                            context: String? = null) {
     assertEqualsWithContext(
-            expectedOperation.durationInMillis,
-            actualOperation.durationInMillis,
-            "durationInMillis didn't match",
+            expectedOperation.durationInSeconds,
+            actualOperation.durationInSeconds,
+            "durationInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.connectivityTimeoutInMillis,
-            actualOperation.connectivityTimeoutInMillis,
-            "connectivityTimeoutInMillis didn't match",
+            expectedOperation.connectivityTimeoutInSeconds,
+            actualOperation.connectivityTimeoutInSeconds,
+            "connectivityTimeoutInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.freshOnly,
-            actualOperation.freshOnly,
-            "freshOnly didn't match",
+            expectedOperation.requestTimeOutInSeconds,
+            actualOperation.requestTimeOutInSeconds,
+            "requestTimeOutInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.mergeOnNextOnError,
-            actualOperation.mergeOnNextOnError,
-            "mergeOnNextOnError didn't match",
+            expectedOperation.priority,
+            actualOperation.priority,
+            "priority didn't match",
             context
     )
 
@@ -122,13 +122,6 @@ private fun assertExpiring(expectedOperation: Cache,
             expectedOperation.compress,
             actualOperation.compress,
             "compress didn't match",
-            context
-    )
-
-    assertEqualsWithContext(
-            expectedOperation.filterFinal,
-            actualOperation.filterFinal,
-            "filterFinal didn't match",
             context
     )
 }

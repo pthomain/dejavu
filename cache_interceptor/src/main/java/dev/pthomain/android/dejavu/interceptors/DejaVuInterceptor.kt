@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
@@ -31,7 +30,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstructi
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Hashed.Valid
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Plain
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.INSTRUCTION
@@ -73,7 +71,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
                                                 private val dateFactory: (Long?) -> Date,
                                                 private val hashingErrorObservableFactory: () -> Observable<Any>,
                                                 private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                                private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> NetworkInterceptor<E>,
+                                                private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
                                                 private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
                                                 private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>)
     : ObservableTransformer<Any, Any>,
@@ -125,7 +123,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
 
             val instruction = CacheInstruction(
                     hashedRequestMetadata,
-                    ifElse(configuration.isCacheEnabled, operation, DoNotCache)
+                    operation
             )
 
             val cacheOperation = instruction.operation as? Cache
@@ -141,7 +139,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
             val errorInterceptor = errorInterceptorFactory(instructionToken)
 
             upstream
-                    .compose(networkInterceptorFactory(errorInterceptor, instructionToken, start))
+                    .compose(networkInterceptorFactory(errorInterceptor, operation as? Cache, start))
                     .compose(cacheInterceptorFactory(errorInterceptor, instructionToken, start))
                     .compose(responseInterceptorFactory(instructionToken, rxType, start))
 
@@ -169,7 +167,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
                                           private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                          private val networkInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> NetworkInterceptor<E>,
+                                          private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
                                           private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
                                           private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>,
                                           private val configuration: DejaVuConfiguration<E>)

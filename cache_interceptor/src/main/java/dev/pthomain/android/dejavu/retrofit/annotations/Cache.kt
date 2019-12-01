@@ -30,11 +30,12 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 
 /**
  * Retrofit annotation for calls made with an associated CACHE directive.
- * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.Cache
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
  *
  * @param priority the priority instructing how the cache should behave
  * @param durationInSeconds period during which the data is still considered fresh from the time it has been cached
  * @param connectivityTimeoutInSeconds maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
+ * @param requestTimeOutInSeconds maximum time to wait for the request to finish (does not apply to cached responses)
  * @param compress whether the cached data should be compressed, useful for large responses
  * @param encrypt whether the cached data should be encrypted, useful for use on external storage
  */
@@ -43,5 +44,6 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 annotation class Cache(val priority: CachePriority = CachePriority.DEFAULT,
                        val durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
                        val connectivityTimeoutInSeconds: Int = -1,
+                       val requestTimeOutInSeconds: Int = -1,
                        val encrypt: Boolean = false,
                        val compress: Boolean = false)

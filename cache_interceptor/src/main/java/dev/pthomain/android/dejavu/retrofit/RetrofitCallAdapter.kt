@@ -104,10 +104,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
             adaptedByDefault(call) ?: adaptedByDefaultRxJavaAdapter(call)
 
     private fun adaptedByDefault(call: Call<Any>) =
-            dejaVuConfiguration.cachePredicate(
-                    responseClass,
-                    getRequestMetadata(call)
-            )?.let {
+            dejaVuConfiguration.cachePredicate(getRequestMetadata(call))?.let {
                 adaptedWithOperation(
                         call,
                         it,

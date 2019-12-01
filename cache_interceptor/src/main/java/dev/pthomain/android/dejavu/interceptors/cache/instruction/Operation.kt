@@ -24,7 +24,11 @@
 package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_PREFERRED
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 
 /**
@@ -44,12 +48,14 @@ sealed class Operation(val type: Type) {
      * @param priority the priority instructing how the cache should behave
      * @param durationInSeconds duration of the cache for this specific call in seconds, during which the data is considered FRESH
      * @param connectivityTimeoutInSeconds maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
+     * @param requestTimeOutInSeconds maximum time to wait for the request to finish (does not apply to cached responses)
      * @param encrypt whether the cached data should be encrypted, useful for use on external storage //TODO abstract
      * @param compress whether the cached data should be compressed, useful for large responses //TODO abstract
      */
     data class Cache(val priority: CachePriority = DEFAULT,
                      val durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
                      val connectivityTimeoutInSeconds: Int? = null,
+                     val requestTimeOutInSeconds: Int? = null,
                      val encrypt: Boolean = false,
                      val compress: Boolean = false) : Operation(CACHE) {
         override fun toString() = SERIALISER.serialise(
@@ -57,9 +63,17 @@ sealed class Operation(val type: Type) {
                 priority,
                 durationInSeconds,
                 connectivityTimeoutInSeconds,
+                requestTimeOutInSeconds,
                 encrypt,
                 compress
         )
+
+        fun isCache() = priority.mode == CacheMode.CACHE
+        fun isRefresh() = priority.mode == REFRESH
+        fun isOffline() = priority.mode == OFFLINE
+        fun isDefault() = priority.preference == CachePreference.DEFAULT
+        fun isFreshOnly() = priority.preference == FRESH_ONLY
+        fun isFreshPreferred() = priority.preference == FRESH_PREFERRED
     }
 
     /**

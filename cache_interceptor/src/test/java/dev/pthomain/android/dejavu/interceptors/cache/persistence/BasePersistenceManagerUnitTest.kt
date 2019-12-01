@@ -94,10 +94,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         return mockConfiguration
     }
 
-    protected abstract fun setUp(instructionToken: CacheToken,
-                                 encryptDataGlobally: Boolean,
-                                 compressDataGlobally: Boolean,
-                                 cacheInstruction: CacheInstruction?): T
+    protected abstract fun setUp(instructionToken: CacheToken): T
 
     @Test
     fun testClearCache() {
@@ -146,12 +143,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                             )))
         }!!
 
-        val target = setUp(
-                instructionToken,
-                true,
-                true,
-                null
-        )
+        val target = setUp(instructionToken)
 
         prepareClearCache(
                 context,
@@ -181,20 +173,14 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         var iteration = 0
         operationSequence { operation ->
             if (operation is Cache) {
-                trueFalseSequence { encryptDataGlobally ->
-                    trueFalseSequence { compressDataGlobally ->
-                        trueFalseSequence { hasPreviousResponse ->
-                            trueFalseSequence { isSerialisationSuccess ->
-                                testCache(
-                                        iteration++,
-                                        operation,
-                                        encryptDataGlobally,
-                                        compressDataGlobally,
-                                        hasPreviousResponse,
-                                        isSerialisationSuccess
-                                )
-                            }
-                        }
+                trueFalseSequence { hasPreviousResponse ->
+                    trueFalseSequence { isSerialisationSuccess ->
+                        testCache(
+                                iteration++,
+                                operation,
+                                hasPreviousResponse,
+                                isSerialisationSuccess
+                        )
                     }
                 }
             }
@@ -203,31 +189,20 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     private fun testCache(iteration: Int,
                           operation: Cache,
-                          encryptDataGlobally: Boolean,
-                          compressDataGlobally: Boolean,
                           hasPreviousResponse: Boolean,
                           isSerialisationSuccess: Boolean) {
         val context = "iteration = $iteration,\n" +
                 "operation = $operation,\n" +
-                "encryptDataGlobally = $encryptDataGlobally,\n" +
-                "compressDataGlobally = $compressDataGlobally,\n" +
                 "hasPreviousResponse = $hasPreviousResponse\n" +
                 "isSerialisationSuccess = $isSerialisationSuccess"
 
         val instructionToken = instructionTokenWithHash(operation)
 
-        val target = setUp(
-                instructionToken,
-                encryptDataGlobally,
-                compressDataGlobally,
-                instructionToken.instruction
-        )
+        val target = setUp(instructionToken)
 
         prepareCache(
                 iteration,
                 operation,
-                encryptDataGlobally,
-                compressDataGlobally,
                 hasPreviousResponse,
                 isSerialisationSuccess
         )
@@ -246,11 +221,9 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
         val encryptData = mockPreviousResponse?.metadata?.cacheToken?.isEncrypted
                 ?: operation.encrypt
-                ?: encryptDataGlobally
 
         val compressData = mockPreviousResponse?.metadata?.cacheToken?.isCompressed
                 ?: operation.compress
-                ?: compressDataGlobally
 
         val metadata = SerialisationDecorationMetadata(compressData, encryptData)
 
@@ -278,8 +251,6 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected open fun prepareCache(iteration: Int,
                                     operation: Cache,
-                                    encryptDataGlobally: Boolean,
-                                    compressDataGlobally: Boolean,
                                     hasPreviousResponse: Boolean,
                                     isSerialisationSuccess: Boolean) = Unit
 
@@ -324,13 +295,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val context = "operation = $operation"
         val instructionToken = instructionTokenWithHash(operation)
 
-        val target = spy(setUp(
-                instructionToken,
-                true,
-                true,
-                null
-        ))
-
+        val target = spy(setUp(instructionToken))
 
         andThen(context, instructionToken, target)
     }
@@ -417,12 +382,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val isCompressed = 1
         val isEncrypted = 1
 
-        val target = spy(setUp(
-                instructionToken,
-                true,
-                true,
-                instructionToken.instruction
-        ))
+        val target = spy(setUp(instructionToken))
 
         val isDataStale = isStale || operation.priority.mode == REFRESH || operation.type == INVALIDATE
         val cacheDateTimeStamp = 98765L

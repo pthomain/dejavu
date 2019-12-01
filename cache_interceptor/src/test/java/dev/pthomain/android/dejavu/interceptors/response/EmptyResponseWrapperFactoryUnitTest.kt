@@ -27,45 +27,26 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.assertEqualsWithContext
+import dev.pthomain.android.dejavu.test.assertNotNullWithContext
+import dev.pthomain.android.dejavu.test.assertNullWithContext
+import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Before
 import org.junit.Test
 
-class EmptyResponseFactoryUnitTest {
+class EmptyResponseWrapperFactoryUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
 
-    private lateinit var target: EmptyResponseFactory<Glitch>
+    private lateinit var target: EmptyResponseWrapperFactory<Glitch>
 
     //TODO update test for DONE and EMPTY
 
     @Before
     fun setUp() {
         mockErrorFactory = mock()
-        target = EmptyResponseFactory(mockErrorFactory)
-    }
-
-    @Test
-    fun testCreateMergeOnNextOnErrorTrue() {
-        assertTrueWithContext(
-                target.create(
-                        true,
-                        TestResponse::class.java
-                ) is TestResponse,
-                "Factory should return an instance of TestResponse"
-        )
-    }
-
-    @Test
-    fun testCreateMergeOnNextOnErrorFalse() {
-        assertNullWithContext(
-                target.create(
-                        false,
-                        TestResponse::class.java
-                ),
-                "Factory should return null when mergeOnNextOnError is false"
-        )
+        target = EmptyResponseWrapperFactory(mockErrorFactory)
     }
 
     @Test
@@ -75,7 +56,7 @@ class EmptyResponseFactoryUnitTest {
 
         whenever(mockErrorFactory(any())).thenReturn(mockError)
 
-        val wrapper = target.emptyResponseWrapper(instructionToken)
+        val wrapper = target.create(instructionToken)
 
         val captor = argumentCaptor<NoSuchElementException>()
         verify(mockErrorFactory).invoke(captor.capture())

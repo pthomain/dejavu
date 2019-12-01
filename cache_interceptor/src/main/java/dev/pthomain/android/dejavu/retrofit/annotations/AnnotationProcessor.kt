@@ -120,6 +120,7 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
                         priority,
                         durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS),
                         connectivityTimeoutInSeconds.swapWhenDefault(null),
+                        requestTimeOutInSeconds.swapWhenDefault(null),
                         encrypt,
                         compress
                 )

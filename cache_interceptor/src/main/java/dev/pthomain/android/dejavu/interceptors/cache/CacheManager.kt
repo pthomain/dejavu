@@ -32,7 +32,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import io.reactivex.Observable
 import java.util.*
 
@@ -41,13 +41,13 @@ import java.util.*
  *
  * @param persistenceManager handles the persistence of the cached responses
  * @param cacheMetadataManager handles the update of the ResponseWrapper metadata
- * @param emptyResponseFactory handles the creation of empty ResponseWrappers for cases where no data can be returned
+ * @param emptyResponseWrapperFactory handles the creation of empty ResponseWrappers for cases where no data can be returned
  * @param dateFactory converts timestamps to Dates
  * @param logger a Logger instance
  */
 internal class CacheManager<E>(private val persistenceManager: PersistenceManager<E>,
                                private val cacheMetadataManager: CacheMetadataManager<E>,
-                               private val emptyResponseFactory: EmptyResponseFactory<E>,
+                               private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val logger: Logger)
         where E : Exception,
@@ -88,7 +88,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
     private fun emptyResponseObservable(instructionToken: CacheToken,
                                         action: () -> Unit = {}) =
             Observable.fromCallable(action::invoke).flatMapSingle {
-                emptyResponseFactory.emptyResponseWrapper(instructionToken).single()
+                emptyResponseWrapperFactory.create(instructionToken).single()
             }!!
 
     /**

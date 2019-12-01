@@ -28,10 +28,10 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
@@ -53,10 +53,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
     private lateinit var mockContentValues: ContentValues
 
-    override fun setUp(instructionToken: CacheToken,
-                       encryptDataGlobally: Boolean,
-                       compressDataGlobally: Boolean,
-                       cacheInstruction: CacheInstruction?): DatabasePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: CacheToken): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockContentValuesFactory = mock()
@@ -64,11 +61,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
         mockContentValuesFactory = mock()
         mockContentValues = mock()
 
-        val mockConfiguration = setUpConfiguration(
-                encryptDataGlobally,
-                compressDataGlobally,
-                cacheInstruction
-        )
+        val mockConfiguration = setUpConfiguration(instructionToken.instruction)
 
         return DatabasePersistenceManager(
                 mockDatabase,
@@ -135,9 +128,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     }
 
     override fun prepareCache(iteration: Int,
-                              operation: Expiring,
-                              encryptDataGlobally: Boolean,
-                              compressDataGlobally: Boolean,
+                              operation: Cache,
                               hasPreviousResponse: Boolean,
                               isSerialisationSuccess: Boolean) {
         whenever(mockContentValuesFactory.invoke(any())).thenReturn(mockContentValues)
@@ -146,12 +137,11 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     override fun verifyCache(context: String,
                              iteration: Int,
                              instructionToken: CacheToken,
-                             operation: Expiring,
+                             operation: Cache,
                              encryptData: Boolean,
                              compressData: Boolean,
                              hasPreviousResponse: Boolean,
-                             isSerialisationSuccess: Boolean,
-                             duration: Long) {
+                             isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
             verifyWithContext(mockDatabase, context).insert(
                     eq(TABLE_DEJA_VU),
@@ -177,7 +167,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                     context
             )
             assertEqualsWithContext(
-                    currentDateTime + duration,
+                    currentDateTime + operation.durationInSeconds,
                     values[EXPIRY_DATE.columnName],
                     "Expiry date didn't match",
                     context
@@ -235,7 +225,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     override fun verifyCheckInvalidation(context: String,
                                          operation: Operation,
                                          instructionToken: CacheToken) {
-        if (operation.type == INVALIDATE || operation.type == REFRESH) {
+        if (operation.type == INVALIDATE || (operation as? Cache)?.priority?.mode == REFRESH) {
             val mapCaptor = argumentCaptor<Map<String, Any>>()
             val tableCaptor = argumentCaptor<String>()
             val conflictCaptor = argumentCaptor<Int>()
@@ -298,7 +288,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     }
 
     override fun prepareGetCachedResponse(context: String,
-                                          operation: Expiring,
+                                          operation: Cache,
                                           instructionToken: CacheToken,
                                           hasResponse: Boolean,
                                           isStale: Boolean,
@@ -331,7 +321,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     }
 
     override fun verifyGetCachedResponse(context: String,
-                                         operation: Expiring,
+                                         operation: Cache,
                                          instructionToken: CacheToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,

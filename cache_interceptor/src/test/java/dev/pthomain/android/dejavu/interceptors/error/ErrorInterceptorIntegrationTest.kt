@@ -26,13 +26,14 @@ package dev.pthomain.android.dejavu.interceptors.error
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
 import org.junit.Before
 import org.junit.Test
@@ -133,7 +134,7 @@ internal class ErrorInterceptorIntegrationTest
 
         val expectedException = ifElse(
                 exception is NoSuchElementException,
-                EmptyResponseFactory.EmptyResponseException,
+                EmptyResponseException,
                 exception
         )
 
@@ -144,7 +145,7 @@ internal class ErrorInterceptorIntegrationTest
         )
 
         assertEqualsWithContext(
-                instructionToken(Cache()).swapLambdaWhen(exception is NoSuchElementException) { it.copy(status = EMPTY) },
+                instructionToken(Cache()).swapLambdaWhen(exception is NoSuchElementException) { it!!.copy(status = EMPTY) },
                 metadata.cacheToken,
                 "Cache token didn't match"
         )

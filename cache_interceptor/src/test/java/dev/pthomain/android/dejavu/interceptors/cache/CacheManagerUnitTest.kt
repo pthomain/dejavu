@@ -36,7 +36,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceMan
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
@@ -52,7 +52,7 @@ class CacheManagerUnitTest {
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
     private lateinit var mockCacheMetadataManager: CacheMetadataManager<Glitch>
     private lateinit var mockPersistenceManager: PersistenceManager<Glitch>
-    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
+    private lateinit var mockEmptyResponseWrapperFactory: EmptyResponseWrapperFactory<Glitch>
     private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockNetworkGlitch: Glitch
     private lateinit var mockNetworkResponseWrapper: ResponseWrapper<Glitch>
@@ -72,7 +72,7 @@ class CacheManagerUnitTest {
     private fun setUp() {
         mockErrorFactory = mock()
         mockPersistenceManager = mock()
-        mockEmptyResponseFactory = mock()
+        mockEmptyResponseWrapperFactory = mock()
         mockDateFactory = mock()
         mockNetworkGlitch = Glitch(IOException("Network error"))
         mockSerialisationGlitch = Glitch(NotSerializableException("Serialisation"))
@@ -83,7 +83,7 @@ class CacheManagerUnitTest {
         target = CacheManager(
                 mockPersistenceManager,
                 mockCacheMetadataManager,
-                mockEmptyResponseFactory,
+                mockEmptyResponseWrapperFactory,
                 mockDateFactory,
                 mock()
         )
@@ -114,7 +114,7 @@ class CacheManagerUnitTest {
         val instructionToken = instructionToken()
         val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
 
-        whenever(mockEmptyResponseFactory.emptyResponseWrapper(
+        whenever(mockEmptyResponseWrapperFactory.create(
                 eq(instructionToken)
         )).thenReturn(mockResponseWrapper)
 
@@ -138,7 +138,7 @@ class CacheManagerUnitTest {
         val instructionToken = instructionToken()
         val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
 
-        whenever(mockEmptyResponseFactory.emptyResponseWrapper(
+        whenever(mockEmptyResponseWrapperFactory.create(
                 eq(instructionToken)
         )).thenReturn(mockResponseWrapper)
 
@@ -236,7 +236,7 @@ class CacheManagerUnitTest {
 
         if (operation.priority.mode == OFFLINE) {
             if (!hasCachedResponse) {
-                whenever(mockEmptyResponseFactory.emptyResponseWrapper(
+                whenever(mockEmptyResponseWrapperFactory.create(
                         eq(instructionToken)
                 )).thenReturn(mockEmptyResponseWrapper)
             }

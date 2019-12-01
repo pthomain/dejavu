@@ -36,8 +36,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.DoneException
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.DoneException
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.utils.Utils.isAnyInstance
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
@@ -56,7 +56,7 @@ import java.util.*
  *
  * @param logger the logger
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
- * @param emptyResponseFactory factory providing empty response wrappers
+ * @param emptyResponseWrapperFactory factory providing empty response wrappers
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  * @param instructionToken the instruction cache token
@@ -65,7 +65,7 @@ import java.util.*
  */
 internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val dateFactory: (Long?) -> Date,
-                                      private val emptyResponseFactory: EmptyResponseFactory<E>,
+                                      private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                                       private val configuration: DejaVuConfiguration<E>,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
                                       private val instructionToken: CacheToken,
@@ -99,7 +99,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             upstream.filter(responseFilter)
                     .switchIfEmpty(Observable.defer {
-                        emptyResponseFactory.emptyResponseWrapper(instructionToken).observable() //TODO this should not happen
+                        emptyResponseWrapperFactory.create(instructionToken).observable() //TODO this should not happen
                     })
                     .flatMap(this::intercept)!!
 

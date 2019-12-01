@@ -43,14 +43,12 @@ import java.util.*
  * @param errorInterceptor the interceptor dealing with network error handling
  * @param cacheManager an instance of the CacheManager to handle cache operations if needed
  * @param dateFactory provides the current time and converts timestamps
- * @param isCacheEnabled whether or not the global configuration sets the cache as being enabled
  * @param instructionToken the call specific cache instruction token
  * @param start the timestamp indicating when the call started
  */
 internal class CacheInterceptor<E>(private val errorInterceptor: ErrorInterceptor<E>,
                                    private val cacheManager: CacheManager<E>,
                                    private val dateFactory: (Long?) -> Date,
-                                   private val isCacheEnabled: Boolean,
                                    private val instructionToken: CacheToken,
                                    private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>,ResponseWrapper<E>>
@@ -64,7 +62,6 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
      */
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
             instructionToken.instruction.let { instruction ->
-                if (isCacheEnabled) {
                     when (instruction.operation) {
                         is Cache -> cacheManager.getCachedResponse(
                                 upstream,
@@ -78,7 +75,6 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
 
                         else -> doNotCache(upstream)
                     }
-                } else doNotCache(upstream)
             }.compose(errorInterceptor)
 
     /**

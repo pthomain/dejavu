@@ -75,7 +75,7 @@ enum class CachePriority(
         val hasSingleResponse: Boolean,
         val mode: CacheMode,
         val preference: CachePreference,
-        vararg returnedStatuses: CacheStatus
+        vararg val returnedStatuses: CacheStatus
 ) {
 
     /**
@@ -343,7 +343,11 @@ enum class CachePriority(
     enum class CacheMode {
         CACHE,
         REFRESH,
-        OFFLINE
+        OFFLINE;
+
+        fun isCache() = this == CACHE
+        fun isRefresh() = this == REFRESH
+        fun isOffline() = this == OFFLINE
     }
 
     /**
@@ -365,7 +369,11 @@ enum class CachePriority(
     enum class CachePreference {
         DEFAULT,
         FRESH_PREFERRED,
-        FRESH_ONLY
+        FRESH_ONLY;
+
+        fun isDefault() = this == DEFAULT
+        fun isFreshOnly() = this == FRESH_ONLY
+        fun isFreshPreferred() = this == FRESH_PREFERRED
     }
 
     companion object {
