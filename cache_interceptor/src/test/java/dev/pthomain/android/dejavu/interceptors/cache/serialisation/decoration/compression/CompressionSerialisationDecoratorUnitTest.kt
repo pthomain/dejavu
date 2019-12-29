@@ -23,5 +23,79 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression
 
-//TODO
-class CompressionSerialisationDecoratorUnitTest
+import com.nhaarman.mockitokotlin2.eq
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.BaseSerialisationDecoratorUnitTest
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.test.assertEqualsWithContext
+import dev.pthomain.android.dejavu.test.instructionToken
+import org.junit.Before
+
+class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitTest() {
+
+    private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
+    private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
+
+    private lateinit var target: CompressionSerialisationDecorator<Glitch>
+
+    @Before
+    override fun setUp() {
+        super.setUp()
+        mockCompresser = mock()
+        mockUncompresser = mock()
+
+        target = CompressionSerialisationDecorator(
+                mock(),
+                mockCompresser,
+                mockUncompresser
+        )
+    }
+
+    override fun testDecorateSerialisation(context: String,
+                                           useString: Boolean,
+                                           metadata: SerialisationDecorationMetadata,
+                                           mockWrapper: ResponseWrapper<Glitch>) {
+        val expectedResult = if (metadata.isCompressed) {
+            whenever(mockCompresser.invoke(eq(mockPayload))).thenReturn(mockSerialisedPayloadArray)
+            mockSerialisedPayloadArray
+        } else mockPayload
+
+        assertEqualsWithContext(
+                expectedResult,
+                target.decorateSerialisation(
+                        mockWrapper,
+                        metadata,
+                        mockPayload
+                ),
+                "The returned payload didn't match",
+                context
+        )
+    }
+
+    override fun testDecorateDeserialisation(context: String,
+                                             metadata: SerialisationDecorationMetadata) {
+        val expectedResult = if (metadata.isCompressed) {
+            whenever(mockUncompresser.invoke(
+                    eq(mockPayload),
+                    eq(0),
+                    eq(mockPayload.size)
+            )).thenReturn(mockSerialisedPayloadArray)
+            mockSerialisedPayloadArray
+        } else mockPayload
+
+        assertEqualsWithContext(
+                expectedResult,
+                target.decorateDeserialisation(
+                        instructionToken(),
+                        metadata,
+                        mockPayload
+                ),
+                "The returned payload didn't match",
+                context
+        )
+    }
+
+}

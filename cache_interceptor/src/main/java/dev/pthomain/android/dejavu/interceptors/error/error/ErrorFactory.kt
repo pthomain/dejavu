@@ -38,6 +38,15 @@ interface ErrorFactory<E> : (Throwable) -> E
               E : NetworkErrorPredicate {
     val exceptionClass: Class<E>
 
+    fun newWrapper(responseClass: Class<*>,
+                   response: Any?,
+                   metadata: CacheMetadata<E>) =
+            ResponseWrapper(
+                    responseClass,
+                    response,
+                    metadata
+            )
+
     fun newMetadata(cacheToken: CacheToken,
                     exception: E? = null,
                     callDuration: Duration = Duration(0, 0, 0)) =
@@ -51,14 +60,15 @@ interface ErrorFactory<E> : (Throwable) -> E
     fun <R : Any> newCacheOperation(
             observable: Observable<ResponseWrapper<E>>,
             responseClass: Class<R>
-    ) = DejaVuCall.Resolved<R, E>(
-            observable.map {
-                ResponseWrapper(
-                        responseClass,
-                        it,
-                        it.metadata
-                )
-            },
-            exceptionClass
-    )
+    ): DejaVuCall<R> =
+            DejaVuCall.create(
+                    observable.map {
+                        ResponseWrapper(
+                                responseClass,
+                                it,
+                                it.metadata
+                        )
+                    },
+                    exceptionClass
+            )
 }

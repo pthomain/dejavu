@@ -81,7 +81,7 @@ internal abstract class RetrofitModule<E>
 
     @Provides
     @Singleton
-    fun provideAnnotationProcessor(configuration: DejaVuConfiguration<E>) =
-            AnnotationProcessor(configuration)
+    fun provideAnnotationProcessor(logger: Logger) =
+            AnnotationProcessor<E>(logger)
 
 }

@@ -79,7 +79,7 @@ internal class EncryptionSerialisationDecorator<E>(private val encryptionManager
             } else payload
 
     companion object {
-        private const val DATA_TAG = "DATA_TAG"
+        internal const val DATA_TAG = "DATA_TAG"
     }
 
 }

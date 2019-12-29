@@ -136,6 +136,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
             (response as CacheMetadata.Holder<E>).metadata = metadata
         }
 
+        //FIXME
         val isEmptyException = exception?.cause.isAnyInstance(
                 EmptyResponseException::class.java,
                 DoneException::class.java
@@ -144,7 +145,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         return when {
             rxType == OPERATION -> {
                 @Suppress("UNCHECKED_CAST")
-                DejaVuCall.Resolved<Any, E>(
+                DejaVuCall.create<Any, E>(
                         wrapper.observable(),
                         errorFactory.exceptionClass
                 ) as Observable<Any>

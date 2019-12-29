@@ -30,6 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_PREFERRED
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
 /**
  * Represent a cache operation. Directives defined here take precedence over global config.
@@ -52,12 +53,24 @@ sealed class Operation(val type: Type) {
      * @param encrypt whether the cached data should be encrypted, useful for use on external storage //TODO abstract
      * @param compress whether the cached data should be compressed, useful for large responses //TODO abstract
      */
-    data class Cache(val priority: CachePriority = DEFAULT,
-                     val durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
-                     val connectivityTimeoutInSeconds: Int? = null,
-                     val requestTimeOutInSeconds: Int? = null,
-                     val encrypt: Boolean = false,
-                     val compress: Boolean = false) : Operation(CACHE) {
+    class Cache(val priority: CachePriority = DEFAULT,
+                durationInSeconds: Int? = DEFAULT_CACHE_DURATION_IN_SECONDS,
+                connectivityTimeoutInSeconds: Int? = null,
+                requestTimeOutInSeconds: Int? = null,
+                val encrypt: Boolean = false,
+                val compress: Boolean = false) : Operation(CACHE) {
+
+        val durationInSeconds: Int = durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!
+        val connectivityTimeoutInSeconds: Int? = connectivityTimeoutInSeconds.swapWhenDefault(null)
+        val requestTimeOutInSeconds: Int? = requestTimeOutInSeconds.swapWhenDefault(null)
+
+        fun isCache() = priority.mode == CacheMode.CACHE
+        fun isRefresh() = priority.mode == REFRESH
+        fun isOffline() = priority.mode == OFFLINE
+        fun isDefault() = priority.preference == CachePreference.DEFAULT
+        fun isFreshOnly() = priority.preference == FRESH_ONLY
+        fun isFreshPreferred() = priority.preference == FRESH_PREFERRED
+
         override fun toString() = SERIALISER.serialise(
                 type,
                 priority,
@@ -68,12 +81,31 @@ sealed class Operation(val type: Type) {
                 compress
         )
 
-        fun isCache() = priority.mode == CacheMode.CACHE
-        fun isRefresh() = priority.mode == REFRESH
-        fun isOffline() = priority.mode == OFFLINE
-        fun isDefault() = priority.preference == CachePreference.DEFAULT
-        fun isFreshOnly() = priority.preference == FRESH_ONLY
-        fun isFreshPreferred() = priority.preference == FRESH_PREFERRED
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Cache
+
+            if (priority != other.priority) return false
+            if (encrypt != other.encrypt) return false
+            if (compress != other.compress) return false
+            if (durationInSeconds != other.durationInSeconds) return false
+            if (connectivityTimeoutInSeconds != other.connectivityTimeoutInSeconds) return false
+            if (requestTimeOutInSeconds != other.requestTimeOutInSeconds) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = priority.hashCode()
+            result = 31 * result + encrypt.hashCode()
+            result = 31 * result + compress.hashCode()
+            result = 31 * result + durationInSeconds
+            result = 31 * result + (connectivityTimeoutInSeconds ?: 0)
+            result = 31 * result + (requestTimeOutInSeconds ?: 0)
+            return result
+        }
     }
 
     /**

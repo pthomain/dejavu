@@ -25,15 +25,19 @@ package dev.pthomain.android.dejavu.demo.gson
 
 
 import com.google.gson.JsonParseException
+import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 
 /**
- * Custom ErrorFactory implementation handling Gson specific errors
+ * Custom Glitch ErrorFactory implementation handling extra Gson specific exceptions.
  */
-class GsonGlitchFactory : GlitchFactory() {
+class GsonGlitchFactory private constructor(private val parentFactory: GlitchFactory)
+    : ErrorFactory<Glitch> by parentFactory {
+
+    constructor() : this(GlitchFactory())
 
     override fun invoke(throwable: Throwable) =
             when (throwable) {
@@ -43,7 +47,7 @@ class GsonGlitchFactory : GlitchFactory() {
                         UNEXPECTED_RESPONSE,
                         throwable.message
                 )
-                else -> super.invoke(throwable)
+                else -> parentFactory.invoke(throwable)
             }
 
 }

@@ -44,18 +44,14 @@ import java.util.*
  * @param byteToStringConverter a factory converting a ByteArray to a String
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
-class SerialisationManager<E> private constructor(private val errorFactory: ErrorFactory<E>,
-                                                  private val serialiser: Serialiser,
-                                                  private val byteToStringConverter: (ByteArray) -> String,
-                                                  private val decoratorList: List<SerialisationDecorator<E>>)
+class SerialisationManager<E> internal constructor(private val errorFactory: ErrorFactory<E>,
+                                                   private val serialiser: Serialiser,
+                                                   private val byteToStringConverter: (ByteArray) -> String,
+                                                   private val decoratorList: List<SerialisationDecorator<E>>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     private val reversedDecoratorList = decoratorList.reversed()
-    private val nullException = SerialisationException(
-            "Could not serialise the given response",
-            NullPointerException("The response was null")
-    )
 
     /**
      * Serialises the given wrapper's response first to a String using the provided Serialiser,
@@ -72,10 +68,16 @@ class SerialisationManager<E> private constructor(private val errorFactory: Erro
         val response = responseWrapper.response
         val responseClass = responseWrapper.responseClass
 
-        return if (response == null) throw nullException
-        else when {
+        return if (response == null) {
+            throw SerialisationException(
+                    "Could not serialise the given response",
+                    NullPointerException("The response was null")
+            )
+        } else when {
             responseClass == String::class.java -> (response as String)
-            !serialiser.canHandleType(response.javaClass) -> throw nullException
+            !serialiser.canHandleType(response.javaClass) -> throw SerialisationException(
+                    "Could not serialise the given response"
+            )
             else -> serialiser.serialise(response)
         }.let {
             var serialised = it.toByteArray()
@@ -121,7 +123,7 @@ class SerialisationManager<E> private constructor(private val errorFactory: Erro
         return byteToStringConverter(deserialised)
                 .let { serialiser.deserialise(it, responseClass) }
                 .let {
-                    ResponseWrapper(
+                    errorFactory.newWrapper(
                             responseClass,
                             it,
                             errorFactory.newMetadata(instructionToken)

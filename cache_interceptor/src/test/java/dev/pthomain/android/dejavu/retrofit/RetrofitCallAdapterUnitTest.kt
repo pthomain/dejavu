@@ -28,8 +28,8 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DefaultCachePredicate
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate.CacheAll
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate.Inactive
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
@@ -87,8 +87,6 @@ class RetrofitCallAdapterUnitTest {
         mockTestResponse = mock()
         mockRequestBodyConverter = mock()
     }
-
-    //TODO test validateInstruction()
 
     private fun getTarget(hasOperation: Boolean,
                           hasHeader: Boolean,
@@ -157,7 +155,7 @@ class RetrofitCallAdapterUnitTest {
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)
                 SINGLE -> Single.just(mockTestResponse)
-                OPERATION -> DejaVuCall.Resolved<TestResponse, Glitch>(mockResponseWrapper.observable(), Glitch::class.java)
+                OPERATION -> DejaVuCall.create<TestResponse, Glitch>(mockResponseWrapper.observable(), Glitch::class.java)
                 else -> mockTestResponse
             }
 
@@ -290,7 +288,7 @@ class RetrofitCallAdapterUnitTest {
                 getTarget(
                         false,
                         false,
-                        CachePredicate.Inactive,
+                        Inactive,
                         false,
                         false
                 ).responseType(),
@@ -303,7 +301,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 false,
                 true,
-                CachePredicate.Inactive,
+                Inactive,
                 true,
                 false
         )
@@ -314,7 +312,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 false,
                 true,
-                CachePredicate.Inactive,
+                Inactive,
                 false,
                 false
         )
@@ -325,7 +323,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 false,
                 true,
-                CachePredicate.Inactive,
+                Inactive,
                 false,
                 true
         )
@@ -336,7 +334,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 true,
                 false,
-                CachePredicate.Inactive,
+                Inactive,
                 true,
                 false
         )
@@ -347,7 +345,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 true,
                 true,
-                CachePredicate.Inactive,
+                Inactive,
                 false,
                 false
         )
@@ -358,7 +356,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 true,
                 true,
-                CachePredicate.Inactive,
+                Inactive,
                 false,
                 true
         )
@@ -370,7 +368,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 false,
                 false,
-                CachePredicate.CacheAll,
+                CacheAll,
                 false,
                 false
         )
@@ -382,7 +380,7 @@ class RetrofitCallAdapterUnitTest {
         testAdapt(
                 false,
                 false,
-                CachePredicate.CacheAll,
+                CacheAll,
                 false,
                 false
         )

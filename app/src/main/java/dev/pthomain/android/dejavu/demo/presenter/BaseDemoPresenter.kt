@@ -79,7 +79,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     private fun newDejaVu() = DejaVu.defaultBuilder(context(), GsonSerialiser(gson))
             .withLogger(uiLogger)
             .withPersistence(true, ::pickPersistenceMode)
-            .withEncryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
+            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
             .withErrorFactory(GsonGlitchFactory())
             .build()
 

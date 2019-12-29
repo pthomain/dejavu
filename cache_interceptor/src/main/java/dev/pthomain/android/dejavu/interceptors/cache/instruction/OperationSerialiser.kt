@@ -97,7 +97,7 @@ internal class OperationSerialiser {
      */
     private fun toInt(value: String,
                       defaultValue: Int? = null) =
-            if (value == "") null
+            if (value == "") defaultValue
             else value.toInt().swapWhenDefault(defaultValue)
 
     /**
@@ -129,9 +129,9 @@ internal class OperationSerialiser {
 
                 Cache(
                         priority,
-                        durationInSeconds,
-                        connectivityTimeoutInSeconds,
-                        requestTimeOutInSeconds,
+                        durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!,
+                        connectivityTimeoutInSeconds.swapWhenDefault(null),
+                        requestTimeOutInSeconds.swapWhenDefault(null),
                         encrypt,
                         compress
                 )

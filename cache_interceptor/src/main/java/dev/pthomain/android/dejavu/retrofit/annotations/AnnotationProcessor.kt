@@ -23,26 +23,22 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
-import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
 /**
  * Processes Retrofit annotations and generates a CacheInstruction if needed.
  *
  * @see CacheInstruction
  */
-internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>)
+internal class AnnotationProcessor<E>(private val logger: Logger)
         where  E : Exception,
                E : NetworkErrorPredicate {
-
-    private val logger = dejaVuConfiguration.logger
 
     /**
      * Processes the annotations on the Retrofit call and tries to convert them to a CacheInstruction
@@ -118,9 +114,9 @@ internal class AnnotationProcessor<E>(private val dejaVuConfiguration: DejaVuCon
             when (this) {
                 is Cache -> Operation.Cache(
                         priority,
-                        durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS),
-                        connectivityTimeoutInSeconds.swapWhenDefault(null),
-                        requestTimeOutInSeconds.swapWhenDefault(null),
+                        durationInSeconds,
+                        connectivityTimeoutInSeconds,
+                        requestTimeOutInSeconds,
                         encrypt,
                         compress
                 )

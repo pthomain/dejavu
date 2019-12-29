@@ -37,7 +37,7 @@ import java.util.concurrent.TimeoutException
  * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.errorFactory for overriding this factory
  * @see Glitch
  */
-open class GlitchFactory : ErrorFactory<Glitch> {
+class GlitchFactory : ErrorFactory<Glitch> {
 
     override val exceptionClass = Glitch::class.java
 

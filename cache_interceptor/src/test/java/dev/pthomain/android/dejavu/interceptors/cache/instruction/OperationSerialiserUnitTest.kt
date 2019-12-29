@@ -31,12 +31,9 @@ import org.junit.Test
 
 class OperationSerialiserUnitTest {
 
-    private fun getMap(targetClass: Class<*>) = targetClass.name.let {
+    private fun getCommonMap(targetClass: Class<*>) = targetClass.name.let {
         LinkedHashMap<String, Operation?>().apply {
-            put("CACHE", Cache())
             put("DO_NOT_CACHE", DoNotCache)
-            put("INVALIDATE", Invalidate())
-            put("CLEAR", Clear())
 
             put("INVALIDATE:false", Invalidate())
             put("INVALIDATE:true", Invalidate(true))
@@ -46,21 +43,35 @@ class OperationSerialiserUnitTest {
             put("CLEAR:false:false", Clear(false, false))
             put("CLEAR:true:false", Clear(true, false))
             put("CLEAR:true:true", Clear(true, true))
+            put("CLEAR:false:true", Clear(false, true))
 
-            put("CACHE:DEFAULT:1234:5678:7654:false:false", Cache(DEFAULT, 1234, 5678, 7654, false, false))
-            put("CACHE:DEFAULT:1234:5678:7654:false:true", Cache(DEFAULT, 1234, 5678, 7654, false, true))
-            put("CACHE:DEFAULT:1234:5678:7654:true:true", Cache(DEFAULT, 1234, 5678, 7654, true, true))
-            put("CACHE:DEFAULT:1234:5678:7654:true:false", Cache(DEFAULT, 1234, 5678, 7654, true, false))
-            put("CACHE:DEFAULT::5678:7654:true:true", Cache(DEFAULT, -1, 5678, 7654, true, true))
-            put("CACHE:DEFAULT::::true:true", Cache(DEFAULT, -1, -1, -1, true, true))
+            put("CACHE:DEFAULT:3600:::false:false", Cache())
+
+            put("CACHE:FRESH_ONLY:1234:5678:7654:false:false", Cache(FRESH_ONLY, 1234, 5678, 7654, false, false))
+            put("CACHE:FRESH_PREFERRED:1234:5678:7654:true:true", Cache(FRESH_PREFERRED, 1234, 5678, 7654, true, true))
+
+            put("CACHE:REFRESH:1234:5678:7654:false:true", Cache(REFRESH, 1234, 5678, 7654, false, true))
+            put("CACHE:REFRESH_FRESH_ONLY:1234:5678:7654:true:false", Cache(REFRESH_FRESH_ONLY, 1234, 5678, 7654, true, false))
 
             put("CACHE:FRESH_PREFERRED:1234:5678:7654:true:true", Cache(FRESH_PREFERRED, 1234, 5678, 7654, true, true))
             put("CACHE:FRESH_ONLY:1234:5678:7654:true:true", Cache(FRESH_ONLY, 1234, 5678, 7654, true, true))
-            put("CACHE:INVALIDATED:1234:5678:7654:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234, 5678, 7654, true, true))
-            put("CACHE:INVALIDATED_FRESH_ONLY:1234:5678:7654:true:true", Cache(REFRESH_FRESH_ONLY, 1234, 5678, 7654, true, true))
+
+            put("CACHE:REFRESH_FRESH_PREFERRED:1234:5678:7654:true:true", Cache(REFRESH_FRESH_PREFERRED, 1234, 5678, 7654, true, true))
+            put("CACHE:REFRESH_FRESH_ONLY:1234:5678:7654:true:true", Cache(REFRESH_FRESH_ONLY, 1234, 5678, 7654, true, true))
+
             put("CACHE:OFFLINE:1234:5678:7654:true:true", Cache(OFFLINE, 1234, 5678, 7654, true, true))
             put("CACHE:OFFLINE_FRESH_ONLY:1234:5678:7654:true:true", Cache(OFFLINE_FRESH_ONLY, 1234, 5678, 7654, true, true))
         }
+    }
+
+    private fun getSerialisationMap(targetClass: Class<*>) = getCommonMap(targetClass).apply {
+        put("CACHE:DEFAULT:3600:::true:true", Cache(DEFAULT, -1, -1, -1, true, true))
+        put("CACHE:REFRESH_FRESH_PREFERRED:3600:5678:7654:true:true", Cache(REFRESH_FRESH_PREFERRED, -1, 5678, 7654, true, true))
+    }
+
+    private fun getDeserialisationMap(targetClass: Class<*>) = getCommonMap(targetClass).apply {
+        put("CACHE:DEFAULT:3600:::true:true", Cache(DEFAULT, 3600, null, null, true, true))
+        put("CACHE:REFRESH_FRESH_PREFERRED:3600:5678:7654:true:true", Cache(REFRESH_FRESH_PREFERRED, 3600, 5678, 7654, true, true))
     }
 
     @Test
@@ -88,7 +99,7 @@ class OperationSerialiserUnitTest {
     }
 
     private fun serialise(targetClass: Class<*>) {
-        getMap(targetClass).entries.forEachIndexed { index, entry ->
+        getSerialisationMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
                     "${entry.value?.type} at position $index could not be serialised",
                     entry.key,
@@ -98,7 +109,7 @@ class OperationSerialiserUnitTest {
     }
 
     private fun deserialise(targetClass: Class<*>) {
-        getMap(targetClass).entries.forEachIndexed { index, entry ->
+        getDeserialisationMap(targetClass).entries.forEachIndexed { index, entry ->
             assertEquals(
                     "${entry.value?.type} at position $index could not be deserialised",
                     entry.value,

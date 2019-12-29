@@ -188,7 +188,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
                         configuration,
                         hasher,
                         dateFactory,
-                        { Observable.error<Any>(IllegalStateException("The request could not be hashed")) },
+                        { Observable.error(IllegalStateException("The request could not be hashed")) },
                         errorInterceptorFactory,
                         networkInterceptorFactory,
                         cacheInterceptorFactory,

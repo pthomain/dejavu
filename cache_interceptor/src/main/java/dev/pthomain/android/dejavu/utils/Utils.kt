@@ -65,10 +65,10 @@ object Utils {
             swapLambdaWhen(condition) { ifTrue }
 
     fun Int?.swapWhenDefault(ifDefault: Int?) =
-            swapValueWhen(ifDefault) { it == null || it == -1 }!!
+            swapValueWhen(ifDefault) { it == null || it == -1 }
 
     fun Class<*>.swapWhenDefault() =
-            swapValueWhen(null) { it == Any::class.java }!!
+            swapValueWhen(null) { it == Any::class.java }
 
     fun Operation.invalidatesExistingData() =
             type == INVALIDATE || (this as? Cache)?.priority?.invalidatesExistingData == true

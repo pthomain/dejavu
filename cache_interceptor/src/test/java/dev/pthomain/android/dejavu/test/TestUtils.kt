@@ -55,6 +55,7 @@ import java.lang.reflect.Type
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
                         action: () -> Unit,
+                        context: String? = null,
                         checkCause: Boolean = false) {
     try {
         action()
@@ -62,17 +63,21 @@ fun <E> expectException(exceptionType: Class<E>,
         val toCheck = if (checkCause) e.cause else e
 
         if (toCheck != null && exceptionType == toCheck.javaClass) {
-            assertEquals("The exception did not have the right message",
+            assertEquals(
+                    withContext("The exception did not have the right message", context),
                     message,
                     toCheck.message
             )
             return
         } else {
-            fail("Expected exception was not caught: $exceptionType, another one was caught instead $toCheck")
+            fail(withContext(
+                    "Expected exception was not caught: $exceptionType, another one was caught instead $toCheck",
+                    context
+            ))
         }
     }
 
-    fail("Expected exception was not caught: $exceptionType")
+    fail(withContext("Expected exception was not caught: $exceptionType", context))
 }
 
 fun assertTrueWithContext(assumption: Boolean,
@@ -284,6 +289,10 @@ fun instructionToken(operation: Operation = Cache()) = CacheToken(
         true,
         true
 )
+
+fun prioritySequence(action: (CachePriority) -> Unit) =
+        CachePriority.values().asSequence()
+                .forEach(action::invoke)
 
 inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(

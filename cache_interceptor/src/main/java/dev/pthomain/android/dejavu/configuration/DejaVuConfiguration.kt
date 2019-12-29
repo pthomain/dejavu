@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.configuration
 
+import android.annotation.SuppressLint
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
@@ -46,22 +47,23 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  *
  * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Cache
- * @see dev.pthomain.android.dejavu.retrofit.annotations.Clear
  * @see dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
  * @see dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
+ * @see dev.pthomain.android.dejavu.retrofit.annotations.Clear
  *
  * TODO update JavaDoc
  */
-data class DejaVuConfiguration<E> internal constructor(val context: Context,
-                                                       val logger: Logger,
-                                                       val errorFactory: ErrorFactory<E>,
-                                                       val serialiser: Serialiser,
-                                                       val encryptionManager: EncryptionManager,
-                                                       val useDatabase: Boolean,
-                                                       val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-                                                       val cachePredicate: (metadata: RequestMetadata) -> Operation?)
-        where E : Exception,
-              E : NetworkErrorPredicate {
+class DejaVuConfiguration<E> internal constructor(
+        internal val context: Context,
+        internal val logger: Logger,
+        val errorFactory: ErrorFactory<E>,
+        internal val serialiser: Serialiser,
+        internal val encryptionManager: EncryptionManager,
+        internal val useDatabase: Boolean,
+        internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
+        internal val cachePredicate: (metadata: RequestMetadata) -> Operation?
+) where E : Exception,
+        E : NetworkErrorPredicate {
 
     companion object {
         const val DEFAULT_CACHE_DURATION_IN_SECONDS = 3600 //1h
@@ -95,7 +97,6 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         private var logger: Logger = SILENT_LOGGER
         private var customErrorFactory: ErrorFactory<E>? = null
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
-
         private var useDatabase = false
 
         private val defaultPersistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>) = {
@@ -138,6 +139,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
         fun withEncryption(mumboPicker: (Mumbo) -> EncryptionManager) =
                 apply { this.mumboPicker = mumboPicker }
 
+        @SuppressLint("NewApi")
         private fun defaultEncryptionManager(mumbo: Mumbo,
                                              context: Context) = with(mumbo) {
             context.packageManager.getApplicationInfo(
@@ -169,7 +171,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
 
         /**
          * Sets a predicate for ad-hoc response caching. This predicate will be called for every
-         * request and will always take precedence on directives set as annotation or header.
+         * request and will always take precedence on directives set as either annotation or header.
          *
          * It will be called with the target response class and associated request metadata before
          * the call is made in order to establish the operation to associate with that request.
@@ -185,7 +187,7 @@ data class DejaVuConfiguration<E> internal constructor(val context: Context,
          * the given RequestMetadata for the request being made.
          */
         fun withPredicate(predicate: (metadata: RequestMetadata) -> Operation?) =
-                apply { this.cachePredicate = predicate } //TODO implement predicate override for all calls
+                apply { this.cachePredicate = predicate }
 
         /**
          * Returns an instance of DejaVu.

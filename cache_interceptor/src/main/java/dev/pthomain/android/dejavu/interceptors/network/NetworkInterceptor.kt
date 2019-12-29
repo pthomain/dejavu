@@ -92,10 +92,10 @@ internal class NetworkInterceptor<E>(private val context: Context,
      * @return the composed Observable optionally delayed for network availability
      */
     private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
-            with(operation?.connectivityTimeoutInSeconds.swapWhenDefault(-1)) {
-                upstream.swapLambdaWhen(this > 0L) {
+            operation?.connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
+                upstream.swapLambdaWhen(timeOut > 0L) {
                     upstream.waitForNetwork(context, logger)
-                            .timeout(toLong(), SECONDS)
+                            .timeout(timeOut.toLong(), SECONDS)
                 }
             }!!
 
