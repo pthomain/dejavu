@@ -32,9 +32,8 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.C
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate.Inactive
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.RxType.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL
@@ -138,7 +137,7 @@ class RetrofitCallAdapterUnitTest {
                 null,
                 OBSERVABLE,
                 SINGLE,
-                OPERATION
+                WRAPPABLE
         ).forEach { rxType ->
             setUp() //reset mocks
 
@@ -155,7 +154,7 @@ class RetrofitCallAdapterUnitTest {
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)
                 SINGLE -> Single.just(mockTestResponse)
-                OPERATION -> DejaVuCall.create<TestResponse, Glitch>(mockResponseWrapper.observable(), Glitch::class.java)
+                WRAPPABLE -> DejaVuCall.create<TestResponse, Glitch>(mockResponseWrapper.observable(), Glitch::class.java)
                 else -> mockTestResponse
             }
 
@@ -194,7 +193,7 @@ class RetrofitCallAdapterUnitTest {
                 when (rxType) {
                     OBSERVABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Observable<Any>))).thenReturn(rxCall.map { it })
                     SINGLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as Single<Any>))).thenReturn(rxCall.map { it })
-                    OPERATION -> whenever(mockDejaVuTransformer.apply(eq(rxCall as DejaVuCall<TestResponse>))).thenReturn(rxCall as Observable<Any>)
+                    WRAPPABLE -> whenever(mockDejaVuTransformer.apply(eq(rxCall as DejaVuCall<TestResponse>))).thenReturn(rxCall as Observable<Any>)
                 }
             }
 
@@ -261,7 +260,7 @@ class RetrofitCallAdapterUnitTest {
                             context
                     )
 
-                    OPERATION -> assertTrueWithContext(
+                    WRAPPABLE -> assertTrueWithContext(
                             Completable::class.java.isAssignableFrom(actualAdapted.javaClass),
                             "Adapted result should be of type Completable",
                             context

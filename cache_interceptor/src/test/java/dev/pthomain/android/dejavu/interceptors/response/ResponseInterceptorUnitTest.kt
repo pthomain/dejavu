@@ -31,9 +31,9 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate
 import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
-import dev.pthomain.android.dejavu.interceptors.RxType.OPERATION
+import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
@@ -174,7 +174,7 @@ class ResponseInterceptorUnitTest {
         val rxType = ifElse(
                 isSingle,
                 RxType.SINGLE,
-                ifElse(isCompletable, OPERATION, OBSERVABLE)
+                ifElse(isCompletable, WRAPPABLE, OBSERVABLE)
         )
 
         val target = ResponseInterceptor(

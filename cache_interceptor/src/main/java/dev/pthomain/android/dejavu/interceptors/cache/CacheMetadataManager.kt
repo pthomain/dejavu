@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken

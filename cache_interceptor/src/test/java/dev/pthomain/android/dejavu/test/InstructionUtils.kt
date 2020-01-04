@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.test
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance

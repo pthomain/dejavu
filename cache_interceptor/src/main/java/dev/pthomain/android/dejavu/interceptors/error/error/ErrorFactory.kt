@@ -23,13 +23,6 @@
 
 package dev.pthomain.android.dejavu.interceptors.error.error
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata.Duration
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import io.reactivex.Observable
-
 /**
  * Converts a given Throwable into a new type extending from Exception and NetworkErrorPredicate
  */
@@ -37,38 +30,4 @@ interface ErrorFactory<E> : (Throwable) -> E
         where E : Exception,
               E : NetworkErrorPredicate {
     val exceptionClass: Class<E>
-
-    fun newWrapper(responseClass: Class<*>,
-                   response: Any?,
-                   metadata: CacheMetadata<E>) =
-            ResponseWrapper(
-                    responseClass,
-                    response,
-                    metadata
-            )
-
-    fun newMetadata(cacheToken: CacheToken,
-                    exception: E? = null,
-                    callDuration: Duration = Duration(0, 0, 0)) =
-            CacheMetadata(
-                    cacheToken,
-                    exceptionClass,
-                    exception,
-                    callDuration
-            )
-
-    fun <R : Any> newCacheOperation(
-            observable: Observable<ResponseWrapper<E>>,
-            responseClass: Class<R>
-    ): DejaVuCall<R> =
-            DejaVuCall.create(
-                    observable.map {
-                        ResponseWrapper(
-                                responseClass,
-                                it,
-                                it.metadata
-                        )
-                    },
-                    exceptionClass
-            )
 }

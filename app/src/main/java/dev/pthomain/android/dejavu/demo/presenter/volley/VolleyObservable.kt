@@ -88,12 +88,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                       E : NetworkErrorPredicate =
                 //FIXME
                 DejaVuCall.create<R, E>(
-                        observable<R, E>(
-                                requestQueue,
-                                gson,
-                                dejaVuInterceptor,
-                                requestMetadata
-                        ),
+                        empty(),
                         Glitch::class.java as Class<E>
                 )
 

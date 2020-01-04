@@ -23,7 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor

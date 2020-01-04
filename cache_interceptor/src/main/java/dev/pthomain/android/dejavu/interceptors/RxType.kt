@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Wrappable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -33,7 +33,7 @@ import io.reactivex.Single
 enum class RxType(val rxClass: Class<*>) {
     OBSERVABLE(Observable::class.java),
     SINGLE(Single::class.java),
-    OPERATION(DejaVuCall::class.java);
+    WRAPPABLE(Wrappable::class.java);
 
     /**
      * @return a String representation of the typed Rx object

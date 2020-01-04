@@ -134,7 +134,7 @@ class AnnotationProcessorUnitTest {
         trueFalseSequence { useRequestParameters ->
             testProcessAnnotation(
                     getAnnotation<Invalidate>(listOf(useRequestParameters)),
-                    Operation.Invalidate(useRequestParameters)
+                    Operation.Local.Invalidate(useRequestParameters)
             )
         }
     }
@@ -143,7 +143,7 @@ class AnnotationProcessorUnitTest {
     fun testProcessDoNotCache() {
         testProcessAnnotation(
                 getAnnotation<DoNotCache>(emptyList()),
-                Operation.DoNotCache
+                Operation.Remote.DoNotCache
         )
     }
 
@@ -156,7 +156,7 @@ class AnnotationProcessorUnitTest {
                                 clearStaleEntriesOnly,
                                 useRequestParameters
                         )),
-                        Operation.Clear(
+                        Operation.Local.Clear(
                                 clearStaleEntriesOnly,
                                 useRequestParameters
                         )

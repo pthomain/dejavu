@@ -30,7 +30,8 @@ import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.DEFAULT_URL

@@ -53,7 +53,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
     fun setOperation(useSingle: Boolean,
                      operation: Operation,
                      responseClass: Class<*>) {
-        text = operation.type.annotationName.let {
+        text = getAnnotationName(operation.type).let {
             TextUtils.concat(
                     getRestMethod(operation),
                     applyOperationStyle(it),
@@ -62,6 +62,14 @@ class InstructionView @JvmOverloads constructor(context: Context,
             )
         }
     }
+
+    private fun getAnnotationName(type: Type) =
+            when (type) {
+                Type.CACHE -> "@Cache"
+                Type.DO_NOT_CACHE -> "@DoNotCache"
+                Type.INVALIDATE -> "@Invalidate"
+                Type.CLEAR -> "@Clear"
+            }
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
             ifElse(

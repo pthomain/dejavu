@@ -29,6 +29,7 @@ import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer

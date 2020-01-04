@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.utils
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
 
 object Utils {

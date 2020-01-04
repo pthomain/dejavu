@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
+import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
@@ -54,6 +54,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
+                                      private val rxType: RxType,
                                       private val annotationOperation: Operation?,
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
@@ -114,7 +115,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @param requestMetadata the RequestMetadata for the current call
      * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
      */
-    private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation? {
+    private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
         return dejaVuConfiguration.cachePredicate(requestMetadata)
     }
@@ -179,6 +180,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         }
 
         val interceptor = dejaVuFactory.create(
+                rxType,
                 operation,
                 requestMetadata
         )
@@ -187,11 +189,6 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
             when (this) {
                 is Single<*> -> compose(interceptor)
                 is Observable<*> -> compose(interceptor)
-                is DejaVuCall<*> -> compose {
-                    @Suppress("UNCHECKED_CAST")
-                    interceptor.apply(it as Observable<Any>)
-                            .map { it as DejaVuCall<*> }
-                }
                 else -> this
             }
         }

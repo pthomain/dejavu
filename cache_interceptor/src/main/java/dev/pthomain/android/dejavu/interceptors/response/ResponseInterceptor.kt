@@ -28,14 +28,14 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.RxType
-import dev.pthomain.android.dejavu.interceptors.RxType.OPERATION
 import dev.pthomain.android.dejavu.interceptors.RxType.SINGLE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.wrap
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.utils.Utils.isAnyInstance
@@ -130,6 +130,7 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
 
         metadataSubject.onNext(metadata)
 
+        //TODO check compatibility with Wrappable
         if (response is CacheMetadata.Holder<*>
                 && response.metadata.exceptionClass.isAssignableFrom(errorFactory.exceptionClass)) {
             @Suppress("UNCHECKED_CAST") // This is verified by the above check
@@ -143,22 +144,19 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         )
 
         return when {
-            rxType == OPERATION -> {
+            rxType == WRAPPABLE -> {
                 @Suppress("UNCHECKED_CAST")
-                DejaVuCall.create<Any, E>(
-                        wrapper.observable(),
-                        errorFactory.exceptionClass
-                ) as Observable<Any>
+                errorFactory.wrap<Any, E>(wrapper.observable()) as Observable<Any>
             }
 
             exception != null -> {
                 logger.d(this, "Returning error: $exception")
-                Observable.error<Any>(exception)
+                Observable.error(exception)
             }
 
             else -> {
                 logger.d(this, "Returning response: $metadata")
-                Observable.just<Any>(response)
+                Observable.just(response)
             }
         }
     }

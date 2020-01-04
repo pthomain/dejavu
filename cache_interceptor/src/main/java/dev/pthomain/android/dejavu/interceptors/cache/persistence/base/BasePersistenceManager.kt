@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
@@ -36,6 +36,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 import java.text.SimpleDateFormat
 import java.util.*
 

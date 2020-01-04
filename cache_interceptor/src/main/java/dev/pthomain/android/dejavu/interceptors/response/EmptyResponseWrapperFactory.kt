@@ -30,6 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 
 /**
  * Provides empty responses for operations that do not return data (e.g. INVALIDATE or CLEAR), for

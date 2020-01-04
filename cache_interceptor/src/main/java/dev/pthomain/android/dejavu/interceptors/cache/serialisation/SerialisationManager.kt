@@ -34,6 +34,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.f
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
+import dev.pthomain.android.dejavu.interceptors.error.error.newWrapper
 import java.util.*
 
 /**

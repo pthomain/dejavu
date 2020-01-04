@@ -95,7 +95,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     private fun testFactory(rxType: RxType,
                             throwAnnotationException: Boolean = false) {
-        val responseClass = if (rxType == OPERATION) Any::class.java
+        val responseClass = if (rxType == WRAPPABLE) Any::class.java
         else TestResponse::class.java
 
         callAdapterFactory(rxType.rxClass, mockRetrofit, responseClass) { returnType, annotations, _ ->
@@ -189,7 +189,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     @Test
     fun testGetCompletable() {
-        testFactory(OPERATION)
+        testFactory(WRAPPABLE)
     }
 
     @Test
@@ -204,7 +204,7 @@ class RetrofitCallAdapterFactoryUnitTest {
 
     @Test
     fun testGetCompletableWithAnnotationException() {
-        testFactory(OPERATION, true)
+        testFactory(WRAPPABLE, true)
     }
 
 }

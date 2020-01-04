@@ -28,6 +28,7 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import io.reactivex.Observable
 import java.io.*

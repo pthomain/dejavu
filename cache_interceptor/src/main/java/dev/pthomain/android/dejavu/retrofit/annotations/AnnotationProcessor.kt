@@ -112,7 +112,7 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
 
         return with(annotation) {
             when (this) {
-                is Cache -> Operation.Cache(
+                is Cache -> Operation.Remote.Cache(
                         priority,
                         durationInSeconds,
                         connectivityTimeoutInSeconds,
@@ -121,14 +121,14 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
                         compress
                 )
 
-                is Invalidate -> Operation.Invalidate(useRequestParameters)
+                is Invalidate -> Operation.Local.Invalidate(useRequestParameters)
 
-                is Clear -> Operation.Clear(
+                is Clear -> Operation.Local.Clear(
                         clearStaleEntriesOnly,
                         useRequestParameters
                 )
 
-                is DoNotCache -> Operation.DoNotCache
+                is DoNotCache -> Operation.Remote.DoNotCache
 
                 else -> null
             }

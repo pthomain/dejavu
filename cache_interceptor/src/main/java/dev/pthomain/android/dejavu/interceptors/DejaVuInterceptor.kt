@@ -24,12 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Hashed.Valid
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Plain
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.INSTRUCTION
@@ -48,6 +46,7 @@ import java.util.*
 /**
  * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
  *
+ * @param rxType the return type of the call
  * @param operation the cache operation for the intercepted call
  * @param requestMetadata the associated request metadata
  * @param configuration the global cache configuration
@@ -64,7 +63,8 @@ import java.util.*
  * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
-class DejaVuInterceptor<E> internal constructor(private val operation: Operation,
+class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
+                                                private val operation: Operation,
                                                 private val requestMetadata: Plain,
                                                 private val configuration: DejaVuConfiguration<E>,
                                                 private val hasher: Hasher,
@@ -86,7 +86,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
      * @return the call intercepted with the inner interceptors
      */
     override fun apply(upstream: Observable<Any>) =
-            composeInternal(upstream, OBSERVABLE)
+            composeInternal(upstream)
 
     /**
      * Composes Single with the wrapped interceptors
@@ -95,18 +95,8 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
      * @return the call intercepted with the inner interceptors
      */
     override fun apply(upstream: Single<Any>) =
-            composeInternal(upstream.toObservable(), SINGLE)
+            composeInternal(upstream.toObservable())
                     .firstOrError()!!
-
-    /**
-     * Composes CacheOperation with the wrapped interceptors
-     *
-     * @param upstream the call to intercept
-     * @return the call intercepted with the inner interceptors
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun apply(upstream: DejaVuCall<*>) =
-            composeInternal(upstream as Observable<Any>, OPERATION)
 
     /**
      * Deals with the internal composition.
@@ -115,8 +105,7 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
      * @param rxType the RxJava return type
      * @return the call intercepted with the inner interceptors
      */
-    private fun composeInternal(upstream: Observable<Any>,
-                                rxType: RxType): Observable<Any> {
+    private fun composeInternal(upstream: Observable<Any>): Observable<Any> {
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
         return if (hashedRequestMetadata is Valid) {
@@ -177,12 +166,15 @@ class DejaVuInterceptor<E> internal constructor(private val operation: Operation
         /**
          * Provides an instance of DejaVuInterceptor
          *
+         * @param rxType the return type of the call
          * @param operation the cache operation for the intercepted call
          * @param requestMetadata the associated request metadata
          */
-        fun create(operation: Operation,
+        fun create(rxType: RxType,
+                   operation: Operation,
                    requestMetadata: Plain) =
                 DejaVuInterceptor(
+                        rxType,
                         operation,
                         requestMetadata,
                         configuration,
