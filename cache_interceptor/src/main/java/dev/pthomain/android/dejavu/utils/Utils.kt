@@ -71,6 +71,6 @@ object Utils {
             swapValueWhen(null) { it == Any::class.java }
 
     fun Operation.invalidatesExistingData() =
-            type == INVALIDATE || (this as? Cache)?.priority?.invalidatesExistingData == true
+            type == INVALIDATE || (this as? Cache)?.priority?.network?.invalidatesLocalData == true
 
 }

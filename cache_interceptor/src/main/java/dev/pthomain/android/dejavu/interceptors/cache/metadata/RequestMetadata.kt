@@ -30,6 +30,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.metadata
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
+//TODO add type
 sealed class RequestMetadata(open val responseClass: Class<*>,
                              open val url: String,
                              open val requestBody: String? = null) {
@@ -70,11 +71,11 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
             requestBody
     ) {
 
-        data class Valid(override val responseClass: Class<*>,
-                         override val url: String,
-                         override val requestBody: String?,
-                         override val requestHash: String,
-                         override val classHash: String) : Hashed(
+        data class Valid internal constructor(override val responseClass: Class<*>,
+                                              override val url: String,
+                                              override val requestBody: String?,
+                                              override val requestHash: String,
+                                              override val classHash: String) : Hashed(
                 responseClass,
                 url,
                 requestBody,
@@ -82,7 +83,7 @@ sealed class RequestMetadata(open val responseClass: Class<*>,
                 classHash
         )
 
-        data class Invalid(override val responseClass: Class<*>) : Hashed(
+        data class Invalid internal constructor(override val responseClass: Class<*>) : Hashed(
                 responseClass,
                 DEFAULT_URL,
                 null,

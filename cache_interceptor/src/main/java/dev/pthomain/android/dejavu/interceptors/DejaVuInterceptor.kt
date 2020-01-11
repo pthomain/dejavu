@@ -46,7 +46,7 @@ import java.util.*
 /**
  * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
  *
- * @param rxType the return type of the call
+ * @param isWrapped whether or not the response should be wrapped in a CacheResult
  * @param operation the cache operation for the intercepted call
  * @param requestMetadata the associated request metadata
  * @param configuration the global cache configuration
@@ -63,7 +63,7 @@ import java.util.*
  * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
-class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
+class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
                                                 private val operation: Operation,
                                                 private val requestMetadata: Plain,
                                                 private val configuration: DejaVuConfiguration<E>,
@@ -73,7 +73,7 @@ class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
                                                 private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
                                                 private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
                                                 private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
-                                                private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>)
+                                                private val responseInterceptorFactory: (CacheToken, Boolean, Long) -> ResponseInterceptor<E>)
     : ObservableTransformer<Any, Any>,
         SingleTransformer<Any, Any>
         where E : Exception,
@@ -130,7 +130,7 @@ class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
             upstream
                     .compose(networkInterceptorFactory(errorInterceptor, operation as? Cache, start))
                     .compose(cacheInterceptorFactory(errorInterceptor, instructionToken, start))
-                    .compose(responseInterceptorFactory(instructionToken, rxType, start))
+                    .compose(responseInterceptorFactory(instructionToken, isWrapped, start))
 
         } else hashingErrorObservableFactory().also {
             configuration.logger.e(this, "The request metadata could not be hashed, this request won't be cached: $requestMetadata")
@@ -158,7 +158,7 @@ class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
                                           private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
                                           private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
                                           private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
-                                          private val responseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<E>,
+                                          private val responseInterceptorFactory: (CacheToken, Boolean, Long) -> ResponseInterceptor<E>,
                                           private val configuration: DejaVuConfiguration<E>)
             where E : Exception,
                   E : NetworkErrorPredicate {
@@ -166,15 +166,15 @@ class DejaVuInterceptor<E> internal constructor(private val rxType: RxType,
         /**
          * Provides an instance of DejaVuInterceptor
          *
-         * @param rxType the return type of the call
+         * @param isWrapped whether or not the response should be wrapped in a CacheResult
          * @param operation the cache operation for the intercepted call
          * @param requestMetadata the associated request metadata
          */
-        fun create(rxType: RxType,
+        fun create(isWrapped: Boolean,
                    operation: Operation,
                    requestMetadata: Plain) =
                 DejaVuInterceptor(
-                        rxType,
+                        isWrapped,
                         operation,
                         requestMetadata,
                         configuration,

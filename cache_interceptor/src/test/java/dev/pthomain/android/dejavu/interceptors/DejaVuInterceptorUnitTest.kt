@@ -26,11 +26,9 @@ package dev.pthomain.android.dejavu.interceptors
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Wrappable
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
@@ -40,7 +38,6 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.test.*
-import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.observers.TestObserver
@@ -197,7 +194,6 @@ class DejaVuInterceptorUnitTest {
                     val mockSingle = mock<Single<Any>>()
                     whenever(mockSingle.toObservable()).thenReturn(mockUpstreamObservable)
                     whenever(mockResponseObservable.firstOrError()).thenReturn(mockSingle)
-
 
                     when (rxType) {
                         OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)

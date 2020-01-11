@@ -88,8 +88,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response:ResponseWrapper<E>,
-                            previousCachedResponse:ResponseWrapper<E>?): CacheDataHolder.Complete {
+    protected fun serialise(response: ResponseWrapper<E>,
+                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Cache

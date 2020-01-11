@@ -23,42 +23,42 @@
 
 package dev.pthomain.android.dejavu.injection.glitch
 
-import android.content.Context
-import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
-import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.DejaVuModule
-import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
+import dev.pthomain.android.dejavu.interceptors.InterceptorModule
+import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsModule
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationModule
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
-import java.util.*
-import javax.inject.Singleton
+import dev.pthomain.android.dejavu.retrofit.RetrofitModule
 
-@Module(includes = [GlitchModule::class])
+@Module(includes = [
+    GlitchSerialisationModule::class,
+    GlitchPersistenceModule::class,
+    GlitchStatisticsModule::class,
+    GlitchInterceptorModule::class,
+    GlitchCacheModule::class,
+    GlitchRetrofitModule::class
+])
 internal class GlitchDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
-    : DejaVuModule<Glitch>(configuration) {
+    : DejaVuModule<Glitch>(configuration)
 
-    @Provides
-    @Singleton
-    fun provideDateFactory() = object : Function1<Long?, Date> {
-        override fun get(t1: Long?) =
-                t1?.let { Date(it) } ?: Date()
-    }
+@Module
+internal class GlitchSerialisationModule : SerialisationModule<Glitch>()
 
-    @Provides
-    @Singleton
-    fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
-            callback?.let {
-                RequerySQLiteOpenHelperFactory().create(
-                        SupportSQLiteOpenHelper.Configuration.builder(context)
-                                .name(DATABASE_NAME)
-                                .callback(it)
-                                .build()
-                )
-            }
+@Module
+internal class GlitchPersistenceModule : PersistenceModule<Glitch>()
 
-}
+@Module
+internal class GlitchStatisticsModule : StatisticsModule<Glitch>()
 
+@Module
+internal class GlitchInterceptorModule : InterceptorModule<Glitch>()
+
+@Module
+internal class GlitchCacheModule : CacheModule<Glitch>()
+
+@Module
+internal class GlitchRetrofitModule : RetrofitModule<Glitch>()

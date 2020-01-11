@@ -27,8 +27,8 @@ import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
@@ -103,13 +103,13 @@ internal interface ObservableCatFactClient {
 
     @DELETE(ENDPOINT)
     @Clear
-    fun clearCache(): DejaVuCall<CatFactResponse>
+    fun clearCache(): Observable<DejaVuResult<CatFactResponse>>
 
     // INVALIDATE
 
     @DELETE(ENDPOINT)
     @Invalidate
-    fun invalidate(): DejaVuCall<CatFactResponse>
+    fun invalidate(): Observable<DejaVuResult<CatFactResponse>>
 
     // OFFLINE
 
@@ -124,6 +124,6 @@ internal interface ObservableCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun execute(@Header(DejaVuHeader) operation: Operation): DejaVuCall<CatFactResponse>
+    fun execute(@Header(DejaVuHeader) operation: Operation): Observable<DejaVuResult<CatFactResponse>>
 
 }

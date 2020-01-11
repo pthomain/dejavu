@@ -28,7 +28,7 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
@@ -225,7 +225,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     override fun verifyCheckInvalidation(context: String,
                                          operation: Operation,
                                          instructionToken: CacheToken) {
-        if (operation.type == INVALIDATE || (operation as? Cache)?.priority?.mode == REFRESH) {
+        if (operation.type == INVALIDATE || (operation as? Cache)?.priority?.network == REFRESH) {
             val mapCaptor = argumentCaptor<Map<String, Any>>()
             val tableCaptor = argumentCaptor<String>()
             val conflictCaptor = argumentCaptor<Int>()

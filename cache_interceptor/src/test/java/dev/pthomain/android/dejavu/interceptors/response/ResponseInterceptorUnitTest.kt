@@ -29,12 +29,12 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate
-import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -192,7 +192,7 @@ class ResponseInterceptorUnitTest {
         val expectedMetadata = mockUpstreamMetadata.copy(
                 cacheToken = mockInstructionToken.copy(status = if (expectEmpty) EMPTY else cacheStatus),
                 exception = if (expectEmpty) mockEmptyException else null,
-                callDuration = CacheMetadata.Duration(0, 0, 4321 - 1234)
+                callDuration = CallDuration(0, 0, 4321 - 1234)
         )
 
         val mockEmptyResponseWrapper = mockUpstreamWrapper.copy(

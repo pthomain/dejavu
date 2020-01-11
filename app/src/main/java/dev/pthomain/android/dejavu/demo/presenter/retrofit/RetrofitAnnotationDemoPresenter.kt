@@ -27,9 +27,9 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
 
 internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
@@ -39,17 +39,17 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                        encrypt: Boolean,
                                        compress: Boolean) =
             with(cachePriority) {
-                if (mode == REFRESH) {
-                    when (preference) {
+                if (network == REFRESH) {
+                    when (freshness) {
                         FRESH_ONLY -> catFactClient().refreshFreshOnly()
                         else -> catFactClient().refresh()
                     }
                 } else {
                     when {
-                        preference == FRESH_ONLY && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
-                        preference == FRESH_ONLY && compress -> catFactClient().freshOnlyCompressed()
-                        preference == FRESH_ONLY && encrypt -> catFactClient().freshOnlyEncrypted()
-                        preference == FRESH_ONLY -> catFactClient().freshOnly()
+                        freshness == FRESH_ONLY && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
+                        freshness == FRESH_ONLY && compress -> catFactClient().freshOnlyCompressed()
+                        freshness == FRESH_ONLY && encrypt -> catFactClient().freshOnlyEncrypted()
+                        freshness == FRESH_ONLY -> catFactClient().freshOnly()
                         compress && encrypt -> catFactClient().compressedEncrypted()
                         compress -> catFactClient().compressed()
                         encrypt -> catFactClient().encrypted()
@@ -58,7 +58,7 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                 }
             }
 
-    override fun getOfflineSingle(preference: CachePreference) = ifElse(
+    override fun getOfflineSingle(preference: FreshnessPriority) = ifElse(
             preference == FRESH_ONLY,
             catFactClient().offlineFreshOnly(),
             catFactClient().offline()

@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_PREFERRED
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_PREFERRED
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
@@ -68,12 +68,12 @@ sealed class Operation(val type: Type) {
             val connectivityTimeoutInSeconds: Int? = connectivityTimeoutInSeconds.swapWhenDefault(null)
             val requestTimeOutInSeconds: Int? = requestTimeOutInSeconds.swapWhenDefault(null)
 
-            fun isCache() = priority.mode == CacheMode.CACHE
-            fun isRefresh() = priority.mode == REFRESH
-            fun isOffline() = priority.mode == OFFLINE
-            fun isDefault() = priority.preference == CachePreference.DEFAULT
-            fun isFreshOnly() = priority.preference == FRESH_ONLY
-            fun isFreshPreferred() = priority.preference == FRESH_PREFERRED
+            fun isCache() = priority.network == NetworkPriority.CACHE
+            fun isRefresh() = priority.network == REFRESH
+            fun isOffline() = priority.network == OFFLINE
+            fun isDefault() = priority.freshness == FreshnessPriority.DEFAULT
+            fun isFreshOnly() = priority.freshness == FRESH_ONLY
+            fun isFreshPreferred() = priority.freshness == FRESH_PREFERRED
 
             override fun toString() = SERIALISER.serialise(
                     type,

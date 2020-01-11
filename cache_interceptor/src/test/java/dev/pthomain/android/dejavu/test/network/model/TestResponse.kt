@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
 
     @Transient
-    override lateinit var metadata: CacheMetadata<Glitch>
+    internal override lateinit var metadata: CacheMetadata<Glitch>
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -27,7 +27,7 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -103,7 +103,7 @@ internal class NetworkInterceptor<E>(private val context: Context,
      * @return a Duration metadata object holding the duration of the network call
      */
     private fun getCallDuration() =
-            CacheMetadata.Duration(
+            CallDuration(
                     0,
                     (dateFactory(null).time - start).toInt(),
                     0

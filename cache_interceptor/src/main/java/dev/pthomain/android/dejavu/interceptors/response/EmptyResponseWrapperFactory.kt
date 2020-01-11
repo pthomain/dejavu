@@ -38,7 +38,7 @@ import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
-internal class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>)
+class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -59,13 +59,13 @@ internal class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFac
                                     copy(status = if (isDone) DONE else EMPTY),
                                     errorFactory(
                                             if (isDone) DoneException(instruction.operation)
-                                            else EmptyResponseException
+                                            else EmptyResponseException(NullPointerException())//FIXME
                                     )
                             )
                     )
                 }
             }
 
-    object EmptyResponseException : NoSuchElementException("The response was empty")
-    data class DoneException(val operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
+    class EmptyResponseException(override val cause: Exception) : NoSuchElementException("The response was empty")
+    class DoneException(val operation: Operation) : NoSuchElementException("This operation does not return any data: ${operation.type}")
 }

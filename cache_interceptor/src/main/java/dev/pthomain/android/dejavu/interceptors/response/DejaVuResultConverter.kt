@@ -21,22 +21,20 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
-/**
- * Wraps the call and associated metadata for internal use.
- *
- * @param responseClass the target response class
- * @param response the call's response if available
- * @param metadata the call's metadata
- */
-//TODO make this internal
-data class ResponseWrapper<E>(val responseClass: Class<*>,
-                              val response: Any?,
-                              override var metadata: CacheMetadata<E>)
-    : CacheMetadata.Holder<E>
+//TODO JavaDoc
+internal class CacheMetadataConverter<E>
         where E : Exception,
-              E : NetworkErrorPredicate
+              E : NetworkErrorPredicate {
+
+    fun from(metadata: CacheMetadata<E>): HasCacheMetadata = object : HasCacheMetadata {
+        override val requestMetadata = metadata.cacheToken.instruction.requestMetadata
+        override val cacheToken = metadata.cacheToken
+        override val callDuration = metadata.callDuration
+    }
+
+}

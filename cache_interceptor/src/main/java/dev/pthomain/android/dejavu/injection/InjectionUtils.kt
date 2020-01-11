@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.injection
 
 import android.content.ContentValues
 
-fun mapToContentValues(map: Map<String, *>): ContentValues {
+internal fun mapToContentValues(map: Map<String, *>): ContentValues {
     val values = ContentValues()
     for ((key, value) in map) {
         when (value) {

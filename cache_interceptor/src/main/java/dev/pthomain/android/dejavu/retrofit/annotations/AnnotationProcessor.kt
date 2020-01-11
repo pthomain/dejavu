@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
@@ -45,14 +44,12 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
      * if applicable.
      *
      * @param annotations the calls annotations as provided by the Retrofit call adapter.
-     * @param rxType the type of RxJava operation for this call
      * @param responseClass the target response class
      *
      * @return the processed cache operation if applicable
      */
     @Throws(CacheException::class)
     fun process(annotations: Array<Annotation>,
-                rxType: RxType,
                 responseClass: Class<*>): Operation? {
         var operation: Operation? = null
 
@@ -66,7 +63,6 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
             }?.let {
                 operation = getOperation(
                         operation,
-                        rxType,
                         responseClass,
                         it,
                         annotation
@@ -88,7 +84,6 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
      * on the same call.
      *
      * @param currentOperation the previous existing annotation if found, to detect duplicates
-     * @param rxType the RxJava type
      * @param responseClass the targeted response class for this call
      * @param foundOperation the operation type associated with the given annotation
      * @param annotation the annotation being processed
@@ -96,7 +91,6 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
      */
     @Throws(CacheException::class)
     private fun getOperation(currentOperation: Operation?,
-                             rxType: RxType,
                              responseClass: Class<*>,
                              foundOperation: Operation.Type,
                              annotation: Annotation): Operation? {
@@ -104,7 +98,7 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
             CacheException(
                     ANNOTATION,
                     "More than one cache annotation defined for method returning"
-                            + " ${rxType.getTypedName(responseClass)}, found ${getAnnotationName(foundOperation)}"
+                            + " ${responseClass.name}, found ${getAnnotationName(foundOperation)}"
                             + " after existing annotation ${getAnnotationName(currentOperation.type)}."
                             + " Only one annotation can be used for this method."
             ).logAndThrow()

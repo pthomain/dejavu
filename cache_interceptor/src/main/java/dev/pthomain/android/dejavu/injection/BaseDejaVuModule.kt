@@ -21,22 +21,39 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.injection
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import android.net.Uri
+import dagger.Module
+import dagger.Provides
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import javax.inject.Singleton
 
-/**
- * Wraps the call and associated metadata for internal use.
- *
- * @param responseClass the target response class
- * @param response the call's response if available
- * @param metadata the call's metadata
- */
-//TODO make this internal
-data class ResponseWrapper<E>(val responseClass: Class<*>,
-                              val response: Any?,
-                              override var metadata: CacheMetadata<E>)
-    : CacheMetadata.Holder<E>
+@Module
+internal abstract class BaseDejaVuModule<E>(private val configuration: DejaVuConfiguration<E>)
         where E : Exception,
-              E : NetworkErrorPredicate
+              E : NetworkErrorPredicate {
+
+    @Provides
+    @Singleton
+    fun provideContext() =
+            configuration.context
+
+    @Provides
+    @Singleton
+    fun provideConfiguration() =
+            configuration
+
+    @Provides
+    @Singleton
+    fun provideLogger() =
+            configuration.logger
+
+    @Provides
+    @Singleton
+    fun provideUriParser() = object : Function1<String, Uri> {
+        override fun get(t1: String) = Uri.parse(t1)
+    }
+
+}

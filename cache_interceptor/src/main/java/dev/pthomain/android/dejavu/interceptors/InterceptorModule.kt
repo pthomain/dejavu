@@ -86,8 +86,7 @@ internal abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    fun provideCacheInterceptorFactory(configuration: DejaVuConfiguration<E>,
-                                       dateFactory: Function1<Long?, Date>,
+    fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
                                        cacheManager: CacheManager<E>) =
             object : Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>> {
                 override fun get(t1: ErrorInterceptor<E>, t2: CacheToken, t3: Long) = CacheInterceptor(
@@ -106,9 +105,9 @@ internal abstract class InterceptorModule<E>
                                    dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<CacheMetadata<E>>,
                                    emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
-            object : Function3<CacheToken, RxType, Long, ResponseInterceptor<E>> {
+            object : Function3<CacheToken, Boolean, Long, ResponseInterceptor<E>> {
                 override fun get(t1: CacheToken,
-                                 t2: RxType,
+                                 t2: Boolean,
                                  t3: Long) = ResponseInterceptor(
                         logger,
                         dateFactory::get,
@@ -140,7 +139,7 @@ internal abstract class InterceptorModule<E>
                                         networkInterceptorFactory: Function3<ErrorInterceptor<E>, Cache?, Long, NetworkInterceptor<E>>,
                                         errorInterceptorFactory: Function1<CacheToken, ErrorInterceptor<E>>,
                                         cacheInterceptorFactory: Function3<ErrorInterceptor<E>, CacheToken, Long, CacheInterceptor<E>>,
-                                        responseInterceptorFactory: Function3<CacheToken, RxType, Long, ResponseInterceptor<E>>) =
+                                        responseInterceptorFactory: Function3<CacheToken, Boolean, Long, ResponseInterceptor<E>>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     dateFactory::get,

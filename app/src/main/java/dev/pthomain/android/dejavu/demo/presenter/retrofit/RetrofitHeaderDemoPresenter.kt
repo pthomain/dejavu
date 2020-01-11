@@ -25,12 +25,14 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
@@ -43,12 +45,12 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     priority = cachePriority,
                     encrypt = encrypt,
                     compress = compress
-            )).map { it.response as CatFactResponse }
+            )).map { (it as DejaVuResult.Response).response }
 
-    override fun getOfflineSingle(preference: CachePreference) =
+    override fun getOfflineSingle(preference: FreshnessPriority) =
             executeOperation(
                     Cache(priority = CachePriority.with(OFFLINE, preference))
-            ).map { it.response as CatFactResponse }.firstOrError()
+            ).map { (it as DejaVuResult.Response).response }.firstOrError()
 
     override fun getClearEntriesCompletable() =
             executeOperation(Clear())

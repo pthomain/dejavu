@@ -25,9 +25,9 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
@@ -194,7 +194,7 @@ class CacheManagerUnitTest {
                 "serialisationFails = $serialisationFails\n"
 
         val instructionToken = instructionToken(operation)
-        val isResponseStaleOverall = isResponseStale || operation.priority.mode == REFRESH
+        val isResponseStaleOverall = isResponseStale || operation.priority.network == REFRESH
 
         val mockPreviousCacheMetadata = CacheMetadata(
                 instructionToken.copy(status = ifElse(isResponseStaleOverall, STALE, FRESH)),
@@ -234,7 +234,7 @@ class CacheManagerUnitTest {
 
         whenever(mockDateFactory.invoke(isNull())).thenReturn(now)
 
-        if (operation.priority.mode == OFFLINE) {
+        if (operation.priority.network == OFFLINE) {
             if (!hasCachedResponse) {
                 whenever(mockEmptyResponseWrapperFactory.create(
                         eq(instructionToken)
@@ -257,7 +257,7 @@ class CacheManagerUnitTest {
                 start
         ).subscribe(testObserver)
 
-        if (operation.priority.mode == OFFLINE) {
+        if (operation.priority.network == OFFLINE) {
             if (hasCachedResponse) {
                 assertEqualsWithContext(
                         mockCachedResponseWrapper,
@@ -382,7 +382,7 @@ class CacheManagerUnitTest {
                                     networkCallFails: Boolean,
                                     serialisationFails: Boolean) {
 
-        val hasSingleResponse = (isResponseStale && operation.priority.preference == FRESH_ONLY)
+        val hasSingleResponse = (isResponseStale && operation.priority.freshness == FRESH_ONLY)
                 || !hasCachedResponse
                 || !isResponseStale
 

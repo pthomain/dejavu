@@ -58,7 +58,7 @@ internal abstract class RetrofitModule<E>
             RetrofitCallAdapterFactory(
                     configuration,
                     defaultAdapterFactory,
-                    { dejaVuFactory, methodDescription, responseClass, rxType, operation, rxCallAdapter ->
+                    { dejaVuFactory, methodDescription, responseClass, isWrapped, operation, rxCallAdapter ->
                         RetrofitCallAdapter(
                                 configuration,
                                 responseClass,
@@ -67,7 +67,7 @@ internal abstract class RetrofitModule<E>
                                 RequestBodyConverter(),
                                 logger,
                                 methodDescription,
-                                rxType,
+                                isWrapped,
                                 operation,
                                 rxCallAdapter
                         )

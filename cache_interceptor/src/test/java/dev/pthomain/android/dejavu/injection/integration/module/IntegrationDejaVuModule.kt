@@ -29,17 +29,17 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.injection.DejaVuModule
+import dev.pthomain.android.dejavu.injection.BaseDejaVuModule
 import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.injection.glitch.GlitchModule
+import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import java.util.*
 import javax.inject.Singleton
 
-@Module(includes = [GlitchModule::class])
+@Module(includes = [GlitchDejaVuModule::class])
 internal class IntegrationDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
-    : DejaVuModule<Glitch>(configuration) {
+    : BaseDejaVuModule<Glitch>(configuration) {
 
     val NOW = Date(1234L)
 

@@ -39,12 +39,16 @@ import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.DejaVuCall
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -57,7 +61,7 @@ internal abstract class BaseDemoPresenter protected constructor(
         DemoPresenter {
 
     private var instructionType: Type = CACHE
-    private var cacheMode: CacheMode = CacheMode.CACHE
+    private var networkPriority: NetworkPriority = NetworkPriority.CACHE
     private var persistenceType = FILE
 
     final override var connectivityTimeoutOn: Boolean = true
@@ -69,7 +73,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var useSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
-    final override var preference = CachePreference.DEFAULT
+    final override var preference = FreshnessPriority.DEFAULT
 
     protected val gson by lazy { Gson() }
 
@@ -94,11 +98,11 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = CACHE
-        cacheMode = ifElse(isRefresh, CacheMode.REFRESH, CacheMode.CACHE)
+        networkPriority = ifElse(isRefresh, NetworkPriority.REFRESH, NetworkPriority.CACHE)
 
         subscribe(
                 getResponseObservable(
-                        CachePriority.with(cacheMode, preference),
+                        CachePriority.with(networkPriority, preference),
                         encrypt,
                         compress
                 ).ignoreElements()
@@ -107,7 +111,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun offline() {
         instructionType = CACHE
-        cacheMode = CacheMode.OFFLINE
+        networkPriority = NetworkPriority.OFFLINE
         subscribe(getOfflineSingle(preference).toObservable())
     }
 
@@ -135,21 +139,21 @@ internal abstract class BaseDemoPresenter protected constructor(
                 }
             }
 
-    private fun getPriority() = when (cacheMode) {
-        CacheMode.CACHE -> when (preference) {
-            CachePreference.DEFAULT -> DEFAULT
-            CachePreference.FRESH_PREFERRED -> FRESH_PREFERRED
-            CachePreference.FRESH_ONLY -> FRESH_ONLY
+    private fun getPriority() = when (networkPriority) {
+        NetworkPriority.CACHE -> when (preference) {
+            FreshnessPriority.DEFAULT -> DEFAULT
+            FreshnessPriority.FRESH_PREFERRED -> FRESH_PREFERRED
+            FreshnessPriority.FRESH_ONLY -> FRESH_ONLY
         }
 
-        CacheMode.REFRESH -> when (preference) {
-            CachePreference.DEFAULT -> REFRESH
-            CachePreference.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
-            CachePreference.FRESH_ONLY -> REFRESH_FRESH_ONLY
+        NetworkPriority.REFRESH -> when (preference) {
+            FreshnessPriority.DEFAULT -> REFRESH
+            FreshnessPriority.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
+            FreshnessPriority.FRESH_ONLY -> REFRESH_FRESH_ONLY
         }
 
-        CacheMode.OFFLINE -> when (preference) {
-            CachePreference.FRESH_ONLY -> OFFLINE_FRESH_ONLY
+        NetworkPriority.OFFLINE -> when (preference) {
+            FreshnessPriority.FRESH_ONLY -> OFFLINE_FRESH_ONLY
             else -> OFFLINE
         }
     }
@@ -157,7 +161,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
-                    .doOnNext { it.metadata.exception?.also { uiLogger.e(this, it) } }
+                    .doOnError { uiLogger.e(this, it) }
                     .doFinally(::onCallComplete)
                     .autoSubscribe(mvpView::showCatFact)
 
@@ -184,9 +188,9 @@ internal abstract class BaseDemoPresenter protected constructor(
                                                  encrypt: Boolean,
                                                  compress: Boolean): Observable<CatFactResponse>
 
-    protected abstract fun getOfflineSingle(preference: CachePreference): Single<CatFactResponse>
-    protected abstract fun getClearEntriesCompletable(): DejaVuCall<CatFactResponse>
-    protected abstract fun getInvalidateCompletable(): DejaVuCall<CatFactResponse>
+    protected abstract fun getOfflineSingle(preference: FreshnessPriority): Single<CatFactResponse>
+    protected abstract fun getClearEntriesCompletable(): Observable<DejaVuResult<CatFactResponse>>
+    protected abstract fun getInvalidateCompletable(): Observable<DejaVuResult<CatFactResponse>>
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

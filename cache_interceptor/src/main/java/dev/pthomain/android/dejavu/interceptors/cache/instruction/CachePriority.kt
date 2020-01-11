@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 /**
  * This class dictates the way the cache should behave in handling a request returning data.
  *
- * For the priorities with the CacheMode CACHE or REFRESH, there are 3 different ways to deal with
+ * For the values with the NetworkPriority CACHE or REFRESH, there are 3 different ways to deal with
  * STALE cache data:
  *
  * - the default way (preference = DEFAULT) is to always emit STALE data from the cache
@@ -58,23 +58,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
  * For the priorities with REFRESH mode, he cached data is always permanently invalidated
  * and considered STALE at the time of the call. This means a network call will always be attempted.
  *
- * @param usesNetwork whether or not the cache should attempt to fetch data from the network
- * @param invalidatesExistingData whether or not cached data should be permanently marked as STALE, regardless of its presence or existing status
- * @param emitsCachedStale whether or not STALE cached data should be returned (prior to a attempting a network call for instance)
- * @param emitsNetworkStale whether or not STALE cached data should be returned after a failed network call (as COULD_NOT_REFRESH)
- * @param hasSingleResponse whether the cache will emit a single response or 2 of them (usually starting with a transient STALE one)
- * @param mode the mode in which this priority operates
- * @param preference the preference regarding the handling of STALE data
+ * @param network the mode in which this priority operates
+ * @param freshness the preference regarding the handling of STALE data
  * @param returnedStatuses the possible statuses of the response(s) emitted by the cache as a result of this priority
  */
 enum class CachePriority(
-        val usesNetwork: Boolean,
-        val invalidatesExistingData: Boolean,
-        val emitsCachedStale: Boolean,
-        val emitsNetworkStale: Boolean,
-        val hasSingleResponse: Boolean,
-        val mode: CacheMode,
-        val preference: CachePreference,
+        val network: NetworkPriority,
+        val freshness: FreshnessPriority,
         vararg val returnedStatuses: CacheStatus
 ) {
 
@@ -98,13 +88,8 @@ enum class CachePriority(
      * during a loading UI state for instance.
      */
     DEFAULT(
-            true,
-            false,
-            true,
-            true,
-            false,
-            CacheMode.CACHE,
-            CachePreference.DEFAULT,
+            NetworkPriority.CACHE,
+            FreshnessPriority.DEFAULT,
             FRESH,
             STALE,
             NETWORK,
@@ -132,13 +117,8 @@ enum class CachePriority(
      * if it could not be refreshed.
      */
     FRESH_PREFERRED(
-            true,
-            false,
-            false,
-            true,
-            true,
-            CacheMode.CACHE,
-            CachePreference.FRESH_PREFERRED,
+            NetworkPriority.CACHE,
+            FreshnessPriority.FRESH_PREFERRED,
             FRESH,
             NETWORK,
             REFRESHED,
@@ -164,13 +144,8 @@ enum class CachePriority(
      * as a result of a failed network call.
      */
     FRESH_ONLY(
-            true,
-            false,
-            false,
-            false,
-            true,
-            CacheMode.CACHE,
-            CachePreference.FRESH_ONLY,
+            NetworkPriority.CACHE,
+            FreshnessPriority.FRESH_ONLY,
             FRESH,
             NETWORK,
             REFRESHED,
@@ -198,13 +173,8 @@ enum class CachePriority(
      * be displayed on a loading UI state for instance.
      */
     REFRESH(
-            true,
-            true,
-            true,
-            true,
-            false,
-            CacheMode.REFRESH,
-            CachePreference.DEFAULT,
+            NetworkPriority.REFRESH,
+            FreshnessPriority.DEFAULT,
             STALE,
             NETWORK,
             REFRESHED,
@@ -232,13 +202,8 @@ enum class CachePriority(
      * be displayed on a loading UI state for instance.
      */
     REFRESH_FRESH_PREFERRED(
-            true,
-            true,
-            false,
-            true,
-            false,
-            CacheMode.REFRESH,
-            CachePreference.FRESH_PREFERRED,
+            NetworkPriority.REFRESH,
+            FreshnessPriority.FRESH_PREFERRED,
             NETWORK,
             REFRESHED,
             EMPTY,
@@ -264,13 +229,8 @@ enum class CachePriority(
      * from the cache or as the result of a failed network call.
      */
     REFRESH_FRESH_ONLY(
-            true,
-            true,
-            false,
-            false,
-            true,
-            CacheMode.REFRESH,
-            CachePreference.FRESH_ONLY,
+            NetworkPriority.REFRESH,
+            FreshnessPriority.FRESH_ONLY,
             NETWORK,
             REFRESHED,
             EMPTY
@@ -288,13 +248,8 @@ enum class CachePriority(
      * This priority returns cached data as is without ever using the network.
      */
     OFFLINE(
-            false,
-            false,
-            true,
-            false,
-            true,
-            CacheMode.OFFLINE,
-            CachePreference.DEFAULT,
+            NetworkPriority.OFFLINE,
+            FreshnessPriority.DEFAULT,
             FRESH,
             STALE,
             EMPTY
@@ -311,13 +266,8 @@ enum class CachePriority(
      * This priority returns only FRESH cached data without ever using the network.
      */
     OFFLINE_FRESH_ONLY(
-            false,
-            false,
-            false,
-            false,
-            true,
-            CacheMode.OFFLINE,
-            CachePreference.FRESH_ONLY,
+            NetworkPriority.OFFLINE,
+            FreshnessPriority.FRESH_ONLY,
             FRESH,
             EMPTY
     );
@@ -339,11 +289,15 @@ enum class CachePriority(
      * the mode that should be used when the device as no connectivity (any of those modes can
      * handle the network being unavailable). OFFLINE specifically instructs the cache never to call
      * the network even if the data is STALE and the network is available.
+     *
+     * @param usesNetwork whether or not the cache should attempt to fetch data from the network
+     * @param invalidatesLocalData whether or not cached data should be permanently marked as STALE, regardless of its presence or existing status
      */
-    enum class CacheMode {
-        CACHE,
-        REFRESH,
-        OFFLINE;
+    enum class NetworkPriority(val usesNetwork: Boolean,
+                               val invalidatesLocalData: Boolean) {
+        CACHE(true, false),
+        REFRESH(true, true),
+        OFFLINE(false, false);
 
         fun isCache() = this == CACHE
         fun isRefresh() = this == REFRESH
@@ -361,15 +315,21 @@ enum class CachePriority(
      *
      * - FRESH_ONLY will never emit any STALE data, even if the network call fails. Instead, it
      * will emit an EMPTY response. Beware that responses with an EMPTY status are emitted as
-     * exceptions unless you have declared your call to return ResponseWrapper<R>, with R being the
+     * exceptions unless you have declared your call to return DejaVuResult<R>, with R being the
      * type of your response, in which case this wrapper will contain this status in the metadata
      * field.
      * @see dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+     *
+     * @param emitsCachedStale whether or not STALE cached data should be returned (prior to a attempting a network call for instance)
+     * @param emitsNetworkStale whether or not STALE cached data should be returned after a failed network call (as COULD_NOT_REFRESH)
+     * @param hasSingleResponse whether the cache will emit a single response or 2 of them (usually starting with a transient STALE one)
      */
-    enum class CachePreference {
-        DEFAULT,
-        FRESH_PREFERRED,
-        FRESH_ONLY;
+    enum class FreshnessPriority(val emitsCachedStale: Boolean,
+                                 val emitsNetworkStale: Boolean,
+                                 val hasSingleResponse: Boolean) {
+        DEFAULT(true, true, false),
+        FRESH_PREFERRED(false, true, true),
+        FRESH_ONLY(false, false, true);
 
         fun isDefault() = this == DEFAULT
         fun isFreshOnly() = this == FRESH_ONLY
@@ -381,27 +341,27 @@ enum class CachePriority(
         /**
          * Commodity factory
          *
-         * @param cacheMode the desired cache mode
+         * @param networkPriority the desired cache mode
          * @param preference the desired cache preference
          * @return the corresponding cache priority
          */
-        fun with(cacheMode: CacheMode,
-                 preference: CachePreference) =
-                when (cacheMode) {
-                    CacheMode.CACHE -> when (preference) {
-                        CachePreference.DEFAULT -> DEFAULT
-                        CachePreference.FRESH_PREFERRED -> FRESH_PREFERRED
-                        CachePreference.FRESH_ONLY -> FRESH_ONLY
+        fun with(networkPriority: NetworkPriority,
+                 preference: FreshnessPriority) =
+                when (networkPriority) {
+                    NetworkPriority.CACHE -> when (preference) {
+                        FreshnessPriority.DEFAULT -> DEFAULT
+                        FreshnessPriority.FRESH_PREFERRED -> FRESH_PREFERRED
+                        FreshnessPriority.FRESH_ONLY -> FRESH_ONLY
                     }
 
-                    CacheMode.REFRESH -> when (preference) {
-                        CachePreference.DEFAULT -> REFRESH
-                        CachePreference.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
-                        CachePreference.FRESH_ONLY -> REFRESH_FRESH_ONLY
+                    NetworkPriority.REFRESH -> when (preference) {
+                        FreshnessPriority.DEFAULT -> REFRESH
+                        FreshnessPriority.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
+                        FreshnessPriority.FRESH_ONLY -> REFRESH_FRESH_ONLY
                     }
 
-                    CacheMode.OFFLINE -> when (preference) {
-                        CachePreference.FRESH_ONLY -> OFFLINE_FRESH_ONLY
+                    NetworkPriority.OFFLINE -> when (preference) {
+                        FreshnessPriority.FRESH_ONLY -> OFFLINE_FRESH_ONLY
                         else -> OFFLINE
                     }
                 }

@@ -35,7 +35,11 @@ import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 
 class InstructionView @JvmOverloads constructor(context: Context,
@@ -73,7 +77,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
             ifElse(
-                    operation is Cache || operation is DoNotCache,
+                    operation is Remote,
                     "@GET(\"fact\")",
                     "@DELETE(\"fact\")"
             ),
@@ -214,7 +218,7 @@ class InstructionView @JvmOverloads constructor(context: Context,
             with(operation) {
                 when (this) {
                     is Cache -> "${ifElse(
-                            priority.hasSingleResponse,
+                            priority.freshness.hasSingleResponse,
                             "Single",
                             "Observable"
                     )}<${responseClass.simpleName}>"

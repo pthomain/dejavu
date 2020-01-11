@@ -23,26 +23,20 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.RxType
-import dev.pthomain.android.dejavu.interceptors.RxType.SINGLE
-import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.error.error.wrap
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.DoneException
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.utils.Utils.isAnyInstance
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import io.reactivex.functions.Predicate
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 
@@ -60,7 +54,7 @@ import java.util.*
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  * @param instructionToken the instruction cache token
- * @param rxType the returned RxJava type
+ * @param isWrapped whether or not the response should be wrapped in a CacheResult
  * @param start the time the call started
  */
 internal class ResponseInterceptor<E>(private val logger: Logger,
@@ -69,26 +63,11 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                                       private val configuration: DejaVuConfiguration<E>,
                                       private val metadataSubject: PublishSubject<CacheMetadata<E>>,
                                       private val instructionToken: CacheToken,
-                                      private val rxType: RxType,
+                                      private val isWrapped: Boolean,
                                       private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, Any>
         where E : Exception,
               E : NetworkErrorPredicate {
-
-    private val responseFilter = Predicate<ResponseWrapper<E>> {
-        val status = it.metadata.cacheToken.status
-        val operation = instructionToken.instruction.operation
-
-        ifElse(
-                operation is Cache,
-                ifElse(
-                        rxType == SINGLE,
-                        status.isFinal,
-                        true
-                ),
-                true
-        )
-    }
 
     /**
      * Composes an Observable call.
@@ -97,11 +76,9 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
      * @return the composed Observable
      */
     override fun apply(upstream: Observable<ResponseWrapper<E>>) =
-            upstream.filter(responseFilter)
-                    .switchIfEmpty(Observable.defer {
-                        emptyResponseWrapperFactory.create(instructionToken).observable() //TODO this should not happen
-                    })
-                    .flatMap(this::intercept)!!
+            upstream.switchIfEmpty(Observable.defer {
+                emptyResponseWrapperFactory.create(instructionToken).observable() //FIXME this should not happen
+            }).flatMap(this::intercept)!!
 
     /**
      * Converts the ResponseWrapper into the expected response with added cache metadata if possible.
@@ -143,10 +120,35 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
                 DoneException::class.java
         )
 
+        val cacheToken = metadata.cacheToken
+        val instruction = cacheToken.instruction
+        val requestMetadata = instruction.requestMetadata
+
         return when {
-            rxType == WRAPPABLE -> {
-                @Suppress("UNCHECKED_CAST")
-                errorFactory.wrap<Any, E>(wrapper.observable()) as Observable<Any>
+            isWrapped -> {
+                if (response == null) {
+                    if (instruction.operation is Operation.Local) {
+                        DejaVuResult.Operation<Any>(
+                                requestMetadata,
+                                cacheToken,
+                                metadata.callDuration
+                        )
+                    } else {
+                        DejaVuResult.Empty<Any>( //TODO check if the response isn't null
+                                EmptyResponseException(metadata.exception!!), //FIXME
+                                requestMetadata,
+                                cacheToken,
+                                metadata.callDuration
+                        )
+                    }
+                } else {
+                    DejaVuResult.Response( //TODO check if the response isn't null
+                            response,
+                            requestMetadata,
+                            cacheToken,
+                            metadata.callDuration
+                    ).observable()
+                } as Observable<Any>
             }
 
             exception != null -> {

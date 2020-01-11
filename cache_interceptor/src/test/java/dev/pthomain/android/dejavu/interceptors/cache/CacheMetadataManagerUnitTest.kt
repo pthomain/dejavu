@@ -28,10 +28,11 @@ import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
@@ -79,17 +80,17 @@ class CacheMetadataManagerUnitTest {
     fun testSetNetworkCallMetadata() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Cache && operation.priority.mode != OFFLINE) {
-                    trueFalseSequence { hasCachedResponse ->
-                        trueFalseSequence { networkCallFails ->
-                            trueFalseSequence { encryptData ->
-                                trueFalseSequence { compressData ->
-                                    testSetNetworkCallMetadata(
-                                            iteration++,
-                                            operation,
-                                            hasCachedResponse,
-                                            networkCallFails,
-                                            encryptData,
+            if (operation is Cache && operation.priority.network != OFFLINE) {
+                trueFalseSequence { hasCachedResponse ->
+                    trueFalseSequence { networkCallFails ->
+                        trueFalseSequence { encryptData ->
+                            trueFalseSequence { compressData ->
+                                testSetNetworkCallMetadata(
+                                        iteration++,
+                                        operation,
+                                        hasCachedResponse,
+                                        networkCallFails,
+                                        encryptData,
                                             compressData
                                     )
                                 }
@@ -122,7 +123,7 @@ class CacheMetadataManagerUnitTest {
                 instructionToken,
                 Glitch::class.java,
                 ifElse(networkCallFails, networkGlitch, null),
-                CacheMetadata.Duration(diskDuration, networkDuration, 0)
+                CallDuration(diskDuration, networkDuration, 0)
         )
 
         val responseWrapper = ResponseWrapper(
@@ -169,7 +170,7 @@ class CacheMetadataManagerUnitTest {
         val expectedStatus = ifElse(
                 networkCallFails,
                 ifElse(
-                        operation.priority.preference == FRESH_ONLY,
+                        operation.priority.freshness == FRESH_ONLY,
                         EMPTY,
                         ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
                 ),
@@ -285,7 +286,7 @@ class CacheMetadataManagerUnitTest {
     fun testSetSerialisationFailedMetadata() {
         var iteration = 0
         operationSequence { operation ->
-            if (operation is Cache && operation.priority.mode != OFFLINE) {
+            if (operation is Cache && operation.priority.network != OFFLINE) {
                 testSetSerialisationFailedMetadata(
                         iteration++,
                         operation

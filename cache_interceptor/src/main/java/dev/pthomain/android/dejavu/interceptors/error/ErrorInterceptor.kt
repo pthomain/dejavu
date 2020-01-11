@@ -80,7 +80,7 @@ internal class ErrorInterceptor<E>(private val context: Context,
                     )
             }
             .switchIfEmpty(Observable.defer {
-                emptyResponseWrapperFactory.create(instructionToken).observable()
+                emptyResponseWrapperFactory.create(instructionToken).observable()//TODO check this
             })
             .onErrorResumeNext(Function {
                 ResponseWrapper(

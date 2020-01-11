@@ -30,10 +30,12 @@ import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
@@ -59,6 +61,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptorFactory.create(
+                                false,
                                 operation,
                                 this
                         ),
@@ -72,6 +75,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptorFactory.create(
+                                true,
                                 operation,
                                 this
                         ),
@@ -79,9 +83,9 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                 )
             }
 
-    override fun getOfflineSingle(preference: CachePreference) =
+    override fun getOfflineSingle(preference: FreshnessPriority) =
             getResponseObservable(
-                    CachePriority.with(CacheMode.OFFLINE, preference),
+                    CachePriority.with(NetworkPriority.OFFLINE, preference),
                     false,
                     false
             ).firstOrError()

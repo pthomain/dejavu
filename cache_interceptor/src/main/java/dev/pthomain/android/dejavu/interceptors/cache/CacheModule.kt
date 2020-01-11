@@ -31,6 +31,7 @@ import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.response.CacheMetadataConverter
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import io.reactivex.subjects.PublishSubject
 import java.util.*
@@ -77,7 +78,13 @@ internal abstract class CacheModule<E>
 
     @Provides
     @Singleton
-    fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<E>>) =
-            subject.map { it }!!
+    fun provideCacheMetadataObservable(subject: PublishSubject<CacheMetadata<E>>,
+                                       converter: CacheMetadataConverter<E>) =
+            subject.map(converter::from)!!
+
+    @Provides
+    @Singleton
+    fun provideCacheMetadataConverter() =
+            CacheMetadataConverter<E>()
 
 }

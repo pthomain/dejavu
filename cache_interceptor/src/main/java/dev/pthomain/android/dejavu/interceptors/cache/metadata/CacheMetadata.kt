@@ -37,23 +37,14 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-data class CacheMetadata<E> internal constructor(val cacheToken: CacheToken,
-                                                 val exceptionClass: Class<E>,
-                                                 val exception: E? = null,
-                                                 val callDuration: Duration = Duration(0, 0, 0))
+
+//TODO make this internal and use CacheResult externally, this is to avoid exposing internals of response/error classes and to stop merging response and error
+data class CacheMetadata<E>(val cacheToken: CacheToken,
+                            val exceptionClass: Class<E>,
+                            val exception: E? = null,
+                            val callDuration: CallDuration = CallDuration(0, 0, 0))
         where E : Exception,
               E : NetworkErrorPredicate {
-
-    /**
-     * Contains information about how long the call took to execute at different stages of the caching process.
-     *
-     * @param disk time taken to retrieve the data from the local cache
-     * @param network time taken to retrieve the data from the network
-     * @param total total time for this call, including disk, network and processing time.
-     */
-    data class Duration(val disk: Int,
-                        val network: Int,
-                        val total: Int)
 
     /**
      * Interface to be set on any response requiring cache metadata to be provided. This metadata

@@ -37,6 +37,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -68,11 +69,10 @@ internal class ExpandableListAdapter(context: Context)
     }
 
     fun showCatFact(catFactResponse: CatFactResponse) {
-        val metadata = catFactResponse.metadata
-        val cacheToken = metadata.cacheToken
-        val exception = metadata.exception
+        val cacheToken = catFactResponse.cacheToken
+        val exception: Glitch? = null // metadata.exception FIXME this is now handled in onError (merging is gone)
         val operation = cacheToken.instruction.operation
-        val callDuration = metadata.callDuration
+        val callDuration = catFactResponse.callDuration
 
         val elapsed = "${operation.type.name} -> ${cacheToken.status} (${callDuration.total}ms)"
         val duration = "Call duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms"
@@ -112,7 +112,7 @@ internal class ExpandableListAdapter(context: Context)
         headers.add(header)
         children[header] = info
 
-        val catFactHeader = "Cat Fact (${catFactResponse.metadata.cacheToken.status})"
+        val catFactHeader = "Cat Fact (${catFactResponse.cacheToken.status})"
         headers.add(catFactHeader)
         children[catFactHeader] = listOf(catFactResponse.fact ?: "N/A")
 

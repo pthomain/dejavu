@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.single
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.OFFLINE
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -108,7 +108,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
         require(cacheOperation is Cache) { "Wrong cache operation: $cacheOperation" }
 
         val instruction = instructionToken.instruction
-        val mode = cacheOperation.priority.mode
+        val mode = cacheOperation.priority.network
         val simpleName = instruction.requestMetadata.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
@@ -157,7 +157,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                     diskDuration
             )
 
-            if (status == STALE && cacheOperation.priority.emitsCachedStale) {
+            if (status == STALE && cacheOperation.priority.freshness.emitsCachedStale) {
                 Observable.concat(
                         Observable.just(cachedResponse).doOnNext {
                             logger.d(this, "Delivering cached $simpleName, status: $status")

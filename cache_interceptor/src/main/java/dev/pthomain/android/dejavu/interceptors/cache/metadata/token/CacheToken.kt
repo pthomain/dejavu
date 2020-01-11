@@ -39,6 +39,7 @@ import java.util.*
  */
 data class CacheToken internal constructor(val instruction: CacheInstruction,
                                            val status: CacheStatus,
+        //TODO separate the fields below for Operation.Remote only
                                            val isCompressed: Boolean,
                                            val isEncrypted: Boolean,
                                            val fetchDate: Date? = null,

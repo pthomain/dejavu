@@ -28,7 +28,6 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
@@ -54,7 +53,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
-                                      private val rxType: RxType,
+                                      private val isWrapped: Boolean,
                                       private val annotationOperation: Operation?,
                                       private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
@@ -180,7 +179,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         }
 
         val interceptor = dejaVuFactory.create(
-                rxType,
+                isWrapped,
                 operation,
                 requestMetadata
         )

@@ -21,23 +21,15 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors
-
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Wrappable
-import io.reactivex.Observable
-import io.reactivex.Single
+package dev.pthomain.android.dejavu.interceptors.cache.metadata
 
 /**
- * Represents a RxJava type
+ * Contains information about how long the call took to execute at different stages of the caching process.
+ *
+ * @param disk time taken to retrieve the data from the local cache
+ * @param network time taken to retrieve the data from the network
+ * @param total total time for this call, including disk, network and processing time.
  */
-enum class RxType(val rxClass: Class<*>) {
-    OBSERVABLE(Observable::class.java),
-    SINGLE(Single::class.java),
-    WRAPPABLE(Wrappable::class.java);
-
-    /**
-     * @return a String representation of the typed Rx object
-     */
-    fun getTypedName(responseClass: Class<*>) =
-            "${rxClass.simpleName}<${responseClass.simpleName}>"
-}
+data class CallDuration(val disk: Int,
+                        val network: Int,
+                        val total: Int)

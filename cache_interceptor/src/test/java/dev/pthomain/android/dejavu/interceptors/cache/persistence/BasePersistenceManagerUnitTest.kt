@@ -27,12 +27,13 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CacheMode.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -214,7 +215,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                     instructionToken(),
                     Glitch::class.java,
                     null,
-                    CacheMetadata.Duration(0, 0, 0)
+                    CallDuration(0, 0, 0)
             )
             whenever(mockPreviousResponse.metadata).thenReturn(previousMetadata)
         }
@@ -384,7 +385,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
         val target = spy(setUp(instructionToken))
 
-        val isDataStale = isStale || operation.priority.mode == REFRESH || operation.type == INVALIDATE
+        val isDataStale = isStale || operation.priority.network == REFRESH || operation.type == INVALIDATE
         val cacheDateTimeStamp = 98765L
 
         val expiryDateTime = ifElse(
@@ -455,7 +456,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
             val actualMetadata = cachedResponse!!.metadata
 
             assertEqualsWithContext(
-                    CacheMetadata.Duration(0, 0, 0),
+                    CallDuration(0, 0, 0),
                     actualMetadata.callDuration,
                     "Metadata call duration didn't match",
                     context

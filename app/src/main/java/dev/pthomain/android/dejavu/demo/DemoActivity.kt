@@ -41,8 +41,8 @@ import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.DEFAULT
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.CachePreference.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
 import io.reactivex.plugins.RxJavaPlugins
 
 

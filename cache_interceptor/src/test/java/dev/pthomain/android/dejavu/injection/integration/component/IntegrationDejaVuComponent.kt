@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
-import dev.pthomain.android.dejavu.interceptors.RxType
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
@@ -74,7 +73,7 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun cacheManager(): CacheManager<Glitch>
     fun errorInterceptorFactory(): Function1<CacheToken, ErrorInterceptor<Glitch>>
     fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>
-    fun responseInterceptorFactory(): Function3<CacheToken, RxType, Long, ResponseInterceptor<Glitch>>
+    fun responseInterceptorFactory(): Function3<CacheToken, Boolean, Long, ResponseInterceptor<Glitch>>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
     fun cacheMetadataSubject(): PublishSubject<CacheMetadata<Glitch>>
     fun annotationProcessor(): AnnotationProcessor<Glitch>

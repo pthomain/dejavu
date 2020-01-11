@@ -23,16 +23,14 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.RxType
-import dev.pthomain.android.dejavu.interceptors.RxType.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Wrappable
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import io.reactivex.Observable
@@ -59,7 +57,7 @@ import java.util.*
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
                                                          private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
-                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, String, Class<*>, RxType, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
+                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, String, Class<*>, Boolean, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val serialiser: OperationSerialiser,
@@ -83,35 +81,34 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
     override fun get(returnType: Type,
                      annotations: Array<Annotation>,
                      retrofit: Retrofit): CallAdapter<*, *> {
-        val rxType = when (getRawType(returnType)) {
-            Single::class.java -> SINGLE
-            Observable::class.java -> OBSERVABLE
-            Wrappable::class.java -> WRAPPABLE
-            else -> null
-        }
+        val rawType = getRawType(returnType)
 
-        val (isAdaptable, responseClass) = if (returnType is ParameterizedType)
-            true to getRawType(getParameterUpperBound(0, returnType))
-        else false to Any::class.java
-
-        val interpretedReturnType = if (rxType == WRAPPABLE) unwrap(responseClass)
-        else returnType
-
-        @Suppress("UNCHECKED_CAST")
-        val defaultCallAdapter = rxJava2CallAdapterFactory.get(
-                interpretedReturnType,
-                annotations,
-                retrofit
-        ) as CallAdapter<Any, Any>
-
-        return if (!isAdaptable) {
+        return if (rawType == null) {
             logger.d(
                     this,
                     "Call with return type $returnType is not supported by DejaVu, using default RxJava adapter"
             )
-            defaultCallAdapter
+            getDefaultCallAdapter(
+                    returnType,
+                    annotations,
+                    retrofit
+            )
         } else {
-            val methodDescription = "call returning " + rxType!!.getTypedName(responseClass)
+            val (unwrappedResponseType, responseClass) = unwrap(
+                    getFirstParameterUpperBound(returnType)!!
+            )
+
+            val defaultCallAdapter = getDefaultCallAdapter(
+                    unwrappedResponseType,
+                    annotations,
+                    retrofit
+            )
+
+            val methodDescription = "call returning " + getTypedName(
+                    responseClass,
+                    unwrappedResponseType != responseClass,
+                    rawType == Single::class.java
+            )
 
             logger.d(
                     this,
@@ -121,11 +118,14 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
             val operation = try {
                 annotationProcessor.process(
                         annotations,
-                        rxType,
                         responseClass
                 )
             } catch (cacheException: CacheException) {
-                logger.e(this, cacheException, "The annotation on $methodDescription cannot be processed, defaulting to other cache methods if available")
+                logger.e(
+                        this,
+                        cacheException,
+                        "The annotation on $methodDescription cannot be processed, defaulting to other cache methods if available"
+                )
                 return defaultCallAdapter
             }
 
@@ -144,29 +144,57 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                 )
             }
 
+            val isWrapped = responseClass != unwrappedResponseType
+
             innerFactory(
                     dejaVuFactory,
                     methodDescription,
                     responseClass,
-                    rxType,
+                    isWrapped,
                     operation,
                     defaultCallAdapter
             )
         }
     }
 
-    private fun unwrap(responseClass: Class<*>) =
-            newParameterizedType(
-                    Observable::class.java,
-                    newParameterizedType(ResponseWrapper::class.java, responseClass)
+    @Suppress("UNCHECKED_CAST")
+    private fun getDefaultCallAdapter(responseType: Type,
+                                      annotations: Array<Annotation>,
+                                      retrofit: Retrofit) =
+            rxJava2CallAdapterFactory.get(
+                    responseType,
+                    annotations,
+                    retrofit
+            ) as CallAdapter<Any, Any>
+
+    private fun unwrap(responseType: Type) =
+            if (responseType == DejaVuResult::class.java) {
+                val responseClass = getFirstParameterUpperBound(responseType)!!
+
+                val unwrappedType = object : ParameterizedType {
+                    override fun getRawType() = Observable::class.java
+                    override fun getOwnerType() = null
+                    override fun getActualTypeArguments(): Array<Class<out Any>?> {
+                        return arrayOf(responseClass)
+                    }
+                }
+
+                unwrappedType to responseClass
+            } else responseType to responseType as Class<*>
+
+    private fun getFirstParameterUpperBound(returnType: Type) =
+            if (returnType is ParameterizedType)
+                getRawType(getParameterUpperBound(0, returnType))
+            else null
+
+    private fun getTypedName(responseClass: Class<*>,
+                             isWrapped: Boolean,
+                             isSingle: Boolean) =
+            String.format(
+                    ifElse(isSingle, "Single<%s>", "Observable<%s>"),
+                    String.format(
+                            ifElse(isWrapped, "DejaVuResult<%s>", "%s"),
+                            responseClass.simpleName
+                    )
             )
-
-    private fun newParameterizedType(wrappingType: Type,
-                                     type: Type) =
-            object : ParameterizedType {
-                override fun getRawType() = wrappingType
-                override fun getOwnerType() = null
-                override fun getActualTypeArguments() = arrayOf(type)
-            }
-
 }
