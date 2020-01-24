@@ -27,13 +27,13 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
@@ -53,7 +53,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     protected lateinit var mockDateFactory: (Long?) -> Date
     protected lateinit var mockCacheToken: CacheToken
     protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
-    protected lateinit var mockMetadata: CacheMetadata<Glitch>
+    protected lateinit var mockMetadata: ResponseMetadata<Glitch>
 
     protected val mockHash = "mockHash"
     protected val mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
@@ -211,7 +211,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
 
         if (mockPreviousResponse != null) {
-            val previousMetadata = CacheMetadata(
+            val previousMetadata = ResponseMetadata(
                     instructionToken(),
                     Glitch::class.java,
                     null,

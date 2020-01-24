@@ -26,9 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Local
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.StatusToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.DoneException
@@ -57,14 +58,14 @@ import java.util.*
  * @param isWrapped whether or not the response should be wrapped in a CacheResult
  * @param start the time the call started
  */
-internal class ResponseInterceptor<E>(private val logger: Logger,
-                                      private val dateFactory: (Long?) -> Date,
-                                      private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
-                                      private val configuration: DejaVuConfiguration<E>,
-                                      private val metadataSubject: PublishSubject<CacheMetadata<E>>,
-                                      private val instructionToken: CacheToken,
-                                      private val isWrapped: Boolean,
-                                      private val start: Long)
+internal class ResponseInterceptor<E> private constructor(private val logger: Logger,
+                                                          private val dateFactory: (Long?) -> Date,
+                                                          private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
+                                                          private val configuration: DejaVuConfiguration<E>,
+                                                          private val metadataSubject: PublishSubject<HasCacheMetadata<out StatusToken>>,
+                                                          private val instructionToken: CacheToken,
+                                                          private val isWrapped: Boolean,
+                                                          private val start: Long)
     : ObservableTransformer<ResponseWrapper<E>, Any>
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -108,10 +109,10 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         metadataSubject.onNext(metadata)
 
         //TODO check compatibility with Wrappable
-        if (response is CacheMetadata.Holder<*>
+        if (response is ResponseMetadata.Holder<*>
                 && response.metadata.exceptionClass.isAssignableFrom(errorFactory.exceptionClass)) {
             @Suppress("UNCHECKED_CAST") // This is verified by the above check
-            (response as CacheMetadata.Holder<E>).metadata = metadata
+            (response as ResponseMetadata.Holder<E>).metadata = metadata
         }
 
         //FIXME
@@ -127,25 +128,25 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         return when {
             isWrapped -> {
                 if (response == null) {
-                    if (instruction.operation is Operation.Local) {
-                        DejaVuResult.Operation<Any>(
+                    if (instruction.operation is Local) {
+                        Result<Any>(
                                 requestMetadata,
-                                cacheToken,
+                                cacheToken, //TODO convert for operation
                                 metadata.callDuration
                         )
                     } else {
-                        DejaVuResult.Empty<Any>( //TODO check if the response isn't null
+                        Empty<Any>( //TODO check if the response isn't null
                                 EmptyResponseException(metadata.exception!!), //FIXME
                                 requestMetadata,
-                                cacheToken,
+                                cacheToken, //TODO convert
                                 metadata.callDuration
                         )
                     }
                 } else {
-                    DejaVuResult.Response( //TODO check if the response isn't null
+                    Response( //TODO check if the response isn't null
                             response,
                             requestMetadata,
-                            cacheToken,
+                            cacheToken, //TODO convert
                             metadata.callDuration
                     ).observable()
                 } as Observable<Any>
@@ -163,4 +164,25 @@ internal class ResponseInterceptor<E>(private val logger: Logger,
         }
     }
 
+    class Factory<E>(private val configuration: DejaVuConfiguration<E>,
+                     private val logger: Logger,
+                     private val dateFactory: (Long?) -> Date,
+                     private val metadataSubject: PublishSubject<HasCacheMetadata<out StatusToken>>,
+                     private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        fun create(instructionToken: CacheToken,
+                   isWrapped: Boolean,
+                   start: Long) = ResponseInterceptor(
+                logger,
+                dateFactory,
+                emptyResponseWrapperFactory,
+                configuration,
+                metadataSubject,
+                instructionToken,
+                isWrapped,
+                start
+        )
+    }
 }

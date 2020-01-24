@@ -28,9 +28,10 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.toOperation
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter.Method.*
 import io.reactivex.Observable
@@ -49,7 +50,6 @@ import java.lang.reflect.Type
 internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                       private val responseClass: Class<*>,
                                       private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                      private val serialiser: OperationSerialiser,
                                       private val requestBodyConverter: (Request) -> String?,
                                       private val logger: Logger,
                                       private val methodDescription: String,
@@ -114,7 +114,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @param requestMetadata the RequestMetadata for the current call
      * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
      */
-    private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation.Remote? {
+    private fun getPredicateOperation(requestMetadata: RequestMetadata): Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
         return dejaVuConfiguration.cachePredicate(requestMetadata)
     }
@@ -128,7 +128,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         val header = call.request().header(DejaVuHeader) ?: return null
 
         val operation = try {
-            serialiser.deserialise(header)
+            header.toOperation()
         } catch (e: Exception) {
             null
         }

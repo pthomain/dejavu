@@ -28,9 +28,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
@@ -41,7 +42,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.utils.Utils.invalidatesExistingData
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
 
@@ -70,41 +70,36 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
      * Both parameters work in conjunction to form an intersection of entries to be cleared.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param operation the Clear operation
+     * @param requestMetadata the request's metadata
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun clearCache(instructionToken: CacheToken) {
-        val instruction = instructionToken.instruction
+    override fun clearCache(operation: Clear,
+                            requestMetadata: ValidRequestMetadata) {
+        val olderEntriesClause = ifElse(
+                operation.clearStaleEntriesOnly,
+                "${EXPIRY_DATE.columnName} < ?",
+                null
+        )
 
-        with(instruction.operation) {
-            if (this is Clear) { //TODO handle Wipe
-                val olderEntriesClause = ifElse(
-                        clearStaleEntriesOnly,
-                        "${EXPIRY_DATE.columnName} < ?",
-                        null
-                )
+        val typeClause = "${CLASS.columnName} = ?"
 
-                val requestMetadata = instruction.requestMetadata
-                val typeClause = "${CLASS.columnName} = ?"
+        val args = arrayListOf<String>().apply {
+            if (operation.clearStaleEntriesOnly) add(dateFactory(null).time.toString())
+            add(requestMetadata.classHash) //TODO requestHash
+        }
 
-                val args = arrayListOf<String>().apply {
-                    if (clearStaleEntriesOnly) add(dateFactory(null).time.toString())
-                    add(requestMetadata.classHash) //TODO requestHash
-                }
-
-                database.delete(
-                        TABLE_DEJA_VU,
-                        arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
-                        args.toArray()
-                ).let { deleted ->
-                    val entryType = requestMetadata.responseClass.simpleName
-                    if (clearStaleEntriesOnly) {
-                        logger.d(this, "Deleted old $entryType entries from cache: $deleted found")
-                    } else {
-                        logger.d(this, "Deleted all existing $entryType entries from cache: $deleted found")
-                    }
-                }
+        database.delete(
+                TABLE_DEJA_VU,
+                arrayOf(olderEntriesClause, typeClause).filterNotNull().joinToString(separator = " AND "),
+                args.toArray()
+        ).let { deleted ->
+            val entryType = requestMetadata.responseClass.simpleName
+            if (operation.clearStaleEntriesOnly) {
+                logger.d(this, "Deleted old $entryType entries from cache: $deleted found")
+            } else {
+                logger.d(this, "Deleted all existing $entryType entries from cache: $deleted found")
             }
         }
     }
@@ -112,15 +107,13 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
     /**
      * Returns the cached data as a CacheDataHolder object.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
      *
      * @return the cached data as a CacheDataHolder
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed): CacheDataHolder.Complete? {
+    override fun getCacheDataHolder(requestMetadata: HashedRequestMetadata): CacheDataHolder? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
@@ -140,7 +133,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         database.query(query)
                 .useAndLogError(
                         { cursor ->
-                            val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
+                            val simpleName = requestMetadata.responseClass.simpleName
                             if (cursor.count != 0 && cursor.moveToNext()) {
                                 logger.d(this, "Found a cached $simpleName")
 
@@ -172,49 +165,57 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * for entries past their expiry date.
      *
-     * @param instructionToken the INVALIDATE instruction token for the desired entry.
-     * @param key the key of the entry to invalidate
+     * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
-     * @throws SerialisationException in case the deserialisation failed
      */
-    @Throws(SerialisationException::class)
-    override fun invalidateIfNeeded(instructionToken: CacheToken) =
-            if (instructionToken.instruction.operation.invalidatesExistingData()) {
-                val map = mapOf(EXPIRY_DATE.columnName to 0)
-                val selection = "${TOKEN.columnName} = ?"
-                val requestMetadata = instructionToken.instruction.requestMetadata
-                val selectionArgs = arrayOf(requestMetadata.requestHash)
+    override fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean {
+        return false //TODO
+    }
 
-                database.update(
-                        TABLE_DEJA_VU,
-                        CONFLICT_REPLACE,
-                        contentValuesFactory(map),
-                        selection,
-                        selectionArgs
-                ).let {
-                    val foundIt = it > 0
-                    logger.d(
-                            this,
-                            "Invalidating cache for ${requestMetadata.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
-                    )
-                    foundIt
-                }
-            } else false
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
+     *
+     * @param operation the request's Invalidate operation
+     * @param requestMetadata the request's metadata
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
+    override fun forceInvalidation(operation: Invalidate,
+                                   requestMetadata: ValidRequestMetadata): Boolean {
+        val map = mapOf(EXPIRY_DATE.columnName to 0)
+        val selection = "${TOKEN.columnName} = ?"
+        val selectionArgs = arrayOf(requestMetadata.requestHash) //TODO classHash
+
+        val results = database.update(
+                TABLE_DEJA_VU,
+                CONFLICT_REPLACE,
+                contentValuesFactory(map),
+                selection,
+                selectionArgs
+        )
+
+        val foundIt = results > 0
+
+        logger.d(
+                this,
+                "Invalidating cache for ${requestMetadata.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
+        )
+
+        return foundIt
+    }
 
     /**
      * Caches a given response.
      *
      * @param responseWrapper the response to cache
-     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
-     *
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper:ResponseWrapper<E>,
-                       previousCachedResponse:ResponseWrapper<E>?) {
-        serialise(responseWrapper, previousCachedResponse).let {
+    override fun cache(responseWrapper: ResponseWrapper<E>) {
+        serialise(responseWrapper).let {
             with(it) {
                 val values = HashMap<String, Any>()
                 values[TOKEN.columnName] = requestMetadata.requestHash

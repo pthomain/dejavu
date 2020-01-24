@@ -25,13 +25,13 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
@@ -47,9 +47,9 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     compress = compress
             )).map { (it as DejaVuResult.Response).response }
 
-    override fun getOfflineSingle(preference: FreshnessPriority) =
+    override fun getOfflineSingle(freshness: FreshnessPriority) =
             executeOperation(
-                    Cache(priority = CachePriority.with(OFFLINE, preference))
+                    Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
             ).map { (it as DejaVuResult.Response).response }.firstOrError()
 
     override fun getClearEntriesCompletable() =

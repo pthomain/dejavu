@@ -21,8 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.instruction
+package dev.pthomain.android.dejavu.interceptors.cache.instruction.operation
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 
@@ -41,7 +43,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
  * metadata field. It can be used to differentiate STALE data from the FRESH one and for the purpose
  * of filtering for instance.
  * @see CacheStatus.isFinal
- * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata.Holder
+ * @see dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata.Holder
  *
  * - FRESH preferred (preference = FRESH_PREFERRED): this priority does not
  * emit STALE data from the cache initially. It will instead attempt a network call and return the
@@ -60,12 +62,12 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
  *
  * @param network the mode in which this priority operates
  * @param freshness the preference regarding the handling of STALE data
- * @param returnedStatuses the possible statuses of the response(s) emitted by the cache as a result of this priority
+ * @param returnStatuses the possible statuses of the response(s) emitted by the cache as a result of this priority
  */
 enum class CachePriority(
         val network: NetworkPriority,
         val freshness: FreshnessPriority,
-        vararg val returnedStatuses: CacheStatus
+        vararg val returnStatuses: CacheStatus
 ) {
 
     /**
@@ -88,8 +90,8 @@ enum class CachePriority(
      * during a loading UI state for instance.
      */
     DEFAULT(
-            NetworkPriority.CACHE,
-            FreshnessPriority.DEFAULT,
+            LOCAL_FIRST,
+            ANY,
             FRESH,
             STALE,
             NETWORK,
@@ -117,7 +119,7 @@ enum class CachePriority(
      * if it could not be refreshed.
      */
     FRESH_PREFERRED(
-            NetworkPriority.CACHE,
+            LOCAL_FIRST,
             FreshnessPriority.FRESH_PREFERRED,
             FRESH,
             NETWORK,
@@ -144,7 +146,7 @@ enum class CachePriority(
      * as a result of a failed network call.
      */
     FRESH_ONLY(
-            NetworkPriority.CACHE,
+            LOCAL_FIRST,
             FreshnessPriority.FRESH_ONLY,
             FRESH,
             NETWORK,
@@ -172,9 +174,9 @@ enum class CachePriority(
      * data is permanently marked as STALE. This STALE cached data will still be returned to
      * be displayed on a loading UI state for instance.
      */
-    REFRESH(
-            NetworkPriority.REFRESH,
-            FreshnessPriority.DEFAULT,
+    INVALIDATE(
+            NETWORK_FIRST,
+            ANY,
             STALE,
             NETWORK,
             REFRESHED,
@@ -201,8 +203,8 @@ enum class CachePriority(
      * data is permanently marked as STALE. This STALE cached data will still be returned to
      * be displayed on a loading UI state for instance.
      */
-    REFRESH_FRESH_PREFERRED(
-            NetworkPriority.REFRESH,
+    INVALIDATE_FRESH_PREFERRED(
+            NETWORK_FIRST,
             FreshnessPriority.FRESH_PREFERRED,
             NETWORK,
             REFRESHED,
@@ -228,8 +230,8 @@ enum class CachePriority(
      * data is permanently marked as STALE. No STALE data will ever be returned either initially
      * from the cache or as the result of a failed network call.
      */
-    REFRESH_FRESH_ONLY(
-            NetworkPriority.REFRESH,
+    INVALIDATE_FRESH_ONLY(
+            NETWORK_FIRST,
             FreshnessPriority.FRESH_ONLY,
             NETWORK,
             REFRESHED,
@@ -248,8 +250,8 @@ enum class CachePriority(
      * This priority returns cached data as is without ever using the network.
      */
     OFFLINE(
-            NetworkPriority.OFFLINE,
-            FreshnessPriority.DEFAULT,
+            LOCAL_ONLY,
+            ANY,
             FRESH,
             STALE,
             EMPTY
@@ -266,7 +268,7 @@ enum class CachePriority(
      * This priority returns only FRESH cached data without ever using the network.
      */
     OFFLINE_FRESH_ONLY(
-            NetworkPriority.OFFLINE,
+            LOCAL_ONLY,
             FreshnessPriority.FRESH_ONLY,
             FRESH,
             EMPTY
@@ -277,38 +279,41 @@ enum class CachePriority(
      * cache data and as to whether a network call should be attempted (regardless of the device's
      * network availability).
      *
-     * - CACHE is the default behaviour and checks the current state of the cached data to determine
-     * whether it should be automatically refreshed or not.
+     * - LOCAL_FIRST is the default behaviour and checks the current state of the cached data to determine
+     * whether it should be automatically refreshed or not. If the data is still FRESH, it is returned
+     * and no call to the network is made. Otherwise, a network is made to refresh it.
      *
-     * - REFRESH disregards the current state of the cached data and permanently invalidates it, which
-     * means a network call will always be attempted, even if the cached data was considered FRESH
-     * before the call was made.
+     * - NETWORK_FIRST permanently invalidates the local data (if present) and goes straight to network.
+     * If the call succeeds, then the network data updates the local one and restores the default
+     * expiry behaviour for subsequent calls. This mode is the only one that has a side effect, that
+     * is to permanently set the local data to STALE (until successfully refreshed).
      *
-     * - OFFLINE will always return cached data without ever attempting to refresh it. This is
+     * - LOCAL_ONLY will always return cached data without ever attempting to refresh it. This is
      * completely independent from the device's network availability and is not necessarily
-     * the mode that should be used when the device as no connectivity (any of those modes can
-     * handle the network being unavailable). OFFLINE specifically instructs the cache never to call
-     * the network even if the data is STALE and the network is available.
+     * the mode that should be used when the device has no connectivity (any of those modes can
+     * handle the network being unavailable). LOCAL_ONLY specifically instructs the cache never
+     * to call the network even if the data is STALE and the network is available.
      *
      * @param usesNetwork whether or not the cache should attempt to fetch data from the network
      * @param invalidatesLocalData whether or not cached data should be permanently marked as STALE, regardless of its presence or existing status
      */
     enum class NetworkPriority(val usesNetwork: Boolean,
                                val invalidatesLocalData: Boolean) {
-        CACHE(true, false),
-        REFRESH(true, true),
-        OFFLINE(false, false);
+        LOCAL_FIRST(true, false),
+        NETWORK_FIRST(true, true),
+        LOCAL_ONLY(false, false);
 
-        fun isCache() = this == CACHE
-        fun isRefresh() = this == REFRESH
-        fun isOffline() = this == OFFLINE
+        fun isLocalFirst() = this == LOCAL_FIRST
+        fun isNetworkFirst() = this == NETWORK_FIRST
+        fun isLocalOnly() = this == LOCAL_ONLY
     }
 
     /**
      * Indicates how the cache should handle STALE data.
      *
-     * - DEFAULT will return STALE cached data initially and then attempt to refresh it (if the
-     * CacheMode is not OFFLINE)
+     * - ANY will return STALE cached data initially and then attempt to refresh it (if the
+     * CacheMode is not OFFLINE) and emit FRESH network data (if the call succeeds) or re-emit
+     * the local STALE data with a COULD_NOT_REFRESH CacheToken status (if the call fails).
      *
      * - FRESH_PREFERRED will never emit the STALE cached data initially but will emit it as the
      * result of a failure of the refresh network call (with the status COULD_NOT_REFRESH).
@@ -327,11 +332,11 @@ enum class CachePriority(
     enum class FreshnessPriority(val emitsCachedStale: Boolean,
                                  val emitsNetworkStale: Boolean,
                                  val hasSingleResponse: Boolean) {
-        DEFAULT(true, true, false),
+        ANY(true, true, false),
         FRESH_PREFERRED(false, true, true),
         FRESH_ONLY(false, false, true);
 
-        fun isDefault() = this == DEFAULT
+        fun isAny() = this == ANY
         fun isFreshOnly() = this == FRESH_ONLY
         fun isFreshPreferred() = this == FRESH_PREFERRED
     }
@@ -341,26 +346,26 @@ enum class CachePriority(
         /**
          * Commodity factory
          *
-         * @param networkPriority the desired cache mode
-         * @param preference the desired cache preference
+         * @param networkPriority the desired network priority
+         * @param freshness the desired freshness priority
          * @return the corresponding cache priority
          */
         fun with(networkPriority: NetworkPriority,
-                 preference: FreshnessPriority) =
+                 freshness: FreshnessPriority) =
                 when (networkPriority) {
-                    NetworkPriority.CACHE -> when (preference) {
-                        FreshnessPriority.DEFAULT -> DEFAULT
+                    LOCAL_FIRST -> when (freshness) {
+                        ANY -> DEFAULT
                         FreshnessPriority.FRESH_PREFERRED -> FRESH_PREFERRED
                         FreshnessPriority.FRESH_ONLY -> FRESH_ONLY
                     }
 
-                    NetworkPriority.REFRESH -> when (preference) {
-                        FreshnessPriority.DEFAULT -> REFRESH
-                        FreshnessPriority.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
-                        FreshnessPriority.FRESH_ONLY -> REFRESH_FRESH_ONLY
+                    NETWORK_FIRST -> when (freshness) {
+                        ANY -> INVALIDATE
+                        FreshnessPriority.FRESH_PREFERRED -> INVALIDATE_FRESH_PREFERRED
+                        FreshnessPriority.FRESH_ONLY -> INVALIDATE_FRESH_ONLY
                     }
 
-                    NetworkPriority.OFFLINE -> when (preference) {
+                    LOCAL_ONLY -> when (freshness) {
                         FreshnessPriority.FRESH_ONLY -> OFFLINE_FRESH_ONLY
                         else -> OFFLINE
                     }

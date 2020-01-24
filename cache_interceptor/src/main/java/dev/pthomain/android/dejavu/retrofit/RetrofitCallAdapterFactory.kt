@@ -27,8 +27,8 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.OperationSerialiser
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -50,7 +50,6 @@ import java.util.*
  * @param rxJava2CallAdapterFactory the default RxJava call adapter factory
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
  * @param dejaVuFactory the DejaVuInterceptor factory
- * @param serialiser an OperationSerialiser instance
  * @param requestBodyConverter a factory converting a Request to String
  * @param annotationProcessor the Retrofit annotation processor
  * @param logger the logger
@@ -60,7 +59,6 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                                                          private val innerFactory: (DejaVuInterceptor.Factory<E>, String, Class<*>, Boolean, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                                         private val serialiser: OperationSerialiser,
                                                          private val requestBodyConverter: (Request) -> String?,
                                                          private val annotationProcessor: AnnotationProcessor<E>,
                                                          private val logger: Logger)

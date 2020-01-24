@@ -26,6 +26,7 @@ package dev.pthomain.android.dejavu.injection
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.StatusToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.HasCacheMetadata
@@ -40,7 +41,7 @@ interface DejaVuComponent<E>
     fun dejaVuInterceptorFactory(): DejaVuInterceptor.Factory<E>
     fun headerInterceptor(): HeaderInterceptor
     fun retrofitCallAdapterFactory(): RetrofitCallAdapterFactory<E>
-    fun cacheResultObservable(): Observable<HasCacheMetadata>
+    fun cacheResultObservable(): Observable<HasCacheMetadata<out StatusToken>>
     fun statisticsCompiler(): StatisticsCompiler
 
 }

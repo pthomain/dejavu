@@ -24,11 +24,13 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.rx.single
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -57,24 +59,34 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * Handles the CLEAR operation
      *
      * @param instructionToken the original request's instruction token
+     * @param requestMetadata the request's metadata
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun clearCache(instructionToken: CacheToken) =
+    fun clearCache(instructionToken: CacheToken,
+                   requestMetadata: ValidRequestMetadata) =
             emptyResponseObservable(instructionToken) {
-                persistenceManager.clearCache(instructionToken)
+                persistenceManager.clearCache(
+                        instructionToken.instruction.operation as Clear,
+                        requestMetadata
+                )
             }
 
     /**
      * Handles the INVALIDATE operation
      *
      * @param instructionToken the original request's instruction token
+     * @param requestMetadata the request's metadata
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun invalidate(instructionToken: CacheToken) =
+    fun invalidate(instructionToken: CacheToken,
+                   requestMetadata: ValidRequestMetadata) =
             emptyResponseObservable(instructionToken) {
-                persistenceManager.invalidate(instructionToken)
+                persistenceManager.forceInvalidation(
+                        instructionToken.instruction.operation as Invalidate,
+                        requestMetadata
+                )
             }
 
     /**
@@ -86,9 +98,13 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
     private fun emptyResponseObservable(instructionToken: CacheToken,
+                                        fetchDate: Date = dateFactory(null),
                                         action: () -> Unit = {}) =
-            Observable.fromCallable(action::invoke).flatMapSingle {
-                emptyResponseWrapperFactory.create(instructionToken).single()
+            Observable.fromCallable(action::invoke).map {
+                emptyResponseWrapperFactory.create(
+                        instructionToken,
+                        fetchDate
+                )
             }!!
 
     /**
@@ -102,7 +118,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
     fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
-                          instructionToken: CacheToken,
+                          instructionToken: RemoteToken,
                           start: Long) = Observable.defer<ResponseWrapper<E>> {
         val cacheOperation = instructionToken.instruction.operation
         require(cacheOperation is Cache) { "Wrong cache operation: $cacheOperation" }
@@ -112,7 +128,10 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
         val simpleName = instruction.requestMetadata.responseClass.simpleName
 
         logger.d(this, "Checking for cached $simpleName")
-        val cachedResponse = persistenceManager.getCachedResponse(instructionToken)
+        val cachedResponse = persistenceManager.getCachedResponse(
+                instructionToken,
+                instruction.requestMetadata
+        )
 
         if (cachedResponse != null) {
             logger.d(
@@ -123,9 +142,9 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
 
         val diskDuration = (dateFactory(null).time - start).toInt()
 
-        if (mode == OFFLINE) {
+        if (mode.isLocalOnly()) {
             if (cachedResponse == null)
-                emptyResponseObservable(instructionToken)
+                emptyResponseObservable(instructionToken, dateFactory(start))
             else
                 Observable.just(cachedResponse)
         } else
@@ -198,10 +217,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                             } else {
                                 logger.d(this, "Finished fetching $simpleName, now caching")
                                 try {
-                                    persistenceManager.cache(
-                                            wrapper,
-                                            previousCachedResponse
-                                    )
+                                    persistenceManager.cache(wrapper)
                                 } catch (e: Exception) {
                                     return@map cacheMetadataManager.setSerialisationFailedMetadata(
                                             wrapper,

@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -101,17 +101,18 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * then recursively applies the list of decorators on this array, in the reverse order used
      * in the initial serialisation step.
      *
-     * @param instructionToken the request's instruction token associated with the payload being deserialised
+     * @param instructionToken the request's instruction token
      * @param metadata the overall metadata associated with the current deserialisation
      * @param data the payload being deserialised
      * @return the deserialised response wrapped in a ResponseWrapper
      * @throws SerialisationException in case the deserialisation fails
      */
     @Throws(SerialisationException::class)
-    fun deserialise(instructionToken: CacheToken,
+    fun deserialise(instructionToken: RemoteToken,
                     data: ByteArray,
-                    metadata: SerialisationDecorationMetadata):ResponseWrapper<E> {
-        val responseClass = instructionToken.instruction.requestMetadata.responseClass
+                    metadata: SerialisationDecorationMetadata): ResponseWrapper<E> {
+        val requestMetadata = instructionToken.instruction.requestMetadata
+        val responseClass = requestMetadata.responseClass
         var deserialised = data
 
         reversedDecoratorList.forEach {

@@ -27,9 +27,9 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -62,7 +62,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
     private lateinit var mockCacheInterceptor: CacheInterceptor<Glitch>
     private lateinit var mockResponseInterceptor: ResponseInterceptor<Glitch>
-    private lateinit var mockInstructionToken: CacheToken
+    private lateinit var mockCacheToken: CacheToken
     private lateinit var mockUpstreamObservable: Observable<Any>
     private lateinit var mockNetworkObservable: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<Glitch>>

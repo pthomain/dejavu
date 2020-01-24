@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
 

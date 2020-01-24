@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -70,7 +70,7 @@ internal class EncryptionSerialisationDecorator<E>(private val encryptionManager
      * @throws SerialisationException in case this decryption step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateDeserialisation(instructionToken: CacheToken,
+    override fun decorateDeserialisation(instructionToken: RemoteToken,
                                          metadata: SerialisationDecorationMetadata,
                                          payload: ByteArray) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {

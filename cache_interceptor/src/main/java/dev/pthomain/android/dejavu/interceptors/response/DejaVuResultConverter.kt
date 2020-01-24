@@ -23,7 +23,8 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken.CacheToken.StatusToken
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 //TODO JavaDoc
@@ -31,7 +32,7 @@ internal class CacheMetadataConverter<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
-    fun from(metadata: CacheMetadata<E>): HasCacheMetadata = object : HasCacheMetadata {
+    fun from(metadata: ResponseMetadata<E>): HasCacheMetadata<out StatusToken> = object : HasCacheMetadata<StatusToken> {
         override val requestMetadata = metadata.cacheToken.instruction.requestMetadata
         override val cacheToken = metadata.cacheToken
         override val callDuration = metadata.callDuration

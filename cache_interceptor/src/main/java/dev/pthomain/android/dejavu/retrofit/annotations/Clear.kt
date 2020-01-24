@@ -28,15 +28,11 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 
 /**
  * Retrofit annotation for calls made with an associated CLEAR directive.
- * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.Clear
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.Clear
  *
  * @param clearStaleEntriesOnly whether or not to clear only the stale entries
- * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to invalidate
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Clear(
-        val clearStaleEntriesOnly: Boolean = false,
-        val useRequestParameters: Boolean = false
-)
+annotation class Clear(val clearStaleEntriesOnly: Boolean = false)
 

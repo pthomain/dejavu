@@ -25,9 +25,9 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Companion.INVALID_HASH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.INVALID_HASH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Complete

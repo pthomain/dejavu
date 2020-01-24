@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE

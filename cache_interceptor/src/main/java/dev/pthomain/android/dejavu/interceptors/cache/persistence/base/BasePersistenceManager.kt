@@ -24,11 +24,12 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
@@ -58,49 +59,23 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
     protected val logger = configuration.logger
 
     /**
-     * Indicates whether or not the entry should be compressed or encrypted based primarily
-     * on the settings of the previous cached entry if available. If there was no previous entry,
-     * then the cache settings are defined by the operation or, if undefined in the operation,
-     * by the values defined globally in DejaVuConfiguration.
-     *
-     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
-     * @param cacheOperation the cache operation for the entry being saved
-     *
-     * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
-     */
-    final override fun shouldEncryptOrCompress(previousCachedResponse:ResponseWrapper<E>?,
-                                               cacheOperation: Cache) =
-            previousCachedResponse?.metadata?.cacheToken?.let {
-                SerialisationDecorationMetadata(
-                        it.isCompressed,
-                        it.isEncrypted
-                )
-            } ?: SerialisationDecorationMetadata(
-                    cacheOperation.compress,
-                    cacheOperation.encrypt
-            )
-
-    /**
      * Serialises the response and generates all the associated metadata for caching.
      *
      * @param response the response to cache.
-     * @param previousCachedResponse the previously cached response, if available, to determine continued values such as previous encryption etc.
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response: ResponseWrapper<E>,
-                            previousCachedResponse: ResponseWrapper<E>?): CacheDataHolder.Complete {
+    protected fun serialise(response: ResponseWrapper<E>): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Cache
         val simpleName = instruction.requestMetadata.responseClass.simpleName
 
-        logger.d(this, "Caching $simpleName")
+        val metadata = with(operation) {
+            SerialisationDecorationMetadata(compress, encrypt)
+        }
 
-        val metadata = shouldEncryptOrCompress(
-                previousCachedResponse,
-                operation
-        )
+        logger.d(this, "Caching $simpleName")
 
         val serialised = serialisationManager.serialise(
                 response,
@@ -122,22 +97,22 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
     /**
      * Returns a cached entry if available
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param instructionToken the request's instruction token
      *
      * @return a cached entry if available, or null otherwise
+     * @throws SerialisationException in case the deserialisation failed
      */
-    final override fun getCachedResponse(instructionToken: CacheToken):ResponseWrapper<E>? {
-        val instruction = instructionToken.instruction
-        val requestMetadata = instruction.requestMetadata
+    final override fun getCachedResponse(instructionToken: RemoteToken): ResponseWrapper<E>? {
+        val requestMetadata = instructionToken.instruction.requestMetadata
 
         logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
 
-        invalidateIfNeeded(instructionToken)
-
-        val serialised = getCacheDataHolder(
-                instructionToken,
+        invalidateIfNeeded(
+                instructionToken.instruction.operation as? Cache,
                 requestMetadata
         )
+
+        val serialised = getCacheDataHolder(requestMetadata)
 
         return with(serialised) {
             if (this == null) null
@@ -155,18 +130,16 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
     /**
      * Returns the cached data as a CacheDataHolder object.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
      *
      * @return the cached data as a CacheDataHolder
      */
-    protected abstract fun getCacheDataHolder(instructionToken: CacheToken,
-                                              requestMetadata: RequestMetadata.Hashed): CacheDataHolder?
+    protected abstract fun getCacheDataHolder(requestMetadata: HashedRequestMetadata): CacheDataHolder?
 
     /**
      * Deserialises the cached data
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param instructionToken the request's instruction token
      * @param cacheDate the Date at which the data was cached
      * @param expiryDate the Date at which the data would become STALE
      * @param isCompressed whether or not the cached data was saved compressed
@@ -175,18 +148,20 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
      */
-    private fun deserialise(instructionToken: CacheToken,
+    private fun deserialise(instructionToken: RemoteToken,
                             cacheDate: Date,
                             expiryDate: Date,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
-                            localData: ByteArray):ResponseWrapper<E>? {
-        val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
+                            localData: ByteArray): ResponseWrapper<E>? {
+        val requestMetadata = instructionToken.instruction.requestMetadata
+        val simpleName = requestMetadata.responseClass.simpleName
 
         return try {
             serialisationManager.deserialise(
                     instructionToken,
                     localData,
+                    //FIXME those values might change for a new call (previous data could have been encrypted but the flags on the new instruction might differ)
                     SerialisationDecorationMetadata(isEncrypted, isCompressed)
             ).let { wrapper ->
                 val formattedDate = dateFormat.format(expiryDate)
@@ -194,10 +169,9 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
 
                 wrapper.apply {
                     metadata = configuration.errorFactory.newMetadata(
-                            instructionToken.copy(
-                                    status = dateFactory.getCacheStatus(expiryDate),
-                                    isCompressed = isCompressed,
-                                    isEncrypted = isEncrypted,
+                            ResponseToken(
+                                    instructionToken.instruction,
+                                    dateFactory.getCacheStatus(expiryDate),
                                     fetchDate = cacheDate, //TODO check this
                                     cacheDate = cacheDate,
                                     expiryDate = expiryDate
@@ -207,30 +181,37 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
             }
         } catch (e: SerialisationException) {
             logger.e(this, "Could not deserialise $simpleName: clearing the cache")
-            with(instructionToken) {
-                clearCache(copy(
-                        instruction = CacheInstruction(
-                                instruction.requestMetadata.copy(responseClass = Any::class.java),
-                                Invalidate()
-                        )
-                ))
-                null
-            }
+            clearCache(
+                    Clear(false),
+                    requestMetadata.copy(responseClass = Any::class.java)
+            )
+            null
         }
     }
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * only if the CachePriority requires it.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param operation the request's operation
+     * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    final override fun invalidate(instructionToken: CacheToken) =
-            with(instructionToken) {
-                invalidateIfNeeded(
-                        copy(instruction = instruction.copy(operation = Invalidate()))
-                )
-            }
+    final override fun invalidateIfNeeded(operation: Cache?,
+                                          requestMetadata: ValidRequestMetadata) =
+            if (operation?.priority?.network?.invalidatesLocalData == true) {
+                invalidateEntriesIfStale(requestMetadata)
+            } else false
+
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * for entries past their expiry date.
+     *
+     * @param requestMetadata the request's metadata
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
+    protected abstract fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean
 
 }

@@ -34,12 +34,12 @@ import android.text.style.StyleSpan
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 
 class InstructionView @JvmOverloads constructor(context: Context,

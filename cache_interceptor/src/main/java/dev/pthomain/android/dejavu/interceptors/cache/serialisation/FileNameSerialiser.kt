@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 
@@ -93,7 +93,7 @@ internal class FileNameSerialiser {
      * @throws SerialisationException if the given file name is invalid
      */
     @Throws(SerialisationException::class)
-    fun deserialise(requestMetadata: RequestMetadata.Hashed,
+    fun deserialise(requestMetadata: HashedRequestMetadata,
                     fileName: String) =
             with(deserialise(fileName)) {
                 CacheDataHolder.Complete(

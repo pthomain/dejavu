@@ -26,8 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Hashed
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Plain
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.InvalidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 
@@ -48,7 +50,7 @@ internal class Hasher(private val logger: Logger,
      * @param requestMetadata the plain metadata
      * @return the hashed metadata or null if the hashing of the URL or class name failed.
      */
-    fun hash(requestMetadata: Plain): Hashed {
+    fun hash(requestMetadata: PlainRequestMetadata): HashedRequestMetadata {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 
@@ -67,14 +69,15 @@ internal class Hasher(private val logger: Logger,
         }
 
         return if (urlHash == null || classHash == null)
-            Hashed.Invalid(requestMetadata.responseClass)
-        else Hashed.Valid(
-                requestMetadata.responseClass,
-                requestMetadata.url,
-                requestMetadata.requestBody,
-                urlHash,
-                classHash
-        )
+            InvalidRequestMetadata(requestMetadata.responseClass)
+        else
+            ValidRequestMetadata(
+                    requestMetadata.responseClass,
+                    requestMetadata.url,
+                    requestMetadata.requestBody,
+                    urlHash,
+                    classHash
+            )
     }
 
     /**

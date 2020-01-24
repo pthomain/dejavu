@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 
 /**
  * Default implementation of CacheMetadata.Holder. Have the response extend this class
@@ -36,13 +36,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
  *
  * @see dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
  */
-abstract class Cacheable : HasCacheMetadata {
+abstract class Cacheable : HasCacheMetadata<ResponseToken> {
 
     @Transient
     override lateinit var requestMetadata: RequestMetadata
 
     @Transient
-    override lateinit var cacheToken: CacheToken
+    override lateinit var cacheToken: ResponseToken
 
     @Transient
     override lateinit var callDuration: CallDuration

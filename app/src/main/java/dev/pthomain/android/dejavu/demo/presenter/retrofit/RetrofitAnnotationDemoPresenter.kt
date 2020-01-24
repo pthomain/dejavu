@@ -26,10 +26,10 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.NetworkPriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
 
 internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
@@ -39,7 +39,7 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                        encrypt: Boolean,
                                        compress: Boolean) =
             with(cachePriority) {
-                if (network == REFRESH) {
+                if (network == NETWORK_FIRST) {
                     when (freshness) {
                         FRESH_ONLY -> catFactClient().refreshFreshOnly()
                         else -> catFactClient().refresh()

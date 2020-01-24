@@ -27,21 +27,161 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstructi
 import java.util.*
 
 /**
- * Represent the cache settings of the request and response.
+ * Holds the request's instruction.
+ *
+ * @param instruction the original request cache instruction
+ */
+open class CacheToken internal constructor(open val instruction: CacheInstruction)
+
+/**
+ * Holds the request's instruction and the response's status.
  *
  * @param instruction the original request cache instruction
  * @param status the cache status of the response
- * @param isCompressed whether or not the response was cached compressed
- * @param isEncrypted whether or not the response was cached encrypted
- * @param fetchDate the optional date at which the request was made
+ */
+sealed class StatusToken(
+        override val instruction: CacheInstruction,
+        open val status: CacheStatus
+) : CacheToken(instruction)
+
+/**
+ * Holds the request's instruction, the response's status and the
+ * date at which the request was executed.
+ *
+ * This applies to operations of type Remote, i.e. returning data.
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.Remote
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param fetchDate the date at which the request was made
+ */
+sealed class RemoteToken(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        open val fetchDate: Date
+) : StatusToken(instruction, status)
+
+/**
+ * Holds the request's instruction, the response's status and the
+ * date at which the request was executed.
+ *
+ * This applies to operations of type Operation.Local, i.e. operating
+ * solely on the local cache.
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.Local
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param executionDate the date at which the operation was executed
+ */
+sealed class LocalToken(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        open val executionDate: Date
+) : StatusToken(instruction, status)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed and optionally the date
+ * at which the response was cached and if so its expiry date.
+ *
+ * This token is returned for responses returning data.
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param fetchDate the date at which the request was made
  * @param cacheDate the optional date at which the response was cached
  * @param expiryDate the optional date at which the response will expire
  */
-data class CacheToken internal constructor(val instruction: CacheInstruction,
-                                           val status: CacheStatus,
-        //TODO separate the fields below for Operation.Remote only
-                                           val isCompressed: Boolean,
-                                           val isEncrypted: Boolean,
-                                           val fetchDate: Date? = null,
-                                           val cacheDate: Date? = null,
-                                           val expiryDate: Date? = null)
+data class ResponseToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val fetchDate: Date,
+        val cacheDate: Date? = null,
+        val expiryDate: Date? = null
+) : RemoteToken(instruction, status, fetchDate)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed.
+ *
+ * This is returned if the remote operation returned no response
+ * due to filtering defined in the associated CachePriority.
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param fetchDate the date at which the request was made
+ */
+data class NetworkRemoteToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val fetchDate: Date
+) : RemoteToken(instruction, status, fetchDate)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed.
+ *
+ * This is returned if the remote operation returned no response
+ * due to filtering defined in the associated CachePriority.
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param fetchDate the date at which the request was made
+ */
+data class EmptyRemoteToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val fetchDate: Date
+) : RemoteToken(instruction, status, fetchDate)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed.
+ *
+ * This is returned if the remote operation returned no response
+ * due to some error.
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param fetchDate the date at which the request was made
+ */
+data class ErrorRemoteToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val fetchDate: Date
+) : RemoteToken(instruction, status, fetchDate)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed.
+ *
+ * This is returned when a local operation has been successfully executed.
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param executionDate the date at which the operation was executed
+ */
+data class EmptyLocalToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val executionDate: Date
+) : LocalToken(instruction, status, executionDate)
+
+/**
+ * Holds the request's instruction, the response's status, the
+ * date at which the request was executed.
+ *
+ * This is returned when a local operation's execution failed.
+ *
+ * @param instruction the original request cache instruction
+ * @param status the cache status of the response
+ * @param executionDate the date at which the operation was executed
+ */
+data class ErrorLocalToken internal constructor(
+        override val instruction: CacheInstruction,
+        override val status: CacheStatus,
+        override val executionDate: Date
+) : LocalToken(instruction, status, executionDate)
+

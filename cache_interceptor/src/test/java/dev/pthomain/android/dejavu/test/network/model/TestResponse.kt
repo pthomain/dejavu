@@ -23,13 +23,13 @@
 
 package dev.pthomain.android.dejavu.test.network.model
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
-class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
+class TestResponse : ArrayList<User>(), ResponseMetadata.Holder<Glitch> {
 
     @Transient
-    internal override lateinit var metadata: CacheMetadata<Glitch>
+    internal override lateinit var metadata: ResponseMetadata<Glitch>
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

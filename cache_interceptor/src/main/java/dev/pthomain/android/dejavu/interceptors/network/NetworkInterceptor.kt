@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.interceptors.network
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -53,13 +53,13 @@ import kotlin.NoSuchElementException
  * @param operation the original request cache operation
  * @param start the time at which the request started
  */
-internal class NetworkInterceptor<E>(private val context: Context,
-                                     private val logger: Logger,
-                                     private val errorInterceptor: ErrorInterceptor<E>,
-                                     private val dateFactory: (Long?) -> Date,
-                                     private val operation: Cache?,
-                                     private val start: Long)
-    : ObservableTransformer<Any,ResponseWrapper<E>>
+internal class NetworkInterceptor<E> private constructor(private val context: Context,
+                                                         private val logger: Logger,
+                                                         private val errorInterceptor: ErrorInterceptor<E>,
+                                                         private val dateFactory: (Long?) -> Date,
+                                                         private val operation: Cache?,
+                                                         private val start: Long)
+    : ObservableTransformer<Any, ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -83,7 +83,7 @@ internal class NetworkInterceptor<E>(private val context: Context,
                     }
                     .compose(errorInterceptor)
                     .map { it.copy(metadata = it.metadata.copy(callDuration = getCallDuration())) }
-                    .compose { addConnectivityTimeOutIfNeeded(it) }
+                    .compose(this::addConnectivityTimeOutIfNeeded)
 
     /**
      * Adds an optional delay for network availability (if the value is set as more than 0).
@@ -108,4 +108,23 @@ internal class NetworkInterceptor<E>(private val context: Context,
                     (dateFactory(null).time - start).toInt(),
                     0
             )
+
+    class Factory<E>(private val context: Context,
+                     private val logger: Logger,
+                     private val dateFactory: (Long?) -> Date)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        fun create(errorInterceptor: ErrorInterceptor<E>,
+                   operation: Cache?,
+                   start: Long) = NetworkInterceptor(
+                context,
+                logger,
+                errorInterceptor,
+                dateFactory,
+                operation,
+                start
+        )
+    }
+
 }

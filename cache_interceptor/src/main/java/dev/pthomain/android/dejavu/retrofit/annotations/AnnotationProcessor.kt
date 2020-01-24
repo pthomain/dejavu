@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
 
@@ -85,14 +85,14 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
      *
      * @param currentOperation the previous existing annotation if found, to detect duplicates
      * @param responseClass the targeted response class for this call
-     * @param foundOperation the operation type associated with the given annotation
+     * @param foundOperationClass the operation's class associated with the given annotation
      * @param annotation the annotation being processed
      * @return the processed cache operation for the given annotation
      */
     @Throws(CacheException::class)
     private fun getOperation(currentOperation: Operation?,
                              responseClass: Class<*>,
-                             foundOperation: Operation.Type,
+                             foundOperationClass: Class<Operation>,
                              annotation: Annotation): Operation? {
         if (currentOperation != null) {
             CacheException(
@@ -106,7 +106,7 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
 
         return with(annotation) {
             when (this) {
-                is Cache -> Operation.Remote.Cache(
+                is Cache -> Remote.Cache(
                         priority,
                         durationInSeconds,
                         connectivityTimeoutInSeconds,
@@ -122,7 +122,7 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
                         useRequestParameters
                 )
 
-                is DoNotCache -> Operation.Remote.DoNotCache
+                is DoNotCache -> Remote.DoNotCache
 
                 else -> null
             }

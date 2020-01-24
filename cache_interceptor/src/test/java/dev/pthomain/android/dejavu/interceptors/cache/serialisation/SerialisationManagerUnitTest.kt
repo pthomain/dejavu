@@ -29,7 +29,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -190,7 +190,7 @@ class SerialisationManagerUnitTest {
             )).thenReturn(mockResponse)
 
             val instructionToken = instructionToken()
-            val mockCacheMetadata = mock<CacheMetadata<Glitch>>()
+            val mockCacheMetadata = mock<ResponseMetadata<Glitch>>()
 
             whenever(mockErrorFactory.newMetadata(eq(instructionToken)))
                     .thenReturn(mockCacheMetadata)

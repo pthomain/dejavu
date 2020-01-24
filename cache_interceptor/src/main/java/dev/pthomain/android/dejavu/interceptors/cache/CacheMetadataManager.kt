@@ -25,10 +25,13 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ErrorRemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
@@ -74,7 +77,7 @@ internal class CacheMetadataManager<E>(
         val hasError = error != null
         val hasCachedResponse = previousCachedResponse != null
 
-        val previousCacheToken = previousCachedResponse?.metadata?.cacheToken
+        val previousCacheToken = previousCachedResponse?.metadata?.cacheToken as? ResponseToken
         val timeToLiveInSeconds = cacheOperation.durationInSeconds
         val fetchDate = dateFactory(null)
 
@@ -90,11 +93,6 @@ internal class CacheMetadataManager<E>(
                 dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
         )
 
-        val (encryptData, compressData) = persistenceManager.shouldEncryptOrCompress(
-                previousCachedResponse,
-                cacheOperation
-        )
-
         val status = ifElse(
                 hasError,
                 ifElse(
@@ -105,11 +103,9 @@ internal class CacheMetadataManager<E>(
                 ifElse(hasCachedResponse, REFRESHED, NETWORK)
         )
 
-        val cacheToken = CacheToken(
+        val cacheToken = ResponseToken(
                 instructionToken.instruction,
                 status,
-                compressData,
-                encryptData,
                 fetchDate,
                 ifElse(status == EMPTY, null, cacheDate),
                 ifElse(status == EMPTY, null, expiryDate)
@@ -138,10 +134,10 @@ internal class CacheMetadataManager<E>(
         val message = "Could not serialise ${wrapper.responseClass.simpleName}: this response will not be cached."
         logger.e(this, message)
 
-        val failedCacheToken = wrapper.metadata.cacheToken.copy(
-                status = NOT_CACHED,
-                cacheDate = null,
-                expiryDate = null
+        val failedCacheToken = ErrorRemoteToken(
+                wrapper.metadata.cacheToken.instruction,
+                NOT_CACHED,
+                (wrapper.metadata.cacheToken as? RemoteToken)?.fetchDate!! //TODO check this
         )
 
         val serialisationException = errorFactory(

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -68,7 +68,7 @@ class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArra
      * @throws SerialisationException in case this step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateDeserialisation(instructionToken: CacheToken,
+    override fun decorateDeserialisation(instructionToken: RemoteToken,
                                          metadata: SerialisationDecorationMetadata,
                                          payload: ByteArray) =
             byteToStringConverter(payload).let {

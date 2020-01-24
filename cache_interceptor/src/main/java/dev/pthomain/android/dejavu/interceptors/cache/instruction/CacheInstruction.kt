@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 
 /**
  * Contains the cache operation, target response class and call-specific directives.
@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
  * @param operation the cache operation with call-specific directives
  */
 data class CacheInstruction internal constructor(
-        val requestMetadata: RequestMetadata.Hashed.Valid,
-        val operation: Operation
+        val operation: Operation,
+        val requestMetadata: ValidRequestMetadata
 )
 

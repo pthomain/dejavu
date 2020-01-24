@@ -28,11 +28,11 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.DEFAULT
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.DoNotCache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
@@ -61,15 +61,15 @@ class DejaVuConfiguration<E> internal constructor(
         internal val encryptionManager: EncryptionManager,
         internal val useDatabase: Boolean,
         internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-        internal val cachePredicate: (metadata: RequestMetadata) -> Operation.Remote?
+        internal val cachePredicate: (metadata: RequestMetadata) -> Remote?
 ) where E : Exception,
         E : NetworkErrorPredicate {
 
     companion object {
         const val DEFAULT_CACHE_DURATION_IN_SECONDS = 3600 //1h
 
-        sealed class CachePredicate(private val operation: Operation.Remote?)
-            : (RequestMetadata) -> Operation.Remote? {
+        sealed class CachePredicate(private val operation: Remote?)
+            : (RequestMetadata) -> Remote? {
 
             override fun invoke(requestMetadata: RequestMetadata) = operation
 
@@ -104,7 +104,7 @@ class DejaVuConfiguration<E> internal constructor(
         }
         private var persistenceManagerPicker = defaultPersistenceManagerPicker
 
-        private var cachePredicate: (RequestMetadata) -> Operation.Remote? = CachePredicate.Inactive
+        private var cachePredicate: (RequestMetadata) -> Remote? = CachePredicate.Inactive
 
         /**
          * Disables log output (default log output is only enabled in DEBUG mode).
@@ -175,7 +175,7 @@ class DejaVuConfiguration<E> internal constructor(
          *
          * It will be called with the target response class and associated request metadata before
          * the call is made in order to establish the operation to associate with that request.
-         * @see Operation.Remote //TODO explain remote vs local
+         * @see Remote //TODO explain remote vs local
          *
          * Returning null means the cache will instead take into account the directives defined
          * as annotation or header on that request (if present).
@@ -186,7 +186,7 @@ class DejaVuConfiguration<E> internal constructor(
          * Otherwise, you can implement your own predicate to return the appropriate operation base on
          * the given RequestMetadata for the request being made.
          */
-        fun withPredicate(predicate: (metadata: RequestMetadata) -> Operation.Remote?) =
+        fun withPredicate(predicate: (metadata: RequestMetadata) -> Remote?) =
                 apply { this.cachePredicate = predicate }
 
         /**

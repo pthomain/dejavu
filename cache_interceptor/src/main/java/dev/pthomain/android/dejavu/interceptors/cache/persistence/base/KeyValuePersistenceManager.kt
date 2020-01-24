@@ -24,9 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
@@ -37,7 +38,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.MEMORY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.utils.Utils.invalidatesExistingData
 import java.util.*
 
 /**
@@ -70,13 +70,11 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      * Caches a given response.
      *
      * @param responseWrapper the response to cache
-     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper:ResponseWrapper<E>,
-                       previousCachedResponse:ResponseWrapper<E>?) {
-        serialise(responseWrapper, previousCachedResponse).let { holder ->
+    override fun cache(responseWrapper: ResponseWrapper<E>) {
+        serialise(responseWrapper).let { holder ->
 
             findPartialKey(holder.requestMetadata.requestHash)?.let {
                 delete(it)
@@ -90,13 +88,11 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
     /**
      * Returns the cached data as a CacheDataHolder object.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
      * @param requestMetadata the associated request metadata
      *
      * @return the cached data as a CacheDataHolder
      */
-    override fun getCacheDataHolder(instructionToken: CacheToken,
-                                    requestMetadata: RequestMetadata.Hashed) =
+    override fun getCacheDataHolder(requestMetadata: HashedRequestMetadata) =
             findPartialKey(requestMetadata.requestHash)
                     ?.let { get(it) }
 
@@ -104,53 +100,57 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
      * Both parameters work in conjunction to form an intersection of entries to be cleared.
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param requestMetadata the request's metadata
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun clearCache(instructionToken: CacheToken) {
+    override fun clearCache(operation: Clear,
+                            requestMetadata: ValidRequestMetadata) {
         val now = dateFactory(null).time
-        with(instructionToken.instruction) {
-            if (operation !is Clear) throw SerialisationException("Wrong operation type: $operation")
+        values().map { it.key to fileNameSerialiser.deserialise(it.key) }
+                .filter {
+                    val holder = it.second
 
-            values().map { it.key to fileNameSerialiser.deserialise(it.key) }
-                    .filter {
-                        val holder = it.second
+                    val isClearAll = requestMetadata.responseClass == Any::class.java
+                    val isRightType = isClearAll || holder.responseClassHash == requestMetadata.classHash
+                    val isRightRequest = holder.requestHash == requestMetadata.requestHash
+                    val isRightExpiry = !operation.clearStaleEntriesOnly || holder.expiryDate <= now
 
-                        val isClearAll = requestMetadata.responseClass == Any::class.java
-                        val isRightType = isClearAll || holder.responseClassHash == requestMetadata.classHash
-                        val isRightRequest = !operation.useRequestParameters || holder.requestHash == requestMetadata.requestHash
-                        val isRightExpiry = !operation.clearStaleEntriesOnly || holder.expiryDate <= now
-
-                        isRightType && isRightRequest && isRightExpiry
-                    }
-                    .forEach { delete(it.first) }
-        }
+                    isRightType && isRightRequest && isRightExpiry
+                }
+                .forEach { delete(it.first) }
     }
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * if the operation is invalidating.
      *
-     * @param instructionToken the INVALIDATE instruction token for the desired entry.
-     * @param key the key of the entry to invalidate
+     * @param operation the request's operation
+     * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
-     * @throws SerialisationException in case the deserialisation failed
      */
-    @Throws(SerialisationException::class)
-    override fun invalidateIfNeeded(instructionToken: CacheToken): Boolean {
-        val operation = instructionToken.instruction.operation
+    override fun forceInvalidation(operation: Invalidate,
+                                   requestMetadata: ValidRequestMetadata): Boolean {
+        //TODO
+        return false
+    }
 
-        if (operation.invalidatesExistingData()) {
-            val requestMetadata = instructionToken.instruction.requestMetadata
-
-            findPartialKey(requestMetadata.requestHash)?.also { oldName ->
-                fileNameSerialiser.deserialise(requestMetadata, oldName).let {
-                    if (it.expiryDate != 0L) {
-                        val newName = fileNameSerialiser.serialise(it.copy(expiryDate = 0L))
-                        rename(oldName, newName)
-                    }
-                    true
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * for entries past their expiry date.
+     *
+     * @param requestMetadata the request's metadata
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
+    override fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean {
+        findPartialKey(requestMetadata.requestHash)?.also { oldName ->
+            fileNameSerialiser.deserialise(requestMetadata, oldName).let {
+                if (it.expiryDate != 0L) {
+                    val newName = fileNameSerialiser.serialise(it.copy(expiryDate = 0L))
+                    rename(oldName, newName)
+                    return true
                 }
             }
         }

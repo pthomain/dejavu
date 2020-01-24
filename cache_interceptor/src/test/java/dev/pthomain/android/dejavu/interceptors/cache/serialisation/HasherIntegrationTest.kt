@@ -27,7 +27,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 import android.net.Uri
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import org.junit.Test

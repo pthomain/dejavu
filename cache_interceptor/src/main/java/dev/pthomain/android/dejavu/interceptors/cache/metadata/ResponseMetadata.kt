@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.metadata
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
@@ -37,12 +37,10 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-
-//TODO make this internal and use CacheResult externally, this is to avoid exposing internals of response/error classes and to stop merging response and error
-data class CacheMetadata<E>(val cacheToken: CacheToken,
-                            val exceptionClass: Class<E>,
-                            val exception: E? = null,
-                            val callDuration: CallDuration = CallDuration(0, 0, 0))
+data class ResponseMetadata<E> internal constructor(val cacheToken: RemoteToken,
+                                                    val exceptionClass: Class<E>,
+                                                    val exception: E? = null,
+                                                    val callDuration: CallDuration = CallDuration(0, 0, 0))
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -53,31 +51,7 @@ data class CacheMetadata<E>(val cacheToken: CacheToken,
     interface Holder<E>
             where E : Exception,
                   E : NetworkErrorPredicate {
-        var metadata: CacheMetadata<E>
-    }
-
-    override fun toString(): String {
-        return "CacheMetadata(cacheToken=$cacheToken, exception=$exception, callDuration=$callDuration)"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CacheMetadata<*>
-
-        if (cacheToken != other.cacheToken) return false
-        if (exceptionClass != other.exceptionClass) return false
-        if (exception != other.exception) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = cacheToken.hashCode()
-        result = 31 * result + (exception?.hashCode() ?: 0)
-        result = 31 * result + exceptionClass.hashCode()
-        return result
+        var metadata: ResponseMetadata<E>
     }
 
 }

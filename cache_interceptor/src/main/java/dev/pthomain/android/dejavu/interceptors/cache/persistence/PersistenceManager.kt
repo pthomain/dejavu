@@ -24,12 +24,14 @@
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import java.util.*
@@ -38,70 +40,57 @@ interface PersistenceManager<E>
         where E : Exception,
               E : NetworkErrorPredicate {
     /**
-     * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
-     * Both parameters work in conjunction to form an intersection of entries to be cleared.
-     *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     * @throws SerialisationException in case the deserialisation failed
-     */
-    @Throws(SerialisationException::class)
-    fun clearCache(instructionToken: CacheToken)
-
-    /**
      * Returns a cached entry if available
      *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
+     * @param instructionToken the request's instruction token
      *
      * @return a cached entry if available, or null otherwise
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun getCachedResponse(instructionToken: CacheToken):ResponseWrapper<E>?
-
-    /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     */
-    fun invalidate(instructionToken: CacheToken): Boolean
-
-    /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     *
-     * @param instructionToken the instruction CacheToken containing the description of the desired entry.
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     * @throws SerialisationException in case the deserialisation failed
-     */
-    @Throws(SerialisationException::class)
-    fun invalidateIfNeeded(instructionToken: CacheToken): Boolean
+    fun getCachedResponse(instructionToken: RemoteToken): ResponseWrapper<E>?
 
     /**
      * Caches a given response.
      *
      * @param responseWrapper the response to cache
-     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun cache(responseWrapper:ResponseWrapper<E>,
-              previousCachedResponse:ResponseWrapper<E>?)
+    fun cache(responseWrapper: ResponseWrapper<E>)
 
     /**
-     * Indicates whether or not the entry should be compressed or encrypted based primarily
-     * on the settings of the previous cached entry if available. If there was no previous entry,
-     * then the cache settings are defined by the operation or, if undefined in the operation,
-     * by the values defined globally in DejaVuConfiguration.
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
      *
-     * @param previousCachedResponse the previously cached response if available for the purpose of replicating the previous cache settings for the new entry (i.e. compression and encryption)
-     * @param cacheOperation the cache operation for the entry being saved
+     * @param operation the request's Invalidate operation
+     * @param requestMetadata the request's metadata
      *
-     * @return a SerialisationDecorationMetadata indicating in order whether the data was encrypted or compressed
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun shouldEncryptOrCompress(previousCachedResponse:ResponseWrapper<E>?,
-                                cacheOperation: Cache): SerialisationDecorationMetadata
+    fun forceInvalidation(operation: Invalidate,
+                          requestMetadata: ValidRequestMetadata): Boolean
+
+    /**
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
+     * if the CachePriority requires it.
+     *
+     * @param operation the request's operation
+     * @param requestMetadata the request's metadata
+     *
+     * @return a Boolean indicating whether the data marked for invalidation was found or not
+     */
+    fun invalidateIfNeeded(operation: Cache?,
+                           requestMetadata: ValidRequestMetadata): Boolean
+
+    /**
+     * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
+     * Both parameters work in conjunction to form an intersection of entries to be cleared.
+     *
+     * @param operation the Clear operation
+     * @param requestMetadata the request's metadata
+     */
+    fun clearCache(operation: Clear,
+                   requestMetadata: ValidRequestMetadata)
 
     companion object {
         /**

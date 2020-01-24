@@ -41,8 +41,8 @@ import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.DEFAULT
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import io.reactivex.plugins.RxJavaPlugins
 
 
@@ -120,7 +120,7 @@ internal class DemoActivity
 
         connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }
         useSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.useSingle = isChecked }
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.preference = ifElse(isChecked, FRESH_ONLY, DEFAULT) } //TODO FRESH_PREFERRED
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 

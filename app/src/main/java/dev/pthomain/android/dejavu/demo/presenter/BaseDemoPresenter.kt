@@ -37,14 +37,18 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CachePriority.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Type.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_FIRST
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.DoNotCache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.*
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -61,7 +65,7 @@ internal abstract class BaseDemoPresenter protected constructor(
         DemoPresenter {
 
     private var instructionType: Type = CACHE
-    private var networkPriority: NetworkPriority = NetworkPriority.CACHE
+    private var networkPriority: NetworkPriority = LOCAL_FIRST
     private var persistenceType = FILE
 
     final override var connectivityTimeoutOn: Boolean = true
@@ -73,7 +77,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var useSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
-    final override var preference = FreshnessPriority.DEFAULT
+    final override var freshness = ANY
 
     protected val gson by lazy { Gson() }
 
@@ -98,11 +102,11 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = CACHE
-        networkPriority = ifElse(isRefresh, NetworkPriority.REFRESH, NetworkPriority.CACHE)
+        networkPriority = ifElse(isRefresh, NETWORK_FIRST, LOCAL_FIRST)
 
         subscribe(
                 getResponseObservable(
-                        CachePriority.with(networkPriority, preference),
+                        CachePriority.with(networkPriority, freshness),
                         encrypt,
                         compress
                 ).ignoreElements()
@@ -111,8 +115,8 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun offline() {
         instructionType = CACHE
-        networkPriority = NetworkPriority.OFFLINE
-        subscribe(getOfflineSingle(preference).toObservable())
+        networkPriority = NetworkPriority.LOCAL_ONLY
+        subscribe(getOfflineSingle(freshness).toObservable())
     }
 
     final override fun clearEntries() {
@@ -129,7 +133,7 @@ internal abstract class BaseDemoPresenter protected constructor(
             with(dejaVu.configuration) {
                 when (instructionType) {
                     CACHE -> Cache(
-                            priority = getPriority(),
+                            priority = CachePriority.with(networkPriority, freshness),
                             encrypt = encrypt,
                             compress = compress
                     )
@@ -138,25 +142,6 @@ internal abstract class BaseDemoPresenter protected constructor(
                     CLEAR -> Clear()
                 }
             }
-
-    private fun getPriority() = when (networkPriority) {
-        NetworkPriority.CACHE -> when (preference) {
-            FreshnessPriority.DEFAULT -> DEFAULT
-            FreshnessPriority.FRESH_PREFERRED -> FRESH_PREFERRED
-            FreshnessPriority.FRESH_ONLY -> FRESH_ONLY
-        }
-
-        NetworkPriority.REFRESH -> when (preference) {
-            FreshnessPriority.DEFAULT -> REFRESH
-            FreshnessPriority.FRESH_PREFERRED -> REFRESH_FRESH_PREFERRED
-            FreshnessPriority.FRESH_ONLY -> REFRESH_FRESH_ONLY
-        }
-
-        NetworkPriority.OFFLINE -> when (preference) {
-            FreshnessPriority.FRESH_ONLY -> OFFLINE_FRESH_ONLY
-            else -> OFFLINE
-        }
-    }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()

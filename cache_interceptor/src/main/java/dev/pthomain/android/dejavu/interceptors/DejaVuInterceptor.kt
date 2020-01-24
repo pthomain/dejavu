@@ -26,11 +26,10 @@ package dev.pthomain.android.dejavu.interceptors
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Hashed.Valid
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.RequestMetadata.Plain
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -65,15 +64,15 @@ import java.util.*
  */
 class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
                                                 private val operation: Operation,
-                                                private val requestMetadata: Plain,
+                                                private val requestMetadata: PlainRequestMetadata,
                                                 private val configuration: DejaVuConfiguration<E>,
                                                 private val hasher: Hasher,
                                                 private val dateFactory: (Long?) -> Date,
                                                 private val hashingErrorObservableFactory: () -> Observable<Any>,
-                                                private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                                private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
-                                                private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
-                                                private val responseInterceptorFactory: (CacheToken, Boolean, Long) -> ResponseInterceptor<E>)
+                                                private val errorInterceptorFactory: ErrorInterceptor.Factory<E>,
+                                                private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
+                                                private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
+                                                private val responseInterceptorFactory: ResponseInterceptor.Factory<E>)
     : ObservableTransformer<Any, Any>,
         SingleTransformer<Any, Any>
         where E : Exception,
@@ -108,29 +107,22 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
     private fun composeInternal(upstream: Observable<Any>): Observable<Any> {
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
-        return if (hashedRequestMetadata is Valid) {
+        return if (hashedRequestMetadata is ValidRequestMetadata) {
 
             val instruction = CacheInstruction(
-                    hashedRequestMetadata,
-                    operation
+                    operation,
+                    hashedRequestMetadata
             )
 
-            val cacheOperation = instruction.operation as? Cache
-
-            val instructionToken = CacheToken(
-                    instruction,
-                    INSTRUCTION,
-                    cacheOperation?.compress ?: false,
-                    cacheOperation?.encrypt ?: false
-            )
+            val instructionToken = CacheToken(instruction)
 
             val start = dateFactory(null).time
-            val errorInterceptor = errorInterceptorFactory(instructionToken)
+            val errorInterceptor = errorInterceptorFactory.create(instructionToken)
 
             upstream
-                    .compose(networkInterceptorFactory(errorInterceptor, operation as? Cache, start))
-                    .compose(cacheInterceptorFactory(errorInterceptor, instructionToken, start))
-                    .compose(responseInterceptorFactory(instructionToken, isWrapped, start))
+                    .compose(networkInterceptorFactory.create(errorInterceptor, operation as? Cache, start))
+                    .compose(cacheInterceptorFactory.create(errorInterceptor, instructionToken, start))
+                    .compose(responseInterceptorFactory.create(instructionToken, isWrapped, start))
 
         } else hashingErrorObservableFactory().also {
             configuration.logger.e(this, "The request metadata could not be hashed, this request won't be cached: $requestMetadata")
@@ -155,10 +147,10 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
      */
     class Factory<E> internal constructor(private val hasher: Hasher,
                                           private val dateFactory: (Long?) -> Date,
-                                          private val errorInterceptorFactory: (CacheToken) -> ErrorInterceptor<E>,
-                                          private val networkInterceptorFactory: (ErrorInterceptor<E>, Cache?, Long) -> NetworkInterceptor<E>,
-                                          private val cacheInterceptorFactory: (ErrorInterceptor<E>, CacheToken, Long) -> CacheInterceptor<E>,
-                                          private val responseInterceptorFactory: (CacheToken, Boolean, Long) -> ResponseInterceptor<E>,
+                                          private val errorInterceptorFactory: ErrorInterceptor.Factory<E>,
+                                          private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
+                                          private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
+                                          private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
                                           private val configuration: DejaVuConfiguration<E>)
             where E : Exception,
                   E : NetworkErrorPredicate {
@@ -172,7 +164,7 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
          */
         fun create(isWrapped: Boolean,
                    operation: Operation,
-                   requestMetadata: Plain) =
+                   requestMetadata: PlainRequestMetadata) =
                 DejaVuInterceptor(
                         isWrapped,
                         operation,

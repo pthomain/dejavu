@@ -60,7 +60,7 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
     override var encrypt = presenter.encrypt
     override var compress = presenter.compress
     override var connectivityTimeoutOn = presenter.connectivityTimeoutOn
-    override var preference = presenter.preference
+    override var freshness = presenter.freshness
 
     override fun loadCatFact(isRefresh: Boolean) {
         presenter.loadCatFact(isRefresh)

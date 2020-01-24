@@ -23,11 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -48,12 +49,12 @@ import java.util.*
  * @param instructionToken the call specific cache instruction token
  * @param start the timestamp indicating when the call started
  */
-internal class CacheInterceptor<E>(private val errorInterceptor: ErrorInterceptor<E>,
-                                   private val cacheManager: CacheManager<E>,
-                                   private val dateFactory: (Long?) -> Date,
-                                   private val instructionToken: CacheToken,
-                                   private val start: Long)
-    : ObservableTransformer<ResponseWrapper<E>,ResponseWrapper<E>>
+internal class CacheInterceptor<E> private constructor(private val errorInterceptor: ErrorInterceptor<E>,
+                                                       private val cacheManager: CacheManager<E>,
+                                                       private val dateFactory: (Long?) -> Date,
+                                                       private val instructionToken: CacheToken,
+                                                       private val start: Long)
+    : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -89,12 +90,29 @@ internal class CacheInterceptor<E>(private val errorInterceptor: ErrorIntercepto
     private fun doNotCache(upstream: Observable<ResponseWrapper<E>>) =
             upstream.doOnNext { responseWrapper ->
                 responseWrapper.metadata = responseWrapper.metadata.copy(
-                        instructionToken.copy(
-                                status = NOT_CACHED,
-                                fetchDate = dateFactory(null),
-                                cacheDate = null,
-                                expiryDate = null
+                        ResponseToken(
+                                instructionToken.instruction,
+                                NOT_CACHED,
+                                dateFactory(null),
+                                null,
+                                null
                         )
                 )
             }
+
+    class Factory<E>(private val dateFactory: (Long?) -> Date,
+                     private val cacheManager: CacheManager<E>)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        fun create(errorInterceptor: ErrorInterceptor<E>,
+                   instructionToken: CacheToken,
+                   start: Long) = CacheInterceptor(
+                errorInterceptor,
+                cacheManager,
+                dateFactory,
+                instructionToken,
+                start
+        )
+    }
 }

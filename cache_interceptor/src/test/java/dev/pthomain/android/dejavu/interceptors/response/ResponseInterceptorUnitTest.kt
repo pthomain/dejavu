@@ -31,10 +31,10 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -53,7 +53,7 @@ class ResponseInterceptorUnitTest {
 
     private lateinit var mockEmptyResponseWrapperFactory: EmptyResponseWrapperFactory<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
-    private lateinit var mockMetadataSubject: PublishSubject<CacheMetadata<Glitch>>
+    private lateinit var mockMetadataSubject: PublishSubject<ResponseMetadata<Glitch>>
     private lateinit var mockEmptyException: Glitch
 
     private val start = 1234L
@@ -141,7 +141,7 @@ class ResponseInterceptorUnitTest {
         val isEmptyUpstream = !hasResponse || isEmptyUpstreamObservable
         val expectEmpty = isEmptyUpstream || !isValid
 
-        val mockUpstreamMetadata = CacheMetadata(
+        val mockUpstreamMetadata = ResponseMetadata(
                 mockInstructionToken.copy(status = if (isEmptyUpstream) EMPTY else cacheStatus),
                 Glitch::class.java,
                 if (isEmptyUpstream) mockEmptyException else null
@@ -282,7 +282,7 @@ class ResponseInterceptorUnitTest {
     }
 
     private fun verifyExpectedException(isCompletable: Boolean,
-                                        metadata: CacheMetadata<Glitch>?,
+                                        metadata: ResponseMetadata<Glitch>?,
                                         expectedException: Exception,
                                         testObserver: TestObserver<Any>,
                                         context: String) {
@@ -313,7 +313,7 @@ class ResponseInterceptorUnitTest {
 
     private fun verifyAddMetadataIfPossible(responseClass: Class<*>,
                                             isCompletable: Boolean,
-                                            expectedMetadata: CacheMetadata<Glitch>,
+                                            expectedMetadata: ResponseMetadata<Glitch>,
                                             testObserver: TestObserver<Any>,
                                             context: String) {
         if (!isCompletable) {

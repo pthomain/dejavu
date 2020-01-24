@@ -25,9 +25,8 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.Operation.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CacheMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
@@ -45,7 +44,7 @@ class CacheInterceptorUnitTest {
 
     private lateinit var mockInstructionToken: CacheToken
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
-    private lateinit var mockMetadata: CacheMetadata<Glitch>
+    private lateinit var mockMetadata: ResponseMetadata<Glitch>
     private lateinit var mockUpstream: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<Glitch>
     private lateinit var mockReturnedResponseWrapper: ResponseWrapper<Glitch>
@@ -59,7 +58,7 @@ class CacheInterceptorUnitTest {
         mockCacheManager = mock()
 
         mockInstructionToken = instructionToken(operation)
-        mockMetadata = CacheMetadata(mockInstructionToken, Glitch::class.java)
+        mockMetadata = ResponseMetadata(mockInstructionToken, Glitch::class.java)
         mockErrorInterceptor = mock()
 
         mockUpstreamResponseWrapper = ResponseWrapper(
