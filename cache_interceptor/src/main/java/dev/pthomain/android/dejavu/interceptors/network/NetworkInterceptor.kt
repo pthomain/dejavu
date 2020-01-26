@@ -100,7 +100,7 @@ internal class NetworkInterceptor<O : Remote, T : RequestToken<O>, E> private co
                     upstream.waitForNetwork(context, logger)
                             .timeout(timeOut.toLong(), SECONDS)
                 }
-            }!!
+            } ?: upstream
 
     /**
      * @return a Duration metadata object holding the duration of the network call

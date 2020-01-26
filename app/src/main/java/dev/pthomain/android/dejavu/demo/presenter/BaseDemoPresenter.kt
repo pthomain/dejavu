@@ -58,7 +58,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 
 internal abstract class BaseDemoPresenter protected constructor(
-        private val demoActivity: DemoActivity,
+        demoActivity: DemoActivity,
         protected val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
@@ -78,7 +78,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var compress: Boolean = false
     final override var freshness = FreshnessPriority.ANY
 
-    protected val gson by lazy { Gson() }
+    protected val gson = Gson()
 
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
@@ -108,7 +108,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                         CachePriority.with(networkPriority, freshness),
                         encrypt,
                         compress
-                ).ignoreElements()
+                )
         )
     }
 
@@ -129,7 +129,6 @@ internal abstract class BaseDemoPresenter protected constructor(
     }
 
     final override fun getCacheOperation() =
-            with(dejaVu.configuration) {
                 when (instructionType) {
                     CACHE -> Cache(
                             priority = CachePriority.with(networkPriority, freshness),
@@ -140,7 +139,6 @@ internal abstract class BaseDemoPresenter protected constructor(
                     INVALIDATE -> Invalidate
                     CLEAR -> Clear()
                 }
-            }
 
     private fun subscribe(observable: Observable<out CatFactResponse>) =
             observable.ioUi()

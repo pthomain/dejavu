@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
-import io.reactivex.Observable
 import io.reactivex.Single
 import okhttp3.Request
 import retrofit2.CallAdapter
@@ -90,19 +89,17 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                     retrofit
             )
         } else {
-            val (unwrappedResponseType, responseClass) = unwrap(
-                    getFirstParameterUpperBound(returnType)!!
-            )
+            val (isWrapped, rxType, responseClass) = unwrap(returnType)
 
             val defaultCallAdapter = getDefaultCallAdapter(
-                    unwrappedResponseType,
+                    rxType,
                     annotations,
                     retrofit
             )
 
             val methodDescription = "call returning " + getTypedName(
                     responseClass,
-                    unwrappedResponseType != responseClass,
+                    isWrapped,
                     rawType == Single::class.java
             )
 
@@ -140,8 +137,6 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                 )
             }
 
-            val isWrapped = responseClass != unwrappedResponseType
-
             innerFactory.create(
                     dejaVuFactory,
                     methodDescription,
@@ -163,24 +158,29 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                     retrofit
             ) as CallAdapter<Any, Any>
 
-    private fun unwrap(responseType: Type) =
-            if (responseType == DejaVuResult::class.java) {
-                val responseClass = getFirstParameterUpperBound(responseType)!!
+    private fun unwrap(responseType: Type): Triple<Boolean, Type, Class<out Any>> {
+        val rxType = getRawType(responseType)
+        val firstParameterUpperBound = getFirstParameterUpperBound(responseType)!!
+        val firstParameterRawType = getRawType(firstParameterUpperBound)
 
-                val unwrappedType = object : ParameterizedType {
-                    override fun getRawType() = Observable::class.java
-                    override fun getOwnerType() = null
-                    override fun getActualTypeArguments(): Array<Class<out Any>?> {
-                        return arrayOf(responseClass)
-                    }
+        return if (firstParameterRawType == DejaVuResult::class.java) {
+            val dejaVuParameter = getFirstParameterUpperBound(firstParameterUpperBound)!! as Class<*>
+
+            val unwrappedType = object : ParameterizedType {
+                override fun getRawType() = rxType
+                override fun getOwnerType() = null
+                override fun getActualTypeArguments(): Array<Class<out Any>?> {
+                    return arrayOf(dejaVuParameter)
                 }
+            }
 
-                unwrappedType to responseClass
-            } else responseType to responseType as Class<*>
+            Triple(true, unwrappedType, dejaVuParameter)
+        } else Triple(false, responseType, firstParameterRawType as Class<*>)
+    }
 
     private fun getFirstParameterUpperBound(returnType: Type) =
             if (returnType is ParameterizedType)
-                getRawType(getParameterUpperBound(0, returnType))
+                getParameterUpperBound(0, returnType)
             else null
 
     private fun getTypedName(responseClass: Class<*>,

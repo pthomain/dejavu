@@ -139,7 +139,7 @@ internal abstract class PersistenceModule<E> where E : Exception,
     @Singleton
     @Synchronized
     fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
-            sqlOpenHelper?.writableDatabase
+                sqlOpenHelper?.writableDatabase
 
     companion object {
         const val DATABASE_NAME = "dejavu.db"

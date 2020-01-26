@@ -58,8 +58,8 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                 }
             }
 
-    override fun getOfflineSingle(preference: FreshnessPriority) = ifElse(
-            preference == FRESH_ONLY,
+    override fun getOfflineSingle(freshness: FreshnessPriority) = ifElse(
+            freshness == FRESH_ONLY,
             catFactClient().offlineFreshOnly(),
             catFactClient().offline()
     )

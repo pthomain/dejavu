@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
+import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
  * Type to use as a return for calls returning response wrappers as defined below.
@@ -41,37 +41,38 @@ sealed class DejaVuResult<R : Any>
 //The result has a response
 data class Response<R : Any, O : Remote> internal constructor(
         val response: R,
-        override val cacheToken: ResponseToken<O>,
-        override val callDuration: CallDuration
+        override var cacheToken: ResponseToken<O>,
+        override var callDuration: CallDuration
 ) : DejaVuResult<R>(),
         HasCacheMetadata<O, ResponseToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
 //The result is empty due to filtering or exceptions
-data class Empty<O : Remote> internal constructor(
-        val exception: EmptyResponseException,
-        override val cacheToken: RequestToken<O>,
-        override val callDuration: CallDuration
+data class Empty<O : Remote, E> internal constructor(
+        val exception: E,
+        override var cacheToken: RequestToken<O>,
+        override var callDuration: CallDuration
 ) : DejaVuResult<Any>(),
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
+        where E : Exception, E : NetworkErrorPredicate
 
 //The result has a response
 data class Result<O : Local> internal constructor(
-        override val cacheToken: RequestToken<O>,
-        override val callDuration: CallDuration
+        override var cacheToken: RequestToken<O>,
+        override var callDuration: CallDuration
 ) : DejaVuResult<Any>(),
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
 internal data class CacheMetadataHolder<O : Operation, T : RequestToken<O>>(
-        override val cacheToken: T,
-        override val callDuration: CallDuration
+        override var cacheToken: T,
+        override var callDuration: CallDuration
 ) : HasCacheMetadata<O, T>
 
 interface HasCacheMetadata<O : Operation, T : RequestToken<O>> : HasCacheToken<O, T>, HasCallDuration
 
 interface HasCacheToken<O : Operation, T : RequestToken<O>> {
-    val cacheToken: T
+    var cacheToken: T
 }
 
 interface HasCallDuration {
-    val callDuration: CallDuration
+    var callDuration: CallDuration
 }

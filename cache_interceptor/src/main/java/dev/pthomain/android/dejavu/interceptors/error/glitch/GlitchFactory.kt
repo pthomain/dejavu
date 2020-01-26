@@ -107,12 +107,11 @@ class GlitchFactory : ErrorFactory<Glitch> {
      * @return the converted Glitch
      */
     private fun getDefaultError(throwable: Throwable) =
-            Glitch.from(throwable)
-                    ?: Glitch(
-                            throwable,
-                            NON_HTTP_STATUS,
-                            UNKNOWN
-                    )
+            Glitch.from(throwable) ?: Glitch(
+                    throwable,
+                    NON_HTTP_STATUS,
+                    UNKNOWN
+            )
 
     /**
      * Parses an HttpException and returns an associated ErrorCode.

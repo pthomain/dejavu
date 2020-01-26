@@ -33,6 +33,7 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
+import com.uber.rxdogtag.RxDogTag
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.cache_interceptor.demo.R
@@ -84,6 +85,7 @@ internal class DemoActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RxDogTag.install()
         onCreateComponent(savedInstanceState)
     }
 

@@ -119,8 +119,8 @@ class InstructionView @JvmOverloads constructor(context: Context,
         val bracketedDirectives = ifElse(
                 styledDirectives.isEmpty(),
                 "" as CharSequence,
-                null
-        )?.let {
+                styledDirectives
+        ).let {
             val array = arrayOfNulls<CharSequence>(styledDirectives.size)
             styledDirectives.forEachIndexed { index, charSequence ->
                 array[index] = charSequence

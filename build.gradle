@@ -66,6 +66,7 @@ ext {
     rxJavaVersion = '2.2.0'
     rxKotlinVersion = '2.3.0'
     rxAndroidVersion = '2.1.0'
+    rxDogTagVersion = '0.3.0'
 
     boilerplateVersion = '4.0'
     mumboVersion = '2.0'
@@ -90,6 +91,7 @@ ext {
     robolectricVersion = '4.0.2'
     mockitoKotlinVersion = '2.0.0'
 
+
     appDependencies = [
             jitPack               : "com.github.jitpack:gradle-simple:$jitPackVersion",
 
@@ -107,6 +109,7 @@ ext {
             rxJava                : "io.reactivex.rxjava2:rxjava:$rxJavaVersion",
             rxKotlin              : "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion",
             rxAndroid             : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
+            rxDogTag              : "com.uber.rxdogtag:rxdogtag:$rxDogTagVersion",
 
             dagger                : "com.google.dagger:dagger:$daggerVersion",
             daggerAndroid         : "com.google.dagger:dagger-android:$daggerVersion",

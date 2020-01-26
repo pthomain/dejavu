@@ -89,7 +89,9 @@ internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private c
 
     private fun emptyWrapperObservable(requestToken: InstructionToken<O>,
                                        fetchDate: Date): Observable<ResponseWrapper<O, T, E>> =
-            emptyResponseWrapperFactory.create<O, T>(requestToken, fetchDate.time).observable()//TODO check this
+            Observable.defer {
+                emptyResponseWrapperFactory.create<O, T>(requestToken, fetchDate.time).observable()//TODO check this
+            }
 
     private fun errorObservable(throwable: Throwable,
                                 networkToken: T) =

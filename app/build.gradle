@@ -95,6 +95,7 @@ dependencies {
     kapt appDependencies.daggerCompiler
 
     implementation appDependencies.boilerplate_ui
+    implementation appDependencies.rxDogTag
 
     implementation appDependencies.okHttp
     implementation appDependencies.okHttpLogging

@@ -44,7 +44,6 @@ internal class FileNameSerialiser {
     fun serialise(cacheDataHolder: CacheDataHolder.Complete) =
             with(cacheDataHolder) {
                 listOf(
-                        requestMetadata.requestHash,
                         cacheDate.toString(),
                         expiryDate.toString(),
                         requestMetadata.classHash,
@@ -71,13 +70,13 @@ internal class FileNameSerialiser {
             if (isValidFormat(fileName)) {
                 with(fileName.split(SEPARATOR)) {
                     Incomplete(
+                            get(0).toLong(),
                             get(1).toLong(),
-                            get(2).toLong(),
                             ByteArray(0),
+                            get(2),
                             get(3),
-                            get(4),
-                            get(5) == "1",
-                            get(6) == "1"
+                            get(4) == "1",
+                            get(5) == "1"
                     )
                 }
             } else throw SerialisationException("This file name is invalid: $fileName")
@@ -109,7 +108,7 @@ internal class FileNameSerialiser {
     companion object {
         const val SEPARATOR = "_"
 
-        private val validFileRegex = Regex("^([^_]+_){6}[^_]+\$")
+        private val validFileRegex = Regex("^([^_]+_){5}[^_]+\$")
 
         /**
          * @return whether or not the given file name has the format of a serialised cache entry.
