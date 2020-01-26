@@ -28,9 +28,10 @@ import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -101,31 +102,50 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
      * Deals with the internal composition.
      *
      * @param upstream the call to intercept
-     * @param rxType the RxJava return type
      * @return the call intercepted with the inner interceptors
      */
     private fun composeInternal(upstream: Observable<Any>): Observable<Any> {
+        val start = dateFactory(null).time
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
-        return if (hashedRequestMetadata is ValidRequestMetadata) {
+        return if (hashedRequestMetadata is ValidRequestMetadata && operation is Remote) {
 
             val instruction = CacheInstruction(
                     operation,
                     hashedRequestMetadata
             )
 
-            val instructionToken = CacheToken(instruction)
-
-            val start = dateFactory(null).time
+            val instructionToken = InstructionToken(instruction)
             val errorInterceptor = errorInterceptorFactory.create(instructionToken)
 
+            val networkInterceptor = networkInterceptorFactory.create(
+                    errorInterceptor,
+                    operation as? Cache,
+                    start
+            )
+
+            val cacheInterceptor = cacheInterceptorFactory.create(
+                    errorInterceptor,
+                    instructionToken,
+                    start
+            )
+
+            val responseInterceptor = responseInterceptorFactory.create(
+                    instructionToken,
+                    isWrapped,
+                    start
+            )
+
             upstream
-                    .compose(networkInterceptorFactory.create(errorInterceptor, operation as? Cache, start))
-                    .compose(cacheInterceptorFactory.create(errorInterceptor, instructionToken, start))
-                    .compose(responseInterceptorFactory.create(instructionToken, isWrapped, start))
+                    .compose(networkInterceptor)
+                    .compose(cacheInterceptor)
+                    .compose(responseInterceptor)
 
         } else hashingErrorObservableFactory().also {
-            configuration.logger.e(this, "The request metadata could not be hashed, this request won't be cached: $requestMetadata")
+            configuration.logger.e(
+                    this,
+                    "The request metadata could not be hashed, this request won't be cached: $requestMetadata"
+            )
         }
     }
 

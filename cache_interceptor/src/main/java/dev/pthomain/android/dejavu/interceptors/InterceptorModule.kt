@@ -31,13 +31,12 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.StatusToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
-import dev.pthomain.android.dejavu.interceptors.response.HasCacheMetadata
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import io.reactivex.subjects.PublishSubject
 import java.util.*
@@ -88,7 +87,7 @@ internal abstract class InterceptorModule<E>
     fun provideResponseInterceptor(configuration: DejaVuConfiguration<E>,
                                    logger: Logger,
                                    dateFactory: Function1<Long?, Date>,
-                                   metadataSubject: PublishSubject<HasCacheMetadata<out StatusToken>>,
+                                   metadataSubject: PublishSubject<DejaVuResult<*>>,
                                    emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
             ResponseInterceptor.Factory(
                     configuration,
@@ -100,8 +99,12 @@ internal abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>) =
-            EmptyResponseWrapperFactory(configuration.errorFactory)
+    fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>,
+                                    dateFactory: Function1<Long?, Date>) =
+            EmptyResponseWrapperFactory(
+                    configuration.errorFactory,
+                    dateFactory::get
+            )
 
 
     @Provides

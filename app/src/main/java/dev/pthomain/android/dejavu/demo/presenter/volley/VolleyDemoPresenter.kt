@@ -29,14 +29,14 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
@@ -56,7 +56,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             newObservable(Cache(priority = cachePriority))
 
     private fun newObservable(operation: Operation) =
-            with(RequestMetadata.Plain(responseClass, URL)) {
+            with(PlainRequestMetadata(responseClass, URL)) {
                 VolleyObservable.observable<CatFactResponse, Glitch>(
                         requestQueue,
                         gson,
@@ -70,7 +70,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             }
 
     private fun newCacheOperation(operation: Operation) =
-            with(RequestMetadata.Plain(responseClass, URL)) {
+            with(PlainRequestMetadata(responseClass, URL)) {
                 VolleyObservable.cacheOperation<CatFactResponse, Glitch>(
                         requestQueue,
                         gson,
@@ -94,6 +94,6 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             newCacheOperation(Clear())
 
     override fun getInvalidateCompletable() =
-            newCacheOperation(Invalidate())
+            newCacheOperation(Invalidate)
 
 }

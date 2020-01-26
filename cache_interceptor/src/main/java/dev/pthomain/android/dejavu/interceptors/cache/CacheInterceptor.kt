@@ -23,11 +23,15 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -47,14 +51,14 @@ import java.util.*
  * @param cacheManager an instance of the CacheManager to handle cache operations if needed
  * @param dateFactory provides the current time and converts timestamps
  * @param instructionToken the call specific cache instruction token
- * @param start the timestamp indicating when the call started
  */
-internal class CacheInterceptor<E> private constructor(private val errorInterceptor: ErrorInterceptor<E>,
-                                                       private val cacheManager: CacheManager<E>,
-                                                       private val dateFactory: (Long?) -> Date,
-                                                       private val instructionToken: CacheToken,
-                                                       private val start: Long)
-    : ObservableTransformer<ResponseWrapper<E>, ResponseWrapper<E>>
+internal class CacheInterceptor<O : Operation, T : RequestToken<O>, E> private constructor(
+        private val errorInterceptor: ErrorInterceptor<O, T, E>,
+        private val cacheManager: CacheManager<E>,
+        private val dateFactory: (Long?) -> Date,
+        private val instructionToken: InstructionToken<O>,
+        private val start: Long
+) : ObservableTransformer<ResponseWrapper<O, T, E>, ResponseWrapper<O, T, E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -63,21 +67,25 @@ internal class CacheInterceptor<E> private constructor(private val errorIntercep
      * @param upstream the upstream Observable instance
      * @return the transformed ObservableSource instance
      */
-    override fun apply(upstream: Observable<ResponseWrapper<E>>) =
-            instructionToken.instruction.let { instruction ->
-                    when (instruction.operation) {
-                        is Cache -> cacheManager.getCachedResponse(
-                                upstream,
-                                instructionToken,
-                                start
-                        )
+    @Suppress("UNCHECKED_CAST")
+    override fun apply(upstream: Observable<ResponseWrapper<O, T, E>>) =
+            with(instructionToken.instruction) {
+                when (operation) {
+                    is Cache -> cacheManager.getCachedResponse(
+                            upstream as Observable<ResponseWrapper<Cache, RequestToken<Cache>, E>>,
+                            instructionToken.asInstruction(),
+                            start
+                    )
 
-                        is Clear -> cacheManager.clearCache(instructionToken) //TODO update request metadata with type defined in operation
+                    is Clear -> cacheManager.clearCache(instructionToken.asInstruction()) //TODO update request metadata with type defined in operation
 
-                        is Invalidate -> cacheManager.invalidate(instructionToken) //TODO update request metadata with type defined in operation
+                    is Invalidate -> cacheManager.invalidate(instructionToken.asInstruction()) //TODO update request metadata with type defined in operation
 
-                        else -> doNotCache(upstream)
-                    }
+                    else -> doNotCache(
+                            instructionToken.asInstruction(),
+                            upstream as Observable<ResponseWrapper<DoNotCache, RequestToken<DoNotCache>, E>>
+                    )
+                }
             }.compose(errorInterceptor)
 
     /**
@@ -87,11 +95,16 @@ internal class CacheInterceptor<E> private constructor(private val errorIntercep
      * @param upstream the upstream Observable instance
      * @return the upstream Observable updating the response with the NOT_CACHED status
      */
-    private fun doNotCache(upstream: Observable<ResponseWrapper<E>>) =
+    private fun doNotCache(instructionToken: InstructionToken<DoNotCache>,
+                           upstream: Observable<ResponseWrapper<DoNotCache, RequestToken<DoNotCache>, E>>) =
             upstream.doOnNext { responseWrapper ->
+                val requestToken = instructionToken.asRequest<DoNotCache>()
+                val instruction = requestToken.instruction
+
+                @Suppress("UNCHECKED_CAST")
                 responseWrapper.metadata = responseWrapper.metadata.copy(
                         ResponseToken(
-                                instructionToken.instruction,
+                                instruction,
                                 NOT_CACHED,
                                 dateFactory(null),
                                 null,
@@ -105,14 +118,15 @@ internal class CacheInterceptor<E> private constructor(private val errorIntercep
             where E : Exception,
                   E : NetworkErrorPredicate {
 
-        fun create(errorInterceptor: ErrorInterceptor<E>,
-                   instructionToken: CacheToken,
-                   start: Long) = CacheInterceptor(
-                errorInterceptor,
-                cacheManager,
-                dateFactory,
-                instructionToken,
-                start
-        )
+        fun <O : Remote, T : RequestToken<O>> create(errorInterceptor: ErrorInterceptor<O, T, E>,
+                                                     instructionToken: InstructionToken<O>,
+                                                     start: Long) =
+                CacheInterceptor(
+                        errorInterceptor,
+                        cacheManager,
+                        dateFactory,
+                        instructionToken,
+                        start
+                )
     }
 }

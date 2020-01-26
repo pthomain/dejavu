@@ -29,7 +29,6 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -46,35 +45,33 @@ internal abstract class RetrofitModule<E>
     fun provideDefaultAdapterFactory() =
             RxJava2CallAdapterFactory.create()!!
 
-
     @Provides
     @Singleton
     fun provideRetrofitCallAdapterFactory(configuration: DejaVuConfiguration<E>,
                                           dateFactory: Function1<Long?, Date>,
                                           logger: Logger,
+                                          innerAdapterFactory: RetrofitCallAdapter.Factory<E>,
                                           defaultAdapterFactory: RxJava2CallAdapterFactory,
                                           dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
                                           annotationProcessor: AnnotationProcessor<E>) =
             RetrofitCallAdapterFactory(
                     configuration,
                     defaultAdapterFactory,
-                    { dejaVuFactory, methodDescription, responseClass, isWrapped, operation, rxCallAdapter ->
-                        RetrofitCallAdapter(
-                                configuration,
-                                responseClass,
-                                dejaVuFactory,
-                                RequestBodyConverter(),
-                                logger,
-                                methodDescription,
-                                isWrapped,
-                                operation,
-                                rxCallAdapter
-                        )
-                    },
+                    innerAdapterFactory,
                     dateFactory::get,
                     dejaVuInterceptorFactory,
                     RequestBodyConverter(),
                     annotationProcessor,
+                    logger
+            )
+
+    @Provides
+    @Singleton
+    fun provideRetrofitCallAdapterInnerFactory(configuration: DejaVuConfiguration<E>,
+                                               logger: Logger) =
+            RetrofitCallAdapter.Factory(
+                    configuration,
+                    RequestBodyConverter(),
                     logger
             )
 

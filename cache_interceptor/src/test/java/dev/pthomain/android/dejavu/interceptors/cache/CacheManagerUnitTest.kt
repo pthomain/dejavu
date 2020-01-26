@@ -25,13 +25,14 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.FreshnessPriority.FRESH_ONLY
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.OFFLINE
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
@@ -335,7 +336,7 @@ class CacheManagerUnitTest {
     }
 
     private fun prepareFetchAndCache(operation: Cache,
-                                     instructionToken: CacheToken,
+                                     instructionToken: InstructionToken,
                                      hasCachedResponse: Boolean,
                                      serialisationFails: Boolean) {
         mockUpdatedMetatadataNetworkResponseWrapper = mockNetworkResponseWrapper.copy(

@@ -23,7 +23,8 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.metadata
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
@@ -37,21 +38,22 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-data class ResponseMetadata<E> internal constructor(val cacheToken: RemoteToken,
-                                                    val exceptionClass: Class<E>,
-                                                    val exception: E? = null,
-                                                    val callDuration: CallDuration = CallDuration(0, 0, 0))
-        where E : Exception,
-              E : NetworkErrorPredicate {
+data class ResponseMetadata<O : Operation, T : RequestToken<O>, E> internal constructor(
+        val cacheToken: T,
+        val exceptionClass: Class<E>,
+        val exception: E? = null,
+        val callDuration: CallDuration = CallDuration(0, 0, 0)
+) where E : Exception,
+        E : NetworkErrorPredicate {
 
     /**
      * Interface to be set on any response requiring cache metadata to be provided. This metadata
      * contains information about the response's status, dates and serialisation methods.
      */
-    interface Holder<E>
+    internal interface Holder<O : Operation, T : RequestToken<O>, E>
             where E : Exception,
                   E : NetworkErrorPredicate {
-        var metadata: ResponseMetadata<E>
+        var metadata: ResponseMetadata<O, T, E>
     }
 
 }

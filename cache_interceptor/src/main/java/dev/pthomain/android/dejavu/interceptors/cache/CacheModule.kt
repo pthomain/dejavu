@@ -28,12 +28,10 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken.CacheToken.StatusToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.response.CacheMetadataConverter
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
-import dev.pthomain.android.dejavu.interceptors.response.HasCacheMetadata
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
@@ -74,18 +72,12 @@ internal abstract class CacheModule<E>
 
     @Provides
     @Singleton
-    fun provideCacheMetadataSubject() =
-            PublishSubject.create<HasCacheMetadata<out StatusToken>>()
+    fun provideDejaVuResultSubject() =
+            PublishSubject.create<DejaVuResult<*>>()
 
     @Provides
     @Singleton
-    fun provideCacheMetadataObservable(subject: PublishSubject<HasCacheMetadata<out StatusToken>>,
-                                       converter: CacheMetadataConverter<E>) =
+    fun provideDejaVuResultObservable(subject: PublishSubject<DejaVuResult<*>>) =
             subject.map { it }!!
-
-    @Provides
-    @Singleton
-    fun provideCacheMetadataConverter() =
-            CacheMetadataConverter<E>()
 
 }

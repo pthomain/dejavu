@@ -28,9 +28,9 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -50,9 +50,9 @@ class DejaVuInterceptorUnitTest {
     private val mockDateFactory: (Long?) -> Date = { Date(start) }
 
     private lateinit var mockNetworkInterceptorFactory: (ErrorInterceptor<Glitch>, Cache?, Long) -> NetworkInterceptor<Glitch>
-    private lateinit var mockErrorInterceptorFactory: (CacheToken) -> ErrorInterceptor<Glitch>
-    private lateinit var mockCacheInterceptorFactory: (ErrorInterceptor<Glitch>, CacheToken, Long) -> CacheInterceptor<Glitch>
-    private lateinit var mockResponseInterceptorFactory: (CacheToken, RxType, Long) -> ResponseInterceptor<Glitch>
+    private lateinit var mockErrorInterceptorFactory: (InstructionToken) -> ErrorInterceptor<Glitch>
+    private lateinit var mockCacheInterceptorFactory: (ErrorInterceptor<Glitch>, InstructionToken, Long) -> CacheInterceptor<Glitch>
+    private lateinit var mockResponseInterceptorFactory: (InstructionToken, RxType, Long) -> ResponseInterceptor<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: RequestMetadata.Plain
@@ -62,16 +62,16 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
     private lateinit var mockCacheInterceptor: CacheInterceptor<Glitch>
     private lateinit var mockResponseInterceptor: ResponseInterceptor<Glitch>
-    private lateinit var mockCacheToken: CacheToken
+    private lateinit var mockCacheToken: InstructionToken
     private lateinit var mockUpstreamObservable: Observable<Any>
     private lateinit var mockNetworkObservable: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<Glitch>>
     private lateinit var mockResponseObservable: Observable<Any>
     private lateinit var mockHashingErrorObservable: Observable<Any>
-    private lateinit var errorTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<CacheToken>
+    private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken>
+    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<InstructionToken>
     private lateinit var networkOperationCaptor: KArgumentCaptor<Cache?>
-    private lateinit var responseTokenCaptor: KArgumentCaptor<CacheToken>
+    private lateinit var responseTokenCaptor: KArgumentCaptor<InstructionToken>
 
     private val mockException = IllegalStateException("test")
 

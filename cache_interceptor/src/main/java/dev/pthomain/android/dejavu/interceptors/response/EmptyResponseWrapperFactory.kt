@@ -24,12 +24,12 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Local
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.DONE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.EmptyRemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -42,7 +42,8 @@ import java.util.*
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
-class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>)
+class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>,
+                                     private val dateFactory: (Long?) -> Date)
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -50,21 +51,22 @@ class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>)
      * Returns a Single emitting a ResponseWrapper with no response and a status of
      * either DONE or EMPTY.
      *
-     * @param instructionToken the instruction token for this call
+     * @param networkToken the instruction token for this call
      * @return an empty ResponseWrapper emitting Single
      */
-    fun create(instructionToken: CacheToken,
-               fetchDate: Date) =
-            with(instructionToken) {
+    fun <O : Operation, T : RequestToken<O>> create(networkToken: InstructionToken<O>,
+                                                    start: Long) =
+            with(networkToken) {
                 ResponseWrapper(
                         instruction.requestMetadata.responseClass,
                         null,
+                        @Suppress("UNCHECKED_CAST")
                         errorFactory.newMetadata(
-                                EmptyRemoteToken(
+                                RequestToken(
                                         instruction,
                                         ifElse(instruction.operation is Local, DONE, EMPTY),
-                                        fetchDate
-                                ),
+                                        dateFactory(start)
+                                ) as T,
                                 errorFactory(
                                         if (instruction.operation is Local) DoneException(instruction.operation)
                                         else EmptyResponseException(NullPointerException())//FIXME

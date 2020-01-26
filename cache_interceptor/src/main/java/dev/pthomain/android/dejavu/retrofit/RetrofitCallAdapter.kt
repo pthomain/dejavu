@@ -28,9 +28,9 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.toOperation
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter.Method.*
@@ -47,15 +47,15 @@ import java.lang.reflect.Type
  *
  * @see dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
  */
-internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                                      private val responseClass: Class<*>,
-                                      private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                      private val requestBodyConverter: (Request) -> String?,
-                                      private val logger: Logger,
-                                      private val methodDescription: String,
-                                      private val isWrapped: Boolean,
-                                      private val annotationOperation: Operation?,
-                                      private val rxCallAdapter: CallAdapter<Any, Any>)
+internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                                                          private val responseClass: Class<*>,
+                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
+                                                          private val requestBodyConverter: (Request) -> String?,
+                                                          private val logger: Logger,
+                                                          private val methodDescription: String,
+                                                          private val isWrapped: Boolean,
+                                                          private val annotationOperation: Operation?,
+                                                          private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -81,7 +81,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @return the call adapted to RxJava type
      */
     override fun adapt(call: Call<Any>): Any {
-        val requestMetadata = RequestMetadata.Plain(
+        val requestMetadata = PlainRequestMetadata(
                 responseClass,
                 call.request().url().toString(),
                 requestBodyConverter(call.request())
@@ -114,7 +114,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      * @param requestMetadata the RequestMetadata for the current call
      * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
      */
-    private fun getPredicateOperation(requestMetadata: RequestMetadata): Remote? {
+    private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
         return dejaVuConfiguration.cachePredicate(requestMetadata)
     }
@@ -165,7 +165,7 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
      */
     private fun adaptedWithOperation(call: Call<Any>,
                                      operation: Operation,
-                                     requestMetadata: RequestMetadata.Plain,
+                                     requestMetadata: PlainRequestMetadata,
                                      method: Method): Any {
         when (method) {
             PREDICATE -> "the cache predicate"
@@ -204,4 +204,28 @@ internal class RetrofitCallAdapter<E>(private val dejaVuConfiguration: DejaVuCon
         ANNOTATION
     }
 
+    internal class Factory<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
+                              private val requestBodyConverter: (Request) -> String?,
+                              private val logger: Logger)
+            where E : Exception,
+                  E : NetworkErrorPredicate {
+
+        fun create(dejaVuFactory: DejaVuInterceptor.Factory<E>,
+                   methodDescription: String,
+                   responseClass: Class<out Any>,
+                   isWrapped: Boolean,
+                   annotationOperation: Operation?,
+                   defaultCallAdapter: CallAdapter<Any, Any>) = RetrofitCallAdapter(
+                dejaVuConfiguration,
+                responseClass,
+                dejaVuFactory,
+                requestBodyConverter,
+                logger,
+                methodDescription,
+                isWrapped,
+                annotationOperation,
+                defaultCallAdapter
+        )
+
+    }
 }

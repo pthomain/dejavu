@@ -37,10 +37,10 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaV
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
@@ -130,7 +130,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
         mockClient.enqueueIOException(exception)
     }
 
-    protected fun getStubbedTestResponse(instructionToken: CacheToken = instructionToken()) =
+    protected fun getStubbedTestResponse(instructionToken: InstructionToken = instructionToken()) =
             assetHelper.observeStubbedResponse(
                     TestResponse.STUB_FILE,
                     TestResponse::class.java,
@@ -143,7 +143,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 )
             }
 
-    protected fun getStubbedUserResponseWrapper(instructionToken: CacheToken = instructionToken(responseClass = User::class.java),
+    protected fun getStubbedUserResponseWrapper(instructionToken: InstructionToken = instructionToken(responseClass = User::class.java),
                                                 url: String = "http://test.com/userResponse") =
             getStubbedTestResponse(instructionToken).let {
                 val requestMetadata = instructionToken.instruction.requestMetadata
@@ -187,7 +187,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
         )
 
         assertEqualsWithContext(
-                CacheToken(
+                InstructionToken(
                         stubbedResponse.metadata.cacheToken.instruction,
                         expectedStatus,
                         true,
@@ -208,7 +208,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                     responseClass,
                     url
             )).let {
-                CacheToken(
+                InstructionToken(
                         CacheInstruction(
                                 it as RequestMetadata.Hashed.Valid,
                                 operation

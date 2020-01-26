@@ -27,8 +27,26 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
+import org.junit.Test
+import java.util.*
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
@@ -36,7 +54,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -51,7 +69,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
     protected lateinit var mockDateFactory: (Long?) -> Date
-    protected lateinit var mockCacheToken: CacheToken
+    protected lateinit var mockCacheToken: InstructionToken
     protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
     protected lateinit var mockMetadata: ResponseMetadata<Glitch>
 
@@ -95,7 +113,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         return mockConfiguration
     }
 
-    protected abstract fun setUp(instructionToken: CacheToken): T
+    protected abstract fun setUp(instructionToken: InstructionToken): T
 
     @Test
     fun testClearCache() {
@@ -162,7 +180,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     protected open fun prepareClearCache(context: String,
-                                         instructionToken: CacheToken) = Unit
+                                         instructionToken: InstructionToken) = Unit
 
     protected abstract fun verifyClearCache(context: String,
                                             useTypeToClear: Boolean,
@@ -257,7 +275,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected abstract fun verifyCache(context: String,
                                        iteration: Int,
-                                       instructionToken: CacheToken,
+                                       instructionToken: InstructionToken,
                                        operation: Cache,
                                        encryptData: Boolean,
                                        compressData: Boolean,
@@ -292,7 +310,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
     }
 
     private fun prepareAllInvalidation(operation: Operation,
-                                       andThen: (String, CacheToken, T) -> Unit) {
+                                       andThen: (String, InstructionToken, T) -> Unit) {
         val context = "operation = $operation"
         val instructionToken = instructionTokenWithHash(operation)
 
@@ -303,7 +321,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected abstract fun prepareInvalidate(context: String,
                                              operation: Operation,
-                                             instructionToken: CacheToken)
+                                             instructionToken: InstructionToken)
 
     @Test
     fun testCheckInvalidation() {
@@ -333,11 +351,11 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected open fun prepareCheckInvalidation(context: String,
                                                 operation: Operation,
-                                                instructionToken: CacheToken) = Unit
+                                                instructionToken: InstructionToken) = Unit
 
     protected abstract fun verifyCheckInvalidation(context: String,
                                                    operation: Operation,
-                                                   instructionToken: CacheToken)
+                                                   instructionToken: InstructionToken)
 
     @Test
     fun testGetCachedResponse() {
@@ -489,7 +507,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected open fun prepareGetCachedResponse(context: String,
                                                 operation: Cache,
-                                                instructionToken: CacheToken,
+                                                instructionToken: InstructionToken,
                                                 hasResponse: Boolean,
                                                 isStale: Boolean,
                                                 isCompressed: Int,
@@ -499,7 +517,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
 
     protected abstract fun verifyGetCachedResponse(context: String,
                                                    operation: Cache,
-                                                   instructionToken: CacheToken,
+                                                   instructionToken: InstructionToken,
                                                    hasResponse: Boolean,
                                                    isStale: Boolean,
                                                    cachedResponse: ResponseWrapper<Glitch>?)

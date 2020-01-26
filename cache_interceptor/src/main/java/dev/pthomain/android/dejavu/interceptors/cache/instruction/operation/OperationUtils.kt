@@ -24,6 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors.cache.instruction.operation
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
+import dev.pthomain.android.dejavu.retrofit.annotations.Cache
+import dev.pthomain.android.dejavu.retrofit.annotations.Clear
+import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
+import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
 
 /**
@@ -63,8 +67,8 @@ internal fun Operation.serialise(vararg arguments: Any?): String {
 internal fun String.toOperation() =
         split(SEPARATOR).let { params ->
             when (params[0]) {
-                DoNotCache::class.java.simpleName -> DoNotCache
-                Invalidate::class.java.simpleName -> Invalidate
+                DoNotCache::class.java.simpleName -> Operation.Remote.DoNotCache
+                Invalidate::class.java.simpleName -> Operation.Local.Invalidate
                 Clear::class.java.simpleName -> getClearOperation(params)
                 Cache::class.java.simpleName -> getCacheOperation(params)
                 else -> null
@@ -98,9 +102,10 @@ private fun toInt(value: String,
 /**
  * Returns a Clear operation instance for the given list of parameters
  */
-private fun getClearOperation(params: List<String>) = Clear(
-        toBoolean(params, 1)
-)
+private fun getClearOperation(params: List<String>) =
+        Operation.Local.Clear(
+                toBoolean(params, 1)
+        )
 
 /**
  * Returns an Expiring operation instance for the given list of parameters
@@ -114,7 +119,7 @@ private fun getCacheOperation(params: List<String>) =
             val encrypt = toBoolean(params, 5)
             val compress = toBoolean(params, 6)
 
-            Cache(
+            Operation.Remote.Cache(
                     priority,
                     durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!,
                     connectivityTimeoutInSeconds.swapWhenDefault(null),
@@ -122,5 +127,5 @@ private fun getCacheOperation(params: List<String>) =
                     encrypt,
                     compress
             )
-        } else Cache()
+        } else Operation.Remote.Cache()
 

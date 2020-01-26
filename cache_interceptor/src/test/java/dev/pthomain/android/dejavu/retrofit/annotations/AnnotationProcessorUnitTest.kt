@@ -27,7 +27,8 @@ import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.*

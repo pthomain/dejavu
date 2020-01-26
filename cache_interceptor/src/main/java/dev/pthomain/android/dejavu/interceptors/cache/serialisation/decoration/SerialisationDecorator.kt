@@ -23,7 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration
 
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -46,7 +48,7 @@ interface SerialisationDecorator<E> where E : Exception,
      * @throws SerialisationException in case this serialisation step failed
      */
     @Throws(SerialisationException::class)
-    fun decorateSerialisation(responseWrapper:ResponseWrapper<E>,
+    fun decorateSerialisation(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
                               metadata: SerialisationDecorationMetadata,
                               payload: ByteArray): ByteArray
 
@@ -60,7 +62,7 @@ interface SerialisationDecorator<E> where E : Exception,
      * @throws SerialisationException in case this deserialisation step failed
      */
     @Throws(SerialisationException::class)
-    fun decorateDeserialisation(instructionToken: RemoteToken,
+    fun decorateDeserialisation(instructionToken: InstructionToken<Cache>,
                                 metadata: SerialisationDecorationMetadata,
                                 payload: ByteArray): ByteArray
 

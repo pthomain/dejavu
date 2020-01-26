@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -59,34 +59,28 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      * Handles the CLEAR operation
      *
      * @param instructionToken the original request's instruction token
-     * @param requestMetadata the request's metadata
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun clearCache(instructionToken: CacheToken,
-                   requestMetadata: ValidRequestMetadata) =
-            emptyResponseObservable(instructionToken) {
-                persistenceManager.clearCache(
-                        instructionToken.instruction.operation as Clear,
-                        requestMetadata
-                )
+    fun clearCache(instructionToken: InstructionToken<Clear>) =
+            emptyResponseObservable(instructionToken, dateFactory(null).time) {
+                with(instructionToken.instruction) {
+                    persistenceManager.clearCache(operation, requestMetadata)
+                }
             }
 
     /**
      * Handles the INVALIDATE operation
      *
      * @param instructionToken the original request's instruction token
-     * @param requestMetadata the request's metadata
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun invalidate(instructionToken: CacheToken,
-                   requestMetadata: ValidRequestMetadata) =
-            emptyResponseObservable(instructionToken) {
-                persistenceManager.forceInvalidation(
-                        instructionToken.instruction.operation as Invalidate,
-                        requestMetadata
-                )
+    fun invalidate(instructionToken: InstructionToken<Invalidate>) =
+            emptyResponseObservable(instructionToken, dateFactory(null).time) {
+                with(instructionToken.instruction) {
+                    persistenceManager.forceInvalidation(operation, requestMetadata)
+                }
             }
 
     /**
@@ -97,13 +91,13 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    private fun emptyResponseObservable(instructionToken: CacheToken,
-                                        fetchDate: Date = dateFactory(null),
-                                        action: () -> Unit = {}) =
+    private fun <O : Operation, T : InstructionToken<O>> emptyResponseObservable(instructionToken: T,
+                                                                                 start: Long,
+                                                                                 action: () -> Unit = {}) =
             Observable.fromCallable(action::invoke).map {
                 emptyResponseWrapperFactory.create(
                         instructionToken,
-                        fetchDate
+                        dateFactory(start).time
                 )
             }!!
 
@@ -117,82 +111,80 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
      *
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
-    fun getCachedResponse(upstream: Observable<ResponseWrapper<E>>,
-                          instructionToken: RemoteToken,
-                          start: Long) = Observable.defer<ResponseWrapper<E>> {
-        val cacheOperation = instructionToken.instruction.operation
-        require(cacheOperation is Cache) { "Wrong cache operation: $cacheOperation" }
+    fun getCachedResponse(upstream: Observable<ResponseWrapper<Cache, RequestToken<Cache>, E>>,
+                          instructionToken: InstructionToken<Cache>,
+                          start: Long) =
+            Observable.defer<ResponseWrapper<Cache, RequestToken<Cache>, E>> {
+                val cacheOperation = instructionToken.instruction.operation
 
-        val instruction = instructionToken.instruction
-        val mode = cacheOperation.priority.network
-        val simpleName = instruction.requestMetadata.responseClass.simpleName
+                val instruction = instructionToken.instruction
+                val mode = cacheOperation.priority.network
+                val simpleName = instruction.requestMetadata.responseClass.simpleName
 
-        logger.d(this, "Checking for cached $simpleName")
-        val cachedResponse = persistenceManager.getCachedResponse(
-                instructionToken,
-                instruction.requestMetadata
-        )
+                logger.d(this, "Checking for cached $simpleName")
+                val cachedResponse = persistenceManager.getCachedResponse(instructionToken)
 
-        if (cachedResponse != null) {
-            logger.d(
-                    this,
-                    "Found cached $simpleName, status: ${cachedResponse.metadata.cacheToken.status}"
-            )
-        }
+                if (cachedResponse != null) {
+                    logger.d(
+                            this,
+                            "Found cached $simpleName, status: ${cachedResponse.metadata.cacheToken.status}"
+                    )
+                }
 
-        val diskDuration = (dateFactory(null).time - start).toInt()
+                val diskDuration = (dateFactory(null).time - start).toInt()
 
-        if (mode.isLocalOnly()) {
-            if (cachedResponse == null)
-                emptyResponseObservable(instructionToken, dateFactory(start))
-            else
-                Observable.just(cachedResponse)
-        } else
-            getOnlineObservable(
-                    cachedResponse,
-                    upstream,
-                    cacheOperation,
-                    instructionToken,
-                    diskDuration
-            )
+                if (mode.isLocalOnly()) {
+                    if (cachedResponse == null)
+                        emptyResponseObservable(instructionToken, start)
+                    else
+                        Observable.just(cachedResponse)
+                } else
+                    getOnlineObservable(
+                            cachedResponse,
+                            upstream,
+                            cacheOperation,
+                            instructionToken,
+                            diskDuration
+                    )
     }!!
 
     //TODO JavaDoc
-    private fun getOnlineObservable(cachedResponse: ResponseWrapper<E>?,
-                                    upstream: Observable<ResponseWrapper<E>>,
+    private fun getOnlineObservable(cachedResponse: ResponseWrapper<Cache, RequestToken<Cache>, E>?,
+                                    upstream: Observable<ResponseWrapper<Cache, RequestToken<Cache>, E>>,
                                     cacheOperation: Cache,
-                                    instructionToken: CacheToken,
-                                    diskDuration: Int) = Observable.defer<ResponseWrapper<E>> {
-        val cachedResponseToken = cachedResponse?.metadata?.cacheToken
-        val status = cachedResponseToken?.status
-        val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
+                                    instructionToken: InstructionToken<Cache>,
+                                    diskDuration: Int) =
+            Observable.defer<ResponseWrapper<Cache, RequestToken<Cache>, E>> {
+                val cachedResponseToken = cachedResponse?.metadata?.cacheToken
+                val status = cachedResponseToken?.status
+                val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
 
-        if (cachedResponse == null || status == STALE) {
-            val fetchAndCache = fetchAndCache(
-                    cachedResponse,
-                    upstream,
-                    cacheOperation,
-                    instructionToken,
-                    diskDuration
-            )
+                if (cachedResponse == null || status == STALE) {
+                    val fetchAndCache = fetchAndCache(
+                            cachedResponse,
+                            upstream,
+                            cacheOperation,
+                            instructionToken,
+                            diskDuration
+                    )
 
-            if (status == STALE && cacheOperation.priority.freshness.emitsCachedStale) {
-                Observable.concat(
-                        Observable.just(cachedResponse).doOnNext {
-                            logger.d(this, "Delivering cached $simpleName, status: $status")
-                        },
-                        fetchAndCache
-                )
-            } else fetchAndCache
-        } else Observable.just(cachedResponse)
-    }
+                    if (status == STALE && cacheOperation.priority.freshness.emitsCachedStale) {
+                        Observable.concat(
+                                Observable.just(cachedResponse).doOnNext {
+                                    logger.d(this, "Delivering cached $simpleName, status: $status")
+                                },
+                                fetchAndCache
+                        )
+                    } else fetchAndCache
+                } else Observable.just(cachedResponse)
+            }
 
-    private fun fetchAndCache(previousCachedResponse: ResponseWrapper<E>?,
-                              upstream: Observable<ResponseWrapper<E>>,
+    private fun fetchAndCache(previousCachedResponse: ResponseWrapper<Cache, RequestToken<Cache>, E>?,
+                              upstream: Observable<ResponseWrapper<Cache, RequestToken<Cache>, E>>,
                               cacheOperation: Cache,
-                              instructionToken: CacheToken,
+                              instructionToken: InstructionToken<Cache>,
                               diskDuration: Int) =
-            Observable.defer<ResponseWrapper<E>> {
+            Observable.defer<ResponseWrapper<Cache, RequestToken<Cache>, E>> {
                 val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
                 logger.d(this, "$simpleName is STALE, attempting to refresh")
 
@@ -206,7 +198,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                                     diskDuration
                             )
                         }
-                        .map { wrapper: ResponseWrapper<E> ->
+                        .map { wrapper: ResponseWrapper<Cache, RequestToken<Cache>, E> ->
                             if (wrapper.metadata.exception != null) {
                                 logger.e(
                                         this,

@@ -25,14 +25,15 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.response.Response
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
@@ -45,18 +46,18 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     priority = cachePriority,
                     encrypt = encrypt,
                     compress = compress
-            )).map { (it as DejaVuResult.Response).response }
+            )).map { (it as Response<CatFactResponse, *>).response }
 
     override fun getOfflineSingle(freshness: FreshnessPriority) =
             executeOperation(
                     Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
-            ).map { (it as DejaVuResult.Response).response }.firstOrError()
+            ).map { (it as Response<CatFactResponse, *>).response }.firstOrError()
 
     override fun getClearEntriesCompletable() =
             executeOperation(Clear())
 
     override fun getInvalidateCompletable() =
-            executeOperation(Invalidate())
+            executeOperation(Invalidate)
 
     private fun executeOperation(cacheOperation: Operation) =
             catFactClient().execute(cacheOperation)

@@ -33,8 +33,8 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import dev.pthomain.android.cache_interceptor.demo.R
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch

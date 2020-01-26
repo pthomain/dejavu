@@ -23,8 +23,12 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.instruction
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.*
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import junit.framework.TestCase.assertEquals
+import org.junit.Test
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.assertEquals
 import org.junit.Test

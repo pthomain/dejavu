@@ -29,10 +29,10 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.DoNotCache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory

@@ -72,7 +72,7 @@ class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
      * Provides an observable emitting the responses metadata, for logging/stats purposes or to use
      * as an alternative to implementing the CacheMetadata.Holder interface on responses.
      */
-    val cacheResultObservable = component.cacheResultObservable()
+    val resultObservable = component.resultObservable()
 
     companion object {
 

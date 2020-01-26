@@ -26,8 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.network
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -53,13 +55,14 @@ import kotlin.NoSuchElementException
  * @param operation the original request cache operation
  * @param start the time at which the request started
  */
-internal class NetworkInterceptor<E> private constructor(private val context: Context,
-                                                         private val logger: Logger,
-                                                         private val errorInterceptor: ErrorInterceptor<E>,
-                                                         private val dateFactory: (Long?) -> Date,
-                                                         private val operation: Cache?,
-                                                         private val start: Long)
-    : ObservableTransformer<Any, ResponseWrapper<E>>
+internal class NetworkInterceptor<O : Remote, T : RequestToken<O>, E> private constructor(
+        private val context: Context,
+        private val logger: Logger,
+        private val errorInterceptor: ErrorInterceptor<O, T, E>,
+        private val dateFactory: (Long?) -> Date,
+        private val operation: Cache?,
+        private val start: Long
+) : ObservableTransformer<Any, ResponseWrapper<O, T, E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -70,7 +73,7 @@ internal class NetworkInterceptor<E> private constructor(private val context: Co
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
      */
-    override fun apply(upstream: Observable<Any>): Observable<ResponseWrapper<E>> =
+    override fun apply(upstream: Observable<Any>): Observable<ResponseWrapper<O, T, E>> =
             upstream
                     .filter { it != null } //see https://github.com/square/retrofit/issues/2242
                     .defaultIfEmpty(Observable.error<Any>(NoSuchElementException("Response was empty")))
@@ -91,7 +94,7 @@ internal class NetworkInterceptor<E> private constructor(private val context: Co
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable optionally delayed for network availability
      */
-    private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<E>>) =
+    private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<O, T, E>>): Observable<ResponseWrapper<O, T, E>> =
             operation?.connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
                 upstream.swapLambdaWhen(timeOut > 0L) {
                     upstream.waitForNetwork(context, logger)
@@ -115,9 +118,9 @@ internal class NetworkInterceptor<E> private constructor(private val context: Co
             where E : Exception,
                   E : NetworkErrorPredicate {
 
-        fun create(errorInterceptor: ErrorInterceptor<E>,
-                   operation: Cache?,
-                   start: Long) = NetworkInterceptor(
+        fun <O : Remote, T : RequestToken<O>> create(errorInterceptor: ErrorInterceptor<O, T, E>,
+                                                     operation: Cache?,
+                                                     start: Long) = NetworkInterceptor(
                 context,
                 logger,
                 errorInterceptor,

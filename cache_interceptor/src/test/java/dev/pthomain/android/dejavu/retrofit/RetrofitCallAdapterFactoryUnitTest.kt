@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstructi
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.DoNotCache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
@@ -120,7 +120,7 @@ class RetrofitCallAdapterFactoryUnitTest {
                 it.thenReturn(mockOperation)
         }
 
-        val cacheTokenCaptor = argumentCaptor<CacheToken>()
+        val cacheTokenCaptor = argumentCaptor<InstructionToken>()
 
         whenever(mockInnerFactory.invoke(
                 eq(mockDejaVuFactory),

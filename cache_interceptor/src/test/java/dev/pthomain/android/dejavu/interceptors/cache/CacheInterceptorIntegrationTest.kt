@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.dejavu.injection.Function3
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import org.junit.Test
 
-internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>>(
+internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<Function3<ErrorInterceptor<Glitch>, InstructionToken, Long, CacheInterceptor<Glitch>>>(
         { it.cacheInterceptorFactory() },
         false
 ) {

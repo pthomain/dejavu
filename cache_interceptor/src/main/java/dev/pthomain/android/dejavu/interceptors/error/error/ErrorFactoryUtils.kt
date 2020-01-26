@@ -23,15 +23,16 @@
 
 package dev.pthomain.android.dejavu.interceptors.error.error
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 
-internal fun <E> ErrorFactory<E>.newWrapper(
+internal fun <O : Operation, T : RequestToken<O>, E> ErrorFactory<E>.newWrapper(
         responseClass: Class<*>,
         response: Any?,
-        metadata: ResponseMetadata<E>
+        metadata: ResponseMetadata<O, T, E>
 ) where E : Exception,
         E : NetworkErrorPredicate =
         ResponseWrapper(
@@ -40,8 +41,8 @@ internal fun <E> ErrorFactory<E>.newWrapper(
                 metadata
         )
 
-internal fun <E> ErrorFactory<E>.newMetadata(
-        cacheToken: RemoteToken,
+internal fun <O : Operation, T : RequestToken<O>, E> ErrorFactory<E>.newMetadata(
+        cacheToken: T,
         exception: E? = null,
         callDuration: CallDuration = CallDuration(0, 0, 0)
 ) where E : Exception,

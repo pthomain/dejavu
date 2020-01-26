@@ -25,12 +25,11 @@ package dev.pthomain.android.dejavu.interceptors.cache
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ErrorRemoteToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -67,11 +66,11 @@ internal class CacheMetadataManager<E>(
      *
      * @return the ResponseWrapper updated with the new metadata
      */
-    fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<E>,
+    fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
                                cacheOperation: Cache,
-                               previousCachedResponse: ResponseWrapper<E>?,
-                               instructionToken: CacheToken,
-                               diskDuration: Int): ResponseWrapper<E> {
+                               previousCachedResponse: ResponseWrapper<Cache, RequestToken<Cache>, E>?,
+                               instructionToken: InstructionToken<Cache>,
+                               diskDuration: Int): ResponseWrapper<Cache, RequestToken<Cache>, E> {
         val metadata = responseWrapper.metadata
         val error = responseWrapper.metadata.exception
         val hasError = error != null
@@ -129,15 +128,16 @@ internal class CacheMetadataManager<E>(
      * @param exception the exception that occurred during serialisation
      * @return the response wrapper with the udpated metadata
      */
-    fun setSerialisationFailedMetadata(wrapper: ResponseWrapper<E>,
-                                       exception: Exception): ResponseWrapper<E> {
+    fun setSerialisationFailedMetadata(wrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
+                                       exception: Exception): ResponseWrapper<Cache, RequestToken<Cache>, E> {
         val message = "Could not serialise ${wrapper.responseClass.simpleName}: this response will not be cached."
         logger.e(this, message)
 
-        val failedCacheToken = ErrorRemoteToken(
-                wrapper.metadata.cacheToken.instruction,
+        val cacheToken = wrapper.metadata.cacheToken
+        val failedCacheToken = ResponseToken(
+                cacheToken.instruction,
                 NOT_CACHED,
-                (wrapper.metadata.cacheToken as? RemoteToken)?.fetchDate!! //TODO check this
+                cacheToken.requestDate
         )
 
         val serialisationException = errorFactory(

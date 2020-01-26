@@ -30,7 +30,7 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import io.reactivex.Observable
@@ -38,7 +38,7 @@ import io.reactivex.Observer
 
 class VolleyObservable<E, R : Any> private constructor(private val requestQueue: RequestQueue,
                                                        private val gson: Gson,
-                                                       private val requestMetadata: RequestMetadata.Plain)
+                                                       private val requestMetadata: PlainRequestMetadata)
     : Observable<R>()
         where E : Exception,
               E : NetworkErrorPredicate {
@@ -69,7 +69,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
         fun <R : Any, E> observable(requestQueue: RequestQueue,
                                     gson: Gson,
                                     dejaVuInterceptor: DejaVuInterceptor<E>,
-                                    requestMetadata: RequestMetadata.Plain): Observable<R>
+                                    requestMetadata: PlainRequestMetadata): Observable<R>
                 where E : Exception,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
@@ -82,7 +82,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
         fun <R : Any, E> cacheOperation(requestQueue: RequestQueue,
                                         gson: Gson,
                                         dejaVuInterceptor: DejaVuInterceptor<E>,
-                                        requestMetadata: RequestMetadata.Plain): Observable<DejaVuResult<R>>
+                                        requestMetadata: PlainRequestMetadata): Observable<DejaVuResult<R>>
                 where E : Exception,
                       E : NetworkErrorPredicate = empty() //FIXME
 

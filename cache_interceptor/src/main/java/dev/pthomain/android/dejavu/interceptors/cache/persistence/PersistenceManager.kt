@@ -25,12 +25,13 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
@@ -48,7 +49,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun getCachedResponse(instructionToken: RemoteToken): ResponseWrapper<E>?
+    fun getCachedResponse(instructionToken: InstructionToken<Cache>): ResponseWrapper<Cache, RequestToken<Cache>, E>?
 
     /**
      * Caches a given response.
@@ -57,7 +58,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun cache(responseWrapper: ResponseWrapper<E>)
+    fun cache(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>)
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).

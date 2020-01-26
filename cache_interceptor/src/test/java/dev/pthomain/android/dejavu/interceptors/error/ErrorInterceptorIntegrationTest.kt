@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.error
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.test.*
@@ -38,7 +38,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class ErrorInterceptorIntegrationTest
-    : BaseIntegrationTest<Function1<CacheToken, ErrorInterceptor<Glitch>>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
+    : BaseIntegrationTest<Function1<InstructionToken, ErrorInterceptor<Glitch>>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
 
     private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
 

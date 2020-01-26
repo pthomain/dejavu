@@ -23,13 +23,29 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.test.BaseIntegrationTest
+import dev.pthomain.android.dejavu.test.assertNotNullWithContext
+import dev.pthomain.android.dejavu.test.assertNullWithContext
+import dev.pthomain.android.dejavu.test.assertTrueWithContext
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.test.network.model.User
+import org.junit.Test
+import java.util.*
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
@@ -247,7 +263,7 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
             secondResponse: ResponseWrapper<Glitch>,
             firstResponseExpectedStatus: CacheStatus = FRESH,
             secondResponseExpectedStatus: CacheStatus = FRESH
-    ): Pair<CacheToken, CacheToken> {
+    ): Pair<InstructionToken, InstructionToken> {
         val firstResponseToken = firstResponse.metadata.cacheToken
         val secondResponseToken = secondResponse.metadata.cacheToken
 

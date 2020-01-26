@@ -26,8 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
@@ -73,7 +75,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: ResponseWrapper<E>) {
+    override fun cache(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>) {
         serialise(responseWrapper).let { holder ->
 
             findPartialKey(holder.requestMetadata.requestHash)?.let {

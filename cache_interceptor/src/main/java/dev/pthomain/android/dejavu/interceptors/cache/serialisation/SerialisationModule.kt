@@ -36,6 +36,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.f
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import org.iq80.snappy.Snappy
+import java.util.*
 import javax.inject.Singleton
 
 @Module
@@ -109,12 +110,14 @@ internal abstract class SerialisationModule<E> where E : Exception,
     @Singleton
     fun provideSerialisationManagerFactory(configuration: DejaVuConfiguration<E>,
                                            byteToStringConverter: Function1<ByteArray, String>,
+                                           dateFactory: Function1<Long?, Date>,
                                            fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                            compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
                                            encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
             SerialisationManager.Factory(
                     configuration.serialiser,
                     configuration.errorFactory,
+                    dateFactory::get,
                     byteToStringConverter::get,
                     fileSerialisationDecorator,
                     compressionSerialisationDecorator,

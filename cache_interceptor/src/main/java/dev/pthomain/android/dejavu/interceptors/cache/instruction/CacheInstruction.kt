@@ -32,8 +32,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
  * @param requestMetadata the request metadata
  * @param operation the cache operation with call-specific directives
  */
-data class CacheInstruction internal constructor(
-        val operation: Operation,
+data class CacheInstruction<O : Operation> internal constructor(
+        val operation: O,
         val requestMetadata: ValidRequestMetadata
 )
 

@@ -26,10 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.error
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NETWORK
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ErrorRemoteToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.NetworkRemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
@@ -51,13 +52,14 @@ import java.util.*
  * @param dateFactory a factory converting timestamps to Dates
  * @param instructionToken the original request's instruction token
  */
-internal class ErrorInterceptor<E> private constructor(private val context: Context,
-                                                       private val errorFactory: ErrorFactory<E>,
-                                                       private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
-                                                       private val logger: Logger,
-                                                       private val dateFactory: (Long?) -> Date,
-                                                       private val instructionToken: CacheToken)
-    : ObservableTransformer<Any, ResponseWrapper<E>>
+internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private constructor(
+        private val context: Context,
+        private val errorFactory: ErrorFactory<E>,
+        private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
+        private val logger: Logger,
+        private val dateFactory: (Long?) -> Date,
+        private val instructionToken: InstructionToken<O>
+) : ObservableTransformer<Any, ResponseWrapper<O, T, E>>
         where E : Exception,
               E : NetworkErrorPredicate {
 
@@ -70,47 +72,46 @@ internal class ErrorInterceptor<E> private constructor(private val context: Cont
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
      */
-    override fun apply(upstream: Observable<Any>): Observable<ResponseWrapper<E>> {
+    override fun apply(upstream: Observable<Any>): Observable<ResponseWrapper<O, T, E>> {
         val fetchDate = dateFactory(null)
-        return upstream.map { this.toResponseWrapper(it, fetchDate) }
-                .switchIfEmpty(emptyWrapperObservable(fetchDate))
-                .onErrorResumeNext(Function { errorObservable(it, fetchDate) })!!
+
+        @Suppress("UNCHECKED_CAST")
+        val networkToken = RequestToken(
+                instructionToken.instruction,
+                NETWORK,
+                fetchDate
+        ) as T
+
+        return upstream.map { toResponseWrapper(it, networkToken) }
+                .switchIfEmpty(emptyWrapperObservable(networkToken, fetchDate))
+                .onErrorResumeNext(Function { errorObservable(it, networkToken) })!!
     }
 
-    private fun emptyWrapperObservable(fetchDate: Date): Observable<ResponseWrapper<E>> = Observable.fromCallable {
-        emptyResponseWrapperFactory.create(instructionToken, fetchDate)//TODO check this
-    }
+    private fun emptyWrapperObservable(requestToken: InstructionToken<O>,
+                                       fetchDate: Date): Observable<ResponseWrapper<O, T, E>> =
+            emptyResponseWrapperFactory.create<O, T>(requestToken, fetchDate.time).observable()//TODO check this
 
     private fun errorObservable(throwable: Throwable,
-                                fetchDate: Date): Observable<ResponseWrapper<E>> =
+                                networkToken: T) =
             ResponseWrapper(
                     responseClass,
                     null,
                     errorFactory.newMetadata(
-                            ErrorRemoteToken(
-                                    instructionToken.instruction,
-                                    NETWORK,
-                                    fetchDate
-                            ),
+                            networkToken,
                             errorFactory(throwable)
                     )
             ).observable()
 
-    private fun toResponseWrapper(it: Any, fetchDate: Date) =
-            if (it is ResponseWrapper<*>)
+    private fun toResponseWrapper(it: Any,
+                                  networkToken: T) =
+            if (it is ResponseWrapper<*, *, *>)
                 @Suppress("UNCHECKED_CAST")
-                it as ResponseWrapper<E>
+                it as ResponseWrapper<O, T, E>
             else
                 ResponseWrapper(
                         responseClass,
                         it,
-                        errorFactory.newMetadata(
-                                NetworkRemoteToken(
-                                        instructionToken.instruction,
-                                        NETWORK,
-                                        fetchDate
-                                )
-                        )
+                        errorFactory.newMetadata(networkToken)
                 )
 
     class Factory<E>(private val context: Context,
@@ -121,13 +122,13 @@ internal class ErrorInterceptor<E> private constructor(private val context: Cont
             where E : Exception,
                   E : NetworkErrorPredicate {
 
-        fun create(cacheToken: CacheToken) = ErrorInterceptor(
+        fun <O : Remote> create(instructionToken: InstructionToken<O>) = ErrorInterceptor(
                 context,
                 errorFactory,
                 emptyResponseWrapperFactory,
                 logger,
                 dateFactory,
-                cacheToken
+                instructionToken
         )
     }
 }

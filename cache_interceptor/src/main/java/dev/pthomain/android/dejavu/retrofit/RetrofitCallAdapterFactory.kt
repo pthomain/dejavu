@@ -27,8 +27,6 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.OperationSerialiser
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -56,7 +54,7 @@ import java.util.*
  */
 class RetrofitCallAdapterFactory<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
                                                          private val rxJava2CallAdapterFactory: RxJava2CallAdapterFactory,
-                                                         private val innerFactory: (DejaVuInterceptor.Factory<E>, String, Class<*>, Boolean, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>,
+                                                         private val innerFactory: RetrofitCallAdapter.Factory<E>,
                                                          private val dateFactory: (Long?) -> Date,
                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
                                                          private val requestBodyConverter: (Request) -> String?,
@@ -144,7 +142,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
 
             val isWrapped = responseClass != unwrappedResponseType
 
-            innerFactory(
+            innerFactory.create(
                     dejaVuFactory,
                     methodDescription,
                     responseClass,

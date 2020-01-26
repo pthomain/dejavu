@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.INVALID_HASH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Complete
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
@@ -62,7 +62,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private val entryOfWrongType2 = "EntryOfWrongType2"
     private val invalidatedEntryName = "invalidatedEntryName"
 
-    override fun setUp(instructionToken: CacheToken): KeyValuePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: InstructionToken): KeyValuePersistenceManager<Glitch> {
         mockFileNameSerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(
@@ -104,7 +104,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     override fun prepareClearCache(context: String,
-                                   instructionToken: CacheToken) {
+                                   instructionToken: InstructionToken) {
         val entryList = arrayOf(entryOfWrongType1, entryOfRightType, entryOfWrongType2)
 
         whenever(mockKeyValueStore.values()).thenReturn(mapOf(
@@ -159,7 +159,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun verifyCache(context: String,
                              iteration: Int,
-                             instructionToken: CacheToken,
+                             instructionToken: InstructionToken,
                              operation: Cache,
                              encryptData: Boolean,
                              compressData: Boolean,
@@ -193,7 +193,7 @@ internal class KeyValuePersistenceManagerUnitTest
     }
 
     private fun assertCacheDataHolder(context: String,
-                                      instructionToken: CacheToken,
+                                      instructionToken: InstructionToken,
                                       dataHolder: Complete) {
         assertEqualsWithContext(
                 instructionToken.instruction.requestMetadata,
@@ -226,7 +226,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun prepareInvalidate(context: String,
                                    operation: Operation,
-                                   instructionToken: CacheToken) {
+                                   instructionToken: InstructionToken) {
         val entryList = mapOf(
                 mockEntryWithValidHash to mockRightCacheDataHolder
         )
@@ -255,7 +255,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun prepareCheckInvalidation(context: String,
                                           operation: Operation,
-                                          instructionToken: CacheToken) {
+                                          instructionToken: InstructionToken) {
         prepareInvalidate(
                 context,
                 operation,
@@ -265,7 +265,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun verifyCheckInvalidation(context: String,
                                          operation: Operation,
-                                         instructionToken: CacheToken) {
+                                         instructionToken: InstructionToken) {
 //        if (operation.type == INVALIDATE || operation.type == REFRESH) {
 //            verifyWithContext(
 //                    mockValidEntry,
@@ -281,7 +281,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun prepareGetCachedResponse(context: String,
                                           operation: Cache,
-                                          instructionToken: CacheToken,
+                                          instructionToken: InstructionToken,
                                           hasResponse: Boolean,
                                           isStale: Boolean,
                                           isCompressed: Int,
@@ -313,7 +313,7 @@ internal class KeyValuePersistenceManagerUnitTest
 
     override fun verifyGetCachedResponse(context: String,
                                          operation: Cache,
-                                         instructionToken: CacheToken,
+                                         instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
                                          cachedResponse: ResponseWrapper<Glitch>?) {

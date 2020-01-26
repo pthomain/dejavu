@@ -28,7 +28,7 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -42,7 +42,7 @@ import java.util.*
 
 class CacheInterceptorUnitTest {
 
-    private lateinit var mockInstructionToken: CacheToken
+    private lateinit var mockInstructionToken: InstructionToken
     private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
     private lateinit var mockMetadata: ResponseMetadata<Glitch>
     private lateinit var mockUpstream: Observable<ResponseWrapper<Glitch>>

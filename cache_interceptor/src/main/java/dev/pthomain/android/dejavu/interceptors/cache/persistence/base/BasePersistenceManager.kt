@@ -26,9 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
@@ -65,7 +66,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response: ResponseWrapper<E>): CacheDataHolder.Complete {
+    protected fun serialise(response: ResponseWrapper<Cache, RequestToken<Cache>, E>): CacheDataHolder.Complete {
         val instructionToken = response.metadata.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation as Cache
@@ -102,7 +103,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      * @return a cached entry if available, or null otherwise
      * @throws SerialisationException in case the deserialisation failed
      */
-    final override fun getCachedResponse(instructionToken: RemoteToken): ResponseWrapper<E>? {
+    final override fun getCachedResponse(instructionToken: InstructionToken<Cache>): ResponseWrapper<Cache, RequestToken<Cache>, E>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
 
         logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
@@ -148,12 +149,12 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
      */
-    private fun deserialise(instructionToken: RemoteToken,
+    private fun deserialise(instructionToken: InstructionToken<Cache>,
                             cacheDate: Date,
                             expiryDate: Date,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
-                            localData: ByteArray): ResponseWrapper<E>? {
+                            localData: ByteArray): ResponseWrapper<Cache, RequestToken<Cache>, E>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val simpleName = requestMetadata.responseClass.simpleName
 
@@ -172,7 +173,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                             ResponseToken(
                                     instructionToken.instruction,
                                     dateFactory.getCacheStatus(expiryDate),
-                                    fetchDate = cacheDate, //TODO check this
+                                    requestDate = cacheDate, //TODO check this
                                     cacheDate = cacheDate,
                                     expiryDate = expiryDate
                             )

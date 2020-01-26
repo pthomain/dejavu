@@ -24,7 +24,10 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.dejavu.configuration.Serialiser
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RemoteToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -47,6 +50,7 @@ import java.util.*
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
 class SerialisationManager<E> internal constructor(private val errorFactory: ErrorFactory<E>,
+                                                   private val dateFactory: (Long?) -> Date,
                                                    private val serialiser: Serialiser,
                                                    private val byteToStringConverter: (ByteArray) -> String,
                                                    private val decoratorList: List<SerialisationDecorator<E>>)
@@ -65,7 +69,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @throws SerialisationException in case the serialisation fails
      */
     @Throws(SerialisationException::class)
-    fun serialise(responseWrapper: ResponseWrapper<E>,
+    fun serialise(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
                   metadata: SerialisationDecorationMetadata): ByteArray {
         val response = responseWrapper.response
         val responseClass = responseWrapper.responseClass
@@ -108,9 +112,9 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @throws SerialisationException in case the deserialisation fails
      */
     @Throws(SerialisationException::class)
-    fun deserialise(instructionToken: RemoteToken,
+    fun deserialise(instructionToken: InstructionToken<Cache>,
                     data: ByteArray,
-                    metadata: SerialisationDecorationMetadata): ResponseWrapper<E> {
+                    metadata: SerialisationDecorationMetadata): ResponseWrapper<Cache, RequestToken<Cache>, E> {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val responseClass = requestMetadata.responseClass
         var deserialised = data
@@ -129,7 +133,13 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                     errorFactory.newWrapper(
                             responseClass,
                             it,
-                            errorFactory.newMetadata(instructionToken)
+                            errorFactory.newMetadata(
+                                    RequestToken(
+                                            instructionToken.instruction,
+                                            NOT_CACHED,
+                                            dateFactory(null)
+                                    )
+                            )
                     )
                 }
     }
@@ -146,6 +156,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      */
     class Factory<E> internal constructor(private val serialiser: Serialiser,
                                           private val errorFactory: ErrorFactory<E>,
+                                          private val dateFactory: (Long?) -> Date,
                                           private val byteToStringConverter: (ByteArray) -> String,
                                           private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                           private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
@@ -170,6 +181,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
 
             return SerialisationManager(
                     errorFactory,
+                    dateFactory,
                     serialiser,
                     byteToStringConverter,
                     decoratorList

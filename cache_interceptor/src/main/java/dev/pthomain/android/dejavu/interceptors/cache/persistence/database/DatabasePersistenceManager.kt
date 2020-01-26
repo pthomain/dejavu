@@ -30,8 +30,10 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
@@ -214,7 +216,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: ResponseWrapper<E>) {
+    override fun cache(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>) {
         serialise(responseWrapper).let {
             with(it) {
                 val values = HashMap<String, Any>()

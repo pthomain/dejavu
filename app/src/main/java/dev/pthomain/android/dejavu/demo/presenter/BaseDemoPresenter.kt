@@ -37,16 +37,15 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_FIRST
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
@@ -77,7 +76,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var useSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
-    final override var freshness = ANY
+    final override var freshness = FreshnessPriority.ANY
 
     protected val gson by lazy { Gson() }
 
@@ -138,7 +137,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                             compress = compress
                     )
                     DO_NOT_CACHE -> DoNotCache
-                    INVALIDATE -> Invalidate()
+                    INVALIDATE -> Invalidate
                     CLEAR -> Clear()
                 }
             }
@@ -173,7 +172,7 @@ internal abstract class BaseDemoPresenter protected constructor(
                                                  encrypt: Boolean,
                                                  compress: Boolean): Observable<CatFactResponse>
 
-    protected abstract fun getOfflineSingle(preference: FreshnessPriority): Single<CatFactResponse>
+    protected abstract fun getOfflineSingle(freshness: FreshnessPriority): Single<CatFactResponse>
     protected abstract fun getClearEntriesCompletable(): Observable<DejaVuResult<CatFactResponse>>
     protected abstract fun getInvalidateCompletable(): Observable<DejaVuResult<CatFactResponse>>
 

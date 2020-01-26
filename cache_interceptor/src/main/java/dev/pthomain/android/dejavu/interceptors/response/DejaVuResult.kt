@@ -23,51 +23,52 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.EmptyRemoteToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.LocalToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.StatusToken
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 
-//TODO JavaDoc
-sealed class DejaVuResult<R : Any, T : StatusToken>(
-        override val requestMetadata: RequestMetadata,
-        override val cacheToken: T,
-        override val callDuration: CallDuration
-) : HasCacheMetadata<T>
+/**
+ * Type to use as a return for calls returning response wrappers as defined below.
+ * This is used as a marker for the call to emit one of the types extending this
+ * sealed class and to provide the type of the response R.
+ */
+sealed class DejaVuResult<R : Any>
 
 //The result has a response
-data class Response<R : Any> internal constructor(
+data class Response<R : Any, O : Remote> internal constructor(
         val response: R,
-        override val requestMetadata: RequestMetadata,
-        override val cacheToken: ResponseToken,
+        override val cacheToken: ResponseToken<O>,
         override val callDuration: CallDuration
-) : DejaVuResult<R, ResponseToken>(requestMetadata, cacheToken, callDuration)
+) : DejaVuResult<R>(),
+        HasCacheMetadata<O, ResponseToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
 //The result is empty due to filtering or exceptions
-data class Empty<R : Any> internal constructor(
+data class Empty<O : Remote> internal constructor(
         val exception: EmptyResponseException,
-        override val requestMetadata: RequestMetadata,
-        override val cacheToken: EmptyRemoteToken,
+        override val cacheToken: RequestToken<O>,
         override val callDuration: CallDuration
-) : DejaVuResult<R, EmptyRemoteToken>(requestMetadata, cacheToken, callDuration)
+) : DejaVuResult<Any>(),
+        HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
 //The result has a response
-data class Result<R : Any> internal constructor(
-        override val requestMetadata: RequestMetadata,
-        override val cacheToken: LocalToken,
+data class Result<O : Local> internal constructor(
+        override val cacheToken: RequestToken<O>,
         override val callDuration: CallDuration
-) : DejaVuResult<R, LocalToken>(requestMetadata, cacheToken, callDuration)
+) : DejaVuResult<Any>(),
+        HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
-interface HasCacheMetadata<T : StatusToken> : HasRequestMetadata, HasCacheToken<T>, HasCallDuration
+internal data class CacheMetadataHolder<O : Operation, T : RequestToken<O>>(
+        override val cacheToken: T,
+        override val callDuration: CallDuration
+) : HasCacheMetadata<O, T>
 
-interface HasRequestMetadata {
-    val requestMetadata: RequestMetadata
-}
+interface HasCacheMetadata<O : Operation, T : RequestToken<O>> : HasCacheToken<O, T>, HasCallDuration
 
-interface HasCacheToken<T : StatusToken> {
+interface HasCacheToken<O : Operation, T : RequestToken<O>> {
     val cacheToken: T
 }
 

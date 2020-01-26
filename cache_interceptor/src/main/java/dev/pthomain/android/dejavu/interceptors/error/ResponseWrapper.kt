@@ -23,7 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.error
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 
 /**
@@ -33,9 +35,10 @@ import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicat
  * @param response the call's response if available
  * @param metadata the call's metadata
  */
-data class ResponseWrapper<E> internal constructor(val responseClass: Class<*>,
-                                                   val response: Any?,
-                                                   override var metadata: ResponseMetadata<E>)
-    : ResponseMetadata.Holder<E>
+data class ResponseWrapper<O : Operation, T : RequestToken<O>, E> internal constructor(
+        val responseClass: Class<*>,
+        val response: Any?,
+        override var metadata: ResponseMetadata<O, T, E>
+) : ResponseMetadata.Holder<O, T, E>
         where E : Exception,
               E : NetworkErrorPredicate

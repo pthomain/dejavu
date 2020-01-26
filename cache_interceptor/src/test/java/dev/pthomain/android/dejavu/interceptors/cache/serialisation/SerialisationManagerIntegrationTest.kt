@@ -27,8 +27,8 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
@@ -45,7 +45,7 @@ internal class SerialisationManagerIntegrationTest
 }) {
 
     private lateinit var wrapper: ResponseWrapper<Glitch>
-    private lateinit var instructionToken: CacheToken
+    private lateinit var instructionToken: InstructionToken
     private lateinit var mockErrorCallback: Action
 
     @Before

@@ -28,11 +28,26 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
+import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.test.assertEqualsWithContext
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.test.verifyNeverWithContext
+import dev.pthomain.android.dejavu.test.verifyWithContext
+import io.reactivex.Observable
+import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+
+dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
@@ -53,7 +68,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
     private lateinit var mockContentValues: ContentValues
 
-    override fun setUp(instructionToken: CacheToken): DatabasePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: InstructionToken): DatabasePersistenceManager<Glitch> {
         mockDatabase = mock()
         mockObservable = mock()
         mockContentValuesFactory = mock()
@@ -136,7 +151,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
 
     override fun verifyCache(context: String,
                              iteration: Int,
-                             instructionToken: CacheToken,
+                             instructionToken: InstructionToken,
                              operation: Cache,
                              encryptData: Boolean,
                              compressData: Boolean,
@@ -207,14 +222,14 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
 
     override fun prepareInvalidate(context: String,
                                    operation: Operation,
-                                   instructionToken: CacheToken) {
+                                   instructionToken: InstructionToken) {
         whenever(mockContentValuesFactory.invoke(any()))
                 .thenReturn(mockContentValues)
     }
 
     override fun prepareCheckInvalidation(context: String,
                                           operation: Operation,
-                                          instructionToken: CacheToken) {
+                                          instructionToken: InstructionToken) {
         prepareInvalidate(
                 context,
                 operation,
@@ -224,7 +239,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
 
     override fun verifyCheckInvalidation(context: String,
                                          operation: Operation,
-                                         instructionToken: CacheToken) {
+                                         instructionToken: InstructionToken) {
         if (operation.type == INVALIDATE || (operation as? Cache)?.priority?.network == REFRESH) {
             val mapCaptor = argumentCaptor<Map<String, Any>>()
             val tableCaptor = argumentCaptor<String>()
@@ -289,7 +304,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
 
     override fun prepareGetCachedResponse(context: String,
                                           operation: Cache,
-                                          instructionToken: CacheToken,
+                                          instructionToken: InstructionToken,
                                           hasResponse: Boolean,
                                           isStale: Boolean,
                                           isCompressed: Int,
@@ -322,7 +337,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
 
     override fun verifyGetCachedResponse(context: String,
                                          operation: Cache,
-                                         instructionToken: CacheToken,
+                                         instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
                                          cachedResponse: ResponseWrapper<Glitch>?) {

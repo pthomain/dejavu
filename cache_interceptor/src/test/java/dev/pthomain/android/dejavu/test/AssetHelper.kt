@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.test
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -39,7 +39,7 @@ class AssetHelper(private val assetsFolder: String,
 
     fun <R> observeStubbedResponse(fileName: String,
                                    responseClass: Class<R>,
-                                   cacheToken: CacheToken)
+                                   cacheToken: InstructionToken)
             : Observable<R> where R : ResponseMetadata.Holder<Glitch> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }

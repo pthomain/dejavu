@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaV
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
@@ -71,9 +71,9 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<Glitch>
     fun memoryStoreFactory(): MemoryStore.Factory
     fun cacheManager(): CacheManager<Glitch>
-    fun errorInterceptorFactory(): Function1<CacheToken, ErrorInterceptor<Glitch>>
-    fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, CacheToken, Long, CacheInterceptor<Glitch>>
-    fun responseInterceptorFactory(): Function3<CacheToken, Boolean, Long, ResponseInterceptor<Glitch>>
+    fun errorInterceptorFactory(): Function1<InstructionToken, ErrorInterceptor<Glitch>>
+    fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, InstructionToken, Long, CacheInterceptor<Glitch>>
+    fun responseInterceptorFactory(): Function3<InstructionToken, Boolean, Long, ResponseInterceptor<Glitch>>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
     fun cacheMetadataSubject(): PublishSubject<ResponseMetadata<Glitch>>
     fun annotationProcessor(): AnnotationProcessor<Glitch>
