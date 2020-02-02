@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -29,12 +29,9 @@ import dagger.Component
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.injection.Function3
-import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
+import dev.pthomain.android.dejavu.injection.integration.module.IntegrationModule
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
@@ -44,6 +41,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -54,12 +52,12 @@ import java.util.*
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [IntegrationDejaVuModule::class])
+@Component(modules = [IntegrationModule::class])
 internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
 
     fun dateFactory(): Function1<Long?, Date>
     fun serialiser(): Serialiser
-    fun encryptionManager(): EncryptionManager
+    fun encryptionManager(): EncryptionManager?
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
@@ -71,11 +69,11 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<Glitch>
     fun memoryStoreFactory(): MemoryStore.Factory
     fun cacheManager(): CacheManager<Glitch>
-    fun errorInterceptorFactory(): Function1<InstructionToken, ErrorInterceptor<Glitch>>
-    fun cacheInterceptorFactory(): Function3<ErrorInterceptor<Glitch>, InstructionToken, Long, CacheInterceptor<Glitch>>
-    fun responseInterceptorFactory(): Function3<InstructionToken, Boolean, Long, ResponseInterceptor<Glitch>>
+    fun errorInterceptorFactory(): ErrorInterceptor.Factory<Glitch>
+    fun cacheInterceptorFactory(): CacheInterceptor.Factory<Glitch>
+    fun responseInterceptorFactory(): ResponseInterceptor.Factory<Glitch>
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
-    fun cacheMetadataSubject(): PublishSubject<ResponseMetadata<Glitch>>
+    fun cacheMetadataSubject(): PublishSubject<DejaVuResult<*>>
     fun annotationProcessor(): AnnotationProcessor<Glitch>
     fun emptyResponseFactory(): EmptyResponseWrapperFactory<Glitch>
     fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?

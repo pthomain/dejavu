@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -70,10 +70,10 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
         override fun freshOnlyCompressedEncrypted() = singleClient.freshOnlyCompressedEncrypted().toObservable()
         override fun refresh() = singleClient.refresh().toObservable()
         override fun refreshFreshOnly() = singleClient.refreshFreshOnly().toObservable()
-        override fun clearCache() = singleClient.clearCache()
-        override fun invalidate() = singleClient.invalidate()
+        override fun clearCache() = singleClient.clearCache().toObservable()
+        override fun invalidate() = singleClient.invalidate().toObservable()
         override fun offline() = singleClient.offline()
         override fun offlineFreshOnly() = singleClient.offlineFreshOnly()
-        override fun execute(operation: Operation) = singleClient.execute(operation)
+        override fun execute(operation: Operation) = singleClient.execute(operation).toObservable()
     }
 }

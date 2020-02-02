@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -32,7 +32,6 @@ import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
-import io.reactivex.Observable
 import io.reactivex.Single
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -102,14 +101,14 @@ internal interface SingleCatFactClient {
     // CLEAR
 
     @DELETE(ENDPOINT)
-    @Clear()
-    fun clearCache(): Observable<DejaVuResult<CatFactResponse>>
+    @Clear
+    fun clearCache(): Single<DejaVuResult<CatFactResponse>>
 
     // INVALIDATE
 
     @DELETE(ENDPOINT)
     @Invalidate
-    fun invalidate(): Observable<DejaVuResult<CatFactResponse>>
+    fun invalidate(): Single<DejaVuResult<CatFactResponse>>
 
     // OFFLINE
 
@@ -124,6 +123,6 @@ internal interface SingleCatFactClient {
     //HEADER
 
     @GET(ENDPOINT)
-    fun execute(@Header(DejaVuHeader) operation: Operation): Observable<DejaVuResult<CatFactResponse>>
+    fun execute(@Header(DejaVuHeader) operation: Operation): Single<DejaVuResult<CatFactResponse>>
 
 }

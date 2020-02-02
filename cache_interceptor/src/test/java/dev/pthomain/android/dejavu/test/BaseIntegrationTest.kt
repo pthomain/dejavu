@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -33,14 +33,16 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.injection.integration.component.DaggerIntegrationTestComponent
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.injection.integration.module.IntegrationDejaVuModule
+import dev.pthomain.android.dejavu.injection.integration.module.IntegrationModule
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
@@ -99,7 +101,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
 
     protected fun setUpWithConfiguration(configuration: DejaVuConfiguration<Glitch>) {
         cacheComponent = DaggerIntegrationDejaVuComponent.builder()
-                .integrationDejaVuModule(IntegrationDejaVuModule(configuration))
+                .integrationDejaVuModule(IntegrationModule(configuration))
                 .build()
 
         dejaVu = DejaVu(cacheComponent)
@@ -130,7 +132,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
         mockClient.enqueueIOException(exception)
     }
 
-    protected fun getStubbedTestResponse(instructionToken: InstructionToken = instructionToken()) =
+    protected fun getStubbedTestResponse(instructionToken: InstructionToken<Cache> = instructionToken()) =
             assetHelper.observeStubbedResponse(
                     TestResponse.STUB_FILE,
                     TestResponse::class.java,
@@ -160,7 +162,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                                                                     requestMetadata.responseClass,
                                                                     url
                                                             )
-                                                    ) as RequestMetadata.Hashed.Valid,
+                                                    ) as ValidRequestMetadata,
                                                     cacheToken.instruction.operation
                                             )
                                     )
@@ -169,12 +171,12 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 }
             }
 
-    protected fun assertResponse(stubbedResponse: ResponseWrapper<Glitch>,
-                                 actualResponse: ResponseWrapper<Glitch>?,
+    protected fun assertResponse(stubbedResponse: ResponseWrapper<Cache, ResponseToken<Cache>, Glitch>,
+                                 actualResponse: ResponseWrapper<*, *, Glitch>?,
                                  expectedStatus: CacheStatus,
-                                 fetchDate: Date? = NOW,
+                                 fetchDate: Date = NOW,
                                  cacheDate: Date? = NOW,
-                                 expiryDate: Date? = Date(NOW.time + (stubbedResponse.metadata.cacheToken.instruction.operation as Cache).durationInSeconds * 1000)) {
+                                 expiryDate: Date? = Date(NOW.time + stubbedResponse.metadata.cacheToken.instruction.operation.durationInSeconds * 1000)) {
         assertNotNullWithContext(
                 actualResponse,
                 "Actual response should not be null"
@@ -187,11 +189,9 @@ internal abstract class BaseIntegrationTest<T : Any>(
         )
 
         assertEqualsWithContext(
-                InstructionToken(
+                ResponseToken(
                         stubbedResponse.metadata.cacheToken.instruction,
                         expectedStatus,
-                        true,
-                        true,
                         fetchDate,
                         cacheDate,
                         expiryDate
@@ -201,23 +201,15 @@ internal abstract class BaseIntegrationTest<T : Any>(
         )
     }
 
-    protected fun instructionToken(operation: Operation = Cache(durationInSeconds = 3600),
+    protected fun instructionToken(operation: Cache = Cache(durationInSeconds = 3600),
                                    responseClass: Class<*> = TestResponse::class.java,
                                    url: String = "http://test.com/testResponse") =
-            cacheComponent.hasher().hash(RequestMetadata.Plain(
-                    responseClass,
-                    url
-            )).let {
-                InstructionToken(
-                        CacheInstruction(
-                                it as RequestMetadata.Hashed.Valid,
-                                operation
-                        ),
-                        CacheStatus.INSTRUCTION,
-                        true,
-                        true
-                )
-            }
-
+            InstructionToken(
+                    CacheInstruction(
+                            operation,
+                            cacheComponent.hasher().hash(PlainRequestMetadata(responseClass, url)
+                            ) as ValidRequestMetadata
+                    )
+            )
 }
 

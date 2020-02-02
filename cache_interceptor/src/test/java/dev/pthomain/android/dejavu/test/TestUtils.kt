@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,38 +27,19 @@ package dev.pthomain.android.dejavu.test
 import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.DEFAULT_URL
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.INVALID_HASH
+import dev.pthomain.android.dejavu.injection.integration.module.NOW
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
-import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import junit.framework.TestCase.*
-import org.junit.Assert.assertArrayEquals
-import org.mockito.internal.verification.VerificationModeFactory
-import org.mockito.verification.VerificationMode
-import retrofit2.CallAdapter
-import retrofit2.Retrofit
-import retrofit2.http.GET
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
-
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
@@ -198,8 +179,8 @@ fun assertGlitchWithContext(expectedGlitch: Glitch?,
     }
 }
 
-internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
-                                              actual: ResponseWrapper<Glitch>,
+internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<*, *, Glitch>,
+                                              actual: ResponseWrapper<*, *, Glitch>,
                                               context: String? = null) {
     assertEqualsWithContext(
             expected.responseClass,
@@ -283,32 +264,31 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
     }
 }
 
-internal fun defaultResponseWrapper(metadata: ResponseMetadata<Glitch>,
+internal fun defaultResponseWrapper(metadata: ResponseMetadata<Cache, ResponseToken<Cache>, Glitch>,
                                     response: TestResponse?) = ResponseWrapper(
         TestResponse::class.java,
         response,
         metadata
 )
 
-fun defaultRequestMetadata() = RequestMetadata.Plain(
+fun defaultRequestMetadata() = PlainRequestMetadata(
         TestResponse::class.java,
         DEFAULT_URL
 )
 
-fun instructionToken(operation: Operation = Cache()) = InstructionToken(
+fun instructionToken(operation: Operation = Cache()) = RequestToken(
         CacheInstruction(
-                RequestMetadata.Hashed.Valid(
+                operation,
+                ValidRequestMetadata(
                         TestResponse::class.java,
                         DEFAULT_URL,
                         null,
                         INVALID_HASH,
                         INVALID_HASH
-                ),
-                operation
+                )
         ),
-        INSTRUCTION,
-        true,
-        true
+        NETWORK,
+        NOW
 )
 
 fun prioritySequence(action: (CachePriority) -> Unit) =
@@ -317,12 +297,10 @@ fun prioritySequence(action: (CachePriority) -> Unit) =
 
 inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(
-            DoNotCache,
-            Invalidate(),
-            Invalidate(true),
+            Remote.DoNotCache,
+            Invalidate,
             Clear(),
-            Clear(true),
-            Clear(true, true)
+            Clear(true)
     ).plus(CachePriority.values().asSequence().map { Cache(it, encrypt = true, compress = true) })
             .forEach(action)
 }
@@ -338,9 +316,9 @@ inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
 
-    is Cache -> operation.priority.returnedStatuses.contains(cacheStatus)
+    is Cache -> operation.priority.returnStatuses.contains(cacheStatus)
 
-    DoNotCache -> cacheStatus == NOT_CACHED
+    Remote.DoNotCache -> cacheStatus == NOT_CACHED
 
     is Invalidate,
     is Clear -> cacheStatus == DONE

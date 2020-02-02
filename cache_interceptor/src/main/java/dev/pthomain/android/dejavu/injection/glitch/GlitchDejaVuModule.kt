@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -26,6 +26,7 @@ package dev.pthomain.android.dejavu.injection.glitch
 import dagger.Module
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.DejaVuModule
+import dev.pthomain.android.dejavu.injection.ProdModule
 import dev.pthomain.android.dejavu.interceptors.InterceptorModule
 import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
@@ -35,6 +36,7 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitModule
 
 @Module(includes = [
+    GlitchProdModule::class,
     GlitchSerialisationModule::class,
     GlitchPersistenceModule::class,
     GlitchStatisticsModule::class,
@@ -44,6 +46,9 @@ import dev.pthomain.android.dejavu.retrofit.RetrofitModule
 ])
 internal class GlitchDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
     : DejaVuModule<Glitch>(configuration)
+
+@Module
+internal class GlitchProdModule : ProdModule<Glitch>()
 
 @Module
 internal class GlitchSerialisationModule : SerialisationModule<Glitch>()

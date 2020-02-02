@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,25 +23,9 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.persistence
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Clear
+import com.google.common.net.HttpHeaders.REFRESH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.test.BaseIntegrationTest
-import dev.pthomain.android.dejavu.test.assertNotNullWithContext
-import dev.pthomain.android.dejavu.test.assertNullWithContext
-import dev.pthomain.android.dejavu.test.assertTrueWithContext
-import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.network.model.User
-import org.junit.Test
-import java.util.*
-
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
@@ -259,8 +243,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceMan
     }
 
     private fun cacheTwoResponses(
-            firstResponse: ResponseWrapper<Glitch>,
-            secondResponse: ResponseWrapper<Glitch>,
+            firstResponse: ResponseWrapper<*, *, Glitch>,
+            secondResponse: ResponseWrapper<*, *, Glitch>,
             firstResponseExpectedStatus: CacheStatus = FRESH,
             secondResponseExpectedStatus: CacheStatus = FRESH
     ): Pair<InstructionToken, InstructionToken> {

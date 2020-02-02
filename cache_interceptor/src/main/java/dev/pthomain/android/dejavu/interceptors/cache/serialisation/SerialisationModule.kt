@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -103,8 +103,8 @@ internal abstract class SerialisationModule<E> where E : Exception,
 
     @Provides
     @Singleton
-    fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager) =
-            EncryptionSerialisationDecorator<E>(encryptionManager)
+    fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager?) =
+            encryptionManager?.let { EncryptionSerialisationDecorator<E>(it) }
 
     @Provides
     @Singleton
@@ -113,7 +113,7 @@ internal abstract class SerialisationModule<E> where E : Exception,
                                            dateFactory: Function1<Long?, Date>,
                                            fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                            compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                           encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>) =
+                                           encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?) =
             SerialisationManager.Factory(
                     configuration.serialiser,
                     configuration.errorFactory,

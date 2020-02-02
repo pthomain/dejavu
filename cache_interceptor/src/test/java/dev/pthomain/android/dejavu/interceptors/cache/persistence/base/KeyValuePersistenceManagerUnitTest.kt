@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.base
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata.Companion.INVALID_HASH
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.INVALID_HASH
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
@@ -316,7 +316,7 @@ internal class KeyValuePersistenceManagerUnitTest
                                          instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
-                                         cachedResponse: ResponseWrapper<Glitch>?) {
+                                         cachedResponse: ResponseWrapper<*, *, Glitch>?) {
         assertEqualsWithContext(
                 mockBlob,
                 mockIncompleteCacheDataHolder.data,

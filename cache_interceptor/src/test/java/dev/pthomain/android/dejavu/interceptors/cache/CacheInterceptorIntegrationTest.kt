@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,14 +23,11 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
-import dev.pthomain.android.dejavu.injection.Function3
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import org.junit.Test
 
-internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<Function3<ErrorInterceptor<Glitch>, InstructionToken, Long, CacheInterceptor<Glitch>>>(
+internal class CacheInterceptorIntegrationTest : BaseIntegrationTest<CacheInterceptor.Factory<Glitch>>(
         { it.cacheInterceptorFactory() },
         false
 ) {

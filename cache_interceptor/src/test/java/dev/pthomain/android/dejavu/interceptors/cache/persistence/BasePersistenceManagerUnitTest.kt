@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -46,31 +46,12 @@ import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import org.junit.Test
 import java.util.*
 
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Invalidate
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.test.*
-import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
-import org.junit.Test
-import java.util.*
-
 internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Glitch>> {
 
     protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
     protected lateinit var mockDateFactory: (Long?) -> Date
     protected lateinit var mockCacheToken: InstructionToken
-    protected lateinit var mockResponseWrapper: ResponseWrapper<Glitch>
+    protected lateinit var mockResponseWrapper: ResponseWrapper<*, *, Glitch>
     protected lateinit var mockMetadata: ResponseMetadata<Glitch>
 
     protected val mockHash = "mockHash"
@@ -226,7 +207,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                 isSerialisationSuccess
         )
 
-        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<Glitch>>() else null
+        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<*, *, Glitch>>() else null
 
         if (mockPreviousResponse != null) {
             val previousMetadata = ResponseMetadata(
@@ -421,7 +402,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
         whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
         whenever(mockDateFactory.invoke(eq(expiryDateTime))).thenReturn(mockExpiryDate)
 
-        val mockResponseWrapper = ResponseWrapper<Glitch>(
+        val mockResponseWrapper = ResponseWrapper<*, *, Glitch>(
                 TestResponse::class.java,
                 null,
                 mock()
@@ -520,5 +501,5 @@ internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Gl
                                                    instructionToken: InstructionToken,
                                                    hasResponse: Boolean,
                                                    isStale: Boolean,
-                                                   cachedResponse: ResponseWrapper<Glitch>?)
+                                                   cachedResponse: ResponseWrapper<*, *, Glitch>?)
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -160,7 +160,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                                           private val byteToStringConverter: (ByteArray) -> String,
                                           private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                           private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                          private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>)
+                                          private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?)
             where E : Exception,
                   E : NetworkErrorPredicate {
 
@@ -175,7 +175,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                    disableEncryption: Boolean = false): SerialisationManager<E> {
             val decoratorList = LinkedList<SerialisationDecorator<E>>().apply {
                 if (persistenceType == FILE) add(fileSerialisationDecorator) //TODO check if this is really needed
-                if (!disableEncryption) add(encryptionSerialisationDecorator)
+                if (encryptionSerialisationDecorator != null && !disableEncryption) add(encryptionSerialisationDecorator)
                 add(compressionSerialisationDecorator)
             }
 

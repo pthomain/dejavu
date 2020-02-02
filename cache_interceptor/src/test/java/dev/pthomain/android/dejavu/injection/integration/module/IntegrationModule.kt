@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -29,19 +29,24 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.injection.BaseDejaVuModule
+import dev.pthomain.android.dejavu.injection.DejaVuModule
 import dev.pthomain.android.dejavu.injection.Function1
-import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
+import dev.pthomain.android.dejavu.injection.glitch.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import java.util.*
 import javax.inject.Singleton
 
-@Module(includes = [GlitchDejaVuModule::class])
-internal class IntegrationDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
-    : BaseDejaVuModule<Glitch>(configuration) {
-
-    val NOW = Date(1234L)
+@Module(includes = [
+    GlitchSerialisationModule::class,
+    GlitchPersistenceModule::class,
+    GlitchStatisticsModule::class,
+    GlitchInterceptorModule::class,
+    GlitchCacheModule::class,
+    GlitchRetrofitModule::class
+])
+internal class IntegrationModule(configuration: DejaVuConfiguration<Glitch>)
+    : DejaVuModule<Glitch>(configuration) {
 
     @Provides
     @Singleton
@@ -61,3 +66,6 @@ internal class IntegrationDejaVuModule(configuration: DejaVuConfiguration<Glitch
             )
 
 }
+
+internal val NOW = Date(1234L)
+

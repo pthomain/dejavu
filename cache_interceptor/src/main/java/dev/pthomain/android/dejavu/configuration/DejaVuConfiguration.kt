@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -56,9 +56,9 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
 class DejaVuConfiguration<E> internal constructor(
         internal val context: Context,
         internal val logger: Logger,
-        val errorFactory: ErrorFactory<E>,
+        internal val errorFactory: ErrorFactory<E>,
         internal val serialiser: Serialiser,
-        internal val encryptionManager: EncryptionManager,
+        internal val encryptionManager: EncryptionManager?,
         internal val useDatabase: Boolean,
         internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
         internal val cachePredicate: (metadata: RequestMetadata) -> Remote?
@@ -78,12 +78,6 @@ class DejaVuConfiguration<E> internal constructor(
             object CacheAll : CachePredicate(Cache(DEFAULT, DEFAULT_CACHE_DURATION_IN_SECONDS))
         }
 
-        private val SILENT_LOGGER = object : Logger {
-            override fun d(tagOrCaller: Any, message: String) = Unit
-            override fun e(tagOrCaller: Any, message: String) = Unit
-            override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
-        }
-
     }
 
     class Builder<E> internal constructor(
@@ -94,7 +88,11 @@ class DejaVuConfiguration<E> internal constructor(
     ) where E : Exception,
             E : NetworkErrorPredicate {
 
-        private var logger: Logger = SILENT_LOGGER
+        private var logger: Logger = object : Logger {
+            override fun d(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, message: String) = Unit
+            override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
+        }
         private var customErrorFactory: ErrorFactory<E>? = null
         private var mumboPicker: ((Mumbo) -> EncryptionManager)? = null
         private var useDatabase = false
@@ -105,11 +103,6 @@ class DejaVuConfiguration<E> internal constructor(
         private var persistenceManagerPicker = defaultPersistenceManagerPicker
 
         private var cachePredicate: (RequestMetadata) -> Remote? = CachePredicate.Inactive
-
-        /**
-         * Disables log output (default log output is only enabled in DEBUG mode).
-         */
-        fun withoutLog() = withLogger(SILENT_LOGGER)
 
         /**
          * Sets custom logger.
@@ -194,8 +187,12 @@ class DejaVuConfiguration<E> internal constructor(
          */
         fun build(): DejaVu<E> {
             val encryptionManager = with(Mumbo(context, logger)) {
-                mumboPicker?.invoke(this)
-                        ?: defaultEncryptionManager(this, context)
+                try {
+                    mumboPicker?.invoke(this)
+                            ?: defaultEncryptionManager(this, context)
+                } catch (exception: Exception) {
+                    null
+                }
             }
 
             return DejaVu(

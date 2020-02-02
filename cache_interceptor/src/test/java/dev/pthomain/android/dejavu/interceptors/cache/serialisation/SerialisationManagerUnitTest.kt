@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -52,7 +52,7 @@ class SerialisationManagerUnitTest {
     private lateinit var mockMetadata: SerialisationDecorationMetadata
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
     private lateinit var mockInstruction: CacheInstruction
-    private lateinit var mockWrapper: ResponseWrapper<Glitch>
+    private lateinit var mockWrapper: ResponseWrapper<*, *, Glitch>
     private lateinit var decoratorList: List<SerialisationDecorator<Glitch>>
 
     private val mockByteArrayString = "mockByteArrayString"

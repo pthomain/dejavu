@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -26,26 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.database
 import android.content.ContentValues
 import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.google.common.net.HttpHeaders.REFRESH
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.test.assertEqualsWithContext
-import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.verifyNeverWithContext
-import dev.pthomain.android.dejavu.test.verifyWithContext
-import io.reactivex.Observable
-import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
@@ -340,7 +325,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                                          instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
-                                         cachedResponse: ResponseWrapper<Glitch>?) {
+                                         cachedResponse: ResponseWrapper<*, *, Glitch>?) {
         val queryCaptor = argumentCaptor<String>()
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 

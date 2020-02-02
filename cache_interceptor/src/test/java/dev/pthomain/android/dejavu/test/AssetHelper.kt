@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,8 +25,9 @@ package dev.pthomain.android.dejavu.test
 
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -39,8 +40,8 @@ class AssetHelper(private val assetsFolder: String,
 
     fun <R> observeStubbedResponse(fileName: String,
                                    responseClass: Class<R>,
-                                   cacheToken: InstructionToken)
-            : Observable<R> where R : ResponseMetadata.Holder<Glitch> =
+                                   cacheToken: RequestToken<Cache>)
+            : Observable<R> where R : ResponseMetadata.Holder<Cache, RequestToken<Cache>, Glitch> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }
                     .doOnNext {

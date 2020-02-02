@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -44,7 +44,7 @@ internal class SerialisationManagerIntegrationTest
     it.serialisationManagerFactory().create(FILE) //TODO test the factory
 }) {
 
-    private lateinit var wrapper: ResponseWrapper<Glitch>
+    private lateinit var wrapper: ResponseWrapper<*, *, Glitch>
     private lateinit var instructionToken: InstructionToken
     private lateinit var mockErrorCallback: Action
 

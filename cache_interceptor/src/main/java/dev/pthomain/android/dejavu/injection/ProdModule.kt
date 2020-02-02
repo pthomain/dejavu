@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,37 +23,39 @@
 
 package dev.pthomain.android.dejavu.injection
 
-import android.net.Uri
+import android.content.Context
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class BaseDejaVuModule<E>(private val configuration: DejaVuConfiguration<E>)
+internal abstract class ProdModule<E>
         where E : Exception,
               E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    fun provideContext() =
-            configuration.context
-
-    @Provides
-    @Singleton
-    fun provideConfiguration() =
-            configuration
-
-    @Provides
-    @Singleton
-    fun provideLogger() =
-            configuration.logger
-
-    @Provides
-    @Singleton
-    fun provideUriParser() = object : Function1<String, Uri> {
-        override fun get(t1: String) = Uri.parse(t1)
+    fun provideDateFactory() = object : Function1<Long?, Date> {
+        override fun get(t1: Long?) = t1?.let { Date(it) } ?: Date()
     }
 
+    @Provides
+    @Singleton
+    fun provideSqlOpenHelper(context: Context,
+                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
+            callback?.let {
+                RequerySQLiteOpenHelperFactory().create(
+                        SupportSQLiteOpenHelper.Configuration.builder(context)
+                                .name(DATABASE_NAME)
+                                .callback(it)
+                                .build()
+                )
+            }
+
 }
+

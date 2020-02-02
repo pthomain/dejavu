@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -26,9 +26,13 @@ package dev.pthomain.android.dejavu.interceptors.cache
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
@@ -42,19 +46,19 @@ import java.util.*
 
 class CacheInterceptorUnitTest {
 
-    private lateinit var mockInstructionToken: InstructionToken
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
-    private lateinit var mockMetadata: ResponseMetadata<Glitch>
-    private lateinit var mockUpstream: Observable<ResponseWrapper<Glitch>>
-    private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockReturnedResponseWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockReturnedObservable: Observable<ResponseWrapper<Glitch>>
+    private lateinit var mockInstructionToken: RequestToken<Cache>
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
+    private lateinit var mockMetadata: ResponseMetadata<*, *, Glitch>
+    private lateinit var mockUpstream: Observable<ResponseWrapper<*, *, Glitch>>
+    private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockReturnedResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockReturnedObservable: Observable<ResponseWrapper<*, *, Glitch>>
     private lateinit var mockCacheManager: CacheManager<Glitch>
 
     private val mockStart = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(1234L) }
 
-    private fun getTarget(operation: Operation): CacheInterceptor<Glitch> {
+    private fun getTarget(operation: Cache): CacheInterceptor<*, *, Glitch> {
         mockCacheManager = mock()
 
         mockInstructionToken = instructionToken(operation)
@@ -111,7 +115,7 @@ class CacheInterceptorUnitTest {
             val responseCaptor = argumentCaptor<Observable<Any>>()
             verify(mockErrorInterceptor).apply(responseCaptor.capture())
 
-            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<Glitch>
+            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<*, *, Glitch>
 
             if (isCacheEnabled) {
                 when (operation) {
@@ -162,7 +166,7 @@ class CacheInterceptorUnitTest {
 
     private fun verifyDoNotCache(operation: Operation,
                                  isCacheEnabled: Boolean,
-                                 responseWrapper: ResponseWrapper<Glitch>) {
+                                 responseWrapper: ResponseWrapper<*, *, Glitch>) {
         assertEqualsWithContext(
                 mockMetadata.copy(cacheToken = mockInstructionToken.copy(
                         status = NOT_CACHED,

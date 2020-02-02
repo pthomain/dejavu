@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,7 +27,9 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.InvalidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
@@ -40,6 +42,7 @@ import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.test.*
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.annotations.SchedulerSupport.SINGLE
 import io.reactivex.observers.TestObserver
 import org.junit.Test
 import java.util.*
@@ -49,29 +52,29 @@ class DejaVuInterceptorUnitTest {
     private val start = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(start) }
 
-    private lateinit var mockNetworkInterceptorFactory: (ErrorInterceptor<Glitch>, Cache?, Long) -> NetworkInterceptor<Glitch>
-    private lateinit var mockErrorInterceptorFactory: (InstructionToken) -> ErrorInterceptor<Glitch>
-    private lateinit var mockCacheInterceptorFactory: (ErrorInterceptor<Glitch>, InstructionToken, Long) -> CacheInterceptor<Glitch>
-    private lateinit var mockResponseInterceptorFactory: (InstructionToken, RxType, Long) -> ResponseInterceptor<Glitch>
+    private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<Glitch>
+    private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>
+    private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
+    private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: RequestMetadata.Plain
-    private lateinit var mockValidHashedMetadata: RequestMetadata.Hashed.Valid
-    private lateinit var mockInvalidHashedMetadata: RequestMetadata.Hashed.Invalid
-    private lateinit var mockNetworkInterceptor: NetworkInterceptor<Glitch>
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<Glitch>
-    private lateinit var mockCacheInterceptor: CacheInterceptor<Glitch>
-    private lateinit var mockResponseInterceptor: ResponseInterceptor<Glitch>
-    private lateinit var mockCacheToken: InstructionToken
+    private lateinit var mockRequestMetadata: PlainRequestMetadata
+    private lateinit var mockValidHashedMetadata: ValidRequestMetadata
+    private lateinit var mockInvalidHashedMetadata: InvalidRequestMetadata
+    private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, Glitch>
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
+    private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, Glitch>
+    private lateinit var mockResponseInterceptor: ResponseInterceptor<*, *, Glitch>
+    private lateinit var mockCacheToken: InstructionToken<*>
     private lateinit var mockUpstreamObservable: Observable<Any>
-    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<Glitch>>
-    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<Glitch>>
+    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<*, *, Glitch>>
+    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<*, *, Glitch>>
     private lateinit var mockResponseObservable: Observable<Any>
     private lateinit var mockHashingErrorObservable: Observable<Any>
-    private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken>
-    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<InstructionToken>
+    private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken<*>>
+    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<InstructionToken<*>>
     private lateinit var networkOperationCaptor: KArgumentCaptor<Cache?>
-    private lateinit var responseTokenCaptor: KArgumentCaptor<InstructionToken>
+    private lateinit var responseTokenCaptor: KArgumentCaptor<InstructionToken<*>>
 
     private val mockException = IllegalStateException("test")
 
@@ -109,23 +112,23 @@ class DejaVuInterceptorUnitTest {
         networkOperationCaptor = argumentCaptor()
         responseTokenCaptor = argumentCaptor()
 
-        whenever(mockErrorInterceptorFactory.invoke(
+        whenever(mockErrorInterceptorFactory.create(
                 errorTokenCaptor.capture()
         )).thenReturn(mockErrorInterceptor)
 
-        whenever(mockNetworkInterceptorFactory.invoke(
+        whenever(mockNetworkInterceptorFactory.create(
                 eq(mockErrorInterceptor),
                 networkOperationCaptor.capture(),
                 eq(start)
         )).thenReturn(mockNetworkInterceptor)
 
-        whenever(mockCacheInterceptorFactory.invoke(
+        whenever(mockCacheInterceptorFactory.create(
                 eq(mockErrorInterceptor),
                 cacheCacheTokenCaptor.capture(),
                 eq(start)
         )).thenReturn(mockCacheInterceptor)
 
-        whenever(mockResponseInterceptorFactory.invoke(
+        whenever(mockResponseInterceptorFactory.create(
                 responseTokenCaptor.capture(),
                 eq(rxType),
                 eq(start)

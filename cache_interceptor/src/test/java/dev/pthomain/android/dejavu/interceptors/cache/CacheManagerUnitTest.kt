@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,13 +23,10 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache
 
+import com.google.common.net.HttpHeaders.REFRESH
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.FreshnessPriority.FRESH_ONLY
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.OFFLINE
-dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.CachePriority.NetworkPriority.REFRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
@@ -56,13 +53,13 @@ class CacheManagerUnitTest {
     private lateinit var mockEmptyResponseWrapperFactory: EmptyResponseWrapperFactory<Glitch>
     private lateinit var mockDateFactory: (Long?) -> Date
     private lateinit var mockNetworkGlitch: Glitch
-    private lateinit var mockNetworkResponseWrapper: ResponseWrapper<Glitch>
-    private var mockCachedResponseWrapper: ResponseWrapper<Glitch>? = null
+    private lateinit var mockNetworkResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private var mockCachedResponseWrapper: ResponseWrapper<*, *, Glitch>? = null
     private lateinit var mockSerialisationGlitch: Glitch
-    private lateinit var mockSerialisationErrorResponseWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockEmptyResponseWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockPersistedResponseWrapper: ResponseWrapper<Glitch>
-    private lateinit var mockUpdatedMetatadataNetworkResponseWrapper: ResponseWrapper<Glitch>
+    private lateinit var mockSerialisationErrorResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockEmptyResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockPersistedResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockUpdatedMetatadataNetworkResponseWrapper: ResponseWrapper<*, *, Glitch>
 
     private val now = Date(1000L)
     private val start = 100L
@@ -113,7 +110,7 @@ class CacheManagerUnitTest {
                 "clearStaleEntriesOnly = $clearStaleEntriesOnly"
 
         val instructionToken = instructionToken()
-        val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
+        val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
 
         whenever(mockEmptyResponseWrapperFactory.create(
                 eq(instructionToken)
@@ -137,7 +134,7 @@ class CacheManagerUnitTest {
     fun testInvalidate() {
         setUp()
         val instructionToken = instructionToken()
-        val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
+        val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
 
         whenever(mockEmptyResponseWrapperFactory.create(
                 eq(instructionToken)
@@ -250,7 +247,7 @@ class CacheManagerUnitTest {
             )
         }
 
-        val testObserver = TestObserver<ResponseWrapper<Glitch>>()
+        val testObserver = TestObserver<ResponseWrapper<*, *, Glitch>>()
 
         target.getCachedResponse(
                 Observable.just(mockNetworkResponseWrapper),
@@ -288,7 +285,7 @@ class CacheManagerUnitTest {
     }
 
     private fun getSingleActualResponse(context: String,
-                                        testObserver: TestObserver<ResponseWrapper<Glitch>>): ResponseWrapper<Glitch> {
+                                        testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>): ResponseWrapper<*, *, Glitch> {
         assertTrueWithContext(
                 testObserver.errorCount() == 0,
                 "Expected no error",
@@ -304,9 +301,9 @@ class CacheManagerUnitTest {
     }
 
     private fun getResponsePair(context: String,
-                                testObserver: TestObserver<ResponseWrapper<Glitch>>,
+                                testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>,
                                 serialisationFails: Boolean,
-                                networkCallFails: Boolean): Pair<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>?> {
+                                networkCallFails: Boolean): Pair<ResponseWrapper<*, *, Glitch>, ResponseWrapper<*, *, Glitch>?> {
         assertEqualsWithContext(
                 null,
                 testObserver.errors().firstOrNull(),
@@ -375,7 +372,7 @@ class CacheManagerUnitTest {
         }
     }
 
-    private fun verifyFetchAndCache(testObserver: TestObserver<ResponseWrapper<Glitch>>,
+    private fun verifyFetchAndCache(testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>,
                                     context: String,
                                     operation: Cache,
                                     hasCachedResponse: Boolean,

@@ -11,7 +11,7 @@ Cache any HTTP call using an annotation on the Retrofit method. All responses ar
 
 Optional support for customisable encryption (choice of JetPack Security on 23+, Facebook Conceal on 16+ or any preferred custom implementation) and Snappy compression (https://github.com/google/snappy).
 
-<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
+<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.dejavu.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="250"/></a>
 
 About v2.0
 ----------

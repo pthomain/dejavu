@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -32,7 +32,7 @@ import junit.framework.TestCase
 import kotlin.reflect.full.createInstance
 
 fun assertInstruction(expectedOperation: Operation,
-                      actualInstruction: CacheInstruction?,
+                      actualInstruction: CacheInstruction<*>?,
                       context: String? = null) {
     TestCase.assertNotNull(
             withContext("Instruction shouldn't be null", context),

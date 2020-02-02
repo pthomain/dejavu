@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,13 +23,15 @@
 
 package dev.pthomain.android.dejavu.test.network.model
 
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 
-class TestResponse : ArrayList<User>(), ResponseMetadata.Holder<Glitch> {
+class TestResponse : ArrayList<User>(), ResponseMetadata.Holder<Cache, ResponseToken<Cache>, Glitch> {
 
     @Transient
-    internal override lateinit var metadata: ResponseMetadata<Glitch>
+    override lateinit var metadata: ResponseMetadata<Cache, ResponseToken<Cache>, Glitch>
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

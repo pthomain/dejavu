@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -60,7 +60,7 @@ open class InstructionToken<O : Operation> internal constructor(
  * @param instruction the original request cache instruction
  * @param status the cache status of the response
  */
-open class StatusToken<O : Operation> internal constructor(
+sealed class StatusToken<O : Operation>(
         instruction: CacheInstruction<O>,
         val status: CacheStatus
 ) : InstructionToken<O>(instruction)

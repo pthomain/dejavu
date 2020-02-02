@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -57,7 +57,7 @@ class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnit
     override fun testDecorateSerialisation(context: String,
                                            useString: Boolean,
                                            metadata: SerialisationDecorationMetadata,
-                                           mockWrapper: ResponseWrapper<Glitch>) {
+                                           mockWrapper: ResponseWrapper<*, *, Glitch>) {
         val expectedResult = if (metadata.isCompressed) {
             whenever(mockCompresser.invoke(eq(mockPayload))).thenReturn(mockSerialisedPayloadArray)
             mockSerialisedPayloadArray

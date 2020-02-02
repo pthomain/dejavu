@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -24,28 +24,28 @@
 package dev.pthomain.android.dejavu.interceptors.error
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.integration.component.IntegrationDejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import io.reactivex.Observable
 import org.junit.Before
 import org.junit.Test
 
 internal class ErrorInterceptorIntegrationTest
-    : BaseIntegrationTest<Function1<InstructionToken, ErrorInterceptor<Glitch>>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
+    : BaseIntegrationTest<ErrorInterceptor.Factory<Glitch>>(IntegrationDejaVuComponent::errorInterceptorFactory) {
 
-    private lateinit var targetErrorInterceptor: ErrorInterceptor<Glitch>
+    private lateinit var targetErrorInterceptor: ErrorInterceptor<*, *, Glitch>
 
     @Before
     override fun setUp() {
         super.setUp()
-        targetErrorInterceptor = target.get(
+        targetErrorInterceptor = target.create(
                 instructionToken(Cache())
         )
     }
@@ -144,7 +144,15 @@ internal class ErrorInterceptorIntegrationTest
         )
 
         assertEqualsWithContext(
-                instructionToken(Cache()).swapLambdaWhen(exception is NoSuchElementException) { it!!.copy(status = EMPTY) },
+                instructionToken(Cache()).swapLambdaWhen(exception is NoSuchElementException) {
+                    ResponseToken(
+                            it!!.instruction,
+                            EMPTY,
+                            NOW,
+                            null,
+                            null
+                    )
+                },
                 metadata.cacheToken,
                 "Cache token didn't match"
         )

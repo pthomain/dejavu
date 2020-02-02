@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.CachePredicate.CacheAll
@@ -44,6 +45,7 @@ import dev.pthomain.android.dejavu.test.verifyWithContext
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.annotations.SchedulerSupport.SINGLE
 import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -147,7 +149,7 @@ class RetrofitCallAdapterUnitTest {
                     isHeaderDeserialisationException
             )
 
-            val mockResponseWrapper = mock<ResponseWrapper<Glitch>>()
+            val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
 
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -156,7 +156,7 @@ class ResponseInterceptorUnitTest {
         )
 
         val mockUpstreamObservable = if (isEmptyUpstreamObservable)
-            Observable.empty<ResponseWrapper<Glitch>>()
+            Observable.empty<ResponseWrapper<*, *, Glitch>>()
         else
             Observable.just(mockUpstreamWrapper)
 
@@ -204,7 +204,7 @@ class ResponseInterceptorUnitTest {
                 eq(mockInstructionToken)
         )).thenReturn(mockEmptyResponseWrapper)
 
-        val mockEmptyResponse = ResponseWrapper<Glitch>(
+        val mockEmptyResponse = ResponseWrapper<*, *, Glitch>(
                 String::class.java,
                 ifElse(
                         responseClass == String::class.java,

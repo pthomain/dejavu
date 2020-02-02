@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,41 +23,34 @@
 
 package dev.pthomain.android.dejavu.injection
 
-import android.content.Context
-import androidx.sqlite.db.SupportSQLiteOpenHelper
+import android.net.Uri
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
-import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class DejaVuModule<E>(configuration: DejaVuConfiguration<E>)
-    : BaseDejaVuModule<E>(configuration)
+internal abstract class DejaVuModule<E>(private val configuration: DejaVuConfiguration<E>)
         where E : Exception,
               E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    fun provideDateFactory() = object : Function1<Long?, Date> {
-        override fun get(t1: Long?) = t1?.let { Date(it) } ?: Date()
-    }
+    fun provideContext() = configuration.context
 
     @Provides
     @Singleton
-    fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
-            callback?.let {
-                RequerySQLiteOpenHelperFactory().create(
-                        SupportSQLiteOpenHelper.Configuration.builder(context)
-                                .name(DATABASE_NAME)
-                                .callback(it)
-                                .build()
-                )
-            }
+    fun provideConfiguration() = configuration
+
+    @Provides
+    @Singleton
+    fun provideLogger() = configuration.logger
+
+    @Provides
+    @Singleton
+    fun provideUriParser() = object : Function1<String, Uri> {
+        override fun get(t1: String) = Uri.parse(t1)
+    }
 
 }
-

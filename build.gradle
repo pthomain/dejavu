@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -52,7 +52,7 @@ task clean(type: Delete) {
 }
 
 ext {
-    compileSdkVersion = 28
+    compileSdkVersion = 29
     minSdkVersion = 16
     targetSdkVersion = 28
     buildToolsVersion = '28.0.2'
@@ -60,16 +60,17 @@ ext {
 
     jitPackVersion = '1.0'
 
-    daggerVersion = '2.12'
+    daggerVersion = '2.13'
     jsr250Version = '1.0'
 
-    rxJavaVersion = '2.2.0'
-    rxKotlinVersion = '2.3.0'
-    rxAndroidVersion = '2.1.0'
+    rxJavaVersion = '2.2.17'
+    rxKotlinVersion = '2.4.0'
+    rxAndroidVersion = '2.1.1'
     rxDogTagVersion = '0.3.0'
 
     boilerplateVersion = '4.0'
     mumboVersion = '2.0'
+    glitchyVersion = '0.1'
     fliptablesVersion = '1.0.2'
 
     snappyVersion = '0.4'
@@ -77,7 +78,7 @@ ext {
     androidXsqliteVersion = '2.0.0'
 
     gsonVersion = '2.8.5'
-    retrofitVersion = '2.4.0'
+    retrofitVersion = '2.7.1'
     okhttpVersion = '3.10.0'
     volleyVersion = '1.1.1'
     reactiveNetworkVersion = '3.0.1'
@@ -90,7 +91,6 @@ ext {
     mockitoVersion = '2.1.0'
     robolectricVersion = '4.0.2'
     mockitoKotlinVersion = '2.0.0'
-
 
     appDependencies = [
             jitPack               : "com.github.jitpack:gradle-simple:$jitPackVersion",
@@ -112,9 +112,7 @@ ext {
             rxDogTag              : "com.uber.rxdogtag:rxdogtag:$rxDogTagVersion",
 
             dagger                : "com.google.dagger:dagger:$daggerVersion",
-            daggerAndroid         : "com.google.dagger:dagger-android:$daggerVersion",
             daggerCompiler        : "com.google.dagger:dagger-compiler:$daggerVersion",
-            daggerAndroidProcessor: "com.google.dagger:dagger-android-processor:$daggerVersion",
 
             jsr250                : "javax.annotation:jsr250-api:$jsr250Version",
             androidAnnotations    : "androidx.annotation:annotation:$androidXversion",
@@ -122,6 +120,7 @@ ext {
             boilerplate           : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
             boilerplate_ui        : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
             mumbo                 : "com.github.pthomain:mumbo:$mumboVersion",
+            glitchy               : "com.github.pthomain:glitchy:$glitchyVersion",
             fliptables            : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
 
             retrofit              : "com.squareup.retrofit2:retrofit:$retrofitVersion",

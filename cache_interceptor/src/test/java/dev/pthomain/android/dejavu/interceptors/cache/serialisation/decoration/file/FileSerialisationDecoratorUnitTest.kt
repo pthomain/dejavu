@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -59,7 +59,7 @@ class FileSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitTest() 
     override fun testDecorateSerialisation(context: String,
                                            useString: Boolean,
                                            metadata: SerialisationDecorationMetadata,
-                                           mockWrapper: ResponseWrapper<Glitch>) {
+                                           mockWrapper: ResponseWrapper<*, *, Glitch>) {
         val result = target.decorateSerialisation(
                 mockWrapper,
                 mock(),
