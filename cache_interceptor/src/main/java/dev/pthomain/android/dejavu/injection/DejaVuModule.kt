@@ -27,7 +27,7 @@ import android.net.Uri
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import javax.inject.Singleton
 
 @Module

@@ -35,7 +35,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION

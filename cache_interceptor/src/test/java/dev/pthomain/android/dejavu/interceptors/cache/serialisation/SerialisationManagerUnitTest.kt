@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.expectException

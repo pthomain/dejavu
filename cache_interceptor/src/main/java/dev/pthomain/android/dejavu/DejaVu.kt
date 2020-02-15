@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -30,9 +30,10 @@ import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
 import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
+import dev.pthomain.android.dejavu.interceptors.error.DejaVuGlitchFactory
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
@@ -103,7 +104,7 @@ class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
                            serialiser: Serialiser) = builder(
                 context,
                 serialiser,
-                GlitchFactory()
+                DejaVuGlitchFactory(GlitchFactory())
         ) {
             DaggerGlitchDejaVuComponent
                     .builder()

@@ -32,7 +32,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import dev.pthomain.android.dejavu.test.*

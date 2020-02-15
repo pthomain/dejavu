@@ -32,8 +32,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsModule
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationModule
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.RetrofitModule
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 
 @Module(includes = [
     GlitchProdModule::class,

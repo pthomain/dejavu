@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -29,9 +29,9 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton

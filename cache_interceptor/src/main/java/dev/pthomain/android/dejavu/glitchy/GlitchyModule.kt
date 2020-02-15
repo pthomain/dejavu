@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -21,20 +21,21 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error.glitch
+package dev.pthomain.android.dejavu.glitchy
 
-/**
- * Represents a converted type of Error.
- *
- * @param canRetry whether or not this exception is transient and whether the call can be silently
- * retried using an exponential backoff for instance.
- */
-enum class ErrorCode constructor(val canRetry: Boolean) {
-    CONFIG(false),
-    NETWORK(true),
-    UNAUTHORISED(false),
-    NOT_FOUND(false),
-    UNEXPECTED_RESPONSE(true),
-    SERVER_ERROR(true),
-    UNKNOWN(true)
+import dagger.Module
+import dagger.Provides
+import dev.pthomain.android.glitchy.Glitchy
+import retrofit2.CallAdapter
+import javax.inject.Singleton
+
+@Module
+internal class GlitchyModule {
+
+    @Provides
+    @Singleton
+    fun provideCallAdapterFactory(): CallAdapter.Factory {
+        return Glitchy.createCallAdapterFactory()
+    }
+
 }

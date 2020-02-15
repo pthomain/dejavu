@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,10 +27,10 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Single
 import okhttp3.Request
 import retrofit2.CallAdapter
@@ -78,74 +78,62 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                      retrofit: Retrofit): CallAdapter<*, *> {
         val rawType = getRawType(returnType)
 
-        return if (rawType == null) {
+        val (isWrapped, rxType, responseClass) = unwrap(returnType)
+
+        val defaultCallAdapter = getDefaultCallAdapter(
+                rxType,
+                annotations,
+                retrofit
+        )
+
+        val methodDescription = "call returning " + getTypedName(
+                responseClass,
+                isWrapped,
+                rawType == Single::class.java
+        )
+
+        logger.d(
+                this,
+                "Processing annotation for $methodDescription"
+        )
+
+        val operation = try {
+            annotationProcessor.process(
+                    annotations,
+                    responseClass
+            )
+        } catch (cacheException: CacheException) {
+            logger.e(
+                    this,
+                    cacheException,
+                    "The annotation on $methodDescription cannot be processed, defaulting to other cache methods if available"
+            )
+            return defaultCallAdapter
+        }
+
+        if (operation == null) {
             logger.d(
                     this,
-                    "Call with return type $returnType is not supported by DejaVu, using default RxJava adapter"
-            )
-            getDefaultCallAdapter(
-                    returnType,
-                    annotations,
-                    retrofit
+                    "Annotation processor for $methodDescription"
+                            + " returned no instruction, defaulting to other cache methods if available"
             )
         } else {
-            val (isWrapped, rxType, responseClass) = unwrap(returnType)
-
-            val defaultCallAdapter = getDefaultCallAdapter(
-                    rxType,
-                    annotations,
-                    retrofit
-            )
-
-            val methodDescription = "call returning " + getTypedName(
-                    responseClass,
-                    isWrapped,
-                    rawType == Single::class.java
-            )
-
             logger.d(
                     this,
-                    "Processing annotation for $methodDescription"
-            )
-
-            val operation = try {
-                annotationProcessor.process(
-                        annotations,
-                        responseClass
-                )
-            } catch (cacheException: CacheException) {
-                logger.e(
-                        this,
-                        cacheException,
-                        "The annotation on $methodDescription cannot be processed, defaulting to other cache methods if available"
-                )
-                return defaultCallAdapter
-            }
-
-            if (operation == null) {
-                logger.d(
-                        this,
-                        "Annotation processor for $methodDescription"
-                                + " returned no instruction, defaulting to other cache methods if available"
-                )
-            } else {
-                logger.d(
-                        this,
-                        "Annotation processor for $methodDescription"
-                                + " returned the following cache operation "
-                                + operation
-                )
-            }
-
-            innerFactory.create(
-                    dejaVuFactory,
-                    methodDescription,
-                    responseClass,
-                    isWrapped,
-                    operation,
-                    defaultCallAdapter
+                    "Annotation processor for $methodDescription"
+                            + " returned the following cache operation "
+                            + operation
             )
         }
+
+        return innerFactory.create(
+                dejaVuFactory,
+                methodDescription,
+                responseClass,
+                isWrapped,
+                operation,
+                defaultCallAdapter
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -169,9 +157,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
             val unwrappedType = object : ParameterizedType {
                 override fun getRawType() = rxType
                 override fun getOwnerType() = null
-                override fun getActualTypeArguments(): Array<Class<out Any>?> {
-                    return arrayOf(dejaVuParameter)
-                }
+                override fun getActualTypeArguments() = arrayOf(dejaVuParameter)
             }
 
             Triple(true, unwrappedType, dejaVuParameter)

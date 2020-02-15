@@ -35,8 +35,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.Mumbo
 import dev.pthomain.android.mumbo.base.EncryptionManager
 

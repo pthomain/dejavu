@@ -28,7 +28,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
 import javax.inject.Singleton

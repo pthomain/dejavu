@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -50,8 +50,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManagerFactory
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.*
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Completable
 import io.reactivex.Observable

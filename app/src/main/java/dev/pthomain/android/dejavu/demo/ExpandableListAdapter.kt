@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.demo
 
 
 import android.content.Context
+import android.content.Context.LAYOUT_INFLATER_SERVICE
 import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
@@ -36,14 +37,14 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
 
 internal class ExpandableListAdapter(context: Context)
     : BaseExpandableListAdapter() {
 
-    private val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+    private val inflater = context.getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
     private val simpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss")
 
     private val headers: LinkedList<String> = LinkedList()

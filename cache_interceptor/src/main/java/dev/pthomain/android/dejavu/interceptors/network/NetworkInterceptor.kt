@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -32,9 +32,9 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.*

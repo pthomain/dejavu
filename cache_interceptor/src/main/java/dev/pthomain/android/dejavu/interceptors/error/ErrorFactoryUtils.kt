@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -21,13 +21,14 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error.error
+package dev.pthomain.android.dejavu.interceptors.error
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 internal fun <O : Operation, T : RequestToken<O>, E> ErrorFactory<E>.newWrapper(
         responseClass: Class<*>,

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -39,7 +39,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton
 

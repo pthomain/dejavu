@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.injection.Function3
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import org.iq80.snappy.Snappy
 import java.util.*

@@ -37,15 +37,14 @@ import dev.pthomain.android.dejavu.injection.integration.module.IntegrationModul
 import dev.pthomain.android.dejavu.injection.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.network.model.User

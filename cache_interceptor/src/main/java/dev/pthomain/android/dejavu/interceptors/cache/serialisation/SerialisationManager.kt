@@ -35,10 +35,10 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.c
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
-import dev.pthomain.android.dejavu.interceptors.error.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.error.error.newMetadata
-import dev.pthomain.android.dejavu.interceptors.error.error.newWrapper
+import dev.pthomain.android.dejavu.interceptors.error.newMetadata
+import dev.pthomain.android.dejavu.interceptors.error.newWrapper
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 
 /**

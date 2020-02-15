@@ -21,34 +21,49 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.gson
+package dev.pthomain.android.dejavu.interceptors.error
 
-
-import com.google.gson.JsonParseException
-import dev.pthomain.android.dejavu.interceptors.error.DejaVuGlitchFactory
+import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
+import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.CONFIG
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
 import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
 /**
- * Custom Glitch ErrorFactory implementation handling extra Gson specific exceptions.
+ * Default implementation of ErrorFactory handling some usual base exceptions.
+ *
+ * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.errorFactory for overriding this factory
+ * @see Glitch
  */
-class GsonGlitchFactory private constructor(private val parentFactory: DejaVuGlitchFactory)
-    : ErrorFactory<Glitch> by parentFactory {
+//TODO deprecate or wrap
+class DejaVuGlitchFactory(private val glitchFactory: GlitchFactory)
+    : ErrorFactory<Glitch> by glitchFactory {
 
-    constructor() : this(DejaVuGlitchFactory(GlitchFactory()))
-
+    /**
+     * Converts a throwable to a Glitch, containing some metadata around the exception
+     *
+     * @param throwable the given throwable to make sense of
+     * @return an instance of Glitch
+     */
     override fun invoke(throwable: Throwable) =
             when (throwable) {
-                is JsonParseException -> Glitch(
-                        throwable,
-                        NON_HTTP_STATUS,
-                        UNEXPECTED_RESPONSE,
-                        throwable.message
-                )
-                else -> parentFactory.invoke(throwable)
+                is CacheException -> getConfigError(throwable)
+                else -> glitchFactory(throwable)
             }
+
+    /**
+     * Converts an CacheException to a Glitch
+     *
+     * @param throwable the original exception
+     * @return the converted Glitch
+     */
+    private fun getConfigError(throwable: CacheException) =
+            Glitch(
+                    throwable,
+                    NON_HTTP_STATUS,
+                    CONFIG,
+                    "Configuration error"
+            )
 
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,9 +25,9 @@ package dev.pthomain.android.dejavu.interceptors.error.error
 
 import com.google.gson.stream.MalformedJsonException
 import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
 import dev.pthomain.android.dejavu.interceptors.error.glitch.ErrorCode
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
 import junit.framework.Assert.*
 import org.junit.Before
 import org.junit.Test
