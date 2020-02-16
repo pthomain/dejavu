@@ -44,7 +44,7 @@ import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class PersistenceModule<E> where E : Exception,
+internal abstract class PersistenceModule<E> where E : Throwable,
                                                    E : NetworkErrorPredicate {
 
     @Provides

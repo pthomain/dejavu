@@ -43,7 +43,7 @@ data class ResponseMetadata<O : Operation, T : RequestToken<O>, E> internal cons
         val exceptionClass: Class<E>,
         val exception: E? = null,
         val callDuration: CallDuration = CallDuration(0, 0, 0)
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate {
 
     /**
@@ -51,7 +51,7 @@ data class ResponseMetadata<O : Operation, T : RequestToken<O>, E> internal cons
      * contains information about the response's status, dates and serialisation methods.
      */
     internal interface Holder<O : Operation, T : RequestToken<O>, E>
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
         var metadata: ResponseMetadata<O, T, E>
     }

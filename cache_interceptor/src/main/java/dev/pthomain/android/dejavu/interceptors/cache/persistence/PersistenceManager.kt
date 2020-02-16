@@ -38,7 +38,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 
 interface PersistenceManager<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
     /**
      * Returns a cached entry if available

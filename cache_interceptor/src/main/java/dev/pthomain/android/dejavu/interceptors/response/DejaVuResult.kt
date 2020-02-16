@@ -53,7 +53,7 @@ data class Empty<O : Remote, E> internal constructor(
         override var callDuration: CallDuration
 ) : DejaVuResult<Any>(),
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
-        where E : Exception, E : NetworkErrorPredicate
+        where E : Throwable, E : NetworkErrorPredicate
 
 //The result has a response
 data class Result<O : Local> internal constructor(

@@ -65,7 +65,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
         serialisationManager,
         dateFactory
 ), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -164,7 +164,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
                                               private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                               private val dateFactory: (Long?) -> Date,
                                               private val fileNameSerialiser: FileNameSerialiser)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
         fun create(cacheDirectory: java.io.File = dejaVuConfiguration.context.cacheDir): PersistenceManager<E> {
             return KeyValuePersistenceManager(
@@ -182,7 +182,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
                                                 private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                                 private val dateFactory: (Long?) -> Date,
                                                 private val fileNameSerialiser: FileNameSerialiser)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
         fun create(maxEntries: Int = 20,
                    disableEncryption: Boolean = false): PersistenceManager<E> =

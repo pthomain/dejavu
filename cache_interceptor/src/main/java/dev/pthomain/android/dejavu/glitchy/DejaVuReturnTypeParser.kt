@@ -21,19 +21,22 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.cache.instruction
+package dev.pthomain.android.dejavu.glitchy
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.retrofit.type.ParsedType
+import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
+import java.lang.reflect.Type
 
-/**
- * Contains the cache operation, target response class and call-specific directives.
- * Those directives take precedence over the ones defined in the global configuration, if applicable.
- *
- * @param requestMetadata the request metadata
- * @param operation the cache operation with call-specific directives
- */
-data class CacheInstruction<O : Operation> internal constructor(
-        val operation: O,
-        val requestMetadata: ValidRequestMetadata
-)
+internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<ResponseMetadata<*, *, E>>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
+    override fun parseReturnType(returnType: Type) =
+            ParsedType(
+                    Unit as ResponseMetadata<*, *, E>, //FIXME
+                    returnType,
+                    returnType //TODO check this
+            )
+}

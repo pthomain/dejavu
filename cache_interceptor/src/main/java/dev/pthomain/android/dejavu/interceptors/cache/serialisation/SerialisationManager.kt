@@ -54,7 +54,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                                                    private val serialiser: Serialiser,
                                                    private val byteToStringConverter: (ByteArray) -> String,
                                                    private val decoratorList: List<SerialisationDecorator<E>>)
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     private val reversedDecoratorList = decoratorList.reversed()
@@ -131,7 +131,6 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                 .let { serialiser.deserialise(it, responseClass) }
                 .let {
                     errorFactory.newWrapper(
-                            responseClass,
                             it,
                             errorFactory.newMetadata(
                                     RequestToken(
@@ -161,7 +160,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
                                           private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
                                           private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
                                           private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         /**

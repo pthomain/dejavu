@@ -33,7 +33,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 
 interface DejaVuComponent<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     fun configuration(): DejaVuConfiguration<E>

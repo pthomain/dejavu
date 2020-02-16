@@ -62,7 +62,7 @@ class DejaVuConfiguration<E> internal constructor(
         internal val useDatabase: Boolean,
         internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
         internal val cachePredicate: (metadata: RequestMetadata) -> Remote?
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate {
 
     companion object {
@@ -85,7 +85,7 @@ class DejaVuConfiguration<E> internal constructor(
             private val context: Context,
             private val serialiser: Serialiser,
             private val componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>
-    ) where E : Exception,
+    ) where E : Throwable,
             E : NetworkErrorPredicate {
 
         private var logger: Logger = object : Logger {

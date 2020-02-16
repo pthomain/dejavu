@@ -53,7 +53,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                                                               private val serialisationManager: SerialisationManager<E>,
                                                               protected val dateFactory: (Long?) -> Date)
     : PersistenceManager<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     private val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)

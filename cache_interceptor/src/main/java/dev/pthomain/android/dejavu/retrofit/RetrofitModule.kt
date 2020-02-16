@@ -37,7 +37,7 @@ import javax.inject.Singleton
 
 @Module
 internal abstract class RetrofitModule<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     @Provides

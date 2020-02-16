@@ -37,7 +37,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * @see CacheInstruction
  */
 internal class AnnotationProcessor<E>(private val logger: Logger)
-        where  E : Exception,
+        where  E : Throwable,
                E : NetworkErrorPredicate {
 
     /**

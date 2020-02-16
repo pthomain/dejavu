@@ -66,7 +66,7 @@ internal class ResponseInterceptor<O : Operation, T : InstructionToken<O>, E> pr
         private val isWrapped: Boolean,
         private val start: Long
 ) : ObservableTransformer<ResponseWrapper<O, RequestToken<O>, E>, Any>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -157,7 +157,7 @@ internal class ResponseInterceptor<O : Operation, T : InstructionToken<O>, E> pr
                      private val dateFactory: (Long?) -> Date,
                      private val metadataSubject: PublishSubject<DejaVuResult<*>>,
                      private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun <O : Operation, T : InstructionToken<O>> create(instructionToken: T,

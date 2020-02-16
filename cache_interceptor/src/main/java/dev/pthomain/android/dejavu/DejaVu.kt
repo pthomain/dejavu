@@ -40,7 +40,7 @@ import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
  */
 class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
     : StatisticsCompiler by component.statisticsCompiler()
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -89,7 +89,7 @@ class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
                         serialiser: Serialiser,
                         errorFactory: ErrorFactory<E>,
                         componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>)
-                where E : Exception,
+                where E : Throwable,
                       E : NetworkErrorPredicate = DejaVuConfiguration.Builder(
                 errorFactory,
                 context,

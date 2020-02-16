@@ -52,7 +52,7 @@ internal class CacheMetadataManager<E>(
         private val persistenceManager: PersistenceManager<E>,
         private val dateFactory: (Long?) -> Date,
         private val logger: Logger
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate {
 
     /**

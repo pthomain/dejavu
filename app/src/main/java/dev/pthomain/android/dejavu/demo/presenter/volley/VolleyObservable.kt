@@ -40,7 +40,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                                                        private val gson: Gson,
                                                        private val requestMetadata: PlainRequestMetadata)
     : Observable<R>()
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     private lateinit var observer: Observer<in R>
@@ -70,7 +70,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                                     gson: Gson,
                                     dejaVuInterceptor: DejaVuInterceptor<E>,
                                     requestMetadata: PlainRequestMetadata): Observable<R>
-                where E : Exception,
+                where E : Throwable,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
                         requestQueue,
@@ -83,7 +83,7 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                                         gson: Gson,
                                         dejaVuInterceptor: DejaVuInterceptor<E>,
                                         requestMetadata: PlainRequestMetadata): Observable<DejaVuResult<R>>
-                where E : Exception,
+                where E : Throwable,
                       E : NetworkErrorPredicate = empty() //FIXME
 
     }

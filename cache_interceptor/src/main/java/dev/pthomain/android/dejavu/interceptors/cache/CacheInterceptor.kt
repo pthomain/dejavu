@@ -59,7 +59,7 @@ internal class CacheInterceptor<O : Operation, T : RequestToken<O>, E> private c
         private val instructionToken: InstructionToken<O>,
         private val start: Long
 ) : ObservableTransformer<ResponseWrapper<O, T, E>, ResponseWrapper<O, T, E>>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -115,7 +115,7 @@ internal class CacheInterceptor<O : Operation, T : RequestToken<O>, E> private c
 
     class Factory<E>(private val dateFactory: (Long?) -> Date,
                      private val cacheManager: CacheManager<E>)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun <O : Remote, T : RequestToken<O>> create(errorInterceptor: ErrorInterceptor<O, T, E>,

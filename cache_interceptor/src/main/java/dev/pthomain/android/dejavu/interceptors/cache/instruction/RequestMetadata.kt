@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -30,7 +30,6 @@ package dev.pthomain.android.dejavu.interceptors.cache.instruction
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-//TODO add type
 sealed class RequestMetadata(open val responseClass: Class<*>,
                              open val url: String,
                              open val requestBody: String? = null)

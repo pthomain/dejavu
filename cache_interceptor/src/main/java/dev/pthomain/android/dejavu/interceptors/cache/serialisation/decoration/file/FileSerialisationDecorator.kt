@@ -39,7 +39,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  */
 class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArray) -> String)
     : SerialisationDecorator<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**

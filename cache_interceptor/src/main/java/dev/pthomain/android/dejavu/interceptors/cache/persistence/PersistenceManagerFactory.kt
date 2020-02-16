@@ -39,5 +39,5 @@ class PersistenceManagerFactory<E> internal constructor(
         val filePersistenceManagerFactory: KeyValuePersistenceManager.FileFactory<E>,
         val databasePersistenceManagerFactory: DatabasePersistenceManager.Factory<E>?,
         val memoryPersistenceManagerFactory: KeyValuePersistenceManager.MemoryFactory<E>
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate

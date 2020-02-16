@@ -44,7 +44,7 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
                                                     private val compresser: (ByteArray) -> ByteArray,
                                                     private val uncompresser: (ByteArray, Int, Int) -> ByteArray)
     : SerialisationDecorator<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**

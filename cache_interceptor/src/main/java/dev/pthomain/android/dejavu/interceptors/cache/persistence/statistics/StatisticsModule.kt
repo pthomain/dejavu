@@ -40,7 +40,7 @@ import javax.inject.Singleton
 
 @Module
 internal abstract class StatisticsModule<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     @Provides

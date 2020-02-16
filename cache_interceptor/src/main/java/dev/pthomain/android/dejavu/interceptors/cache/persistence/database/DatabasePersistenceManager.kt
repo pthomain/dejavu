@@ -65,7 +65,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
         dejaVuConfiguration,
         serialisationManager,
         dateFactory
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate {
 
     /**
@@ -247,7 +247,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                                           private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                           private val dateFactory: (Long?) -> Date,
                                           private val contentValuesFactory: (Map<String, *>) -> ContentValues)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun create(): PersistenceManager<E> = DatabasePersistenceManager(

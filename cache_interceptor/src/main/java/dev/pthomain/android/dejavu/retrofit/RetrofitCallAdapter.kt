@@ -57,7 +57,7 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
                                                           private val annotationOperation: Operation?,
                                                           private val rxCallAdapter: CallAdapter<Any, Any>)
     : CallAdapter<Any, Any>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -207,7 +207,7 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
     internal class Factory<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                               private val requestBodyConverter: (Request) -> String?,
                               private val logger: Logger)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun create(dejaVuFactory: DejaVuInterceptor.Factory<E>,

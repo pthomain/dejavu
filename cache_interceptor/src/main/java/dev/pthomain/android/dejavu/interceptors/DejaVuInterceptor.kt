@@ -76,7 +76,7 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
                                                 private val responseInterceptorFactory: ResponseInterceptor.Factory<E>)
     : ObservableTransformer<Any, Any>,
         SingleTransformer<Any, Any>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -172,7 +172,7 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
                                           private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
                                           private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
                                           private val configuration: DejaVuConfiguration<E>)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         /**

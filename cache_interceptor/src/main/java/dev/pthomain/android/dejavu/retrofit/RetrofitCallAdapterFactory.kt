@@ -60,7 +60,7 @@ class RetrofitCallAdapterFactory<E> internal constructor(private val configurati
                                                          private val annotationProcessor: AnnotationProcessor<E>,
                                                          private val logger: Logger)
     : CallAdapter.Factory()
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**

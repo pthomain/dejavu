@@ -41,7 +41,7 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  */
 internal class EncryptionSerialisationDecorator<E>(private val encryptionManager: EncryptionManager)
     : SerialisationDecorator<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**

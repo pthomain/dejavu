@@ -31,13 +31,11 @@ import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 internal fun <O : Operation, T : RequestToken<O>, E> ErrorFactory<E>.newWrapper(
-        responseClass: Class<*>,
         response: Any?,
         metadata: ResponseMetadata<O, T, E>
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate =
         ResponseWrapper(
-                responseClass,
                 response,
                 metadata
         )
@@ -46,7 +44,7 @@ internal fun <O : Operation, T : RequestToken<O>, E> ErrorFactory<E>.newMetadata
         cacheToken: T,
         exception: E? = null,
         callDuration: CallDuration = CallDuration(0, 0, 0)
-) where E : Exception,
+) where E : Throwable,
         E : NetworkErrorPredicate =
         ResponseMetadata(
                 cacheToken,

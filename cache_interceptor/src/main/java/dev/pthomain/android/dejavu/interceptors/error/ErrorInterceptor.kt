@@ -59,7 +59,7 @@ internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private c
         private val dateFactory: (Long?) -> Date,
         private val instructionToken: InstructionToken<O>
 ) : ObservableTransformer<Any, ResponseWrapper<O, T, E>>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     private val responseClass = instructionToken.instruction.requestMetadata.responseClass
@@ -95,7 +95,6 @@ internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private c
     private fun errorObservable(throwable: Throwable,
                                 networkToken: T) =
             ResponseWrapper(
-                    responseClass,
                     null,
                     errorFactory.newMetadata(
                             networkToken,
@@ -110,7 +109,6 @@ internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private c
                 it as ResponseWrapper<O, T, E>
             else
                 ResponseWrapper(
-                        responseClass,
                         it,
                         errorFactory.newMetadata(networkToken)
                 )
@@ -120,7 +118,7 @@ internal class ErrorInterceptor<O : Operation, T : RequestToken<O>, E> private c
                      private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                      private val logger: Logger,
                      private val dateFactory: (Long?) -> Date)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun <O : Remote> create(instructionToken: InstructionToken<O>) = ErrorInterceptor(

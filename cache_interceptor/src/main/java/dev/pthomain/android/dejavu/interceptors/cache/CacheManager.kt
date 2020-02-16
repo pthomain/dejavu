@@ -52,7 +52,7 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                                private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
                                private val dateFactory: (Long?) -> Date,
                                private val logger: Logger)
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**

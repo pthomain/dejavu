@@ -31,14 +31,16 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 /**
  * Wraps the call and associated metadata for internal use.
  *
- * @param responseClass the target response class
  * @param response the call's response if available
  * @param metadata the call's metadata
  */
 data class ResponseWrapper<O : Operation, T : RequestToken<O>, E> internal constructor(
-        val responseClass: Class<*>,
         val response: Any?,
         override var metadata: ResponseMetadata<O, T, E>
 ) : ResponseMetadata.Holder<O, T, E>
-        where E : Exception,
-              E : NetworkErrorPredicate
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+
+    val responseClass: Class<*> = metadata.cacheToken.instruction.requestMetadata.responseClass
+
+}

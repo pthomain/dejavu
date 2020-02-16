@@ -39,7 +39,7 @@ import javax.inject.Singleton
 
 @Module
 internal abstract class CacheModule<E>
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     @Provides

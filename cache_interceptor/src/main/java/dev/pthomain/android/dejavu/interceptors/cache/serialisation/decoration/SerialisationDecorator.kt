@@ -35,7 +35,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * SerialisationManager to be executed in their defined order during serialisation
  * (and in reverse during deserialisation).
  */
-interface SerialisationDecorator<E> where E : Exception,
+interface SerialisationDecorator<E> where E : Throwable,
                                           E : NetworkErrorPredicate {
 
     /**

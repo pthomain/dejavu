@@ -40,7 +40,7 @@ import java.util.*
 import javax.inject.Singleton
 
 @Module
-internal abstract class SerialisationModule<E> where E : Exception,
+internal abstract class SerialisationModule<E> where E : Throwable,
                                                      E : NetworkErrorPredicate {
     @Provides
     @Singleton

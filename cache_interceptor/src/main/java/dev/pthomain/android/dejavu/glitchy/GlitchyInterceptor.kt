@@ -23,40 +23,28 @@
 
 package dev.pthomain.android.dejavu.glitchy
 
-import dagger.Module
-import dagger.Provides
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.glitchy.Glitchy
 import dev.pthomain.android.glitchy.interceptor.Interceptor
+import dev.pthomain.android.glitchy.interceptor.Interceptor.SimpleInterceptor
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import retrofit2.CallAdapter
-import java.util.*
-import javax.inject.Singleton
+import dev.pthomain.android.glitchy.retrofit.type.ParsedType
+import io.reactivex.Observable
+import io.reactivex.ObservableSource
 
-@Module
-internal abstract class GlitchyModule<E> where E : Throwable,
-                                               E : NetworkErrorPredicate {
-    @Provides
-    @Singleton
-    fun provideDejaVuReturnTypeParserFactory() =
-            DejaVuReturnTypeParser<E>()
+internal class GlitchyInterceptor<E>(errorFactory: ErrorFactory<E>) : SimpleInterceptor()
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
-    @Provides
-    @Singleton
-    fun provideCallAdapterFactory(errorFactory: ErrorFactory<E>,
-                                  parser: DejaVuReturnTypeParser<E>,
-                                  logger: Logger): CallAdapter.Factory {
-        val interceptors = LinkedList<Interceptor.Factory<E>>().apply {
+    override fun apply(upstream: Observable<Any>): ObservableSource<Any> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
-        }
+    class Factory<E>(private val errorFactory: ErrorFactory<E>) : Interceptor.Factory<E>
+            where E : Throwable,
+                  E : NetworkErrorPredicate {
 
-        return Glitchy.createCallAdapterFactory(
-                errorFactory,
-                parser,
-                interceptors,
-                logger
-        )
+        override fun <M> create(parsedType: ParsedType<M>) =
+                GlitchyInterceptor(errorFactory)
     }
 
 }

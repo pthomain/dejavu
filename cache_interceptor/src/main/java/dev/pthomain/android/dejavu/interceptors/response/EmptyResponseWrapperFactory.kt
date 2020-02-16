@@ -44,7 +44,7 @@ import java.util.*
  */
 class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>,
                                      private val dateFactory: (Long?) -> Date)
-        where E : Exception,
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
@@ -58,7 +58,6 @@ class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>,
                                                     start: Long) =
             with(networkToken) {
                 ResponseWrapper(
-                        instruction.requestMetadata.responseClass,
                         null,
                         @Suppress("UNCHECKED_CAST")
                         errorFactory.newMetadata(

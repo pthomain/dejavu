@@ -121,7 +121,7 @@ class FileStore private constructor(
     class Factory<E> internal constructor(private val logger: Logger,
                                           private val dejaVuConfiguration: DejaVuConfiguration<E>,
                                           private val fileNameSerialiser: FileNameSerialiser)
-            where E : Exception,
+            where E : Throwable,
                   E : NetworkErrorPredicate {
 
         fun create(cacheDirectory: File = dejaVuConfiguration.context.cacheDir) =
