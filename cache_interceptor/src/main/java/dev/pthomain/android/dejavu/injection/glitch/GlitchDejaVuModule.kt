@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.injection.glitch
 
 import dagger.Module
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.glitchy.GlitchyModule
 import dev.pthomain.android.dejavu.injection.DejaVuModule
 import dev.pthomain.android.dejavu.injection.ProdModule
 import dev.pthomain.android.dejavu.interceptors.InterceptorModule
@@ -32,7 +33,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsModule
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationModule
-import dev.pthomain.android.dejavu.retrofit.RetrofitModule
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 
 @Module(includes = [
@@ -42,7 +42,7 @@ import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
     GlitchStatisticsModule::class,
     GlitchInterceptorModule::class,
     GlitchCacheModule::class,
-    GlitchRetrofitModule::class
+    GlitchGlitchyModule::class
 ])
 internal class GlitchDejaVuModule(configuration: DejaVuConfiguration<Glitch>)
     : DejaVuModule<Glitch>(configuration)
@@ -66,4 +66,4 @@ internal class GlitchInterceptorModule : InterceptorModule<Glitch>()
 internal class GlitchCacheModule : CacheModule<Glitch>()
 
 @Module
-internal class GlitchRetrofitModule : RetrofitModule<Glitch>()
+internal class GlitchGlitchyModule : GlitchyModule<Glitch>()

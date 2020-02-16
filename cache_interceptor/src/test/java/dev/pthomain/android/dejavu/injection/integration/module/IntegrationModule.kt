@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.injection.DejaVuModule
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.injection.glitch.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule.Companion.DATABASE_NAME
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import java.util.*
 import javax.inject.Singleton
 
@@ -43,7 +43,7 @@ import javax.inject.Singleton
     GlitchStatisticsModule::class,
     GlitchInterceptorModule::class,
     GlitchCacheModule::class,
-    GlitchRetrofitModule::class
+    GlitchGlitchyModule::class
 ])
 internal class IntegrationModule(configuration: DejaVuConfiguration<Glitch>)
     : DejaVuModule<Glitch>(configuration) {

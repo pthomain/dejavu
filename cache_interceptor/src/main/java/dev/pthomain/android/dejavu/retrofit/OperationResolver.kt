@@ -25,46 +25,28 @@ package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.toOperation
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapter.Method.*
+import dev.pthomain.android.dejavu.retrofit.OperationResolver.Method.*
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.Single
 import okhttp3.Request
 import retrofit2.Call
-import retrofit2.CallAdapter
-import java.lang.reflect.Type
 
-/**
- * Retrofit call adapter composing with DejaVuInterceptor. It takes a type {@code E} for the exception
- * used in generic error handling.
- *
- * @see dev.pthomain.android.dejavu.interceptors.error.error.ErrorFactory
- */
-internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                                                          private val responseClass: Class<*>,
-                                                          private val dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                                                          private val requestBodyConverter: (Request) -> String?,
-                                                          private val logger: Logger,
-                                                          private val methodDescription: String,
-                                                          private val isWrapped: Boolean,
-                                                          private val annotationOperation: Operation?,
-                                                          private val rxCallAdapter: CallAdapter<Any, Any>)
-    : CallAdapter<Any, Any>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+internal class OperationResolver<E> private constructor(
+        private val dejaVuConfiguration: DejaVuConfiguration<E>,
+        private val responseClass: Class<*>,
+        private val requestBodyConverter: (Request) -> String?,
+        private val annotationOperation: Operation?,
+        private val methodDescription: String,
+        private val logger: Logger
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     /**
-     * Adapts the call by composing it with a DejaVuInterceptor if a cache operation is provided
-     * via any of the supported methods (cache predicate, header or annotation)
-     * or via the default RxJava call adapter otherwise.
-     *
+     * Resolves the cache operation if present.
      * The priority for cache operations is, in decreasing order:
      * - operations returned by the cache predicate for the given RequestMetadata
      * - operations defined in the request's DejaVu header
@@ -76,37 +58,42 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
      * returns a DoNotCache operation for its associated request metadata, then the DoNotCache
      * operation takes precedence.
      * @see DejaVuConfiguration.Builder.withPredicate()
-     *
-     * @param call the current Retrofit call
-     * @return the call adapted to RxJava type
      */
-    override fun adapt(call: Call<Any>): Any {
+    fun getResolvedOperation(call: Call<Any>): ResolvedOperation? {
         val requestMetadata = PlainRequestMetadata(
                 responseClass,
                 call.request().url().toString(),
                 requestBodyConverter(call.request())
         )
 
-        val (operation, method) =
+        val operationToMethod: Pair<Operation, Method>? =
                 getPredicateOperation(requestMetadata)?.let { it to PREDICATE }
                         ?: getHeaderOperation(call)?.let { it to HEADER }
                         ?: getAnnotationOperation()?.let { it to ANNOTATION }
-                        ?: null to null
+                        ?: null as Pair<Operation, Method>?
 
-        return if (operation == null) {
+        return if (operationToMethod != null) {
+            val (operation, method) = operationToMethod
+
+            when (method) {
+                PREDICATE -> "the cache predicate"
+                HEADER -> "the request's DejaVuHeader"
+                ANNOTATION -> "the call's cache annotation"
+            }.let {
+                logger.d(
+                        this,
+                        "Found the following operation using $it for $methodDescription: $operation"
+                )
+            }
+
+            ResolvedOperation(operation, method, requestMetadata)
+        } else {
             logger.d(
                     this,
                     "No cache operation found for $methodDescription,"
                             + " the call will be adapted with the default RxJava adapter."
             )
-            rxCallAdapter.adapt(call)
-        } else {
-            adaptedWithOperation(
-                    call,
-                    operation,
-                    requestMetadata,
-                    method!!
-            )
+            null
         }
     }
 
@@ -125,7 +112,7 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
      */
     private fun getHeaderOperation(call: Call<Any>): Operation? {
         logger.d(this, "Checking cache header on $methodDescription")
-        val header = call.request().header(DejaVuHeader) ?: return null
+        val header = call.request().header(DejaVu.DejaVuHeader) ?: return null
 
         val operation = try {
             header.toOperation()
@@ -149,60 +136,17 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
         return annotationOperation
     }
 
-    /**
-     * Returns the adapted call composed with a DejaVuInterceptor with a given cache operation,
-     * either processed by the annotation processor or set on the call as a header operation.
-     *
-     * @param call the call to adapt
-     * @param operation the cache operation
-     * @param requestMetadata the call's associated RequestMetadata
-     * @param method the method providing the operation
-     *
-     * @see dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
-     * @see DejaVu.DejaVuHeader
-     *
-     * @return the call adapted to RxJava type
-     */
-    private fun adaptedWithOperation(call: Call<Any>,
-                                     operation: Operation,
-                                     requestMetadata: PlainRequestMetadata,
-                                     method: Method): Any {
-        when (method) {
-            PREDICATE -> "the cache predicate"
-            HEADER -> "the request's DejaVuHeader"
-            ANNOTATION -> "the call's cache annotation"
-        }.let {
-            logger.d(
-                    this,
-                    "Found the following operation using $it for $methodDescription: $operation"
-            )
-        }
-
-        val interceptor = dejaVuFactory.create(
-                isWrapped,
-                operation,
-                requestMetadata
-        )
-
-        return with(rxCallAdapter.adapt(call)) {
-            when (this) {
-                is Single<*> -> compose(interceptor)
-                is Observable<*> -> compose(interceptor)
-                else -> this
-            }
-        }
-    }
-
-    /**
-     * @return the value type as defined by the default RxJava adapter.
-     */
-    override fun responseType(): Type = rxCallAdapter.responseType()
-
-    private enum class Method {
+    internal enum class Method {
         PREDICATE,
         HEADER,
         ANNOTATION
     }
+
+    data class ResolvedOperation(
+            val operation: Operation,
+            val method: Method,
+            val requestMetadata: PlainRequestMetadata
+    )
 
     internal class Factory<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
                               private val requestBodyConverter: (Request) -> String?,
@@ -210,22 +154,15 @@ internal class RetrofitCallAdapter<E> private constructor(private val dejaVuConf
             where E : Throwable,
                   E : NetworkErrorPredicate {
 
-        fun create(dejaVuFactory: DejaVuInterceptor.Factory<E>,
-                   methodDescription: String,
+        fun create(methodDescription: String,
                    responseClass: Class<out Any>,
-                   isWrapped: Boolean,
-                   annotationOperation: Operation?,
-                   defaultCallAdapter: CallAdapter<Any, Any>) = RetrofitCallAdapter(
+                   annotationOperation: Operation?) = OperationResolver(
                 dejaVuConfiguration,
                 responseClass,
-                dejaVuFactory,
                 requestBodyConverter,
-                logger,
-                methodDescription,
-                isWrapped,
                 annotationOperation,
-                defaultCallAdapter
+                methodDescription,
+                logger
         )
-
     }
 }

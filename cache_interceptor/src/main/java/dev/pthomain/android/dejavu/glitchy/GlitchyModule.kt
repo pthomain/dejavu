@@ -26,6 +26,12 @@ package dev.pthomain.android.dejavu.glitchy
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.retrofit.DejaVuCallInterceptorFactory
+import dev.pthomain.android.dejavu.retrofit.OperationResolver
+import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
+import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.glitchy.Glitchy
 import dev.pthomain.android.glitchy.interceptor.Interceptor
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
@@ -37,26 +43,80 @@ import javax.inject.Singleton
 @Module
 internal abstract class GlitchyModule<E> where E : Throwable,
                                                E : NetworkErrorPredicate {
+
     @Provides
     @Singleton
-    fun provideDejaVuReturnTypeParserFactory() =
+    fun provideAnnotationProcessor(logger: Logger) =
+            AnnotationProcessor<E>(logger)
+
+    @Provides
+    @Singleton
+    fun provideDejaVuReturnTypeParser() =
             DejaVuReturnTypeParser<E>()
 
     @Provides
     @Singleton
-    fun provideCallAdapterFactory(errorFactory: ErrorFactory<E>,
-                                  parser: DejaVuReturnTypeParser<E>,
-                                  logger: Logger): CallAdapter.Factory {
-        val interceptors = LinkedList<Interceptor.Factory<E>>().apply {
+    fun provideOperationReturnTypeParser(
+            dejaVuTypeParser: DejaVuReturnTypeParser<E>,
+            annotationProcessor: AnnotationProcessor<E>,
+            logger: Logger
+    ) =
+            OperationReturnTypeParser(
+                    dejaVuTypeParser,
+                    annotationProcessor,
+                    logger
+            )
 
-        }
+    @Provides
+    @Singleton
+    fun provideRequestBodyConverter() =
+            RequestBodyConverter()
 
-        return Glitchy.createCallAdapterFactory(
-                errorFactory,
-                parser,
-                interceptors,
-                logger
-        )
-    }
+    @Provides
+    @Singleton
+    fun provideOperationResolverFactory(
+            dejaVuConfiguration: DejaVuConfiguration<E>,
+            requestBodyConverter: RequestBodyConverter,
+            logger: Logger
+    ) =
+            OperationResolver.Factory(
+                    dejaVuConfiguration,
+                    requestBodyConverter,
+                    logger
+            )
+
+    @Provides
+    @Singleton
+    fun provideDejaVuCallInterceptorFactory(
+            operationResolverFactory: OperationResolver.Factory<E>,
+            dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>
+    ) =
+            DejaVuCallInterceptorFactory(
+                    operationResolverFactory,
+                    dejaVuInterceptorFactory
+            )
+
+    @Provides
+    @Singleton
+    fun provideCallInterceptorFactoryList(dejaVuCallInterceptorFactory: DejaVuCallInterceptorFactory<E>) =
+            LinkedList<Interceptor.CallFactory<E>>().apply {
+                add(dejaVuCallInterceptorFactory)
+            }
+
+    @Provides
+    @Singleton
+    fun provideCallAdapterFactory(
+            errorFactory: ErrorFactory<E>,
+            operationReturnTypeParser: OperationReturnTypeParser<E>,
+            callInterceptorFactoryList: LinkedList<Interceptor.CallFactory<E>>,
+            logger: Logger
+    ): CallAdapter.Factory =
+            Glitchy.createCallAdapterFactory(
+                    errorFactory,
+                    operationReturnTypeParser,
+                    LinkedList(),
+                    callInterceptorFactoryList,
+                    logger
+            )
 
 }

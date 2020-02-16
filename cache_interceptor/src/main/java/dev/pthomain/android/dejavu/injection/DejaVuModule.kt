@@ -45,6 +45,10 @@ internal abstract class DejaVuModule<E>(private val configuration: DejaVuConfigu
 
     @Provides
     @Singleton
+    fun provideErrorFactory() = configuration.errorFactory
+
+    @Provides
+    @Singleton
     fun provideLogger() = configuration.logger
 
     @Provides

@@ -28,9 +28,9 @@ import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
+import retrofit2.CallAdapter
 
 interface DejaVuComponent<E>
         where E : Throwable,
@@ -39,7 +39,7 @@ interface DejaVuComponent<E>
     fun configuration(): DejaVuConfiguration<E>
     fun dejaVuInterceptorFactory(): DejaVuInterceptor.Factory<E>
     fun headerInterceptor(): HeaderInterceptor
-    fun retrofitCallAdapterFactory(): RetrofitCallAdapterFactory<E>
+    fun retrofitCallAdapterFactory(): CallAdapter.Factory
     fun resultObservable(): Observable<DejaVuResult<*>>
     fun statisticsCompiler(): StatisticsCompiler
 

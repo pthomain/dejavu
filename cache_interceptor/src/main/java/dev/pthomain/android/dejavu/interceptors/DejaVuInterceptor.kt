@@ -36,11 +36,9 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.glitchy.interceptor.Interceptor.SimpleInterceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
-import io.reactivex.Single
-import io.reactivex.SingleTransformer
 import java.util.*
 
 /**
@@ -74,8 +72,7 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
                                                 private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
                                                 private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
                                                 private val responseInterceptorFactory: ResponseInterceptor.Factory<E>)
-    : ObservableTransformer<Any, Any>,
-        SingleTransformer<Any, Any>
+    : SimpleInterceptor()
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -87,16 +84,6 @@ class DejaVuInterceptor<E> internal constructor(private val isWrapped: Boolean,
      */
     override fun apply(upstream: Observable<Any>) =
             composeInternal(upstream)
-
-    /**
-     * Composes Single with the wrapped interceptors
-     *
-     * @param upstream the call to intercept
-     * @return the call intercepted with the inner interceptors
-     */
-    override fun apply(upstream: Single<Any>) =
-            composeInternal(upstream.toObservable())
-                    .firstOrError()!!
 
     /**
      * Deals with the internal composition.
