@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.glitchy
+package dev.pthomain.android.dejavu.retrofit.glitchy
 
 import dagger.Module
 import dagger.Provides

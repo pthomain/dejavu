@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.instruction.operation
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
-import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
+import dev.pthomain.android.dejavu.utils.swapWhenDefault
 
 /**
  * Represent a cache operation.

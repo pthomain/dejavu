@@ -25,7 +25,6 @@ package dev.pthomain.android.dejavu.injection.glitch
 
 import dagger.Module
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
-import dev.pthomain.android.dejavu.glitchy.GlitchyModule
 import dev.pthomain.android.dejavu.injection.DejaVuModule
 import dev.pthomain.android.dejavu.injection.ProdModule
 import dev.pthomain.android.dejavu.interceptors.InterceptorModule
@@ -33,6 +32,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.CacheModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceModule
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsModule
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationModule
+import dev.pthomain.android.dejavu.retrofit.glitchy.GlitchyModule
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 
 @Module(includes = [

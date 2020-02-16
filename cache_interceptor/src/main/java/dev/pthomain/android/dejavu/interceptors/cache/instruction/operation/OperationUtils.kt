@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
-import dev.pthomain.android.dejavu.utils.Utils.swapWhenDefault
+import dev.pthomain.android.dejavu.utils.swapWhenDefault
 
 /**
  * Class in charge of operating a simple serialisation of Operation

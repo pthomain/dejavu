@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
-import dev.pthomain.android.dejavu.glitchy.OperationReturnType
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.glitchy.interceptor.Interceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType

@@ -23,47 +23,43 @@
 
 package dev.pthomain.android.dejavu.utils
 
-object Utils {
-
-    fun <T> T?.isAnyNullable(predicate: (Any?) -> Boolean,
-                             vararg values: Any?): Boolean {
-        if (this != null) {
-            values.forEach {
-                if (predicate(it)) return true
-            }
+fun <T> T?.isAnyNullable(predicate: (Any?) -> Boolean,
+                         vararg values: Any?): Boolean {
+    if (this != null) {
+        values.forEach {
+            if (predicate(it)) return true
         }
-        return false
     }
-
-    fun <T> T.isAny(predicate: (Any) -> Boolean,
-                    vararg values: Any) =
-            isAnyNullable(
-                    { it != null && predicate(it) },
-                    values
-            )
-
-    fun <T : Any> T?.isAnyInstance(vararg classes: Class<*>) =
-            this != null && isAny(
-                    { this::class.java.isAssignableFrom(it::class.java) },
-                    classes
-            )
-
-    fun <T> T?.swapLambdaWhen(condition: Boolean?,
-                              ifTrue: (T?) -> T?): T? =
-            swapLambdaWhen({ condition }, ifTrue)
-
-    fun <T> T?.swapLambdaWhen(condition: (T?) -> Boolean?,
-                              ifTrue: (T?) -> T?): T? =
-            if (condition(this) == true) ifTrue(this) else this
-
-    fun <T> T?.swapValueWhen(ifTrue: T?,
-                             condition: (T?) -> Boolean?): T? =
-            swapLambdaWhen(condition) { ifTrue }
-
-    fun Int?.swapWhenDefault(ifDefault: Int?) =
-            swapValueWhen(ifDefault) { it == null || it == -1 }
-
-    fun Class<*>.swapWhenDefault() =
-            swapValueWhen(null) { it == Any::class.java }
-
+    return false
 }
+
+fun <T> T.isAny(predicate: (Any) -> Boolean,
+                vararg values: Any) =
+        isAnyNullable(
+                { it != null && predicate(it) },
+                values
+        )
+
+fun <T : Any> T?.isAnyInstance(vararg classes: Class<*>) =
+        this != null && isAny(
+                { this::class.java.isAssignableFrom(it::class.java) },
+                classes
+        )
+
+fun <T> T?.swapLambdaWhen(condition: Boolean?,
+                          ifTrue: (T?) -> T?): T? =
+        swapLambdaWhen({ condition }, ifTrue)
+
+fun <T> T?.swapLambdaWhen(condition: (T?) -> Boolean?,
+                          ifTrue: (T?) -> T?): T? =
+        if (condition(this) == true) ifTrue(this) else this
+
+fun <T> T?.swapValueWhen(ifTrue: T?,
+                         condition: (T?) -> Boolean?): T? =
+        swapLambdaWhen(condition) { ifTrue }
+
+fun Int?.swapWhenDefault(ifDefault: Int?) =
+        swapValueWhen(ifDefault) { it == null || it == -1 }
+
+fun Class<*>.swapWhenDefault() =
+        swapValueWhen(null) { it == Any::class.java }

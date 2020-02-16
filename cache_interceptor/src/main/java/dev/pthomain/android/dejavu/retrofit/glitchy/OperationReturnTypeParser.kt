@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.glitchy
+package dev.pthomain.android.dejavu.retrofit.glitchy
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger

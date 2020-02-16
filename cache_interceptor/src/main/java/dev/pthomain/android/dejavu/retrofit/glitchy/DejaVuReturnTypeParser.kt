@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.glitchy
+package dev.pthomain.android.dejavu.retrofit.glitchy
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
@@ -52,14 +52,17 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
         val parsedType = parsedRxType.parsedType
 
         val isDejaVuResult = rawType(parsedType) == DejaVuResult::class.java
-        val responseClass = getFirstParameterUpperBound(parsedType)!! as Class<*>
 
         val (parsedResultType, outcomeType) = if (isDejaVuResult) {
-            wrapToRx(responseClass, isSingle) to parsedType
+            wrapToRx(getFirstParameterUpperBound(parsedType)!! as Class<*>, isSingle) to parsedType
         } else parsedRxType.returnType to parsedType
 
         return ParsedType(
-                DejaVuReturnType(isDejaVuResult, isSingle, responseClass),
+                DejaVuReturnType(
+                        isDejaVuResult,
+                        isSingle,
+                        outcomeType as Class<*>
+                ),
                 parsedResultType,
                 outcomeType
         )

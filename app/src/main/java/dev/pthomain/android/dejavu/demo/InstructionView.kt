@@ -40,12 +40,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type
-import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 
-class InstructionView @JvmOverloads constructor(context: Context,
-                                                attrs: AttributeSet? = null,
-                                                defStyleAttr: Int = 0)
-    : AppCompatTextView(context, attrs, defStyleAttr) {
+class InstructionView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatTextView(context, attrs, defStyleAttr) {
 
     private val orange = Color.parseColor("#CC7832")
     private val purple = Color.parseColor("#9876AA")
