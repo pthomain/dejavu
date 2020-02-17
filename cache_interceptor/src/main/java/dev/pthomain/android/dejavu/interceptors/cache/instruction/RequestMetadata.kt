@@ -30,7 +30,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.instruction
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-sealed class RequestMetadata(open val responseClass: Class<*>,
+sealed class RequestMetadata(open val responseClass: Class<*>, //TODO type
                              open val url: String,
                              open val requestBody: String? = null)
 

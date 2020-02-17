@@ -37,6 +37,7 @@ import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.subjects.PublishSubject
 import java.util.*
@@ -120,6 +121,7 @@ internal abstract class InterceptorModule<E>
                                         networkInterceptorFactory: NetworkInterceptor.Factory<E>,
                                         errorInterceptorFactory: ErrorInterceptor.Factory<E>,
                                         cacheInterceptorFactory: CacheInterceptor.Factory<E>,
+                                        operationResolverFactory: OperationResolver.Factory<E>,
                                         responseInterceptorFactory: ResponseInterceptor.Factory<E>) =
             DejaVuInterceptor.Factory(
                     hasher,
@@ -128,6 +130,7 @@ internal abstract class InterceptorModule<E>
                     networkInterceptorFactory,
                     cacheInterceptorFactory,
                     responseInterceptorFactory,
+                    operationResolverFactory,
                     configuration
             )
 

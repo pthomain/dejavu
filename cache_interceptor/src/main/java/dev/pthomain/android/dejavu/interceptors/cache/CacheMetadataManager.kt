@@ -51,6 +51,7 @@ internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager<E>,
         private val dateFactory: (Long?) -> Date,
+        private val durationPredicate: (TransientResponse) -> Int?,
         private val logger: Logger
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -77,8 +78,26 @@ internal class CacheMetadataManager<E>(
         val hasCachedResponse = previousCachedResponse != null
 
         val previousCacheToken = previousCachedResponse?.metadata?.cacheToken as? ResponseToken
-        val timeToLiveInSeconds = cacheOperation.durationInSeconds
         val fetchDate = dateFactory(null)
+
+        val status = ifElse(
+                hasError,
+                ifElse(
+                        cacheOperation.priority.freshness.hasSingleResponse,
+                        EMPTY,
+                        ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
+                ),
+                ifElse(hasCachedResponse, REFRESHED, NETWORK)
+        )
+
+        val predicateDuration = if (status.isFresh) {
+            durationPredicate(TransientResponse(
+                    responseWrapper.response!!,
+                    instructionToken
+            ))
+        } else null
+
+        val timeToLiveInSeconds = predicateDuration ?: cacheOperation.durationInSeconds
 
         val cacheDate = ifElse(
                 hasError,
@@ -90,16 +109,6 @@ internal class CacheMetadataManager<E>(
                 hasError,
                 previousCacheToken?.expiryDate,
                 dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
-        )
-
-        val status = ifElse(
-                hasError,
-                ifElse(
-                        cacheOperation.priority.freshness.hasSingleResponse,
-                        EMPTY,
-                        ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
-                ),
-                ifElse(hasCachedResponse, REFRESHED, NETWORK)
         )
 
         val cacheToken = ResponseToken(
@@ -170,5 +179,10 @@ internal class CacheMetadataManager<E>(
                     network = callDuration.network - diskDuration,
                     total = callDuration.network
             )
-
 }
+
+data class TransientResponse(
+        val response: Any, //TODO add type
+        var cacheToken: InstructionToken<Cache>
+)
+

@@ -55,7 +55,7 @@ data class Empty<O : Remote, E> internal constructor(
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
         where E : Throwable, E : NetworkErrorPredicate
 
-//The result has a response
+//The result has no response
 data class Result<O : Local> internal constructor(
         override var cacheToken: RequestToken<O>,
         override var callDuration: CallDuration

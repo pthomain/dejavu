@@ -103,7 +103,7 @@ internal class OperationResolver<E> private constructor(
      */
     private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
-        return dejaVuConfiguration.cachePredicate(requestMetadata)
+        return dejaVuConfiguration.operationPredicate(requestMetadata)
     }
 
     /**

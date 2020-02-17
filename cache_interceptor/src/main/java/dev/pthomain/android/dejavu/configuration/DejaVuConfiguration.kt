@@ -28,6 +28,7 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
+import dev.pthomain.android.dejavu.interceptors.cache.TransientResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
@@ -61,7 +62,8 @@ class DejaVuConfiguration<E> internal constructor(
         internal val encryptionManager: EncryptionManager?,
         internal val useDatabase: Boolean,
         internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-        internal val cachePredicate: (metadata: RequestMetadata) -> Remote?
+        internal val operationPredicate: (metadata: RequestMetadata) -> Remote?,
+        internal val durationPredicate: (TransientResponse) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
@@ -102,7 +104,8 @@ class DejaVuConfiguration<E> internal constructor(
         }
         private var persistenceManagerPicker = defaultPersistenceManagerPicker
 
-        private var cachePredicate: (RequestMetadata) -> Remote? = CachePredicate.Inactive
+        private var operationPredicate: (RequestMetadata) -> Remote? = CachePredicate.Inactive
+        private var durationPredicate: (TransientResponse) -> Int? = { null }
 
         /**
          * Sets custom logger.
@@ -164,7 +167,7 @@ class DejaVuConfiguration<E> internal constructor(
 
         /**
          * Sets a predicate for ad-hoc response caching. This predicate will be called for every
-         * request and will always take precedence on directives set as either annotation or header.
+         * request and will always take precedence on the provided request operation.
          *
          * It will be called with the target response class and associated request metadata before
          * the call is made in order to establish the operation to associate with that request.
@@ -179,8 +182,20 @@ class DejaVuConfiguration<E> internal constructor(
          * Otherwise, you can implement your own predicate to return the appropriate operation base on
          * the given RequestMetadata for the request being made.
          */
-        fun withPredicate(predicate: (metadata: RequestMetadata) -> Remote?) =
-                apply { this.cachePredicate = predicate }
+        fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata) -> Remote?) =
+                apply { this.operationPredicate = operationPredicate }
+
+        /**
+         * Sets a predicate for ad-hoc response duration caching.
+         *
+         * If not null, the value returned by this predicate will take precedence on the
+         * cache duration provided in the request's operation.
+         *
+         * This is useful for responses containing cache duration information, enabling server-side
+         * cache control.
+         */
+        fun withDurationPredicate(durationPredicate: (TransientResponse) -> Int?) =
+                apply { this.durationPredicate = durationPredicate }
 
         /**
          * Returns an instance of DejaVu.
@@ -205,7 +220,8 @@ class DejaVuConfiguration<E> internal constructor(
                                     encryptionManager,
                                     useDatabase,
                                     persistenceManagerPicker,
-                                    cachePredicate
+                                    operationPredicate,
+                                    durationPredicate
                             ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                     )
             )

@@ -28,7 +28,6 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.retrofit.DejaVuCallInterceptorFactory
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
@@ -87,20 +86,9 @@ internal abstract class GlitchyModule<E> where E : Throwable,
 
     @Provides
     @Singleton
-    fun provideDejaVuCallInterceptorFactory(
-            operationResolverFactory: OperationResolver.Factory<E>,
-            dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>
-    ) =
-            DejaVuCallInterceptorFactory(
-                    operationResolverFactory,
-                    dejaVuInterceptorFactory
-            )
-
-    @Provides
-    @Singleton
-    fun provideCallInterceptorFactoryList(dejaVuCallInterceptorFactory: DejaVuCallInterceptorFactory<E>) =
-            LinkedList<Interceptor.CallFactory<E>>().apply {
-                add(dejaVuCallInterceptorFactory)
+    fun provideCallInterceptorFactoryList(dejaVuCallInterceptorFactory: DejaVuInterceptor.Factory<E>) =
+            LinkedList<Interceptor.Factory<E>>().apply {
+                add(dejaVuCallInterceptorFactory.internalFactory)
             }
 
     @Provides
@@ -108,13 +96,12 @@ internal abstract class GlitchyModule<E> where E : Throwable,
     fun provideCallAdapterFactory(
             errorFactory: ErrorFactory<E>,
             operationReturnTypeParser: OperationReturnTypeParser<E>,
-            callInterceptorFactoryList: LinkedList<Interceptor.CallFactory<E>>,
+            callInterceptorFactoryList: LinkedList<Interceptor.Factory<E>>,
             logger: Logger
     ): CallAdapter.Factory =
             Glitchy.createCallAdapterFactory(
                     errorFactory,
                     operationReturnTypeParser,
-                    LinkedList(),
                     callInterceptorFactoryList,
                     logger
             )
