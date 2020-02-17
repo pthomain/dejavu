@@ -38,7 +38,8 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * @param exception any exception caught by the generic error handling or resulting of an exception during the caching process
  * @param callDuration how long the call took to execute at different stages of the caching process
  */
-data class ResponseMetadata<O : Operation, T : RequestToken<O>, E> internal constructor(
+@Deprecated("Replace with sealed class DejaVuResult")
+internal data class ResponseMetadata<O : Operation, T : RequestToken<O>, E>(
         val cacheToken: T,
         val exceptionClass: Class<E>,
         val exception: E? = null,

@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
@@ -47,32 +46,18 @@ data class Response<R : Any, O : Remote> internal constructor(
         HasCacheMetadata<O, ResponseToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
 
 //The result is empty due to filtering or exceptions
-data class Empty<O : Remote, E> internal constructor(
+class Empty<O : Remote, E> internal constructor(
         val exception: E,
         override var cacheToken: RequestToken<O>,
         override var callDuration: CallDuration
-) : DejaVuResult<Any>(),
+) : DejaVuResult<Nothing>(),
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
-        where E : Throwable, E : NetworkErrorPredicate
+        where E : Throwable,
+              E : NetworkErrorPredicate
 
-//The result has no response
+//The result has no response (Local operation)
 data class Result<O : Local> internal constructor(
         override var cacheToken: RequestToken<O>,
         override var callDuration: CallDuration
-) : DejaVuResult<Any>(),
+) : DejaVuResult<Nothing>(),
         HasCacheMetadata<O, RequestToken<O>> by CacheMetadataHolder(cacheToken, callDuration)
-
-internal data class CacheMetadataHolder<O : Operation, T : RequestToken<O>>(
-        override var cacheToken: T,
-        override var callDuration: CallDuration
-) : HasCacheMetadata<O, T>
-
-interface HasCacheMetadata<O : Operation, T : RequestToken<O>> : HasCacheToken<O, T>, HasCallDuration
-
-interface HasCacheToken<O : Operation, T : RequestToken<O>> {
-    var cacheToken: T
-}
-
-interface HasCallDuration {
-    var callDuration: CallDuration
-}

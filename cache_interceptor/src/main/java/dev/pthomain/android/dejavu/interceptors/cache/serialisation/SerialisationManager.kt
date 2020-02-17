@@ -25,18 +25,17 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation
 
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.compression.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file.FileSerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.newMetadata
-import dev.pthomain.android.dejavu.interceptors.error.newWrapper
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -69,21 +68,18 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @throws SerialisationException in case the serialisation fails
      */
     @Throws(SerialisationException::class)
-    fun serialise(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
+    fun serialise(responseWrapper: Response<Any, Cache>,
                   metadata: SerialisationDecorationMetadata): ByteArray {
         val response = responseWrapper.response
-        val responseClass = responseWrapper.responseClass
+        val responseClass = responseWrapper.cacheToken.instruction.requestMetadata.responseClass
 
-        return if (response == null) {
-            throw SerialisationException(
-                    "Could not serialise the given response",
-                    NullPointerException("The response was null")
-            )
-        } else when {
+        return when {
             responseClass == String::class.java -> (response as String)
+
             !serialiser.canHandleType(response.javaClass) -> throw SerialisationException(
                     "Could not serialise the given response"
             )
+
             else -> serialiser.serialise(response)
         }.let {
             var serialised = it.toByteArray()
@@ -114,7 +110,7 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
     @Throws(SerialisationException::class)
     fun deserialise(instructionToken: InstructionToken<Cache>,
                     data: ByteArray,
-                    metadata: SerialisationDecorationMetadata): ResponseWrapper<Cache, RequestToken<Cache>, E> {
+                    metadata: SerialisationDecorationMetadata): Response<Any, Cache> {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val responseClass = requestMetadata.responseClass
         var deserialised = data
@@ -130,15 +126,14 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
         return byteToStringConverter(deserialised)
                 .let { serialiser.deserialise(it, responseClass) }
                 .let {
-                    errorFactory.newWrapper(
+                    Response(
                             it,
-                            errorFactory.newMetadata(
-                                    RequestToken(
-                                            instructionToken.instruction,
-                                            NOT_CACHED,
-                                            dateFactory(null)
-                                    )
-                            )
+                            ResponseToken(
+                                    instructionToken.instruction,
+                                    NOT_CACHED,
+                                    dateFactory(null)
+                            ),
+                            CallDuration(0, 0, 0)
                     )
                 }
     }

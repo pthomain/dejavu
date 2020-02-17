@@ -29,15 +29,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMe
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.newMetadata
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.text.SimpleDateFormat
 import java.util.*
@@ -66,10 +64,10 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response: ResponseWrapper<Cache, RequestToken<Cache>, E>): CacheDataHolder.Complete {
-        val instructionToken = response.metadata.cacheToken
+    protected fun serialise(response: Response<Any, Cache>): CacheDataHolder.Complete {
+        val instructionToken = response.cacheToken
         val instruction = instructionToken.instruction
-        val operation = instruction.operation as Cache
+        val operation = instruction.operation
         val simpleName = instruction.requestMetadata.responseClass.simpleName
 
         val metadata = with(operation) {
@@ -103,7 +101,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      * @return a cached entry if available, or null otherwise
      * @throws SerialisationException in case the deserialisation failed
      */
-    final override fun getCachedResponse(instructionToken: InstructionToken<Cache>): ResponseWrapper<Cache, RequestToken<Cache>, E>? {
+    final override fun getCachedResponse(instructionToken: InstructionToken<Cache>): Response<Any, Cache>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
 
         logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
@@ -154,7 +152,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                             expiryDate: Date,
                             isCompressed: Boolean,
                             isEncrypted: Boolean,
-                            localData: ByteArray): ResponseWrapper<Cache, RequestToken<Cache>, E>? {
+                            localData: ByteArray): Response<Any, Cache>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val simpleName = requestMetadata.responseClass.simpleName
 
@@ -168,15 +166,17 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
                 val formattedDate = dateFormat.format(expiryDate)
                 logger.d(this, "Returning cached $simpleName cached until $formattedDate")
 
-                wrapper.apply {
-                    metadata = configuration.errorFactory.newMetadata(
+                with(wrapper) {
+                    Response(
+                            response,
                             ResponseToken(
                                     instructionToken.instruction,
                                     dateFactory.getCacheStatus(expiryDate),
                                     requestDate = cacheDate, //TODO check this
                                     cacheDate = cacheDate,
                                     expiryDate = expiryDate
-                            )
+                            ),
+                            callDuration
                     )
                 }
             }

@@ -31,9 +31,8 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 
@@ -49,7 +48,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun getCachedResponse(instructionToken: InstructionToken<Cache>): ResponseWrapper<Cache, RequestToken<Cache>, E>?
+    fun getCachedResponse(instructionToken: InstructionToken<Cache>): Response<Any, Cache>?
 
     /**
      * Caches a given response.
@@ -58,7 +57,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun cache(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>)
+    fun cache(responseWrapper: Response<Any, Cache>)
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).

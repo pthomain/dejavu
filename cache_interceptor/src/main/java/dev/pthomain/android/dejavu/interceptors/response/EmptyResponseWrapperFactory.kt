@@ -42,10 +42,11 @@ import java.util.*
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
-class EmptyResponseWrapperFactory<E>(private val errorFactory: ErrorFactory<E>,
-                                     private val dateFactory: (Long?) -> Date)
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+internal class EmptyResponseWrapperFactory<E>(
+        private val errorFactory: ErrorFactory<E>,
+        private val dateFactory: (Long?) -> Date
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     /**
      * Returns a Single emitting a ResponseWrapper with no response and a status of

@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMe
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder
@@ -42,7 +41,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOp
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.DATABASE
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
@@ -145,7 +144,6 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
                                 val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
                                 val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
                                 val responseClassHash = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
-
                                 //TODO verify the class hash is the same as the one the request metadata
 
                                 return CacheDataHolder.Complete(
@@ -216,7 +214,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>) {
+    override fun cache(responseWrapper: Response<Any, Cache>) {
         serialise(responseWrapper).let {
             with(it) {
                 val values = HashMap<String, Any>()

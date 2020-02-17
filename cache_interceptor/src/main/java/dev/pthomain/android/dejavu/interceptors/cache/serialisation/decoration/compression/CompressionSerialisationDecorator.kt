@@ -26,11 +26,10 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 /**
@@ -57,14 +56,14 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
      * @throws SerialisationException in case this compression step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
+    override fun decorateSerialisation(responseWrapper: Response<Any, Cache>,
                                        metadata: SerialisationDecorationMetadata,
                                        payload: ByteArray) =
             if (metadata.isCompressed) {
                 compresser(payload).also { compressed ->
                     logCompression(
                             compressed,
-                            responseWrapper.responseClass.simpleName,
+                            responseWrapper.response.javaClass.simpleName,
                             payload
                     )
                 }

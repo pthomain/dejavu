@@ -31,9 +31,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.error.newMetadata
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
+import dev.pthomain.android.dejavu.interceptors.response.Response
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import java.util.*
@@ -47,13 +51,15 @@ import java.util.*
  * @param dateFactory converts timestamps to Dates
  * @param logger a Logger instance
  */
-internal class CacheManager<E>(private val persistenceManager: PersistenceManager<E>,
-                               private val cacheMetadataManager: CacheMetadataManager<E>,
-                               private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
-                               private val dateFactory: (Long?) -> Date,
-                               private val logger: Logger)
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+internal class CacheManager<E>(
+        private val persistenceManager: PersistenceManager<E>,
+        private val cacheMetadataManager: CacheMetadataManager<E>,
+        private val emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
+        private val errorFactory: ErrorFactory<E>,
+        private val dateFactory: (Long?) -> Date,
+        private val logger: Logger
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     /**
      * Handles the CLEAR operation
@@ -124,29 +130,38 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                 logger.d(this, "Checking for cached $simpleName")
                 val cachedResponse = persistenceManager.getCachedResponse(instructionToken)
 
-                if (cachedResponse != null) {
+                val responseWrapper = if (cachedResponse != null) {
                     logger.d(
                             this,
-                            "Found cached $simpleName, status: ${cachedResponse.metadata.cacheToken.status}"
+                            "Found cached $simpleName, status: ${cachedResponse.cacheToken.status}"
                     )
-                }
+                    ResponseWrapper<Cache, RequestToken<Cache>, E>(
+                            cachedResponse,
+                            errorFactory.newMetadata(
+                                    with(cachedResponse.cacheToken) {
+                                        ResponseToken(instruction, status, requestDate)
+                                    },
+                                    null
+                            )
+                    )
+                } else null
 
                 val diskDuration = (dateFactory(null).time - start).toInt()
 
                 if (mode.isLocalOnly()) {
-                    if (cachedResponse == null)
+                    if (responseWrapper == null)
                         emptyResponseObservable(instructionToken, start)
                     else
-                        Observable.just(cachedResponse)
+                        Observable.just(responseWrapper)
                 } else
                     getOnlineObservable(
-                            cachedResponse,
+                            responseWrapper,
                             upstream,
                             cacheOperation,
                             instructionToken,
                             diskDuration
                     )
-    }!!
+            }
 
     //TODO JavaDoc
     private fun getOnlineObservable(cachedResponse: ResponseWrapper<Cache, RequestToken<Cache>, E>?,
@@ -209,7 +224,13 @@ internal class CacheManager<E>(private val persistenceManager: PersistenceManage
                             } else {
                                 logger.d(this, "Finished fetching $simpleName, now caching")
                                 try {
-                                    persistenceManager.cache(wrapper)
+                                    persistenceManager.cache(Response(
+                                            wrapper.response!!,
+                                            with(wrapper.metadata.cacheToken) {
+                                                ResponseToken(instruction, status, requestDate) //TODO check expiry date etc
+                                            },
+                                            wrapper.metadata.callDuration
+                                    ))
                                 } catch (e: Exception) {
                                     return@map cacheMetadataManager.setSerialisationFailedMetadata(
                                             wrapper,

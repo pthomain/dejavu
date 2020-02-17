@@ -21,27 +21,24 @@
  *
  */
 
-package dev.pthomain.android.dejavu.interceptors.error
+package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
-/**
- * Wraps the call and associated metadata for internal use.
- *
- * @param response the call's response if available
- * @param metadata the call's metadata
- */
-@Deprecated("Replace with sealed class DejaVuResult")
-internal data class ResponseWrapper<O : Operation, T : RequestToken<O>, E>(
-        val response: Any?,
-        override var metadata: ResponseMetadata<O, T, E>
-) : ResponseMetadata.Holder<O, T, E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+internal data class CacheMetadataHolder<O : Operation, T : RequestToken<O>>(
+        override var cacheToken: T,
+        override var callDuration: CallDuration
+) : HasCacheMetadata<O, T>
 
-    val responseClass: Class<*> = metadata.cacheToken.instruction.requestMetadata.responseClass
+interface HasCacheMetadata<O : Operation, T : RequestToken<O>>
+    : HasCacheToken<O, T>, HasCallDuration
 
+interface HasCacheToken<O : Operation, T : RequestToken<O>> {
+    var cacheToken: T
+}
+
+interface HasCallDuration {
+    var callDuration: CallDuration
 }
