@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -48,7 +48,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun getCachedResponse(instructionToken: InstructionToken<Cache>): Response<Any, Cache>?
+    fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): Response<R, Cache>?
 
     /**
      * Caches a given response.
@@ -57,7 +57,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun cache(responseWrapper: Response<Any, Cache>)
+    fun <R : Any> cache(responseWrapper: Response<R, Cache>)
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
@@ -67,8 +67,8 @@ interface PersistenceManager<E>
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun forceInvalidation(operation: Invalidate,
-                          requestMetadata: ValidRequestMetadata): Boolean
+    fun <R> forceInvalidation(operation: Invalidate,
+                              requestMetadata: ValidRequestMetadata<R>): Boolean
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
@@ -79,8 +79,8 @@ interface PersistenceManager<E>
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun invalidateIfNeeded(operation: Cache?,
-                           requestMetadata: ValidRequestMetadata): Boolean
+    fun <R> invalidateIfNeeded(operation: Cache?,
+                               requestMetadata: ValidRequestMetadata<R>): Boolean
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -89,8 +89,8 @@ interface PersistenceManager<E>
      * @param operation the Clear operation
      * @param requestMetadata the request's metadata
      */
-    fun clearCache(operation: Clear,
-                   requestMetadata: ValidRequestMetadata)
+    fun <R> clearCache(operation: Clear,
+                       requestMetadata: ValidRequestMetadata<R>)
 
     companion object {
         /**

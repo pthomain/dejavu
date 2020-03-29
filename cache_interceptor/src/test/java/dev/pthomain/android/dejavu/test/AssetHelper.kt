@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.test
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import java.io.*
 

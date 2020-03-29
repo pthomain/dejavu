@@ -30,7 +30,7 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.google.gson.Gson
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
@@ -38,7 +38,7 @@ import io.reactivex.Observer
 
 class VolleyObservable<E, R : Any> private constructor(private val requestQueue: RequestQueue,
                                                        private val gson: Gson,
-                                                       private val requestMetadata: PlainRequestMetadata)
+                                                       private val requestMetadata: RequestMetadata<R>)
     : Observable<R>()
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -68,8 +68,8 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
 
         fun <R : Any, E> observable(requestQueue: RequestQueue,
                                     gson: Gson,
-                                    dejaVuInterceptor: DejaVuInterceptor<E>,
-                                    requestMetadata: PlainRequestMetadata): Observable<R>
+                                    dejaVuInterceptor: DejaVuInterceptor<E, R>,
+                                    requestMetadata: RequestMetadata<R>): Observable<R>
                 where E : Throwable,
                       E : NetworkErrorPredicate =
                 VolleyObservable<E, R>(
@@ -77,12 +77,12 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
                         gson,
                         requestMetadata
                 ).compose(dejaVuInterceptor)
-                        .cast(requestMetadata.responseClass as Class<R>)!!
+                        .cast(requestMetadata.responseClass)!!
 
         fun <R : Any, E> cacheOperation(requestQueue: RequestQueue,
                                         gson: Gson,
-                                        dejaVuInterceptor: DejaVuInterceptor<E>,
-                                        requestMetadata: PlainRequestMetadata): Observable<DejaVuResult<R>>
+                                        dejaVuInterceptor: DejaVuInterceptor<E, R>,
+                                        requestMetadata: RequestMetadata<R>): Observable<DejaVuResult<R>>
                 where E : Throwable,
                       E : NetworkErrorPredicate = empty() //FIXME
 

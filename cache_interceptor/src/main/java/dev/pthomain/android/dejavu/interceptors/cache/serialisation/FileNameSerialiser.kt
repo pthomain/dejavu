@@ -41,7 +41,7 @@ internal class FileNameSerialiser {
      * @param cacheDataHolder the model containing the metadata required for the name serialisation
      * @return the file name to use to save the response associated to the given metadata
      */
-    fun serialise(cacheDataHolder: CacheDataHolder.Complete) =
+    fun <R> serialise(cacheDataHolder: CacheDataHolder.Complete<R>) =
             with(cacheDataHolder) {
                 listOf(
                         cacheDate.toString(),
@@ -92,8 +92,8 @@ internal class FileNameSerialiser {
      * @throws SerialisationException if the given file name is invalid
      */
     @Throws(SerialisationException::class)
-    fun deserialise(requestMetadata: HashedRequestMetadata,
-                    fileName: String) =
+    fun <R> deserialise(requestMetadata: HashedRequestMetadata<R>,
+                        fileName: String) =
             with(deserialise(fileName)) {
                 CacheDataHolder.Complete(
                         requestMetadata, //TODO verify that responseClassHash matches the hash on the metadata

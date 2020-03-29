@@ -93,7 +93,7 @@ class FileStore private constructor(
      * @return a map of the existing entries
      */
     override fun values() =
-            cacheDirectory.list()
+            cacheDirectory.list()!!
                     .filter(::isValidFormat)
                     .associateWith(::get)
 

@@ -34,10 +34,8 @@ import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.*
@@ -51,7 +49,7 @@ import java.util.*
 
 class ResponseInterceptorUnitTest {
 
-    private lateinit var mockEmptyResponseWrapperFactory: EmptyResponseWrapperFactory<Glitch>
+    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockMetadataSubject: PublishSubject<ResponseMetadata<Glitch>>
     private lateinit var mockEmptyException: Glitch
@@ -62,7 +60,7 @@ class ResponseInterceptorUnitTest {
 
     @Before
     fun setUp() {
-        mockEmptyResponseWrapperFactory = mock()
+        mockEmptyResponseFactory = mock()
         mockMetadataSubject = mock()
     }
 
@@ -125,7 +123,7 @@ class ResponseInterceptorUnitTest {
         setUp() //reset mocks
 
         val mockInstructionToken = instructionToken(operation)
-        mockEmptyException = Glitch(EmptyResponseWrapperFactory.EmptyResponseException)
+        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException)
 
         val isValid = if (operation is Cache) {
             val filterFresh = cacheStatus.isFresh || !operation.isFreshOnly()
@@ -180,7 +178,7 @@ class ResponseInterceptorUnitTest {
         val target = ResponseInterceptor(
                 mock(),
                 mockDateFactory,
-                mockEmptyResponseWrapperFactory,
+                mockEmptyResponseFactory,
                 mockConfiguration,
                 mockMetadataSubject,
                 mockInstructionToken,
@@ -200,7 +198,7 @@ class ResponseInterceptorUnitTest {
                 metadata = expectedMetadata
         )
 
-        whenever(mockEmptyResponseWrapperFactory.create(
+        whenever(mockEmptyResponseFactory.create(
                 eq(mockInstructionToken)
         )).thenReturn(mockEmptyResponseWrapper)
 
@@ -214,11 +212,11 @@ class ResponseInterceptorUnitTest {
                 mock()
         )
 
-        whenever(mockEmptyResponseWrapperFactory.create(
+        whenever(mockEmptyResponseFactory.create(
                 eq(mockInstructionToken)
         )).thenReturn(mockEmptyResponse)
 
-        whenever(mockEmptyResponseWrapperFactory.create(
+        whenever(mockEmptyResponseFactory.create(
                 eq(mockInstructionToken)
         )).thenReturn(null)
 

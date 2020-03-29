@@ -30,5 +30,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation
  * @param message the description of the error
  * @param cause the optional original exception
  */
-class SerialisationException(message: String?,
-                             cause: Throwable? = null) : Exception(message, cause)
+class SerialisationException(
+        message: String?,
+        cause: Throwable? = null
+) : Exception(message, cause)

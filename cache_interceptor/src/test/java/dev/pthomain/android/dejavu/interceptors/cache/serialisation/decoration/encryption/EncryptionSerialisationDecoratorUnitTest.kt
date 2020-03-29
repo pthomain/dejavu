@@ -32,7 +32,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.BaseSerialisationDecoratorUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption.EncryptionSerialisationDecorator.Companion.DATA_TAG
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.expectException

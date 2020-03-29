@@ -36,10 +36,10 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseTok
  *
  * @see dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
  */
-abstract class Cacheable : HasCacheMetadata<Remote, ResponseToken<Remote>> {
+abstract class Cacheable<R : Any> : HasCacheMetadata<Remote, R, ResponseToken<Remote, R>> {
 
     @Transient
-    override lateinit var cacheToken: ResponseToken<Remote>
+    override lateinit var cacheToken: ResponseToken<Remote, R>
 
     @Transient
     override lateinit var callDuration: CallDuration

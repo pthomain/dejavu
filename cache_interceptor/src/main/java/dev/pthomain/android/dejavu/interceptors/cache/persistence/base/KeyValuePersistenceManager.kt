@@ -54,12 +54,13 @@ import java.util.*
  * @param store the KeyValueStore holding the data
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  */
-class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: DejaVuConfiguration<E>,
-                                                         dateFactory: (Long?) -> Date,
-                                                         private val fileNameSerialiser: FileNameSerialiser,
-                                                         private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
-                                                         serialisationManager: SerialisationManager<E>)
-    : BasePersistenceManager<E>(
+class KeyValuePersistenceManager<E> internal constructor(
+        dejaVuConfiguration: DejaVuConfiguration<E>,
+        dateFactory: (Long?) -> Date,
+        private val fileNameSerialiser: FileNameSerialiser,
+        private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
+        serialisationManager: SerialisationManager<E>
+) : BasePersistenceManager<E>(
         dejaVuConfiguration,
         serialisationManager,
         dateFactory
@@ -74,7 +75,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: Response<Any, Cache>) {
+    override fun <R : Any> cache(responseWrapper: Response<R, Cache>) {
         serialise(responseWrapper).let { holder ->
 
             findPartialKey(holder.requestMetadata.requestHash)?.let {
@@ -93,7 +94,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      *
      * @return the cached data as a CacheDataHolder
      */
-    override fun getCacheDataHolder(requestMetadata: HashedRequestMetadata) =
+    override fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>) =
             findPartialKey(requestMetadata.requestHash)
                     ?.let { get(it) }
 
@@ -105,8 +106,8 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun clearCache(operation: Clear,
-                            requestMetadata: ValidRequestMetadata) {
+    override fun <R> clearCache(operation: Clear,
+                                requestMetadata: ValidRequestMetadata<R>) {
         val now = dateFactory(null).time
         values().map { it.key to fileNameSerialiser.deserialise(it.key) }
                 .filter {
@@ -131,8 +132,8 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun forceInvalidation(operation: Invalidate,
-                                   requestMetadata: ValidRequestMetadata): Boolean {
+    override fun <R> forceInvalidation(operation: Invalidate,
+                                       requestMetadata: ValidRequestMetadata<R>): Boolean {
         //TODO
         return false
     }
@@ -145,7 +146,7 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean {
+    override fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean {
         findPartialKey(requestMetadata.requestHash)?.also { oldName ->
             fileNameSerialiser.deserialise(requestMetadata, oldName).let {
                 if (it.expiryDate != 0L) {
@@ -158,13 +159,14 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
         return false
     }
 
-    class FileFactory<E> internal constructor(private val fileStoreFactory: FileStore.Factory<E>,
-                                              private val serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                              private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                                              private val dateFactory: (Long?) -> Date,
-                                              private val fileNameSerialiser: FileNameSerialiser)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
+    class FileFactory<E> internal constructor(
+            private val fileStoreFactory: FileStore.Factory<E>,
+            private val serialisationManagerFactory: SerialisationManager.Factory<E>,
+            private val dejaVuConfiguration: DejaVuConfiguration<E>,
+            private val dateFactory: (Long?) -> Date,
+            private val fileNameSerialiser: FileNameSerialiser
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
         fun create(cacheDirectory: java.io.File = dejaVuConfiguration.context.cacheDir): PersistenceManager<E> {
             return KeyValuePersistenceManager(
                     dejaVuConfiguration,
@@ -176,13 +178,14 @@ class KeyValuePersistenceManager<E> internal constructor(dejaVuConfiguration: De
         }
     }
 
-    class MemoryFactory<E> internal constructor(private val memoryStoreFactory: MemoryStore.Factory,
-                                                private val serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                                private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                                                private val dateFactory: (Long?) -> Date,
-                                                private val fileNameSerialiser: FileNameSerialiser)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
+    class MemoryFactory<E> internal constructor(
+            private val memoryStoreFactory: MemoryStore.Factory,
+            private val serialisationManagerFactory: SerialisationManager.Factory<E>,
+            private val dejaVuConfiguration: DejaVuConfiguration<E>,
+            private val dateFactory: (Long?) -> Date,
+            private val fileNameSerialiser: FileNameSerialiser
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
         fun create(maxEntries: Int = 20,
                    disableEncryption: Boolean = false): PersistenceManager<E> =
                 KeyValuePersistenceManager(

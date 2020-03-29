@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.encryption
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -38,8 +38,9 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * @param encryptionManager an instance of EncryptionManager
  * @see dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Builder.withEncryption
  */
-internal class EncryptionSerialisationDecorator<E>(private val encryptionManager: EncryptionManager)
-    : SerialisationDecorator<E>
+internal class EncryptionSerialisationDecorator<E>(
+        private val encryptionManager: EncryptionManager
+) : SerialisationDecorator<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -53,9 +54,11 @@ internal class EncryptionSerialisationDecorator<E>(private val encryptionManager
      * @throws SerialisationException in case this encryption step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: Response<Any, Cache>,
-                                       metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray) =
+    override fun <R : Any> decorateSerialisation(
+            responseWrapper: Response<R, Cache>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.encryptBytes(payload, DATA_TAG)
                         ?: throw SerialisationException("Could not encrypt data")
@@ -71,9 +74,11 @@ internal class EncryptionSerialisationDecorator<E>(private val encryptionManager
      * @throws SerialisationException in case this decryption step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateDeserialisation(instructionToken: InstructionToken<Cache>,
-                                         metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray) =
+    override fun <R : Any> decorateDeserialisation(
+            instructionToken: CacheToken<Cache, R>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.decryptBytes(payload, DATA_TAG)
                         ?: throw SerialisationException("Could not decrypt data")

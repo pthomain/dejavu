@@ -39,10 +39,9 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.mumbo.base.EncryptionManager
@@ -75,7 +74,7 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun defaultAdapterFactory(): RxJava2CallAdapterFactory
     fun cacheMetadataSubject(): PublishSubject<DejaVuResult<*>>
     fun annotationProcessor(): AnnotationProcessor<Glitch>
-    fun emptyResponseFactory(): EmptyResponseWrapperFactory<Glitch>
+    fun emptyResponseFactory(): EmptyResponseFactory<Glitch>
     fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
     fun persistenceManagerFactory(): PersistenceManagerFactory<Glitch>
 

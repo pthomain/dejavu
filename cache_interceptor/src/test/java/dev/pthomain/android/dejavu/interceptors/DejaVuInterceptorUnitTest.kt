@@ -34,8 +34,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor

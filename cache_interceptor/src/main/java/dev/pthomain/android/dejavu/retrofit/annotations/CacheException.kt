@@ -37,9 +37,7 @@ data class CacheException(val type: Type,
 
     enum class Type {
         ANNOTATION,
-        METADATA,
-        RETURN_TYPE,
-        SERIALISATION
+        METADATA
     }
 
 }

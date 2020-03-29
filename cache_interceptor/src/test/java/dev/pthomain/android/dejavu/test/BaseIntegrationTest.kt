@@ -43,7 +43,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

@@ -62,8 +62,8 @@ class DejaVuConfiguration<E> internal constructor(
         internal val encryptionManager: EncryptionManager?,
         internal val useDatabase: Boolean,
         internal val persistenceManagerPicker: ((PersistenceManagerFactory<E>) -> PersistenceManager<E>)?,
-        internal val operationPredicate: (metadata: RequestMetadata) -> Remote?,
-        internal val durationPredicate: (TransientResponse) -> Int?
+        internal val operationPredicate: (metadata: RequestMetadata<*>) -> Remote?,
+        internal val durationPredicate: (TransientResponse<*>) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
@@ -71,9 +71,9 @@ class DejaVuConfiguration<E> internal constructor(
         const val DEFAULT_CACHE_DURATION_IN_SECONDS = 3600 //1h
 
         sealed class CachePredicate(private val operation: Remote?)
-            : (RequestMetadata) -> Remote? {
+            : (RequestMetadata<*>) -> Remote? {
 
-            override fun invoke(requestMetadata: RequestMetadata) = operation
+            override fun invoke(requestMetadata: RequestMetadata<*>) = operation
 
             object Inactive : CachePredicate(null)
             object CacheNone : CachePredicate(DoNotCache)
@@ -104,8 +104,8 @@ class DejaVuConfiguration<E> internal constructor(
         }
         private var persistenceManagerPicker = defaultPersistenceManagerPicker
 
-        private var operationPredicate: (RequestMetadata) -> Remote? = CachePredicate.Inactive
-        private var durationPredicate: (TransientResponse) -> Int? = { null }
+        private var operationPredicate: (RequestMetadata<*>) -> Remote? = CachePredicate.Inactive
+        private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
 
         /**
          * Sets custom logger.
@@ -181,8 +181,8 @@ class DejaVuConfiguration<E> internal constructor(
          *
          * Otherwise, you can implement your own predicate to return the appropriate operation base on
          * the given RequestMetadata for the request being made.
-         */
-        fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata) -> Remote?) =
+         *///TODO rename to Provider
+        fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata<*>) -> Remote?) =
                 apply { this.operationPredicate = operationPredicate }
 
         /**
@@ -193,8 +193,8 @@ class DejaVuConfiguration<E> internal constructor(
          *
          * This is useful for responses containing cache duration information, enabling server-side
          * cache control.
-         */
-        fun withDurationPredicate(durationPredicate: (TransientResponse) -> Int?) =
+         *///TODO rename to Provider
+        fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
                 apply { this.durationPredicate = durationPredicate }
 
         /**

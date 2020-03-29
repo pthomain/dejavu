@@ -54,9 +54,9 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     compress = compress
             )).flatMap {
                 when (it) {
-                    is Response<*, *> -> (it as Response<CatFactResponse, *>).response.observable()
-                    is Empty<*, *> -> Observable.error(it.exception)
-                    is Result<*> -> Observable.empty()
+                    is Response<CatFactResponse, *> -> it.response.observable()
+                    is Empty<*, *, *> -> Observable.error(it.exception)
+                    is Result<*, *> -> Observable.empty()
                 }
             }
 
@@ -65,9 +65,9 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                     Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
             ).firstOrError().flatMap {
                 when (it) {
-                    is Response<*, *> -> (it as Response<CatFactResponse, *>).response.single()
-                    is Empty<*, *> -> Single.error(it.exception)
-                    is Result<*> -> Single.error(NoSuchElementException("This operation does not emit any response: ${it.cacheToken.instruction.operation.type}"))
+                    is Response<CatFactResponse, *> -> it.response.single()
+                    is Empty<*, *, *> -> Single.error(it.exception)
+                    is Result<*, *> -> Single.error(NoSuchElementException("This operation does not emit any response: ${it.cacheToken.instruction.operation.type}"))
                 }
             }
 

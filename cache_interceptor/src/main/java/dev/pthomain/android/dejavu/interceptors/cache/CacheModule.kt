@@ -30,8 +30,7 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.subjects.PublishSubject
 import java.util.*
@@ -63,13 +62,11 @@ internal abstract class CacheModule<E>
                             persistenceManager: PersistenceManager<E>,
                             cacheMetadataManager: CacheMetadataManager<E>,
                             dateFactory: Function1<Long?, Date>,
-                            errorFactory: ErrorFactory<E>,
-                            emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
+                            emptyResponseFactory: EmptyResponseFactory<E>) =
             CacheManager(
                     persistenceManager,
                     cacheMetadataManager,
-                    emptyResponseWrapperFactory,
-                    errorFactory,
+                    emptyResponseFactory,
                     dateFactory::get,
                     logger
             )

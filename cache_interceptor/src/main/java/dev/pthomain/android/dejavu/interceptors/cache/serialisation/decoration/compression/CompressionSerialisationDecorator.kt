@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -39,10 +39,11 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * @param compresser a function compressing an input ByteArray
  * @param uncompresser a function decompressing an input ByteArray
  */
-internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
-                                                    private val compresser: (ByteArray) -> ByteArray,
-                                                    private val uncompresser: (ByteArray, Int, Int) -> ByteArray)
-    : SerialisationDecorator<E>
+internal class CompressionSerialisationDecorator<E>(
+        private val logger: Logger,
+        private val compresser: (ByteArray) -> ByteArray,
+        private val uncompresser: (ByteArray, Int, Int) -> ByteArray
+) : SerialisationDecorator<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -56,9 +57,11 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
      * @throws SerialisationException in case this compression step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: Response<Any, Cache>,
-                                       metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray) =
+    override fun <R : Any> decorateSerialisation(
+            responseWrapper: Response<R, Cache>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             if (metadata.isCompressed) {
                 compresser(payload).also { compressed ->
                     logCompression(
@@ -79,9 +82,11 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
      * @throws SerialisationException in case this decompression step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateDeserialisation(instructionToken: InstructionToken<Cache>,
-                                         metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray) =
+    override fun <R : Any> decorateDeserialisation(
+            instructionToken: CacheToken<Cache, R>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             if (metadata.isCompressed) {
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
@@ -99,9 +104,11 @@ internal class CompressionSerialisationDecorator<E>(private val logger: Logger,
      * @param simpleName the class name of the response associated with the payload
      * @param uncompressed the original payload
      */
-    private fun logCompression(compressedData: ByteArray,
-                               simpleName: String,
-                               uncompressed: ByteArray) {
+    private fun logCompression(
+            compressedData: ByteArray,
+            simpleName: String,
+            uncompressed: ByteArray
+    ) {
         logger.d(
                 this,
                 "Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B "

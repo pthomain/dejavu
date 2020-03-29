@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestM
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager.Companion.getCacheStatus
@@ -47,10 +47,11 @@ import java.util.*
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  * @param dateFactory class providing the time, for the purpose of testing
  */
-abstract class BasePersistenceManager<E> internal constructor(private val configuration: DejaVuConfiguration<E>,
-                                                              private val serialisationManager: SerialisationManager<E>,
-                                                              protected val dateFactory: (Long?) -> Date)
-    : PersistenceManager<E>
+abstract class BasePersistenceManager<E> internal constructor(
+        private val configuration: DejaVuConfiguration<E>,
+        private val serialisationManager: SerialisationManager<E>,
+        protected val dateFactory: (Long?) -> Date
+) : PersistenceManager<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -64,7 +65,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
-    protected fun serialise(response: Response<Any, Cache>): CacheDataHolder.Complete {
+    protected fun <R : Any> serialise(response: Response<R, Cache>): CacheDataHolder.Complete<R> {
         val instructionToken = response.cacheToken
         val instruction = instructionToken.instruction
         val operation = instruction.operation
@@ -101,7 +102,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      * @return a cached entry if available, or null otherwise
      * @throws SerialisationException in case the deserialisation failed
      */
-    final override fun getCachedResponse(instructionToken: InstructionToken<Cache>): Response<Any, Cache>? {
+    final override fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): Response<R, Cache>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
 
         logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
@@ -113,9 +114,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
 
         val serialised = getCacheDataHolder(requestMetadata)
 
-        return with(serialised) {
-            if (this == null) null
-            else deserialise(
+        return serialised?.run {
+            deserialise(
                     instructionToken,
                     dateFactory(cacheDate),
                     dateFactory(expiryDate),
@@ -133,7 +133,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return the cached data as a CacheDataHolder
      */
-    protected abstract fun getCacheDataHolder(requestMetadata: HashedRequestMetadata): CacheDataHolder?
+    protected abstract fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>): CacheDataHolder?
 
     /**
      * Deserialises the cached data
@@ -147,12 +147,12 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a ResponseWrapper containing the deserialised data or null if the operation failed.
      */
-    private fun deserialise(instructionToken: InstructionToken<Cache>,
-                            cacheDate: Date,
-                            expiryDate: Date,
-                            isCompressed: Boolean,
-                            isEncrypted: Boolean,
-                            localData: ByteArray): Response<Any, Cache>? {
+    private fun <R : Any> deserialise(instructionToken: CacheToken<Cache, R>,
+                                      cacheDate: Date,
+                                      expiryDate: Date,
+                                      isCompressed: Boolean,
+                                      isEncrypted: Boolean,
+                                      localData: ByteArray): Response<R, Cache>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val simpleName = requestMetadata.responseClass.simpleName
 
@@ -184,7 +184,7 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
             logger.e(this, "Could not deserialise $simpleName: clearing the cache")
             clearCache(
                     Clear(false),
-                    requestMetadata.copy(responseClass = Any::class.java)
+                    requestMetadata.copy(responseClass = Any::class.java as Class<R>) //TODO check
             )
             null
         }
@@ -199,8 +199,8 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    final override fun invalidateIfNeeded(operation: Cache?,
-                                          requestMetadata: ValidRequestMetadata) =
+    final override fun <R> invalidateIfNeeded(operation: Cache?,
+                                              requestMetadata: ValidRequestMetadata<R>) =
             if (operation?.priority?.network?.invalidatesLocalData == true) {
                 invalidateEntriesIfStale(requestMetadata)
             } else false
@@ -213,6 +213,6 @@ abstract class BasePersistenceManager<E> internal constructor(private val config
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    protected abstract fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean
+    protected abstract fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean
 
 }

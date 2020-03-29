@@ -34,6 +34,6 @@ class HeaderInterceptor : Interceptor {
                             .newBuilder()
                             .removeHeader(DejaVuHeader)
                             .build()
-            )!!
+            )
 
 }

@@ -28,10 +28,8 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -39,7 +37,6 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.*
 import java.util.concurrent.TimeUnit.SECONDS
-import kotlin.NoSuchElementException
 
 /**
  * This interceptor adds a connectivity timeout to the network call, which defines a maximum
@@ -50,19 +47,15 @@ import kotlin.NoSuchElementException
  *
  * @param context the application context
  * @param logger a Logger instance
- * @param errorInterceptor the interceptor dealing with network error handling
  * @param dateFactory a factory converting timestamps to Dates
- * @param operation the original request cache operation
- * @param start the time at which the request started
+ * @param requestToken the original request cache token
  */
-internal class NetworkInterceptor<O : Remote, T : RequestToken<O>, E> private constructor(
+internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<O, R>, E> private constructor(
         private val context: Context,
         private val logger: Logger,
-        private val errorInterceptor: ErrorInterceptor<O, T, E>,
         private val dateFactory: (Long?) -> Date,
-        private val operation: Cache?,
-        private val start: Long
-) : ObservableTransformer<Any, ResponseWrapper<O, T, E>>
+        private val requestToken: T
+) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -73,61 +66,39 @@ internal class NetworkInterceptor<O : Remote, T : RequestToken<O>, E> private co
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
      */
-    override fun apply(upstream: Observable<Any>): Observable<ResponseWrapper<O, T, E>> =
-            upstream
-                    .filter { it != null } //see https://github.com/square/retrofit/issues/2242
-                    .defaultIfEmpty(Observable.error<Any>(NoSuchElementException("Response was empty")))
-                    .compose {
-                        with(operation?.requestTimeOutInSeconds) {
-                            if (this != null && this > 0)
-                                it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
+    override fun apply(upstream: Observable<DejaVuResult<R>>) =
+            with(requestToken.instruction) {
+                if (operation is Cache) {
+                    upstream.compose {
+                        with(operation.requestTimeOutInSeconds) {
+                            if (this != null && this > 0) it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
                             else it
                         }
+                    }.compose {
+                        operation.connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
+                            upstream.swapLambdaWhen(timeOut > 0L) {
+                                upstream.waitForNetwork(context, logger)
+                                        .timeout(timeOut.toLong(), SECONDS)
+                            }
+                        } ?: it
                     }
-                    .compose(errorInterceptor)
-                    .map { it.copy(metadata = it.metadata.copy(callDuration = getCallDuration())) }
-                    .compose(this::addConnectivityTimeOutIfNeeded)
+                } else upstream
+            }
 
-    /**
-     * Adds an optional delay for network availability (if the value is set as more than 0).
-     *
-     * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
-     * @return the composed Observable optionally delayed for network availability
-     */
-    private fun addConnectivityTimeOutIfNeeded(upstream: Observable<ResponseWrapper<O, T, E>>): Observable<ResponseWrapper<O, T, E>> =
-            operation?.connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
-                upstream.swapLambdaWhen(timeOut > 0L) {
-                    upstream.waitForNetwork(context, logger)
-                            .timeout(timeOut.toLong(), SECONDS)
-                }
-            } ?: upstream
+    class Factory<E>(
+            private val context: Context,
+            private val logger: Logger,
+            private val dateFactory: (Long?) -> Date
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
 
-    /**
-     * @return a Duration metadata object holding the duration of the network call
-     */
-    private fun getCallDuration() =
-            CallDuration(
-                    0,
-                    (dateFactory(null).time - start).toInt(),
-                    0
-            )
-
-    class Factory<E>(private val context: Context,
-                     private val logger: Logger,
-                     private val dateFactory: (Long?) -> Date)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
-
-        fun <O : Remote, T : RequestToken<O>> create(errorInterceptor: ErrorInterceptor<O, T, E>,
-                                                     operation: Cache?,
-                                                     start: Long) = NetworkInterceptor(
-                context,
-                logger,
-                errorInterceptor,
-                dateFactory,
-                operation,
-                start
-        )
+        fun <O : Remote, R : Any, T : RequestToken<O, R>> create(requestToken: T) =
+                NetworkInterceptor<O, R, T, E>(
+                        context,
+                        logger,
+                        dateFactory,
+                        requestToken
+                )
     }
 
 }

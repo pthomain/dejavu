@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory.EmptyResponseException
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory.EmptyResponseException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen

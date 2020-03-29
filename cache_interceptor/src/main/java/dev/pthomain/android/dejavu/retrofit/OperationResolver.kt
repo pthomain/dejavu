@@ -35,9 +35,9 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import okhttp3.Request
 import retrofit2.Call
 
-internal class OperationResolver<E> private constructor(
+internal class OperationResolver<E, R> private constructor(
         private val dejaVuConfiguration: DejaVuConfiguration<E>,
-        private val responseClass: Class<*>,
+        private val responseClass: Class<R>,
         private val requestBodyConverter: (Request) -> String?,
         private val annotationOperation: Operation?,
         private val methodDescription: String,
@@ -57,9 +57,9 @@ internal class OperationResolver<E> private constructor(
      * For instance, if a call is annotated with a @Cache annotation but the cache predicate
      * returns a DoNotCache operation for its associated request metadata, then the DoNotCache
      * operation takes precedence.
-     * @see DejaVuConfiguration.Builder.withPredicate()
+     * @see DejaVuConfiguration.Builder.withOperationPredicate()
      */
-    fun getResolvedOperation(call: Call<Any>): ResolvedOperation? {
+    fun getResolvedOperation(call: Call<Any>): ResolvedOperation<R>? {
         val requestMetadata = PlainRequestMetadata(
                 responseClass,
                 call.request().url().toString(),
@@ -101,7 +101,7 @@ internal class OperationResolver<E> private constructor(
      * @param requestMetadata the RequestMetadata for the current call
      * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
      */
-    private fun getPredicateOperation(requestMetadata: RequestMetadata): Operation.Remote? {
+    private fun getPredicateOperation(requestMetadata: RequestMetadata<R>): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
         return dejaVuConfiguration.operationPredicate(requestMetadata)
     }
@@ -142,21 +142,22 @@ internal class OperationResolver<E> private constructor(
         ANNOTATION
     }
 
-    data class ResolvedOperation(
+    data class ResolvedOperation<R>(
             val operation: Operation,
             val method: Method,
-            val requestMetadata: PlainRequestMetadata
+            val requestMetadata: PlainRequestMetadata<R>
     )
 
-    internal class Factory<E>(private val dejaVuConfiguration: DejaVuConfiguration<E>,
-                              private val requestBodyConverter: (Request) -> String?,
-                              private val logger: Logger)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
+    internal class Factory<E>(
+            private val dejaVuConfiguration: DejaVuConfiguration<E>,
+            private val requestBodyConverter: (Request) -> String?,
+            private val logger: Logger
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
 
-        fun create(methodDescription: String,
-                   responseClass: Class<out Any>,
-                   annotationOperation: Operation?) = OperationResolver(
+        fun <R> create(methodDescription: String,
+                       responseClass: Class<R>,
+                       annotationOperation: Operation?) = OperationResolver(
                 dejaVuConfiguration,
                 responseClass,
                 requestBodyConverter,

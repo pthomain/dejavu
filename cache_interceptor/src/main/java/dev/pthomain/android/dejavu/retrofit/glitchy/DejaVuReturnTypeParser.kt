@@ -26,6 +26,7 @@ package dev.pthomain.android.dejavu.retrofit.glitchy
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
 import dev.pthomain.android.glitchy.retrofit.RetrofitCallAdapterFactory.Companion.getFirstParameterUpperBound
 import dev.pthomain.android.glitchy.retrofit.RetrofitCallAdapterFactory.Companion.rawType
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
@@ -54,8 +55,9 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
         val isDejaVuResult = rawType(parsedType) == DejaVuResult::class.java
 
         val (parsedResultType, outcomeType) = if (isDejaVuResult) {
-            wrapToRx(getFirstParameterUpperBound(parsedType)!! as Class<*>, isSingle) to parsedType
-        } else parsedRxType.returnType to parsedType
+            val outcomeType = getFirstParameterUpperBound(parsedType)!! as Class<*>
+            wrapToRx(wrapToOutcome(outcomeType), isSingle) to parsedType
+        } else wrapToOutcome(parsedRxType.returnType) to parsedType
 
         return ParsedType(
                 DejaVuReturnType(
@@ -69,10 +71,25 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
     }
 
     private fun wrapToRx(outcomeType: Type,
-                         isSingle: Boolean): Type = object : ParameterizedType {
-        override fun getRawType() = ifElse(isSingle, Single::class.java, Observable::class.java)
+                         isSingle: Boolean) =
+            wrapToParameterizedType(
+                    ifElse(isSingle, Single::class.java, Observable::class.java),
+                    outcomeType
+            )
+
+    private fun wrapToOutcome(outcomeType: Type) =
+            wrapToParameterizedType(
+                    Outcome::class.java,
+                    outcomeType
+            )
+
+    private fun wrapToParameterizedType(
+            wrappingClass: Class<*>,
+            typeArgument: Type
+    ): Type = object : ParameterizedType {
+        override fun getRawType() = wrappingClass
         override fun getOwnerType() = null
-        override fun getActualTypeArguments() = arrayOf(outcomeType)
+        override fun getActualTypeArguments() = arrayOf(typeArgument as Class<*>)
     }
 
 }

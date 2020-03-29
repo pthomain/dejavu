@@ -297,8 +297,10 @@ enum class CachePriority(
      * @param usesNetwork whether or not the cache should attempt to fetch data from the network
      * @param invalidatesLocalData whether or not cached data should be permanently marked as STALE, regardless of its presence or existing status
      */
-    enum class NetworkPriority(val usesNetwork: Boolean,
-                               val invalidatesLocalData: Boolean) {
+    enum class NetworkPriority(
+            val usesNetwork: Boolean,
+            val invalidatesLocalData: Boolean
+    ) {
         LOCAL_FIRST(true, false),
         NETWORK_FIRST(true, true),
         LOCAL_ONLY(false, false);
@@ -329,9 +331,11 @@ enum class CachePriority(
      * @param emitsNetworkStale whether or not STALE cached data should be returned after a failed network call (as COULD_NOT_REFRESH)
      * @param hasSingleResponse whether the cache will emit a single response or 2 of them (usually starting with a transient STALE one)
      */
-    enum class FreshnessPriority(val emitsCachedStale: Boolean,
-                                 val emitsNetworkStale: Boolean,
-                                 val hasSingleResponse: Boolean) {
+    enum class FreshnessPriority(
+            val emitsCachedStale: Boolean,
+            val emitsNetworkStale: Boolean,
+            val hasSingleResponse: Boolean
+    ) {
         ANY(true, true, false),
         FRESH_PREFERRED(false, true, true),
         FRESH_ONLY(false, false, true);
@@ -350,8 +354,10 @@ enum class CachePriority(
          * @param freshness the desired freshness priority
          * @return the corresponding cache priority
          */
-        fun with(networkPriority: NetworkPriority,
-                 freshness: FreshnessPriority) =
+        fun with(
+                networkPriority: NetworkPriority,
+                freshness: FreshnessPriority
+        ) =
                 when (networkPriority) {
                     LOCAL_FIRST -> when (freshness) {
                         ANY -> DEFAULT

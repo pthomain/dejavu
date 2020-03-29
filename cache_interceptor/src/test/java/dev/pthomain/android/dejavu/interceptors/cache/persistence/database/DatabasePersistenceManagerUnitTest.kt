@@ -36,7 +36,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.Instruction
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.database.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

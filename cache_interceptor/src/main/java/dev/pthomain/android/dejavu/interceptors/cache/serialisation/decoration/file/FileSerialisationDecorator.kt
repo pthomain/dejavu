@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.file
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
@@ -51,9 +51,11 @@ class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArra
      * @throws SerialisationException in case this step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateSerialisation(responseWrapper: Response<Any, Cache>,
-                                       metadata: SerialisationDecorationMetadata,
-                                       payload: ByteArray) =
+    override fun <R : Any> decorateSerialisation(
+            responseWrapper: Response<R, Cache>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             responseWrapper.response.javaClass.name
                     .plus("\n")
                     .plus(byteToStringConverter(payload))
@@ -69,9 +71,11 @@ class FileSerialisationDecorator<E>(private val byteToStringConverter: (ByteArra
      * @throws SerialisationException in case this step failed
      */
     @Throws(SerialisationException::class)
-    override fun decorateDeserialisation(instructionToken: InstructionToken<Cache>,
-                                         metadata: SerialisationDecorationMetadata,
-                                         payload: ByteArray) =
+    override fun <R : Any> decorateDeserialisation(
+            instructionToken: CacheToken<Cache, R>,
+            metadata: SerialisationDecorationMetadata,
+            payload: ByteArray
+    ) =
             byteToStringConverter(payload).let {
                 if (it.contains("\n")) it.substring(it.indexOf("\n"))
                 else throw SerialisationException("Could not extract the payload")

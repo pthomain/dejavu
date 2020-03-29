@@ -28,13 +28,11 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.responseClass
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
-import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.SERIALISATION
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -51,7 +49,7 @@ internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager<E>,
         private val dateFactory: (Long?) -> Date,
-        private val durationPredicate: (TransientResponse) -> Int?,
+        private val durationPredicate: (TransientResponse<*>) -> Int?,
         private val logger: Logger
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -67,66 +65,38 @@ internal class CacheMetadataManager<E>(
      *
      * @return the ResponseWrapper updated with the new metadata
      */
-    fun setNetworkCallMetadata(responseWrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
-                               cacheOperation: Cache,
-                               previousCachedResponse: ResponseWrapper<Cache, RequestToken<Cache>, E>?,
-                               instructionToken: InstructionToken<Cache>,
-                               diskDuration: Int): ResponseWrapper<Cache, RequestToken<Cache>, E> {
-        val metadata = responseWrapper.metadata
-        val error = responseWrapper.metadata.exception
-        val hasError = error != null
+    fun <R : Any> setNetworkCallMetadata(
+            responseWrapper: Response<R, Cache>,
+            cacheOperation: Cache,
+            previousCachedResponse: Response<R, Cache>?,
+            instructionToken: RequestToken<Cache, R>,
+            diskDuration: Int
+    ): Response<R, Cache> {
         val hasCachedResponse = previousCachedResponse != null
-
-        val previousCacheToken = previousCachedResponse?.metadata?.cacheToken as? ResponseToken
         val fetchDate = dateFactory(null)
-
-        val status = ifElse(
-                hasError,
-                ifElse(
-                        cacheOperation.priority.freshness.hasSingleResponse,
-                        EMPTY,
-                        ifElse(hasCachedResponse, COULD_NOT_REFRESH, EMPTY)
-                ),
-                ifElse(hasCachedResponse, REFRESHED, NETWORK)
-        )
+        val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
 
         val predicateDuration = if (status.isFresh) {
             durationPredicate(TransientResponse(
-                    responseWrapper.response!!,
+                    responseWrapper.response,
                     instructionToken
             ))
         } else null
 
         val timeToLiveInSeconds = predicateDuration ?: cacheOperation.durationInSeconds
-
-        val cacheDate = ifElse(
-                hasError,
-                previousCacheToken?.cacheDate,
-                fetchDate
-        )
-
-        val expiryDate = ifElse(
-                hasError,
-                previousCacheToken?.expiryDate,
-                dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
-        )
+        val expiryDate = dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
 
         val cacheToken = ResponseToken(
                 instructionToken.instruction,
                 status,
                 fetchDate,
-                ifElse(status == EMPTY, null, cacheDate),
-                ifElse(status == EMPTY, null, expiryDate)
-        )
-
-        val newMetadata = metadata.copy(
-                cacheToken,
-                callDuration = getRefreshCallDuration(metadata.callDuration, diskDuration)
+                fetchDate,
+                expiryDate
         )
 
         return responseWrapper.copy(
-                metadata = newMetadata,
-                response = ifElse(status == EMPTY, null, responseWrapper.response)
+                cacheToken = cacheToken,
+                callDuration = getRefreshCallDuration(responseWrapper.callDuration, diskDuration)
         )
     }
 
@@ -135,34 +105,27 @@ internal class CacheMetadataManager<E>(
      *
      * @param wrapper the wrapper to be cached
      * @param exception the exception that occurred during serialisation
-     * @return the response wrapper with the udpated metadata
+     * @return the response wrapper with the updated metadata
      */
-    fun setSerialisationFailedMetadata(wrapper: ResponseWrapper<Cache, RequestToken<Cache>, E>,
-                                       exception: Exception): ResponseWrapper<Cache, RequestToken<Cache>, E> {
-        val message = "Could not serialise ${wrapper.responseClass.simpleName}: this response will not be cached."
-        logger.e(this, message)
-
-        val cacheToken = wrapper.metadata.cacheToken
-        val failedCacheToken = ResponseToken(
-                cacheToken.instruction,
-                NOT_CACHED,
-                cacheToken.requestDate
+    fun <R : Any> setSerialisationFailedMetadata(
+            wrapper: Response<R, Cache>,
+            exception: Exception
+    ): Response<R, Cache> {
+        logger.e(
+                this,
+                exception,
+                "Could not serialise ${wrapper.responseClass().simpleName}: this response will not be cached."
         )
 
-        val serialisationException = errorFactory(
-                CacheException(
-                        SERIALISATION,
-                        message,
-                        exception
-                )
-        )
-
-        return wrapper.copy(
-                metadata = wrapper.metadata.copy(
-                        exception = serialisationException,
-                        cacheToken = failedCacheToken
-                )
-        )
+        return with(wrapper.cacheToken) {
+            wrapper.copy(
+                    cacheToken = ResponseToken(
+                            instruction,
+                            NOT_CACHED,
+                            requestDate
+                    )
+            )
+        }
     }
 
     /**
@@ -172,8 +135,10 @@ internal class CacheMetadataManager<E>(
      * @param diskDuration the duration of the operation to retrieve the response from cache
      * @return the udpated Duration metadata
      */
-    private fun getRefreshCallDuration(callDuration: CallDuration,
-                                       diskDuration: Int) =
+    private fun getRefreshCallDuration(
+            callDuration: CallDuration,
+            diskDuration: Int
+    ) =
             callDuration.copy(
                     disk = diskDuration,
                     network = callDuration.network - diskDuration,
@@ -181,8 +146,8 @@ internal class CacheMetadataManager<E>(
             )
 }
 
-data class TransientResponse(
-        val response: Any, //TODO add type
-        var cacheToken: InstructionToken<Cache>
+data class TransientResponse<R : Any>(
+        val response: R,
+        var cacheToken: RequestToken<Cache, R>
 )
 

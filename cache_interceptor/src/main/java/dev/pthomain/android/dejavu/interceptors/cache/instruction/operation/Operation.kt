@@ -52,12 +52,14 @@ sealed class Operation(val type: Type) {
          * @param encrypt whether the cached data should be encrypted, useful for use on external storage //TODO abstract
          * @param compress whether the cached data should be compressed, useful for large responses //TODO abstract
          */
-        class Cache(val priority: CachePriority = DEFAULT,
-                    durationInSeconds: Int? = DEFAULT_CACHE_DURATION_IN_SECONDS,
-                    connectivityTimeoutInSeconds: Int? = null,
-                    requestTimeOutInSeconds: Int? = null,
-                    val encrypt: Boolean = false,
-                    val compress: Boolean = false) : Remote(CACHE) {
+        class Cache(
+                val priority: CachePriority = DEFAULT,
+                durationInSeconds: Int? = DEFAULT_CACHE_DURATION_IN_SECONDS,
+                connectivityTimeoutInSeconds: Int? = null,
+                requestTimeOutInSeconds: Int? = null,
+                val encrypt: Boolean = false,
+                val compress: Boolean = false
+        ) : Remote(CACHE) {
 
             val durationInSeconds: Int = durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!
             val connectivityTimeoutInSeconds: Int? = connectivityTimeoutInSeconds.swapWhenDefault(null)

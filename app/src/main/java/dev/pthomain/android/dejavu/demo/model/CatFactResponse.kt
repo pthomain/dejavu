@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.demo.model
 
 import dev.pthomain.android.dejavu.interceptors.response.Cacheable
 
-class CatFactResponse : Cacheable() {
+class CatFactResponse : Cacheable<CatFactResponse>() {
 
     var fact: String? = null
 

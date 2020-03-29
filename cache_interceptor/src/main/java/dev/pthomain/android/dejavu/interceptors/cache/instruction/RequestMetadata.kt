@@ -30,9 +30,11 @@ package dev.pthomain.android.dejavu.interceptors.cache.instruction
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-sealed class RequestMetadata(open val responseClass: Class<*>, //TODO type
-                             open val url: String,
-                             open val requestBody: String? = null)
+sealed class RequestMetadata<R>(
+        open val responseClass: Class<R>,
+        open val url: String,
+        open val requestBody: String? = null
+)
 
 /**
  * Holds metadata related to the request prior to internal hashing of the URL
@@ -42,9 +44,11 @@ sealed class RequestMetadata(open val responseClass: Class<*>, //TODO type
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-data class PlainRequestMetadata(override val responseClass: Class<*>,
-                                override val url: String,
-                                override val requestBody: String? = null) : RequestMetadata(
+data class PlainRequestMetadata<R>(
+        override val responseClass: Class<R>,
+        override val url: String,
+        override val requestBody: String? = null
+) : RequestMetadata<R>(
         responseClass,
         url,
         requestBody
@@ -60,21 +64,25 @@ data class PlainRequestMetadata(override val responseClass: Class<*>,
  * @param requestHash the hash of the URL and its alphabetically sorted query parameters
  * @param classHash the response class' hash
  */
-sealed class HashedRequestMetadata(override val responseClass: Class<*>,
-                                   override val url: String,
-                                   override val requestBody: String?,
-                                   open val requestHash: String,
-                                   open val classHash: String) : RequestMetadata(
+sealed class HashedRequestMetadata<R>(
+        override val responseClass: Class<R>,
+        override val url: String,
+        override val requestBody: String?,
+        open val requestHash: String,
+        open val classHash: String
+) : RequestMetadata<R>(
         responseClass,
         url,
         requestBody
 )
 
-data class ValidRequestMetadata internal constructor(override val responseClass: Class<*>,
-                                                     override val url: String,
-                                                     override val requestBody: String?,
-                                                     override val requestHash: String,
-                                                     override val classHash: String) : HashedRequestMetadata(
+data class ValidRequestMetadata<R> internal constructor(
+        override val responseClass: Class<R>,
+        override val url: String,
+        override val requestBody: String?,
+        override val requestHash: String,
+        override val classHash: String
+) : HashedRequestMetadata<R>(
         responseClass,
         url,
         requestBody,
@@ -82,7 +90,9 @@ data class ValidRequestMetadata internal constructor(override val responseClass:
         classHash
 )
 
-data class InvalidRequestMetadata internal constructor(override val responseClass: Class<*>) : HashedRequestMetadata(
+data class InvalidRequestMetadata<R> internal constructor(
+        override val responseClass: Class<R>
+) : HashedRequestMetadata<R>(
         responseClass,
         DEFAULT_URL,
         null,

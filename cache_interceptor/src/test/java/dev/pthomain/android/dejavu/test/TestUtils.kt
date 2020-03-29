@@ -35,12 +35,10 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

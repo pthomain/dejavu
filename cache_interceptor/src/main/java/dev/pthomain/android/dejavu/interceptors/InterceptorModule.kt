@@ -32,10 +32,9 @@ import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.error.ErrorInterceptor
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseWrapperFactory
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -50,21 +49,6 @@ internal abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    fun provideErrorInterceptorFactory(configuration: DejaVuConfiguration<E>,
-                                       context: Context,
-                                       emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>,
-                                       logger: Logger,
-                                       dateFactory: Function1<Long?, Date>) =
-            ErrorInterceptor.Factory(
-                    context,
-                    configuration.errorFactory,
-                    emptyResponseWrapperFactory,
-                    logger,
-                    dateFactory::get
-            )
-
-    @Provides
-    @Singleton
     fun provideNetworkInterceptorFactory(context: Context,
                                          logger: Logger,
                                          dateFactory: Function1<Long?, Date>) =
@@ -76,12 +60,8 @@ internal abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    fun provideCacheInterceptorFactory(dateFactory: Function1<Long?, Date>,
-                                       cacheManager: CacheManager<E>) =
-            CacheInterceptor.Factory(
-                    dateFactory::get,
-                    cacheManager
-            )
+    fun provideCacheInterceptorFactory(cacheManager: CacheManager<E>) =
+            CacheInterceptor.Factory(cacheManager)
 
     @Provides
     @Singleton
@@ -89,24 +69,19 @@ internal abstract class InterceptorModule<E>
                                    logger: Logger,
                                    dateFactory: Function1<Long?, Date>,
                                    metadataSubject: PublishSubject<DejaVuResult<*>>,
-                                   emptyResponseWrapperFactory: EmptyResponseWrapperFactory<E>) =
+                                   emptyResponseFactory: EmptyResponseFactory<E>) =
             ResponseInterceptor.Factory(
                     configuration,
                     logger,
                     dateFactory::get,
                     metadataSubject,
-                    emptyResponseWrapperFactory
+                    emptyResponseFactory
             )
 
     @Provides
     @Singleton
-    fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>,
-                                    dateFactory: Function1<Long?, Date>) =
-            EmptyResponseWrapperFactory(
-                    configuration.errorFactory,
-                    dateFactory::get
-            )
-
+    fun provideEmptyResponseFactory(configuration: DejaVuConfiguration<E>) =
+            EmptyResponseFactory(configuration.errorFactory)
 
     @Provides
     @Singleton
@@ -119,14 +94,12 @@ internal abstract class InterceptorModule<E>
                                         configuration: DejaVuConfiguration<E>,
                                         dateFactory: Function1<Long?, Date>,
                                         networkInterceptorFactory: NetworkInterceptor.Factory<E>,
-                                        errorInterceptorFactory: ErrorInterceptor.Factory<E>,
                                         cacheInterceptorFactory: CacheInterceptor.Factory<E>,
                                         operationResolverFactory: OperationResolver.Factory<E>,
                                         responseInterceptorFactory: ResponseInterceptor.Factory<E>) =
             DejaVuInterceptor.Factory(
                     hasher,
                     dateFactory::get,
-                    errorInterceptorFactory,
                     networkInterceptorFactory,
                     cacheInterceptorFactory,
                     responseInterceptorFactory,

@@ -55,12 +55,13 @@ import java.util.*
  * @param dateFactory class providing the time, for the purpose of testing
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
-class DatabasePersistenceManager<E> internal constructor(private val database: SupportSQLiteDatabase,
-                                                         serialisationManager: SerialisationManager<E>,
-                                                         dejaVuConfiguration: DejaVuConfiguration<E>,
-                                                         dateFactory: (Long?) -> Date,
-                                                         private val contentValuesFactory: (Map<String, *>) -> ContentValues)
-    : BasePersistenceManager<E>(
+class DatabasePersistenceManager<E> internal constructor(
+        private val database: SupportSQLiteDatabase,
+        serialisationManager: SerialisationManager<E>,
+        dejaVuConfiguration: DejaVuConfiguration<E>,
+        dateFactory: (Long?) -> Date,
+        private val contentValuesFactory: (Map<String, *>) -> ContentValues
+) : BasePersistenceManager<E>(
         dejaVuConfiguration,
         serialisationManager,
         dateFactory
@@ -76,8 +77,8 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun clearCache(operation: Clear,
-                            requestMetadata: ValidRequestMetadata) {
+    override fun <R> clearCache(operation: Clear,
+                                requestMetadata: ValidRequestMetadata<R>) {
         val olderEntriesClause = ifElse(
                 operation.clearStaleEntriesOnly,
                 "${EXPIRY_DATE.columnName} < ?",
@@ -114,7 +115,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun getCacheDataHolder(requestMetadata: HashedRequestMetadata): CacheDataHolder? {
+    override fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>): CacheDataHolder? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
@@ -133,30 +134,32 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
 
         database.query(query)
                 .useAndLogError(
-                        { cursor ->
-                            val simpleName = requestMetadata.responseClass.simpleName
-                            if (cursor.count != 0 && cursor.moveToNext()) {
-                                logger.d(this, "Found a cached $simpleName")
+                        {
+                            with(it) {
+                                val simpleName = requestMetadata.responseClass.simpleName
+                                if (count != 0 && moveToNext()) {
+                                    logger.d(this, "Found a cached $simpleName")
 
-                                val cacheDate = dateFactory(cursor.getLong(cursor.getColumnIndex(DATE.columnName)))
-                                val localData = cursor.getBlob(cursor.getColumnIndex(DATA.columnName))
-                                val isCompressed = cursor.getInt(cursor.getColumnIndex(IS_COMPRESSED.columnName)) != 0
-                                val isEncrypted = cursor.getInt(cursor.getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-                                val expiryDate = dateFactory(cursor.getLong(cursor.getColumnIndex(EXPIRY_DATE.columnName)))
-                                val responseClassHash = cursor.getString(cursor.getColumnIndex(CLASS.columnName))
-                                //TODO verify the class hash is the same as the one the request metadata
+                                    val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
+                                    val localData = getBlob(getColumnIndex(DATA.columnName))
+                                    val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                                    val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+                                    val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
+                                    val responseClassHash = getString(getColumnIndex(CLASS.columnName))
+                                    //TODO verify the class hash is the same as the one the request metadata
 
-                                return CacheDataHolder.Complete(
-                                        requestMetadata,
-                                        cacheDate.time,
-                                        expiryDate.time,
-                                        localData,
-                                        isCompressed,
-                                        isEncrypted
-                                )
-                            } else {
-                                logger.d(this, "Found no cached $simpleName")
-                                return null
+                                    return CacheDataHolder.Complete(
+                                            requestMetadata,
+                                            cacheDate.time,
+                                            expiryDate.time,
+                                            localData,
+                                            isCompressed,
+                                            isEncrypted
+                                    )
+                                } else {
+                                    logger.d(this, "Found no cached $simpleName")
+                                    return null
+                                }
                             }
                         },
                         logger
@@ -171,7 +174,7 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata): Boolean {
+    override fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean {
         return false //TODO
     }
 
@@ -183,8 +186,8 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun forceInvalidation(operation: Invalidate,
-                                   requestMetadata: ValidRequestMetadata): Boolean {
+    override fun <R> forceInvalidation(operation: Invalidate,
+                                       requestMetadata: ValidRequestMetadata<R>): Boolean {
         val map = mapOf(EXPIRY_DATE.columnName to 0)
         val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(requestMetadata.requestHash) //TODO classHash
@@ -214,27 +217,25 @@ class DatabasePersistenceManager<E> internal constructor(private val database: S
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun cache(responseWrapper: Response<Any, Cache>) {
-        serialise(responseWrapper).let {
-            with(it) {
-                val values = HashMap<String, Any>()
-                values[TOKEN.columnName] = requestMetadata.requestHash
-                values[DATE.columnName] = cacheDate
-                values[EXPIRY_DATE.columnName] = expiryDate
-                values[DATA.columnName] = data
-                values[CLASS.columnName] = requestMetadata.classHash
-                values[IS_COMPRESSED.columnName] = ifElse(isCompressed, 1, 0)
-                values[IS_ENCRYPTED.columnName] = ifElse(isEncrypted, 1, 0)
+    override fun <R : Any> cache(responseWrapper: Response<R, Cache>) {
+        with(serialise(responseWrapper)) {
+            val values = HashMap<String, Any>()
+            values[TOKEN.columnName] = requestMetadata.requestHash
+            values[DATE.columnName] = cacheDate
+            values[EXPIRY_DATE.columnName] = expiryDate
+            values[DATA.columnName] = data
+            values[CLASS.columnName] = requestMetadata.classHash
+            values[IS_COMPRESSED.columnName] = ifElse(isCompressed, 1, 0)
+            values[IS_ENCRYPTED.columnName] = ifElse(isEncrypted, 1, 0)
 
-                try {
-                    database.insert(
-                            TABLE_DEJA_VU,
-                            CONFLICT_REPLACE,
-                            contentValuesFactory(values)
-                    )
-                } catch (e: Exception) {
-                    throw SerialisationException("Could not save the response to database", e)
-                }
+            try {
+                database.insert(
+                        TABLE_DEJA_VU,
+                        CONFLICT_REPLACE,
+                        contentValuesFactory(values)
+                )
+            } catch (e: Exception) {
+                throw SerialisationException("Could not save the response to database", e)
             }
         }
     }

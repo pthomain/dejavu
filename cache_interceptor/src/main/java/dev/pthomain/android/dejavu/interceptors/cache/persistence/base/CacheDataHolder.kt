@@ -88,8 +88,8 @@ sealed class CacheDataHolder(
      * @param isCompressed whether or not the response was cached compressed
      * @param isEncrypted whether or not the response was cached encrypted
      */
-    data class Complete(
-            val requestMetadata: HashedRequestMetadata,
+    data class Complete<R>(
+            val requestMetadata: HashedRequestMetadata<R>,
             override val cacheDate: Long,
             override val expiryDate: Long,
             override val data: ByteArray,
@@ -119,7 +119,7 @@ sealed class CacheDataHolder(
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
-            other as Complete
+            other as Complete<*>
             if (requestMetadata != other.requestMetadata) return false
             return super.equals(other)
         }

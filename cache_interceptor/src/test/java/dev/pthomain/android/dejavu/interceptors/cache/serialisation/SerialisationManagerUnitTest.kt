@@ -29,10 +29,8 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.expectException

@@ -30,6 +30,8 @@ package dev.pthomain.android.dejavu.interceptors.cache.metadata
  * @param network time taken to retrieve the data from the network
  * @param total total time for this call, including disk, network and processing time.
  */
-data class CallDuration(val disk: Int,
-                        val network: Int,
-                        val total: Int)
+data class CallDuration(
+        val disk: Int,
+        val network: Int,
+        val total: Int
+)

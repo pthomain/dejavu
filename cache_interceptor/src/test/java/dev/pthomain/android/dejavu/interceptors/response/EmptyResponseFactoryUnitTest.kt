@@ -34,18 +34,18 @@ import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Before
 import org.junit.Test
 
-class EmptyResponseWrapperFactoryUnitTest {
+class EmptyResponseFactoryUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
 
-    private lateinit var target: EmptyResponseWrapperFactory<Glitch>
+    private lateinit var target: EmptyResponseFactory<Glitch>
 
     //TODO update test for DONE and EMPTY
 
     @Before
     fun setUp() {
         mockErrorFactory = mock()
-        target = EmptyResponseWrapperFactory(mockErrorFactory)
+        target = EmptyResponseFactory(mockErrorFactory)
     }
 
     @Test

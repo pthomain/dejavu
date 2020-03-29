@@ -34,7 +34,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheData
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext

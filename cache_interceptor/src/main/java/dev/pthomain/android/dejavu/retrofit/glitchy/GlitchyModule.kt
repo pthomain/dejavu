@@ -32,11 +32,10 @@ import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.glitchy.Glitchy
-import dev.pthomain.android.glitchy.interceptor.Interceptor
+import dev.pthomain.android.glitchy.interceptor.Interceptors
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import retrofit2.CallAdapter
-import java.util.*
 import javax.inject.Singleton
 
 @Module
@@ -86,23 +85,16 @@ internal abstract class GlitchyModule<E> where E : Throwable,
 
     @Provides
     @Singleton
-    fun provideCallInterceptorFactoryList(dejaVuCallInterceptorFactory: DejaVuInterceptor.Factory<E>) =
-            LinkedList<Interceptor.Factory<E>>().apply {
-                add(dejaVuCallInterceptorFactory.internalFactory)
-            }
-
-    @Provides
-    @Singleton
     fun provideCallAdapterFactory(
             errorFactory: ErrorFactory<E>,
             operationReturnTypeParser: OperationReturnTypeParser<E>,
-            callInterceptorFactoryList: LinkedList<Interceptor.Factory<E>>,
+            dejaVuCallInterceptorFactory: DejaVuInterceptor.Factory<E>,
             logger: Logger
     ): CallAdapter.Factory =
             Glitchy.createCallAdapterFactory(
                     errorFactory,
                     operationReturnTypeParser,
-                    callInterceptorFactoryList,
+                    Interceptors.After(dejaVuCallInterceptorFactory.glitchyFactory),
                     logger
             )
 

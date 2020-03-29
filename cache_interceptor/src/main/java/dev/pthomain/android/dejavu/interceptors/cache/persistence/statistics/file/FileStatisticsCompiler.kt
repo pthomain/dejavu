@@ -58,7 +58,7 @@ internal class FileStatisticsCompiler(
      * @return the list of valid file names in the cache directory.
      */
     override fun loadEntries() =
-            cacheDirectory.list().filter { isValidFormat(it) }
+            cacheDirectory.list()!!.filter { isValidFormat(it) }
 
     /**
      * Converts a file name to a CacheEntry.

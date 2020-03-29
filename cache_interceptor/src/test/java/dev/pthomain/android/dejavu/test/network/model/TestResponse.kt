@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.test.network.model
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.ResponseMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 

@@ -27,7 +27,7 @@ import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration.SerialisationDecorationMetadata
@@ -48,13 +48,14 @@ import java.util.*
  * @param byteToStringConverter a factory converting a ByteArray to a String
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
-class SerialisationManager<E> internal constructor(private val errorFactory: ErrorFactory<E>,
-                                                   private val dateFactory: (Long?) -> Date,
-                                                   private val serialiser: Serialiser,
-                                                   private val byteToStringConverter: (ByteArray) -> String,
-                                                   private val decoratorList: List<SerialisationDecorator<E>>)
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+class SerialisationManager<E> internal constructor(
+        private val errorFactory: ErrorFactory<E>,
+        private val dateFactory: (Long?) -> Date,
+        private val serialiser: Serialiser,
+        private val byteToStringConverter: (ByteArray) -> String,
+        private val decoratorList: List<SerialisationDecorator<E>>
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     private val reversedDecoratorList = decoratorList.reversed()
 
@@ -68,8 +69,10 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @throws SerialisationException in case the serialisation fails
      */
     @Throws(SerialisationException::class)
-    fun serialise(responseWrapper: Response<Any, Cache>,
-                  metadata: SerialisationDecorationMetadata): ByteArray {
+    fun <R : Any> serialise(
+            responseWrapper: Response<R, Cache>,
+            metadata: SerialisationDecorationMetadata
+    ): ByteArray {
         val response = responseWrapper.response
         val responseClass = responseWrapper.cacheToken.instruction.requestMetadata.responseClass
 
@@ -108,9 +111,11 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @throws SerialisationException in case the deserialisation fails
      */
     @Throws(SerialisationException::class)
-    fun deserialise(instructionToken: InstructionToken<Cache>,
-                    data: ByteArray,
-                    metadata: SerialisationDecorationMetadata): Response<Any, Cache> {
+    fun <R : Any> deserialise(
+            instructionToken: CacheToken<Cache, R>,
+            data: ByteArray,
+            metadata: SerialisationDecorationMetadata
+    ): Response<R, Cache> {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val responseClass = requestMetadata.responseClass
         var deserialised = data
@@ -148,15 +153,16 @@ class SerialisationManager<E> internal constructor(private val errorFactory: Err
      * @param compressionSerialisationDecorator a SerialisationDecorator used for payload compression
      * @param encryptionSerialisationDecorator a SerialisationDecorator used for payload encryption
      */
-    class Factory<E> internal constructor(private val serialiser: Serialiser,
-                                          private val errorFactory: ErrorFactory<E>,
-                                          private val dateFactory: (Long?) -> Date,
-                                          private val byteToStringConverter: (ByteArray) -> String,
-                                          private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
-                                          private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-                                          private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
+    class Factory<E> internal constructor(
+            private val serialiser: Serialiser,
+            private val errorFactory: ErrorFactory<E>,
+            private val dateFactory: (Long?) -> Date,
+            private val byteToStringConverter: (ByteArray) -> String,
+            private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
+            private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
+            private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
 
         /**
          * Factory providing an instance of SerialisationManager

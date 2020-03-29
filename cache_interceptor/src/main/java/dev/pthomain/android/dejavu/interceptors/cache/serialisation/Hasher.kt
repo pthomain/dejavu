@@ -40,9 +40,11 @@ import java.security.MessageDigest
  * @param messageDigest the hashing algorithm
  * @param uriParser a factory converting String to Uri
  */
-internal class Hasher(private val logger: Logger,
-                      private val messageDigest: MessageDigest?,
-                      private val uriParser: (String) -> Uri) {
+internal class Hasher(
+        private val logger: Logger,
+        private val messageDigest: MessageDigest?,
+        private val uriParser: (String) -> Uri
+) {
 
     /**
      * Hashes a RequestMetadata
@@ -50,7 +52,7 @@ internal class Hasher(private val logger: Logger,
      * @param requestMetadata the plain metadata
      * @return the hashed metadata or null if the hashing of the URL or class name failed.
      */
-    fun hash(requestMetadata: PlainRequestMetadata): HashedRequestMetadata {
+    fun <R : Any> hash(requestMetadata: PlainRequestMetadata<R>): HashedRequestMetadata<R> {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 

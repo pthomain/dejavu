@@ -23,17 +23,15 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.DONE
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
-import dev.pthomain.android.dejavu.interceptors.error.newMetadata
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import io.reactivex.Observable
 import java.util.*
 
 /**
@@ -42,11 +40,25 @@ import java.util.*
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
-internal class EmptyResponseWrapperFactory<E>(
-        private val errorFactory: ErrorFactory<E>,
-        private val dateFactory: (Long?) -> Date
+internal class EmptyResponseFactory<E>(
+        private val errorFactory: ErrorFactory<E>
 ) where E : Throwable,
         E : NetworkErrorPredicate {
+
+    /**
+     * TODO JavaDoc
+     * Returns a Single emitting a ResponseWrapper with no response and a status of
+     * either DONE or EMPTY.
+     *
+     * @param networkToken the instruction token for this call
+     * @return an empty ResponseWrapper emitting Single
+     */
+    fun <R : Any> createEmptyResponse(networkToken: RequestToken<Cache, R>) =
+            Empty(
+                    errorFactory(EmptyResponseException(NullPointerException())),
+                    networkToken,
+                    CallDuration(0, 0, 0) //FIXME
+            )
 
     /**
      * Returns a Single emitting a ResponseWrapper with no response and a status of
@@ -55,24 +67,35 @@ internal class EmptyResponseWrapperFactory<E>(
      * @param networkToken the instruction token for this call
      * @return an empty ResponseWrapper emitting Single
      */
-    fun <O : Operation, T : RequestToken<O>> create(networkToken: InstructionToken<O>,
-                                                    start: Long) =
-            with(networkToken) {
-                ResponseWrapper(
-                        null,
-                        @Suppress("UNCHECKED_CAST")
-                        errorFactory.newMetadata(
-                                RequestToken(
-                                        instruction,
-                                        ifElse(instruction.operation is Local, DONE, EMPTY),
-                                        dateFactory(start)
-                                ) as T,
-                                errorFactory(
-                                        if (instruction.operation is Local) DoneException(instruction.operation)
-                                        else EmptyResponseException(NullPointerException())//FIXME
-                                )
-                        )
-                )
+    fun <R : Any, O : Local> createDoneResponse(networkToken: RequestToken<O, R>) =
+            Result(
+                    RequestToken(
+                            networkToken.instruction,
+                            DONE,
+                            networkToken.requestDate
+                    ),
+                    CallDuration(0, 0, 0) //FIXME
+            )
+
+    /**
+     * Wraps a callable action into an Observable that only emits an empty ResponseWrapper (with a DONE status).
+     *
+     * @param instructionToken the original request's instruction token
+     * @param action the callable action to execute as an Observable
+     *
+     * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
+     */
+    fun <R : Any, O : Operation> createEmptyResponseObservable(
+            instructionToken: RequestToken<O, R>,
+            action: () -> Unit = {}
+    ) =
+            Observable.defer {
+                Observable.just(
+                        when (instructionToken.instruction.operation) {
+                            is Cache -> createEmptyResponse(instructionToken as RequestToken<Cache, R>)
+                            else -> createDoneResponse(instructionToken as RequestToken<out Local, R>)
+                        } as DejaVuResult<R>
+                ).doOnSubscribe { action() }
             }
 
     class EmptyResponseException(override val cause: Exception) : NoSuchElementException("The response was empty")

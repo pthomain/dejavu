@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.interceptors.cache.serialisation.decoration
 import androidx.annotation.CallSuper
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.interceptors.error.ResponseWrapper
 import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.trueFalseSequence
