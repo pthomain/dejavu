@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.retrofit.glitchy
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
 import dev.pthomain.android.glitchy.retrofit.RetrofitCallAdapterFactory.Companion.getFirstParameterUpperBound
 import dev.pthomain.android.glitchy.retrofit.RetrofitCallAdapterFactory.Companion.rawType
+import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import dev.pthomain.android.glitchy.retrofit.type.RxReturnTypeParser
@@ -51,22 +51,20 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
 
         val isSingle = parsedRxType.metadata
         val parsedType = parsedRxType.parsedType
-
         val isDejaVuResult = rawType(parsedType) == DejaVuResult::class.java
 
-        val (parsedResultType, outcomeType) = if (isDejaVuResult) {
-            val outcomeType = getFirstParameterUpperBound(parsedType)!! as Class<*>
-            wrapToRx(wrapToOutcome(outcomeType), isSingle) to parsedType
-        } else wrapToOutcome(parsedRxType.returnType) to parsedType
+        val upperBoundType: Class<*> = if (isDejaVuResult) //TODO check if this is a class and throw exception otherwise
+            getFirstParameterUpperBound(parsedType)!! as Class<*>
+        else parsedType as Class<*>
 
         return ParsedType(
                 DejaVuReturnType(
                         isDejaVuResult,
                         isSingle,
-                        outcomeType as Class<*>
+                        upperBoundType
                 ),
-                parsedResultType,
-                outcomeType
+                wrapToRx(upperBoundType, isSingle),
+                parsedType
         )
     }
 
@@ -77,19 +75,13 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
                     outcomeType
             )
 
-    private fun wrapToOutcome(outcomeType: Type) =
-            wrapToParameterizedType(
-                    Outcome::class.java,
-                    outcomeType
-            )
-
     private fun wrapToParameterizedType(
             wrappingClass: Class<*>,
             typeArgument: Type
     ): Type = object : ParameterizedType {
         override fun getRawType() = wrappingClass
         override fun getOwnerType() = null
-        override fun getActualTypeArguments() = arrayOf(typeArgument as Class<*>)
+        override fun getActualTypeArguments() = arrayOf(typeArgument)
     }
 
 }
@@ -98,7 +90,7 @@ internal data class DejaVuReturnType(
         val isDejaVuResult: Boolean,
         val isSingle: Boolean,
         val responseClass: Class<*>
-)
+) : IsOutcome
 
 internal object RxSingleReturnTypeParser
     : ReturnTypeParser<Boolean> by RxReturnTypeParser({ rawType(it) == Single::class.java })

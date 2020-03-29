@@ -160,10 +160,10 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     private fun onCallComplete() {
         mvpView.onCallComplete()
-        dejaVu.getStatistics().ioUi()
-                .doOnSuccess { it.log(uiLogger) }
-                .doOnError { uiLogger.e(this, it, "Could not show stats") }
-                .autoSubscribe()
+//        dejaVu.getStatistics().ioUi()
+//                .doOnSuccess { it.log(uiLogger) }
+//                .doOnError { uiLogger.e(this, it, "Could not show stats") }
+//                .autoSubscribe()
     }
 
     protected abstract fun getResponseObservable(cachePriority: CachePriority,

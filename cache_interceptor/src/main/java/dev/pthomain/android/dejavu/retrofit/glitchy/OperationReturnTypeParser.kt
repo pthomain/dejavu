@@ -29,6 +29,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import java.lang.reflect.Type
@@ -113,4 +114,4 @@ internal data class OperationReturnType(
         val annotationOperation: Operation?,
         val methodDescription: String,
         val dejaVuReturnType: DejaVuReturnType
-)
+) : IsOutcome
