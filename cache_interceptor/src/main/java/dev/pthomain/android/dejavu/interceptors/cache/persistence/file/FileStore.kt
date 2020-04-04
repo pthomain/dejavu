@@ -29,7 +29,6 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.isValidFormat
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.io.*
@@ -55,8 +54,8 @@ class FileStore private constructor(
      * @return the matching full key if present
      */
     override fun findPartialKey(partialKey: String) =
-            cacheDirectory.list()
-                    .firstOrNull { it.startsWith(partialKey + SEPARATOR) }
+            cacheDirectory.list()!!
+                    .firstOrNull { it.contains(partialKey) }
 
     /**
      * Returns an entry for the given key, if present

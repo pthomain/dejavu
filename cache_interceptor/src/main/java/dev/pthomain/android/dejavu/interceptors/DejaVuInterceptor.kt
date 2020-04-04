@@ -122,13 +122,14 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                     .map { checkOutcome(it, instructionToken) }
                     .compose(networkInterceptorFactory.create(instructionToken))
                     .compose(cacheInterceptorFactory.create(instructionToken))
-                    .compose(responseInterceptorFactory.create())
+                    .compose(responseInterceptorFactory.create(isWrapped))
 
-        } else hashingErrorObservableFactory().also {
+        } else {
             configuration.logger.e(
                     this,
                     "The request metadata could not be hashed, this request won't be cached: $requestMetadata"
             )
+            hashingErrorObservableFactory()
         }
     }
 

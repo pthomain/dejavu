@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence.memory
 import android.util.LruCache
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValueStore
-import dev.pthomain.android.dejavu.interceptors.cache.serialisation.FileNameSerialiser.Companion.SEPARATOR
 
 class MemoryStore internal constructor(
         private val lruCache: LruCache<String, Incomplete>
@@ -41,7 +40,7 @@ class MemoryStore internal constructor(
     override fun findPartialKey(partialKey: String) =
             lruCache.snapshot()
                     .entries
-                    .firstOrNull { it.key.startsWith(partialKey + SEPARATOR) }
+                    .firstOrNull { it.key.contains(partialKey) }
                     ?.key
 
     /**

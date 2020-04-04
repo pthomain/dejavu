@@ -31,6 +31,7 @@ import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.subjects.PublishSubject
 import java.util.*
+import kotlin.NoSuchElementException
 
 /**
  * Intercepts the response wrapper returned from the error and cache interceptors and returns the actual
@@ -46,14 +47,14 @@ import java.util.*
  * @param configuration the cache configuration
  * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  */
-//TODO check if this class is still needed
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
         private val configuration: DejaVuConfiguration<E>,
+        private val isWrapped: Boolean,
         private val metadataSubject: PublishSubject<DejaVuResult<*>>
-) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
+) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -74,71 +75,24 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
      * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun intercept(wrapper: DejaVuResult<R>): Observable<DejaVuResult<R>> {
-        return wrapper.observable() //FIXME is this still needed?
-//        val callDuration = wrapper.metadata.callDuration.copy(
-//                total = (dateFactory(null).time - start).toInt()
-//        )
-//
-//        val metadata = wrapper.metadata.copy(
-//                exception = exception,
-//                callDuration = callDuration
-//        )
-//
-//        val response = wrapper.response
-//
-//        val result = convert(wrapper)
-//        metadataSubject.onNext(result)
-//
-//        if (response is HasCacheToken<*, *, *>) {
-//            (response as HasCacheToken<O, R, RequestToken<O, R>>).cacheToken = wrapper.metadata.cacheToken
-//        }
-//
-//        if (response is HasCallDuration) {
-//            response.callDuration = wrapper.metadata.callDuration
-//        }
-//
-//        return when {
-//            isWrapped -> result.observable() as Observable<Any>
-//
-//            exception != null -> {
-//                logger.d(this, "Returning error: $exception")
-//                Observable.error(exception)
-//            }
-//
-//            else -> {
-//                logger.d(this, "Returning response: $metadata")
-//                Observable.just(response)
-//            }
-//        }
-    }
+    private fun intercept(wrapper: DejaVuResult<R>): Observable<Any> {
+        val hasMetadata = wrapper.hasCacheMetadata
 
-//    //TODO JavaDoc
-//    private fun convert(wrapper: ResponseWrapper<O, R, RequestToken<O, R>, E>): DejaVuResult<R> {
-//        val metadata = wrapper.metadata
-//        return if (wrapper.response == null) {
-//            val exception = metadata.exception!!.cause
-//
-//            when (exception) {
-//                is DoneException -> {
-//                    val cacheToken = metadata.cacheToken.asRequest<Local>()
-//                    Result(
-//                            cacheToken,
-//                            metadata.callDuration
-//                    )
-//                }
-//                else -> Empty<R, Remote, E>(
-//                        metadata.exception,
-//                        metadata.cacheToken.asRequest(),
-//                        metadata.callDuration
-//                )
-//            }
-//        } else Response<R, Remote>(
-//                wrapper.response,
-//                metadata.cacheToken.asResponse(),
-//                metadata.callDuration
-//        )
-//    }
+        hasMetadata.callDuration = hasMetadata.callDuration.copy(
+                total = (dateFactory(null).time - hasMetadata.cacheToken.requestDate.time).toInt()
+        )
+
+        metadataSubject.onNext(wrapper)
+
+        return if (isWrapped) wrapper.observable()
+        else {
+            when (wrapper) {
+                is Response<R, *> -> wrapper.response.observable()
+                is Empty<R, *, *> -> Observable.error(wrapper.exception)
+                is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
+            }
+        } as Observable<Any>
+    }
 
     class Factory<E>(private val configuration: DejaVuConfiguration<E>,
                      private val logger: Logger,
@@ -148,11 +102,12 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
             where E : Throwable,
                   E : NetworkErrorPredicate {
 
-        fun <R : Any> create() = ResponseInterceptor<R, E>(
+        fun <R : Any> create(isWrapped: Boolean) = ResponseInterceptor<R, E>(
                 logger,
                 dateFactory,
                 emptyResponseFactory,
                 configuration,
+                isWrapped,
                 metadataSubject
         )
     }

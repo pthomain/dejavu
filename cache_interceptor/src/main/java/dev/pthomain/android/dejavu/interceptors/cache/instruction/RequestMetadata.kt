@@ -68,8 +68,8 @@ sealed class HashedRequestMetadata<R>(
         override val responseClass: Class<R>,
         override val url: String,
         override val requestBody: String?,
-        open val requestHash: String,
-        open val classHash: String
+        internal open val requestHash: String,
+        internal open val classHash: String
 ) : RequestMetadata<R>(
         responseClass,
         url,

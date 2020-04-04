@@ -95,8 +95,7 @@ class KeyValuePersistenceManager<E> internal constructor(
      * @return the cached data as a CacheDataHolder
      */
     override fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>) =
-            findPartialKey(requestMetadata.requestHash)
-                    ?.let { get(it) }
+            findPartialKey(requestMetadata.requestHash)?.let(::get)
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).

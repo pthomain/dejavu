@@ -37,7 +37,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 
 internal class VolleyDemoPresenter(demoActivity: DemoActivity,
                                    uiLogger: Logger)
@@ -57,7 +56,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
 
     private fun newObservable(operation: Operation) =
             with(PlainRequestMetadata(responseClass, URL)) {
-                VolleyObservable.observable<CatFactResponse, Glitch>(
+                VolleyObservable.observable(
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptorFactory.create(
@@ -71,7 +70,7 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
 
     private fun newCacheOperation(operation: Operation) =
             with(PlainRequestMetadata(responseClass, URL)) {
-                VolleyObservable.cacheOperation<CatFactResponse, Glitch>(
+                VolleyObservable.cacheOperation(
                         requestQueue,
                         gson,
                         dejaVu.dejaVuInterceptorFactory.create(

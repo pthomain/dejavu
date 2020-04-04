@@ -50,8 +50,8 @@ class VolleyObservable<E, R : Any> private constructor(private val requestQueue:
         requestQueue.add(StringRequest(
                 Request.Method.GET,
                 requestMetadata.url,
-                Response.Listener(this::onResponse),
-                Response.ErrorListener(this::onError)
+                Response.Listener(::onResponse),
+                Response.ErrorListener(::onError)
         ))
     }
 

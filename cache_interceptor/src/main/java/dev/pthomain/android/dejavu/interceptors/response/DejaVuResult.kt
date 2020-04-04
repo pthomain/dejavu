@@ -21,6 +21,7 @@
  *
  */
 
+
 package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
@@ -35,7 +36,10 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * This is used as a marker for the call to emit one of the types extending this
  * sealed class and to provide the type of the response R.
  */
-sealed class DejaVuResult<R : Any>
+@Suppress("LeakingThis", "UNCHECKED_CAST") //sealed classes are final and all implement the interface
+sealed class DejaVuResult<R : Any> {
+    internal val hasCacheMetadata = this as HasCacheMetadata<*, R, *>
+}
 
 //The result has a response
 data class Response<R : Any, O : Remote> internal constructor(
