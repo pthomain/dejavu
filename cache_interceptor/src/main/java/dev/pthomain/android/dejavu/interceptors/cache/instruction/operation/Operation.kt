@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors.cache.instruction.operation
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
 
@@ -53,7 +53,7 @@ sealed class Operation(val type: Type) {
          * @param compress whether the cached data should be compressed, useful for large responses //TODO abstract
          */
         class Cache(
-                val priority: CachePriority = DEFAULT,
+                val priority: CachePriority = STALE_ACCEPTED_FIRST,
                 durationInSeconds: Int? = DEFAULT_CACHE_DURATION_IN_SECONDS,
                 connectivityTimeoutInSeconds: Int? = null,
                 requestTimeOutInSeconds: Int? = null,

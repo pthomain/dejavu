@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.demo
 
-
 import android.content.Context
 import android.content.Context.LAYOUT_INFLATER_SERVICE
 import android.graphics.Typeface
@@ -34,9 +33,14 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.response.*
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -68,53 +72,78 @@ internal class ExpandableListAdapter(context: Context)
         notifyDataSetChanged()
     }
 
-    fun showCatFact(catFactResponse: CatFactResponse) {
-        val cacheToken = catFactResponse.cacheToken
-        val exception: Glitch? = null // metadata.exception FIXME this is now handled in onError (merging is gone)
+    @Suppress("UNCHECKED_CAST")
+    fun showDejaVuResult(result: DejaVuResult<CatFactResponse>) {
+        when (result) {
+            is Response<CatFactResponse, *> -> showResponse(result.response)
+
+            is Empty<CatFactResponse, *, *> -> showHeaderAndBody(
+                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, Glitch>),
+                    "No response due to filtering or exception"
+            )
+
+            is Result<CatFactResponse, *> -> showHeaderAndBody(
+                    InternalResult.Result(result as Result<CatFactResponse, out Local>),
+                    "This operation does not support responses"
+            )
+        }
+    }
+
+    fun showResponse(response: CatFactResponse) {
+        showHeaderAndBody(
+                InternalResult.Response(response),
+                "The call returned a ${response.cacheToken.status} response"
+        )
+    }
+
+    private fun showHeaderAndBody(
+            internalResult: InternalResult<*, out CacheToken<*, CatFactResponse>>,
+            header: String
+    ) {
+        val cacheToken = internalResult.cacheToken
         val operation = cacheToken.instruction.operation
-        val callDuration = catFactResponse.callDuration
+        val callDuration = internalResult.callDuration
 
         val elapsed = "${operation.type.name} -> ${cacheToken.status} (${callDuration.total}ms)"
         val duration = "Call duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms"
 
         val info = ArrayList<String>()
-        val header: String
 
+        info.add(duration)
         info.add("Cache token instruction: $operation")
         info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
 
-        if (exception != null) {
-            header = "An error occurred: $elapsed"
+        headers.add(elapsed + "\n" + header)
 
-            info.add("Description: " + exception.description)
-            info.add("Message: " + exception.message)
-            info.add("Cause: " + exception.cause)
-            info.add(duration)
-        } else {
-            header = elapsed
+        when (internalResult) {
+            is InternalResult.Response -> with(internalResult.response.cacheToken) {
+                cacheDate?.also {
+                    info.add("Cache token cache date: " + simpleDateFormat.format(it))
+                }
+                expiryDate?.also {
+                    info.add("Cache token expiry date: "
+                            + simpleDateFormat.format(it)
+                            + " (TTL: "
+                            + (operation as Remote.Cache).durationInSeconds
+                            + "s)"
+                    )
+                }
 
-            cacheToken.cacheDate?.also {
-                info.add("Cache token cache date: " + simpleDateFormat.format(it))
+                val catFactHeader = "Here's a cat fact \uD83D\uDE3A"
+                headers.add(catFactHeader)
+                children[catFactHeader] = listOf(internalResult.response.fact)
             }
 
-            info.add(duration)
+            is InternalResult.Result -> info.add("Operation succeeded")
 
-            if (operation is Cache) {
-                info.add("Cache token expiry date: "
-                        + simpleDateFormat.format(cacheToken.expiryDate)
-                        + " (TTL: "
-                        + operation.durationInSeconds
-                        + "s)"
-                )
+            is InternalResult.Empty -> with(internalResult.empty) {
+                info.add("Description: " + exception.description)
+                info.add("Message: " + exception.message)
+                info.add("Cause: " + exception.cause)
             }
         }
 
-        headers.add(header)
         children[header] = info
-
-        val catFactHeader = "Cat Fact (${catFactResponse.cacheToken.status})"
-        headers.add(catFactHeader)
-        children[catFactHeader] = listOf(catFactResponse.fact ?: "N/A")
 
         notifyDataSetChanged()
     }
@@ -200,4 +229,22 @@ internal class ExpandableListAdapter(context: Context)
 
     override fun isChildSelectable(groupPosition: Int,
                                    childPosition: Int) = false
+
+    private sealed class InternalResult<O : Operation, T : CacheToken<O, CatFactResponse>>(
+            delegate: HasCacheMetadata<O, CatFactResponse, T>
+    ) : HasCacheMetadata<O, CatFactResponse, T> by delegate {
+
+        class Response(
+                val response: CatFactResponse
+        ) : InternalResult<Remote, ResponseToken<Remote, CatFactResponse>>(response)
+
+        class Result<O : Local>(
+                val result: dev.pthomain.android.dejavu.interceptors.response.Result<CatFactResponse, O>
+        ) : InternalResult<O, RequestToken<O, CatFactResponse>>(result)
+
+        class Empty<O : Remote>(
+                val empty: dev.pthomain.android.dejavu.interceptors.response.Empty<CatFactResponse, O, Glitch>
+        ) : InternalResult<O, RequestToken<O, CatFactResponse>>(empty)
+    }
+
 }

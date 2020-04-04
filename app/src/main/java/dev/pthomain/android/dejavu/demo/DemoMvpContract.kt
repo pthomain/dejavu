@@ -32,6 +32,7 @@ import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -40,6 +41,7 @@ internal class DemoMvpContract {
     interface DemoMvpView : MvpView<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         fun showCatFact(response: CatFactResponse)
+        fun showResult(result: DejaVuResult<CatFactResponse>)
         fun onCallStarted()
         fun onCallComplete()
 

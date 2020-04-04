@@ -45,9 +45,9 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(cachePriority: CachePriority,
-                                       encrypt: Boolean,
-                                       compress: Boolean) =
+    override fun getDataObservable(cachePriority: CachePriority,
+                                   encrypt: Boolean,
+                                   compress: Boolean) =
             executeOperation(Cache(
                     priority = cachePriority,
                     encrypt = encrypt,
@@ -71,13 +71,13 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                 }
             }
 
-    override fun getClearEntriesCompletable() =
+    override fun getClearEntriesResult() =
             executeOperation(Clear())
 
-    override fun getInvalidateCompletable() =
+    override fun getInvalidateResult() =
             executeOperation(Invalidate)
 
     private fun executeOperation(cacheOperation: Operation) =
-            catFactClient().execute(cacheOperation)
+            operationsClient().execute(cacheOperation)
 
 }

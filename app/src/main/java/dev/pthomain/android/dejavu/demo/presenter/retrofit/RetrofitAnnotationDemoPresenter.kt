@@ -35,36 +35,39 @@ internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(cachePriority: CachePriority,
-                                       encrypt: Boolean,
-                                       compress: Boolean) =
+    override fun getDataObservable(cachePriority: CachePriority,
+                                   encrypt: Boolean,
+                                   compress: Boolean) =
             with(cachePriority) {
+                val client = dataClient()
                 if (network == NETWORK_FIRST) {
                     when (freshness) {
-                        FRESH_ONLY -> catFactClient().refreshFreshOnly()
-                        else -> catFactClient().refresh()
+                        FRESH_ONLY -> client.refreshFreshOnly()
+                        else -> client.refresh()
                     }
                 } else {
                     when {
-                        freshness == FRESH_ONLY && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
-                        freshness == FRESH_ONLY && compress -> catFactClient().freshOnlyCompressed()
-                        freshness == FRESH_ONLY && encrypt -> catFactClient().freshOnlyEncrypted()
-                        freshness == FRESH_ONLY -> catFactClient().freshOnly()
-                        compress && encrypt -> catFactClient().compressedEncrypted()
-                        compress -> catFactClient().compressed()
-                        encrypt -> catFactClient().encrypted()
-                        else -> catFactClient().get()
+                        freshness.isFreshOnly() && compress && encrypt -> client.freshOnlyCompressedEncrypted()
+                        freshness.isFreshOnly() && compress -> client.freshOnlyCompressed()
+                        freshness.isFreshOnly() && encrypt -> client.freshOnlyEncrypted()
+                        freshness.isFreshOnly() -> client.freshOnly()
+                        compress && encrypt -> client.compressedEncrypted()
+                        compress -> client.compressed()
+                        encrypt -> client.encrypted()
+                        else -> client.get()
                     }
                 }
             }
 
     override fun getOfflineSingle(freshness: FreshnessPriority) = ifElse(
             freshness == FRESH_ONLY,
-            catFactClient().offlineFreshOnly(),
-            catFactClient().offline()
+            dataClient().offlineFreshOnly(),
+            dataClient().offline()
     )
 
-    override fun getClearEntriesCompletable() = catFactClient().clearCache()
+    override fun getClearEntriesResult() =
+            operationsClient().clearCache()
 
-    override fun getInvalidateCompletable() = catFactClient().invalidate()
+    override fun getInvalidateResult() =
+            operationsClient().invalidate()
 }

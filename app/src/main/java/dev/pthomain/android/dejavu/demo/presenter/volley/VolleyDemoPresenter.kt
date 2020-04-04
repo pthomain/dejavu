@@ -49,9 +49,9 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
         private const val URL = BASE_URL + ENDPOINT
     }
 
-    override fun getResponseObservable(cachePriority: CachePriority,
-                                       encrypt: Boolean,
-                                       compress: Boolean) =
+    override fun getDataObservable(cachePriority: CachePriority,
+                                   encrypt: Boolean,
+                                   compress: Boolean) =
             newObservable(Cache(priority = cachePriority))
 
     private fun newObservable(operation: Operation) =
@@ -83,16 +83,16 @@ internal class VolleyDemoPresenter(demoActivity: DemoActivity,
             }
 
     override fun getOfflineSingle(freshness: FreshnessPriority) =
-            getResponseObservable(
+            getDataObservable(
                     CachePriority.with(LOCAL_ONLY, freshness),
                     false,
                     false
             ).firstOrError()
 
-    override fun getClearEntriesCompletable() =
+    override fun getClearEntriesResult() =
             newCacheOperation(Clear())
 
-    override fun getInvalidateCompletable() =
+    override fun getInvalidateResult() =
             newCacheOperation(Invalidate)
 
 }

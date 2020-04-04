@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
 
@@ -41,7 +42,7 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Cache(val priority: CachePriority = CachePriority.DEFAULT,
+annotation class Cache(val priority: CachePriority = STALE_ACCEPTED_FIRST,
                        val durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
                        val connectivityTimeoutInSeconds: Int = -1,
                        val requestTimeOutInSeconds: Int = -1,

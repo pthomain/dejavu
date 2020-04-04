@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.injection.DejaVuComponent
 import dev.pthomain.android.dejavu.interceptors.cache.TransientResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.DEFAULT
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
@@ -77,7 +77,7 @@ class DejaVuConfiguration<E> internal constructor(
 
             object Inactive : CachePredicate(null)
             object CacheNone : CachePredicate(DoNotCache)
-            object CacheAll : CachePredicate(Cache(DEFAULT, DEFAULT_CACHE_DURATION_IN_SECONDS))
+            object CacheAll : CachePredicate(Cache(STALE_ACCEPTED_FIRST, DEFAULT_CACHE_DURATION_IN_SECONDS))
         }
 
     }

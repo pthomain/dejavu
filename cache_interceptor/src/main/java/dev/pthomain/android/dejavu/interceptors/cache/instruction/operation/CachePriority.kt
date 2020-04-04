@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors.cache.instruction.operation
 
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
@@ -71,6 +71,11 @@ enum class CachePriority(
 ) {
 
     /**
+     * Returns:
+     * - FRESH cached data
+     * or
+     * - STALE cached data then loads from network.
+     *
      * Returns cached data even if it is STALE then if it is STALE attempts to refresh
      * the data by making a network call and by emitting the result of this call even if the call
      * failed (re-emitting the previous STALE response with a COULD_NOT_REFRESH status).
@@ -89,7 +94,7 @@ enum class CachePriority(
      * This priority is the most versatile and allows for showing transient STALE data
      * during a loading UI state for instance.
      */
-    DEFAULT(
+    STALE_ACCEPTED_FIRST(
             LOCAL_FIRST,
             ANY,
             FRESH,
@@ -101,6 +106,8 @@ enum class CachePriority(
     ),
 
     /**
+     * Returns STALE cached data as a last resort.
+     *
      * Returns cached data only if it is FRESH or if it is STALE attempts to refresh
      * the data by making a network call and by emitting the result of this call even if the call
      * fails (re-emitting the previous STALE response with a COULD_NOT_REFRESH status).
@@ -118,9 +125,9 @@ enum class CachePriority(
      * This priority ignores cached data if it is STALE but will return it
      * if it could not be refreshed.
      */
-    FRESH_PREFERRED(
+    STALE_ACCEPTED_LAST(
             LOCAL_FIRST,
-            FreshnessPriority.FRESH_PREFERRED,
+            FRESH_PREFERRED,
             FRESH,
             NETWORK,
             REFRESHED,
@@ -129,6 +136,8 @@ enum class CachePriority(
     ),
 
     /**
+     * Never returns STALE.
+     *
      * Returns cached data only if it is FRESH or if it is STALE attempts to refresh
      * the data by making a network call and by emitting the result of this call only
      * if the call succeeds (or EMPTY otherwise).
@@ -145,9 +154,9 @@ enum class CachePriority(
      * This priority will never return STALE data, either transiently from the cache or
      * as a result of a failed network call.
      */
-    FRESH_ONLY(
+    STALE_NOT_ACCEPTED(
             LOCAL_FIRST,
-            FreshnessPriority.FRESH_ONLY,
+            FRESH_ONLY,
             FRESH,
             NETWORK,
             REFRESHED,
@@ -155,6 +164,8 @@ enum class CachePriority(
     ),
 
     /**
+     * Invalidates THEN returns STALE (invalidated) cached data THEN loads from network.
+     *
      * Invalidates the cached data then attempts to refresh
      * the data by making a network call and by emitting the result of this call even if the call
      * fails (re-emitting the previous STALE response with a COULD_NOT_REFRESH status).
@@ -174,7 +185,7 @@ enum class CachePriority(
      * data is permanently marked as STALE. This STALE cached data will still be returned to
      * be displayed on a loading UI state for instance.
      */
-    INVALIDATE(
+    INVALIDATE_STALE_ACCEPTED_FIRST(
             NETWORK_FIRST,
             ANY,
             STALE,
@@ -185,9 +196,11 @@ enum class CachePriority(
     ),
 
     /**
+     * Invalidates THEN returns STALE as last resort.
+     *
      * Invalidates the cached data then attempts to refresh the data by making a network call
-     * and by emitting the result of this call and by emitting the result of this call even if the call
-     * fails (re-emitting the previous STALE response with a COULD_NOT_REFRESH status).
+     * and by emitting the result of this call even if the call fails
+     * (re-emitting the previous STALE response with a COULD_NOT_REFRESH status).
      *
      * No network call is attempted if the cached data is FRESH.
      * STALE data is not emitted from the cache but only if the network call failed (COULD_NOT_REFRESH).
@@ -203,9 +216,9 @@ enum class CachePriority(
      * data is permanently marked as STALE. This STALE cached data will still be returned to
      * be displayed on a loading UI state for instance.
      */
-    INVALIDATE_FRESH_PREFERRED(
+    INVALIDATE_STALE_ACCEPTED_LAST(
             NETWORK_FIRST,
-            FreshnessPriority.FRESH_PREFERRED,
+            FRESH_PREFERRED,
             NETWORK,
             REFRESHED,
             EMPTY,
@@ -213,6 +226,8 @@ enum class CachePriority(
     ),
 
     /**
+     * Invalidates THEN never returns STALE.
+     *
      * Invalidates the cached data then attempts to refresh
      * the data by making a network call and by emitting the result of this call only
      * if the call succeeds (or EMPTY otherwise).
@@ -230,16 +245,18 @@ enum class CachePriority(
      * data is permanently marked as STALE. No STALE data will ever be returned either initially
      * from the cache or as the result of a failed network call.
      */
-    INVALIDATE_FRESH_ONLY(
+    INVALIDATE_STALE_NOT_ACCEPTED(
             NETWORK_FIRST,
-            FreshnessPriority.FRESH_ONLY,
+            FRESH_ONLY,
             NETWORK,
             REFRESHED,
             EMPTY
     ),
 
     /**
-     * Returns cached data even if is STALE. No network call is attempted.
+     * Returns cached data even if it is STALE.
+     *
+     * No network call is attempted.
      * Returns EMPTY if no cached data is available.
      *
      * Only emits a single response, either:
@@ -249,7 +266,7 @@ enum class CachePriority(
      *
      * This priority returns cached data as is without ever using the network.
      */
-    OFFLINE(
+    OFFLINE_STALE_ACCEPTED(
             LOCAL_ONLY,
             ANY,
             FRESH,
@@ -258,7 +275,9 @@ enum class CachePriority(
     ),
 
     /**
-     * Returns cached data only if is FRESH. No network call is attempted.
+     * Returns cached data only if it is FRESH.
+     *
+     * No network call is attempted.
      * Returns EMPTY if no cached data is available.
      *
      * Only emits a single response, either:
@@ -267,9 +286,9 @@ enum class CachePriority(
      *
      * This priority returns only FRESH cached data without ever using the network.
      */
-    OFFLINE_FRESH_ONLY(
+    OFFLINE_STALE_NOT_ACCEPTED(
             LOCAL_ONLY,
-            FreshnessPriority.FRESH_ONLY,
+            FRESH_ONLY,
             FRESH,
             EMPTY
     );
@@ -360,20 +379,20 @@ enum class CachePriority(
         ) =
                 when (networkPriority) {
                     LOCAL_FIRST -> when (freshness) {
-                        ANY -> DEFAULT
-                        FreshnessPriority.FRESH_PREFERRED -> FRESH_PREFERRED
-                        FreshnessPriority.FRESH_ONLY -> FRESH_ONLY
+                        ANY -> STALE_ACCEPTED_FIRST
+                        FRESH_PREFERRED -> STALE_ACCEPTED_LAST
+                        FRESH_ONLY -> STALE_NOT_ACCEPTED
                     }
 
                     NETWORK_FIRST -> when (freshness) {
-                        ANY -> INVALIDATE
-                        FreshnessPriority.FRESH_PREFERRED -> INVALIDATE_FRESH_PREFERRED
-                        FreshnessPriority.FRESH_ONLY -> INVALIDATE_FRESH_ONLY
+                        ANY -> INVALIDATE_STALE_ACCEPTED_FIRST
+                        FRESH_PREFERRED -> INVALIDATE_STALE_ACCEPTED_LAST
+                        FRESH_ONLY -> INVALIDATE_STALE_NOT_ACCEPTED
                     }
 
                     LOCAL_ONLY -> when (freshness) {
-                        FreshnessPriority.FRESH_ONLY -> OFFLINE_FRESH_ONLY
-                        else -> OFFLINE
+                        FRESH_ONLY -> OFFLINE_STALE_NOT_ACCEPTED
+                        else -> OFFLINE_STALE_ACCEPTED
                     }
                 }
     }

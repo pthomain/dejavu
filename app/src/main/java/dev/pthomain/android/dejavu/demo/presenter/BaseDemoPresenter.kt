@@ -53,7 +53,6 @@ import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Serialisatio
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.mumbo.Mumbo
-import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -99,12 +98,24 @@ internal abstract class BaseDemoPresenter protected constructor(
                 }
             }
 
+    final override fun getCacheOperation() =
+            when (instructionType) {
+                CACHE -> Cache(
+                        priority = CachePriority.with(networkPriority, freshness),
+                        encrypt = encrypt,
+                        compress = compress
+                )
+                DO_NOT_CACHE -> DoNotCache
+                INVALIDATE -> Invalidate
+                CLEAR -> Clear()
+            }
+
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = CACHE
         networkPriority = ifElse(isRefresh, NETWORK_FIRST, LOCAL_FIRST)
 
-        subscribe(
-                getResponseObservable(
+        subscribeData(
+                getDataObservable(
                         CachePriority.with(networkPriority, freshness),
                         encrypt,
                         compress
@@ -115,43 +126,32 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override fun offline() {
         instructionType = CACHE
         networkPriority = NetworkPriority.LOCAL_ONLY
-        subscribe(getOfflineSingle(freshness).toObservable())
+        subscribeData(getOfflineSingle(freshness).toObservable())
     }
 
     final override fun clearEntries() {
         instructionType = CLEAR
-        subscribe(getClearEntriesCompletable().ignoreElements())
+        subscribeResult(getClearEntriesResult())
     }
 
     final override fun invalidate() {
         instructionType = INVALIDATE
-        subscribe(getInvalidateCompletable().ignoreElements())
+        subscribeResult(getInvalidateResult())
     }
 
-    final override fun getCacheOperation() =
-                when (instructionType) {
-                    CACHE -> Cache(
-                            priority = CachePriority.with(networkPriority, freshness),
-                            encrypt = encrypt,
-                            compress = compress
-                    )
-                    DO_NOT_CACHE -> DoNotCache
-                    INVALIDATE -> Invalidate
-                    CLEAR -> Clear()
-                }
+    private fun subscribeData(observable: Observable<CatFactResponse>) =
+            observable.compose { composer<CatFactResponse>(it) }
+                    .autoSubscribe(mvpView::showCatFact)
 
-    private fun subscribe(observable: Observable<out CatFactResponse>) =
-            observable.ioUi()
+    private fun subscribeResult(observable: Observable<DejaVuResult<CatFactResponse>>) =
+            observable.compose { composer<DejaVuResult<CatFactResponse>>(it) }
+                    .autoSubscribe(mvpView::showResult)
+
+    private fun <T : Any> composer(upstream: Observable<T>) =
+            upstream.ioUi()
                     .doOnSubscribe { mvpView.onCallStarted() }
                     .doOnError { uiLogger.e(this, it) }
                     .doFinally(::onCallComplete)
-                    .autoSubscribe(mvpView::showCatFact)
-
-    private fun subscribe(completable: Completable) =
-            completable.ioUi()
-                    .doOnSubscribe { mvpView.onCallStarted() }
-                    .doFinally(::onCallComplete)
-                    .autoSubscribe()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
@@ -166,13 +166,13 @@ internal abstract class BaseDemoPresenter protected constructor(
 //                .autoSubscribe()
     }
 
-    protected abstract fun getResponseObservable(cachePriority: CachePriority,
-                                                 encrypt: Boolean,
-                                                 compress: Boolean): Observable<CatFactResponse>
+    protected abstract fun getDataObservable(cachePriority: CachePriority,
+                                             encrypt: Boolean,
+                                             compress: Boolean): Observable<CatFactResponse>
 
     protected abstract fun getOfflineSingle(freshness: FreshnessPriority): Single<CatFactResponse>
-    protected abstract fun getClearEntriesCompletable(): Observable<DejaVuResult<CatFactResponse>>
-    protected abstract fun getInvalidateCompletable(): Observable<DejaVuResult<CatFactResponse>>
+    protected abstract fun getClearEntriesResult(): Observable<DejaVuResult<CatFactResponse>>
+    protected abstract fun getInvalidateResult(): Observable<DejaVuResult<CatFactResponse>>
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"

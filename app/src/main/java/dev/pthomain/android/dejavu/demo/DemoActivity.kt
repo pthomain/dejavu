@@ -43,6 +43,7 @@ import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import io.reactivex.plugins.RxJavaPlugins
 
 
@@ -142,7 +143,11 @@ internal class DemoActivity
     }
 
     override fun showCatFact(response: CatFactResponse) {
-        listAdapter.showCatFact(response)
+        listAdapter.showResponse(response)
+    }
+
+    override fun showResult(result: DejaVuResult<CatFactResponse>) {
+        listAdapter.showDejaVuResult(result)
     }
 
     override fun onCallStarted() {
