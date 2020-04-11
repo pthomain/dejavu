@@ -29,10 +29,8 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.injection.Function1
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
 
@@ -70,15 +68,5 @@ internal abstract class CacheModule<E>
                     dateFactory::get,
                     logger
             )
-
-    @Provides
-    @Singleton
-    fun provideDejaVuResultSubject() =
-            PublishSubject.create<DejaVuResult<*>>()
-
-    @Provides
-    @Singleton
-    fun provideDejaVuResultObservable(subject: PublishSubject<DejaVuResult<*>>) =
-            subject.map { it }!!
 
 }

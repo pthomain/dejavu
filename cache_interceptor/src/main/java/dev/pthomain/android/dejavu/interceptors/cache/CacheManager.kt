@@ -27,7 +27,6 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
@@ -101,7 +100,7 @@ internal class CacheManager<E>(
                 val cacheOperation = requestToken.instruction.operation
 
                 val instruction = requestToken.instruction
-                val mode = cacheOperation.priority.network
+                val networkPriority = cacheOperation.priority.network
                 val simpleName = instruction.requestMetadata.responseClass.simpleName
 
                 logger.d(this, "Checking for cached $simpleName")
@@ -109,34 +108,26 @@ internal class CacheManager<E>(
 
                 val diskDuration = (dateFactory(null).time - requestToken.requestDate.time).toInt()
 
-                val responseWrapper = if (cachedResponse != null) {
+                if (cachedResponse != null) {
                     logger.d(
                             this,
                             "Found cached $simpleName, status: ${cachedResponse.cacheToken.status}"
                     )
-                    Response(
-                            cachedResponse as R, //TODO check
-                            with(cachedResponse.cacheToken) {
-                                ResponseToken(instruction, status, requestDate)  //TODO check
-                            },
-                            CallDuration(diskDuration, 0, 0) //FIXME
-                    )
-                } else null
+                }
 
-                if (mode.isLocalOnly()) {
-                    when (responseWrapper) {
+                if (networkPriority.isLocalOnly()) {
+                    when (cachedResponse) {
                         null -> emptyResponseFactory.createEmptyResponseObservable(requestToken)
-                        else -> Observable.just(responseWrapper)
+                        else -> Observable.just(cachedResponse)
                     }
                 } else
                     getOnlineObservable(
-                            responseWrapper,
+                            cachedResponse,
                             upstream,
                             cacheOperation,
                             requestToken,
                             diskDuration
                     )
-
             }
 
     //TODO JavaDoc

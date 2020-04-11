@@ -98,7 +98,7 @@ internal class ExpandableListAdapter(context: Context)
 
     private fun showHeaderAndBody(
             internalResult: InternalResult<*, out CacheToken<*, CatFactResponse>>,
-            header: String
+            caption: String
     ) {
         val cacheToken = internalResult.cacheToken
         val operation = cacheToken.instruction.operation
@@ -113,7 +113,8 @@ internal class ExpandableListAdapter(context: Context)
         info.add("Cache token instruction: $operation")
         info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
 
-        headers.add(elapsed + "\n" + header)
+        val header = elapsed + "\n" + caption
+        headers.add(header)
 
         when (internalResult) {
             is InternalResult.Response -> with(internalResult.response.cacheToken) {
@@ -231,8 +232,8 @@ internal class ExpandableListAdapter(context: Context)
                                    childPosition: Int) = false
 
     private sealed class InternalResult<O : Operation, T : CacheToken<O, CatFactResponse>>(
-            delegate: HasCacheMetadata<O, CatFactResponse, T>
-    ) : HasCacheMetadata<O, CatFactResponse, T> by delegate {
+            delegate: HasMetadata<CatFactResponse, O, T>
+    ) : HasMetadata<CatFactResponse, O, T> by delegate {
 
         class Response(
                 val response: CatFactResponse

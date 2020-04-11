@@ -314,7 +314,7 @@ inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
 
-    is Cache -> operation.priority.returnStatuses.contains(cacheStatus)
+    is Cache -> operation.priority.possibleStatuses.contains(cacheStatus)
 
     Remote.DoNotCache -> cacheStatus == NOT_CACHED
 

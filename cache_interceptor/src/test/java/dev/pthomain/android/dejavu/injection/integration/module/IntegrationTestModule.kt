@@ -31,21 +31,16 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.retrofit.RetrofitCallAdapterFactory
 import okhttp3.OkHttpClient
 import org.mockito.Mockito.mock
+import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-
 @Module
 internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
-
-    val ASSETS_FOLDER = "src/main/assets/"
-    val BASE_URL = "http://test.com"
 
     @Provides
     @Singleton
@@ -85,7 +80,7 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideRetrofit(adapterFactory: RetrofitCallAdapterFactory<Glitch>,
+    fun provideRetrofit(adapterFactory: CallAdapter.Factory,
                         okHttpClient: OkHttpClient,
                         gsonConverterFactory: GsonConverterFactory) =
             Retrofit.Builder()
@@ -107,12 +102,12 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideAssetHelper(gson: Gson,
-                           errorFactory: ErrorFactory<Glitch>) =
+    fun provideAssetHelper(gson: Gson) =
             AssetHelper(
                     ASSETS_FOLDER,
-                    gson,
-                    errorFactory
+                    gson
             )
-
 }
+
+const val ASSETS_FOLDER = "src/main/assets/"
+const val BASE_URL = "http://test.com"

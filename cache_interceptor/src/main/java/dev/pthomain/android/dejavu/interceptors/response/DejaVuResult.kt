@@ -38,7 +38,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  */
 @Suppress("LeakingThis", "UNCHECKED_CAST") //sealed classes are final and all implement the interface
 sealed class DejaVuResult<R : Any> {
-    internal val hasCacheMetadata = this as HasCacheMetadata<*, R, *>
+    internal val hasMetadata = this as HasMetadata<R, *, *>
 }
 
 //The result has a response
@@ -47,7 +47,7 @@ data class Response<R : Any, O : Remote> internal constructor(
         override var cacheToken: ResponseToken<O, R>,
         override var callDuration: CallDuration
 ) : DejaVuResult<R>(),
-        HasCacheMetadata<O, R, ResponseToken<O, R>> by CacheMetadataHolder(cacheToken, callDuration)
+        HasResponseMetadata<R, O> by MetadataHolder(cacheToken, callDuration)
 
 //The result is empty due to filtering or exceptions
 class Empty<R : Any, O : Remote, E> internal constructor(
@@ -55,7 +55,7 @@ class Empty<R : Any, O : Remote, E> internal constructor(
         override var cacheToken: RequestToken<O, R>,
         override var callDuration: CallDuration
 ) : DejaVuResult<R>(),
-        HasCacheMetadata<O, R, RequestToken<O, R>> by CacheMetadataHolder(cacheToken, callDuration)
+        HasRequestMetadata<R, O> by MetadataHolder(cacheToken, callDuration)
         where E : Throwable,
               E : NetworkErrorPredicate
 
@@ -64,5 +64,5 @@ data class Result<R : Any, O : Local> internal constructor(
         override var cacheToken: RequestToken<O, R>,
         override var callDuration: CallDuration
 ) : DejaVuResult<R>(),
-        HasCacheMetadata<O, R, RequestToken<O, R>> by CacheMetadataHolder(cacheToken, callDuration)
+        HasRequestMetadata<R, O> by MetadataHolder(cacheToken, callDuration)
 

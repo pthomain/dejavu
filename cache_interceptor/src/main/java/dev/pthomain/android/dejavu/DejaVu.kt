@@ -69,12 +69,6 @@ class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
      */
     val dejaVuInterceptorFactory = component.dejaVuInterceptorFactory()
 
-    /**
-     * Provides an observable emitting the responses metadata, for logging/stats purposes or to use
-     * as an alternative to implementing the CacheMetadata.Holder interface on responses.
-     */
-    val resultObservable = component.resultObservable()
-
     companion object {
 
         /**

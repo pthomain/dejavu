@@ -107,7 +107,7 @@ class MockClient : Interceptor {
         source.write(response.toByteArray())
         val body = RealResponseBody("text/plain", response.length.toLong(), source)
         responseBuilder.body(body)
-        enqueueResponse(MockClient.ResponseWrapper(responseBuilder, httpCode))
+        enqueueResponse(ResponseWrapper(responseBuilder, httpCode))
     }
 
     /**

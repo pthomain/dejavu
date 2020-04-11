@@ -40,9 +40,9 @@ import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.observers.TestObserver
-import io.reactivex.subjects.PublishSubject
 import org.junit.Before
 import org.junit.Test
 import java.util.*
@@ -51,7 +51,6 @@ class ResponseInterceptorUnitTest {
 
     private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
     private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
-    private lateinit var mockMetadataSubject: PublishSubject<ResponseMetadata<Glitch>>
     private lateinit var mockEmptyException: Glitch
 
     private val start = 1234L
@@ -61,7 +60,6 @@ class ResponseInterceptorUnitTest {
     @Before
     fun setUp() {
         mockEmptyResponseFactory = mock()
-        mockMetadataSubject = mock()
     }
 
     @Test
@@ -223,11 +221,6 @@ class ResponseInterceptorUnitTest {
         val testObserver = TestObserver<Any>()
 
         target.apply(mockUpstreamObservable).subscribe(testObserver)
-
-        verifyWithContext(
-                mockMetadataSubject,
-                context
-        ).onNext(eq(expectedMetadata))
 
         if (isValid) {
                 verifyAddMetadataIfPossible(

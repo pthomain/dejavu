@@ -39,6 +39,7 @@ import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_FIRST
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
@@ -75,7 +76,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var useSingle: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
-    final override var freshness = FreshnessPriority.ANY
+    final override var freshness = ANY
 
     protected val gson = Gson()
 

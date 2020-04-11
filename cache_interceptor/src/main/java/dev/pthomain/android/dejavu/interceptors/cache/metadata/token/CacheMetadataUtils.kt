@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.interceptors.cache.metadata.token
 
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.response.HasCacheMetadata
+import dev.pthomain.android.dejavu.interceptors.response.HasMetadata
 
-internal fun <O : Operation, R : Any> HasCacheMetadata<O, R, *>.instruction() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.instruction() =
         cacheToken.instruction
 
-internal fun <O : Operation, R : Any> HasCacheMetadata<O, R, *>.requestMetadata() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.requestMetadata() =
         instruction().requestMetadata
 
-internal fun <O : Operation, R : Any> HasCacheMetadata<O, R, *>.responseClass() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.responseClass() =
         requestMetadata().responseClass

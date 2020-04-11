@@ -25,25 +25,40 @@ package dev.pthomain.android.dejavu.test
 
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
+import dev.pthomain.android.dejavu.injection.integration.module.NOW
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import io.reactivex.Observable
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
-                  private val gson: Gson,
-                  private val errorFactory: ErrorFactory<Glitch>) {
+                  private val gson: Gson) {
 
-    fun <R> observeStubbedResponse(fileName: String,
-                                   responseClass: Class<R>,
-                                   cacheToken: RequestToken<Cache>)
-            : Observable<R> where R : ResponseMetadata.Holder<Cache, RequestToken<Cache>, Glitch> =
+    fun <R : Any> observeStubbedResponse(fileName: String,
+                                         responseClass: Class<R>,
+                                         cacheToken: RequestToken<Cache, R>)
+            : Observable<out DejaVuResult<R>> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }
-                    .doOnNext {
-                        it.metadata = errorFactory.newMetadata(cacheToken)
+                    .map {
+                        Response(
+                                it,
+                                with(cacheToken) {
+                                    ResponseToken(
+                                            instruction,
+                                            FRESH,
+                                            NOW,
+                                            NOW,
+                                            NOW
+                                    )
+                                },
+                                CallDuration(0, 0, 0)
+                        )
                     }
 
     fun observeFile(fileName: String): Observable<String> =

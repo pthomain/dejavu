@@ -33,12 +33,10 @@ import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.cache.CacheManager
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
-import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import io.reactivex.subjects.PublishSubject
 import java.util.*
 import javax.inject.Singleton
 
@@ -68,13 +66,11 @@ internal abstract class InterceptorModule<E>
     fun provideResponseInterceptor(configuration: DejaVuConfiguration<E>,
                                    logger: Logger,
                                    dateFactory: Function1<Long?, Date>,
-                                   metadataSubject: PublishSubject<DejaVuResult<*>>,
                                    emptyResponseFactory: EmptyResponseFactory<E>) =
             ResponseInterceptor.Factory(
                     configuration,
                     logger,
                     dateFactory::get,
-                    metadataSubject,
                     emptyResponseFactory
             )
 

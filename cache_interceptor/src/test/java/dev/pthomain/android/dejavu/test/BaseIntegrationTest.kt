@@ -40,14 +40,14 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMe
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.interceptors.error.GlitchFactory
-import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.network.model.User
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 import dev.pthomain.android.mumbo.Mumbo
 import okhttp3.OkHttpClient
 import org.junit.Before
@@ -86,6 +86,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
             Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
             true,
             null,
+            { _ -> null },
             { _ -> null }
     )
 
@@ -130,42 +131,43 @@ internal abstract class BaseIntegrationTest<T : Any>(
         mockClient.enqueueIOException(exception)
     }
 
-    protected fun getStubbedTestResponse(instructionToken: InstructionToken<Cache> = instructionToken()) =
+    protected fun getStubbedTestResponse(instructionToken: RequestToken<Cache, TestResponse> = instructionToken()) =
             assetHelper.observeStubbedResponse(
                     TestResponse.STUB_FILE,
                     TestResponse::class.java,
                     instructionToken
-            ).blockingFirst().let {
-                ResponseWrapper(
-                        TestResponse::class.java,
-                        it,
-                        it.metadata
-                )
-            }
+            ).blockingFirst()
 
-    protected fun getStubbedUserResponseWrapper(instructionToken: InstructionToken = instructionToken(responseClass = User::class.java),
-                                                url: String = "http://test.com/userResponse") =
-            getStubbedTestResponse(instructionToken).let {
-                val requestMetadata = instructionToken.instruction.requestMetadata
+    protected fun getStubbedUserResponseWrapper(
+            instructionToken: RequestToken<Cache, User> = instructionToken(responseClass = User::class.java),
+            url: String = "http://test.com/userResponse"
+    ) =
+            assetHelper.observeStubbedResponse(
+                    UserResponse.STUB_FILE,
+                    TestResponse::class.java,
+                    instructionToken
+            ).blockingFirst()
+                    .let {
+                        val requestMetadata = instructionToken.instruction.requestMetadata
 
-                with(it.metadata) {
-                    ResponseWrapper(
-                            requestMetadata.responseClass,
-                            (it.response as TestResponse).first(),
-                            copy(
-                                    cacheToken = cacheToken.copy(
-                                            CacheInstruction(
-                                                    cacheComponent.hasher().hash(
-                                                            RequestMetadata.Plain(
-                                                                    requestMetadata.responseClass,
-                                                                    url
-                                                            )
-                                                    ) as ValidRequestMetadata,
-                                                    cacheToken.instruction.operation
+                        with(it.metadata) {
+                            ResponseWrapper(
+                                    requestMetadata.responseClass,
+                                    (it.response as TestResponse).first(),
+                                    copy(
+                                            cacheToken = cacheToken.copy(
+                                                    CacheInstruction(
+                                                            cacheComponent.hasher().hash(
+                                                                    RequestMetadata.Plain(
+                                                                            requestMetadata.responseClass,
+                                                                            url
+                                                                    )
+                                                            ) as ValidRequestMetadata,
+                                                            cacheToken.instruction.operation
+                                                    )
                                             )
                                     )
                             )
-                    )
                 }
             }
 

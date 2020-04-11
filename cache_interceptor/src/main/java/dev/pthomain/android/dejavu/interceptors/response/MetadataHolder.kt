@@ -26,19 +26,24 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-
-internal data class CacheMetadataHolder<O : Operation, R : Any, T : CacheToken<O, R>>(
-        override var cacheToken: T,
-        override var callDuration: CallDuration
-) : HasCacheMetadata<O, R, T>
-
-interface HasCacheMetadata<O : Operation, R : Any, T : CacheToken<O, R>>
-    : HasCacheToken<O, R, T>, HasCallDuration
-
-interface HasCacheToken<O : Operation, R : Any, T : CacheToken<O, R>> {
-    var cacheToken: T
-}
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 
 interface HasCallDuration {
     var callDuration: CallDuration
 }
+
+interface HasCacheToken<R : Any, O : Operation, T : CacheToken<O, R>> {
+    var cacheToken: T
+}
+
+interface HasMetadata<R : Any, O : Operation, T : CacheToken<O, R>>
+    : HasCacheToken<R, O, T>, HasCallDuration
+
+internal data class MetadataHolder<R : Any, O : Operation, T : CacheToken<O, R>>(
+        override var cacheToken: T,
+        override var callDuration: CallDuration
+) : HasMetadata<R, O, T>
+
+internal typealias HasRequestMetadata<R, O> = HasMetadata<R, O, RequestToken<O, R>>
+internal typealias HasResponseMetadata<R, O> = HasMetadata<R, O, ResponseToken<O, R>>

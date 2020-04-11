@@ -65,9 +65,9 @@ data class PlainRequestMetadata<R>(
  * @param classHash the response class' hash
  */
 sealed class HashedRequestMetadata<R>(
-        override val responseClass: Class<R>,
-        override val url: String,
-        override val requestBody: String?,
+        responseClass: Class<R>,
+        url: String,
+        requestBody: String?,
         internal open val requestHash: String,
         internal open val classHash: String
 ) : RequestMetadata<R>(

@@ -26,10 +26,13 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import io.reactivex.subjects.PublishSubject
 import java.util.*
 import kotlin.NoSuchElementException
 
@@ -45,15 +48,13 @@ import kotlin.NoSuchElementException
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
  * @param emptyResponseFactory factory providing empty response wrappers
  * @param configuration the cache configuration
- * @param metadataSubject the subject used to emit the current response's metadata (exposed as an Observable on DejaVu)
  */
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
         private val configuration: DejaVuConfiguration<E>,
-        private val isWrapped: Boolean,
-        private val metadataSubject: PublishSubject<DejaVuResult<*>>
+        private val isWrapped: Boolean
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -65,7 +66,7 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
      * @return the composed Observable
      */
     override fun apply(upstream: Observable<DejaVuResult<R>>) =
-            upstream.flatMap(this::intercept)!!
+            upstream.flatMap(::intercept)!!
 
     /**
      * Converts the ResponseWrapper into the expected response with added cache metadata if possible.
@@ -76,13 +77,18 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
      */
     @Suppress("UNCHECKED_CAST")
     private fun intercept(wrapper: DejaVuResult<R>): Observable<Any> {
-        val hasMetadata = wrapper.hasCacheMetadata
+        with(wrapper.hasMetadata) {
+            callDuration = callDuration.copy(
+                    total = (dateFactory(null).time - cacheToken.requestDate.time).toInt()
+            )
+        }
 
-        hasMetadata.callDuration = hasMetadata.callDuration.copy(
-                total = (dateFactory(null).time - hasMetadata.cacheToken.requestDate.time).toInt()
-        )
-
-        metadataSubject.onNext(wrapper)
+        if (wrapper is Response<*, *> && wrapper.response is HasMetadata<*, *, *>) {
+            when (wrapper.cacheToken.instruction.operation) {
+                is Cache -> setMetadata(wrapper)
+                DoNotCache -> setMetadata(wrapper)
+            }
+        }
 
         return if (isWrapped) wrapper.observable()
         else {
@@ -94,10 +100,17 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
         } as Observable<Any>
     }
 
+    @Suppress("UNCHECKED_CAST")
+    private fun <R : Any, O : Remote> setMetadata(wrapper: Response<R, O>) {
+        (wrapper.response as HasMetadata<R, O, ResponseToken<O, R>>).apply {
+            cacheToken = wrapper.cacheToken
+            callDuration = wrapper.callDuration
+        }
+    }
+
     class Factory<E>(private val configuration: DejaVuConfiguration<E>,
                      private val logger: Logger,
                      private val dateFactory: (Long?) -> Date,
-                     private val metadataSubject: PublishSubject<DejaVuResult<*>>,
                      private val emptyResponseFactory: EmptyResponseFactory<E>)
             where E : Throwable,
                   E : NetworkErrorPredicate {
@@ -107,8 +120,7 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
                 dateFactory,
                 emptyResponseFactory,
                 configuration,
-                isWrapped,
-                metadataSubject
+                isWrapped
         )
     }
 }
