@@ -31,6 +31,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
@@ -104,25 +105,23 @@ internal class ExpandableListAdapter(context: Context)
         val operation = cacheToken.instruction.operation
         val callDuration = internalResult.callDuration
 
-        val elapsed = "${operation.type.name} -> ${cacheToken.status} (${callDuration.total}ms)"
-        val duration = "Call duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms"
-
+        val header = "${operation.type.name} -> ${cacheToken.status} (${callDuration.total}ms)"
         val info = ArrayList<String>()
 
-        info.add(duration)
-        info.add("Cache token instruction: $operation")
-        info.add("Cache token status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
+        info.add(caption)
+        info.add("Instruction: $operation")
+        info.add("Status: ${cacheToken.status} (coming from ${getOrigin(cacheToken.status)})")
+        info.add("Duration: disk = ${callDuration.disk}ms, network = ${callDuration.network}ms, total = ${callDuration.total}ms")
 
-        val header = elapsed + "\n" + caption
         headers.add(header)
 
         when (internalResult) {
             is InternalResult.Response -> with(internalResult.response.cacheToken) {
                 cacheDate?.also {
-                    info.add("Cache token cache date: " + simpleDateFormat.format(it))
+                    info.add("Cache date: " + simpleDateFormat.format(it))
                 }
                 expiryDate?.also {
-                    info.add("Cache token expiry date: "
+                    info.add("Expiry date: "
                             + simpleDateFormat.format(it)
                             + " (TTL: "
                             + (operation as Remote.Cache).durationInSeconds
@@ -130,7 +129,10 @@ internal class ExpandableListAdapter(context: Context)
                     )
                 }
 
-                val catFactHeader = "Here's a cat fact \uD83D\uDE3A"
+                val catFactHeader = "Here's a" +
+                        " ${ifElse(status.isFresh, "FRESH", "STALE")}" +
+                        " cat fact \uD83D\uDE3A" +
+                        " (from ${ifElse(status.isFromCache, "cache", "network")})"
                 headers.add(catFactHeader)
                 children[catFactHeader] = listOf(internalResult.response.fact)
             }

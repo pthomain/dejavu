@@ -91,12 +91,10 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
         }
 
         return if (isWrapped) wrapper.observable()
-        else {
-            when (wrapper) {
-                is Response<R, *> -> wrapper.response.observable()
-                is Empty<R, *, *> -> Observable.error(wrapper.exception)
-                is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
-            }
+        else when (wrapper) {
+            is Response<R, *> -> wrapper.response.observable()
+            is Empty<R, *, *> -> Observable.error(wrapper.exception)
+            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
         } as Observable<Any>
     }
 

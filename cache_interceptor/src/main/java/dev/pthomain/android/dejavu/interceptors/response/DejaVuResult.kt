@@ -37,9 +37,11 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * sealed class and to provide the type of the response R.
  */
 @Suppress("LeakingThis", "UNCHECKED_CAST") //sealed classes are final and all implement the interface
-sealed class DejaVuResult<R : Any> {
+sealed class DejaVuResult<R : Any> : ResultWrapper<R> {
     internal val hasMetadata = this as HasMetadata<R, *, *>
 }
+
+internal interface ResultWrapper<R : Any>
 
 //The result has a response
 data class Response<R : Any, O : Remote> internal constructor(
@@ -65,4 +67,14 @@ data class Result<R : Any, O : Local> internal constructor(
         override var callDuration: CallDuration
 ) : DejaVuResult<R>(),
         HasRequestMetadata<R, O> by MetadataHolder(cacheToken, callDuration)
+
+//This is used in lieu of the upstream observable for Local operations.
+internal class LocalOperationToken<R : Any> : ResultWrapper<R>
+
+@Deprecated("Replace DejaVuResult with ResultWrapper interface")
+internal fun <R : Any, O : Local> localOperationToken(requestToken: RequestToken<O, R>) =
+        Result(
+                requestToken,
+                CallDuration(0, 0, 0)
+        )
 

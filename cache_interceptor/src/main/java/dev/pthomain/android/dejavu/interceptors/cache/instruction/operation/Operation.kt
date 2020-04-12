@@ -138,6 +138,8 @@ sealed class Operation(val type: Type) {
         }
     }
 
+    override fun toString() = serialise()
+
     enum class Type {
         CACHE,
         DO_NOT_CACHE,

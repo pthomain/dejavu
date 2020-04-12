@@ -56,6 +56,10 @@ enum class CacheStatus(
          */
         val isFresh: Boolean,
         /**
+         * Identifies data that is from the local cache.
+         */
+        val isFromCache: Boolean,
+        /**
          * Indicates whether or not this status represents an error and as such contains an
          * error in the cache metadata (for responses implementing the CacheMetadata.Holder interface).
          * Responses with this status may or may not have a response, but they'll always have an exception.
@@ -65,24 +69,24 @@ enum class CacheStatus(
     /**
      * Internal use only, for the request instruction
      */
-    INSTRUCTION(false, false, false),
+    INSTRUCTION(false, false, false, false),
 
     /**
      * Returned with responses that were not cached, in accordance to the
      * DO_NOT_CACHE instruction explicitly set on the request.
      */
-    NOT_CACHED(true, true, true),
+    NOT_CACHED(true, true, true, false),
 
     /**
      * Returned with responses coming straight from the network for which no cached data exists.
      */
-    NETWORK(true, true, true),
+    NETWORK(true, true, true, false),
 
     /**
      * Returned with responses coming straight from the cache within their expiry date,
      * no further network call is made (hence isSingle = true).
      */
-    FRESH(true, true, true),
+    FRESH(true, true, true, true),
 
     /**
      * Returned with responses coming straight from the cache after their expiry date.
@@ -95,14 +99,14 @@ enum class CacheStatus(
      * - the data is returned via an Observable and not a Single (in which case only
      * a final response is returned, i.e. either REFRESHED, COULD_NOT_REFRESH or EMPTY).
      */
-    STALE(false, false, false),
+    STALE(false, false, false, true),
 
     /**
      * Returned after a STALE response with NETWORK data from a successful network call or
      * alternatively as a single response if the freshOnly directive is set or the response
      * is returned via a Single rather than an Observable.
      */
-    REFRESHED(true, false, true),
+    REFRESHED(true, false, true, false),
 
     /**
      * Returned after a STALE response with STALE data from an unsuccessful network call or
@@ -115,7 +119,7 @@ enum class CacheStatus(
      * implement CacheMetadata.Holder, the exception will be delivered using the default
      * RxJava error mechanism.
      */
-    COULD_NOT_REFRESH(true, false, false, true),
+    COULD_NOT_REFRESH(true, false, false, true, true),
 
     /**
      * Returned when no data is available as a result of a network error and either:
@@ -137,13 +141,13 @@ enum class CacheStatus(
      * implement CacheMetadata.Holder, the exception will be delivered using the default
      * RxJava error mechanism.
      */
-    EMPTY(true, false, true, true),
+    EMPTY(true, false, true, false, true),
 
     /**
      * Returned for instructions that do not return any data (e.g. INVALIDATE or CLEAR).
      * This status indicates that the instruction was properly processed.
      */
-    DONE(true, true, true, false);
+    DONE(true, true, true, false, false);
 
     /**
      * This field indicates a response that won't be succeeded by another one.

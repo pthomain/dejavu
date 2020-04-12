@@ -37,10 +37,7 @@ import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToke
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
 import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
-import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
-import dev.pthomain.android.dejavu.interceptors.response.Empty
-import dev.pthomain.android.dejavu.interceptors.response.Response
-import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.*
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.glitchy.interceptor.Interceptor
@@ -106,7 +103,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         val requestDate = dateFactory(null)
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
-        return if (hashedRequestMetadata is ValidRequestMetadata<R> && operation is Remote) {
+        return if (hashedRequestMetadata is ValidRequestMetadata<R>) {
             val instruction = CacheInstruction(
                     operation,
                     hashedRequestMetadata
@@ -118,12 +115,21 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                     requestDate
             )
 
-            upstream
-                    .map { checkOutcome(it, instructionToken) }
-                    .compose(networkInterceptorFactory.create(instructionToken))
-                    .compose(cacheInterceptorFactory.create(instructionToken))
-                    .compose(responseInterceptorFactory.create(isWrapped))
+            val cacheInterceptor = cacheInterceptorFactory.create(instructionToken)
+            val responseInterceptor = responseInterceptorFactory.create<R>(isWrapped)
 
+            @Suppress("UNCHECKED_CAST")
+            if (operation is Remote) {
+                instructionToken as RequestToken<out Remote, R>
+                upstream.map { checkOutcome(it, instructionToken) }
+                        .compose(networkInterceptorFactory.create(instructionToken))
+                        .compose(cacheInterceptor)
+                        .compose(responseInterceptor)
+            } else {
+                Observable.just(localOperationToken(instructionToken as RequestToken<out Operation.Local, R>))
+                        .compose(cacheInterceptor)
+                        .compose(responseInterceptor)
+            }
         } else {
             configuration.logger.e(
                     this,
@@ -133,9 +139,9 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         }
     }
 
-    private fun checkOutcome(
+    private fun <O : Remote> checkOutcome(
             outcome: Any,
-            instructionToken: RequestToken<Remote, R>
+            instructionToken: RequestToken<O, R>
     ): DejaVuResult<R> {
         val callDuration = CallDuration(
                 0,

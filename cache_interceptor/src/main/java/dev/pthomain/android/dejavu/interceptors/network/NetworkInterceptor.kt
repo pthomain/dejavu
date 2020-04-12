@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit.SECONDS
  * @param dateFactory a factory converting timestamps to Dates
  * @param requestToken the original request cache token
  */
-internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<O, R>, E> private constructor(
+internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R>, E> private constructor(
         private val context: Context,
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
@@ -92,7 +92,7 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<O, R>, E
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
-        fun <O : Remote, R : Any, T : RequestToken<O, R>> create(requestToken: T) =
+        fun <O : Remote, R : Any, T : RequestToken<out O, R>> create(requestToken: T) =
                 NetworkInterceptor<O, R, T, E>(
                         context,
                         logger,
