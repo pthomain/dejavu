@@ -133,7 +133,7 @@ internal class CacheMetadataManager<E>(
      *
      * @param callDuration the duration of the network call
      * @param diskDuration the duration of the operation to retrieve the response from cache
-     * @return the udpated Duration metadata
+     * @return the updated Duration metadata
      */
     private fun getRefreshCallDuration(
             callDuration: CallDuration,

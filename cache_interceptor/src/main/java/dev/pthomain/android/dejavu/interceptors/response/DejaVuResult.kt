@@ -71,10 +71,10 @@ data class Result<R : Any, O : Local> internal constructor(
 //This is used in lieu of the upstream observable for Local operations.
 internal class LocalOperationToken<R : Any> : ResultWrapper<R>
 
-@Deprecated("Replace DejaVuResult with ResultWrapper interface")
-internal fun <R : Any, O : Local> localOperationToken(requestToken: RequestToken<O, R>) =
-        Result(
-                requestToken,
-                CallDuration(0, 0, 0)
-        )
+//@Deprecated("Replace DejaVuResult with ResultWrapper interface")
+//internal fun <R : Any, O : Local> localOperationToken(requestToken: RequestToken<O, R>) =
+//        Result(
+//                requestToken,
+//                CallDuration(0, 0, 0)
+//        )
 

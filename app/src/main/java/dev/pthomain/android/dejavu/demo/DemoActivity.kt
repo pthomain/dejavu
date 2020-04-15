@@ -40,7 +40,8 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
@@ -63,7 +64,6 @@ internal class DemoActivity
 
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
-    private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
     private val connectivityTimeoutCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_connectivity_timeout)!! }
     private val useSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_use_single)!! }
@@ -117,7 +117,6 @@ internal class DemoActivity
 
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
-        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
         connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }

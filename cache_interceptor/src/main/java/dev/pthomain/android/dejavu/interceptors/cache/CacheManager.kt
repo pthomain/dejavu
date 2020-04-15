@@ -79,9 +79,7 @@ internal class CacheManager<E>(
      */
     fun <R : Any> invalidate(instructionToken: RequestToken<Invalidate, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
-                with(instructionToken.instruction) {
-                    persistenceManager.forceInvalidation(operation, requestMetadata)
-                }
+                    persistenceManager.forceInvalidation(instructionToken.instruction.requestMetadata)
             }
 
     /**
@@ -138,7 +136,7 @@ internal class CacheManager<E>(
             instructionToken: RequestToken<Cache, R>,
             diskDuration: Int
     ) =
-            Observable.defer<Response<R, Cache>> {
+            Observable.defer {
                 val cachedResponseToken = cachedResponse?.cacheToken
                 val status = cachedResponseToken?.status
                 val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName

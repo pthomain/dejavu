@@ -202,17 +202,7 @@ abstract class BasePersistenceManager<E> internal constructor(
     final override fun <R> invalidateIfNeeded(operation: Cache?,
                                               requestMetadata: ValidRequestMetadata<R>) =
             if (operation?.priority?.network?.invalidatesLocalData == true) {
-                invalidateEntriesIfStale(requestMetadata)
+                forceInvalidation(requestMetadata)
             } else false
-
-    /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     * for entries past their expiry date.
-     *
-     * @param requestMetadata the request's metadata
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     */
-    protected abstract fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean
 
 }

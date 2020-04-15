@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.cache.metadata.token
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.response.HasMetadata
 
-internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.instruction() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, out CacheToken<O, R>>.instruction() =
         cacheToken.instruction
 
-internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.requestMetadata() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, out CacheToken<O, R>>.requestMetadata() =
         instruction().requestMetadata
 
-internal fun <O : Operation, R : Any> HasMetadata<R, O, *>.responseClass() =
+internal fun <O : Operation, R : Any> HasMetadata<R, O, out CacheToken<O, R>>.responseClass() =
         requestMetadata().responseClass

@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.base.BasePersistenceManager
@@ -167,27 +166,13 @@ class DatabasePersistenceManager<E> internal constructor(
     }
 
     /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     * for entries past their expiry date.
-     *
-     * @param requestMetadata the request's metadata
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     */
-    override fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean {
-        return false //TODO
-    }
-
-    /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
      *
-     * @param operation the request's Invalidate operation
      * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun <R> forceInvalidation(operation: Invalidate,
-                                       requestMetadata: ValidRequestMetadata<R>): Boolean {
+    override fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
         val map = mapOf(EXPIRY_DATE.columnName to 0)
         val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(requestMetadata.requestHash) //TODO classHash

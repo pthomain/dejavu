@@ -135,16 +135,16 @@ class DejaVuConfiguration<E> internal constructor(
         fun withEncryption(mumboPicker: (Mumbo) -> EncryptionManager) =
                 apply { this.mumboPicker = mumboPicker }
 
-        @SuppressLint("NewApi")
         private fun defaultEncryptionManager(mumbo: Mumbo,
                                              context: Context) = with(mumbo) {
-            context.packageManager.getApplicationInfo(
+            with(context.packageManager.getApplicationInfo(
                     context.packageName,
                     0
-            )?.let {
-                if (it.targetSdkVersion >= 23) tink()
+            )) {
+                @SuppressLint("NewApi")
+                if (targetSdkVersion >= 23) tink()
                 else conceal()
-            } ?: conceal()
+            }
         }
 
         /**

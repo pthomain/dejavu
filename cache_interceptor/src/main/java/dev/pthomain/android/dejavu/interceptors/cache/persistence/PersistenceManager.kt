@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.interceptors.cache.persistence
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
@@ -62,13 +61,11 @@ interface PersistenceManager<E>
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
      *
-     * @param operation the request's Invalidate operation
      * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun <R> forceInvalidation(operation: Invalidate,
-                              requestMetadata: ValidRequestMetadata<R>): Boolean
+    fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)

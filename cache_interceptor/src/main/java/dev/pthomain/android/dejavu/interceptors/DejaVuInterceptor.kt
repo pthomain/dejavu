@@ -126,7 +126,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         .compose(cacheInterceptor)
                         .compose(responseInterceptor)
             } else {
-                Observable.just(localOperationToken(instructionToken as RequestToken<out Operation.Local, R>))
+                Observable.just(LocalOperationToken<R>())
                         .compose(cacheInterceptor)
                         .compose(responseInterceptor)
             }

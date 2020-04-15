@@ -27,7 +27,6 @@ import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.interceptors.cache.persistence.file.FileStore
@@ -123,29 +122,13 @@ class KeyValuePersistenceManager<E> internal constructor(
     }
 
     /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     * if the operation is invalidating.
-     *
-     * @param operation the request's operation
-     * @param requestMetadata the request's metadata
-     *
-     * @return a Boolean indicating whether the data marked for invalidation was found or not
-     */
-    override fun <R> forceInvalidation(operation: Invalidate,
-                                       requestMetadata: ValidRequestMetadata<R>): Boolean {
-        //TODO
-        return false
-    }
-
-    /**
-     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
-     * for entries past their expiry date.
+     * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
      *
      * @param requestMetadata the request's metadata
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun <R> invalidateEntriesIfStale(requestMetadata: ValidRequestMetadata<R>): Boolean {
+    override fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
         findPartialKey(requestMetadata.requestHash)?.also { oldName ->
             fileNameSerialiser.deserialise(requestMetadata, oldName).let {
                 if (it.expiryDate != 0L) {

@@ -27,32 +27,30 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.DemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyDemoPresenter
 import io.reactivex.disposables.CompositeDisposable
 
-internal class CompositePresenter(override val mvpView: DemoActivity,
-                                  private var presenter: DemoPresenter,
-                                  private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
-                                  private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
-                                  private val volleyDemoPresenter: VolleyDemoPresenter)
-    : DemoPresenter, Callback1<Method> {
+internal class CompositePresenter(
+        override val mvpView: DemoActivity,
+        private var presenter: DemoPresenter,
+        private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
+        private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter
+) : DemoPresenter, Callback1<Method> {
 
     override var subscriptions = CompositeDisposable()
 
     enum class Method {
         RETROFIT_ANNOTATION,
-        RETROFIT_HEADER,
-        VOLLEY
+        RETROFIT_HEADER
     }
 
     override fun invoke(p1: Method) {
         presenter = when (p1) {
             RETROFIT_ANNOTATION -> retrofitAnnotationDemoPresenter
             RETROFIT_HEADER -> retrofitHeaderDemoPresenter
-            VOLLEY -> volleyDemoPresenter
         }
     }
 

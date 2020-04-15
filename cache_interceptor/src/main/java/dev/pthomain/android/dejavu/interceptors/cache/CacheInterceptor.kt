@@ -29,11 +29,13 @@ import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Oper
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.response.Response
+import dev.pthomain.android.dejavu.interceptors.response.ResultWrapper
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -50,7 +52,7 @@ import io.reactivex.ObservableTransformer
 internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
         private val cacheManager: CacheManager<E>,
         private val requestToken: RequestToken<O, R>
-) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
+) : ObservableTransformer<ResultWrapper<R>, DejaVuResult<R>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -60,7 +62,7 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
      * @return the transformed ObservableSource instance
      */
     @Suppress("UNCHECKED_CAST")
-    override fun apply(upstream: Observable<DejaVuResult<R>>): Observable<DejaVuResult<R>> {
+    override fun apply(upstream: Observable<ResultWrapper<R>>): Observable<DejaVuResult<R>> {
         return when (requestToken.instruction.operation) {
             is Cache -> cacheManager.getCachedResponse(
                     upstream.map { it as Response<R, Cache> }, //TODO check this
@@ -71,7 +73,7 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
 
             is Invalidate -> cacheManager.invalidate(requestToken as RequestToken<Invalidate, R>) //TODO update request metadata with type defined in operation
 
-            else -> doNotCache(upstream)
+            else -> doNotCache(upstream as Observable<Response<R, DoNotCache>>)
         }
     }
 
@@ -82,13 +84,18 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
      * @param upstream the upstream Observable instance
      * @return the upstream Observable updating the response with the NOT_CACHED status
      */
-    private fun doNotCache(upstream: Observable<DejaVuResult<R>>) =
-            upstream.doOnNext {
+    private fun doNotCache(upstream: Observable<Response<R, DoNotCache>>): Observable<DejaVuResult<R>> =
+            upstream.map {
                 val instruction = requestToken.instruction
-                ResponseToken(
-                        instruction as CacheInstruction<DoNotCache, R>,
-                        NOT_CACHED,
-                        requestToken.requestDate
+
+                Response(
+                        it.response,
+                        ResponseToken(
+                                instruction as CacheInstruction<DoNotCache, R>,
+                                NOT_CACHED,
+                                requestToken.requestDate
+                        ),
+                        CallDuration(0, 0, 0) //FIXME
                 )
             }
 
