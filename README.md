@@ -67,7 +67,13 @@ That's all Folks! 🥕
 Demo
 ----
 
-<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="200"/></a>
+You can see the lib in action (v1) on the Play Store:
+<a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="150"/></a>
+
+⚠️ Disclaimer
+------------
+
+This library is a pre-release and is not recommended for use in production. It's under active development and its public API is likely to change with no particular care taken for backwards compatibility. No documentation is provided and the code coverage is suboptimal. Also PRs are not considered at this point. These concerns will be addressed before it comes out of beta. 
 
 About v2.0
 ----------
@@ -117,7 +123,7 @@ allprojects {
  
  ```
  dependencies {
-    compile 'com.github.pthomain:dejavu:2.0.0-beta4'
+    compile 'com.github.pthomain:dejavu:2.0.0-beta13'
 }
 ```
 
