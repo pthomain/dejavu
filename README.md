@@ -123,7 +123,7 @@ allprojects {
  
  ```
  dependencies {
-    compile 'com.github.pthomain:dejavu:2.0.0-beta13'
+    compile 'com.github.pthomain:dejavu:2.1.0-beta1'
 }
 ```
 
