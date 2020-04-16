@@ -62,11 +62,13 @@ internal class DemoActivity
     private val invalidateButton by lazy { findViewById<View>(R.id.invalidate_button)!! }
     private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
 
+    private val observableRadio by lazy { findViewById<View>(R.id.radio_button_observable)!! }
+    private val singleRadio by lazy { findViewById<View>(R.id.radio_button_single)!! }
+
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
 
     private val connectivityTimeoutCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_connectivity_timeout)!! }
-    private val useSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_use_single)!! }
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
@@ -115,12 +117,14 @@ internal class DemoActivity
         offlineButton.setOnClickListener { presenter.offline() }
         invalidateButton.setOnClickListener { presenter.invalidate() }
 
+        observableRadio.setOnClickListener { presenter.useSingle = false }
+        singleRadio.setOnClickListener { presenter.useSingle = true }
+
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
         gitHubButton.setOnClickListener { openGithub() }
 
         connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }
-        useSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.useSingle = isChecked }
         freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
@@ -154,6 +158,7 @@ internal class DemoActivity
             setButtonsEnabled(false)
             listAdapter.onStart(
                     presenter.useSingle,
+                    presenter.useHeader,
                     presenter.getCacheOperation()
             )
         }

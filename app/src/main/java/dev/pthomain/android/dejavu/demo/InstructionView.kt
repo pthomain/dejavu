@@ -56,31 +56,46 @@ class InstructionView @JvmOverloads constructor(
     private val white = Color.parseColor("#A9B7C6")
 
     fun setOperation(useSingle: Boolean,
+                     useHeader: Boolean,
                      operation: Operation,
                      responseClass: Class<*>) {
-        text = getAnnotationName(operation.type).let {
-            TextUtils.concat(
-                    getRestMethod(operation),
-                    applyOperationStyle(it),
-                    getDirectives(it.length + 1, operation),
-                    getMethod(useSingle, operation, responseClass)
-            )
+        text = getAnnotationName(operation.type, !useHeader).run {
+            val restMethod = getRestMethod(operation)
+            val directives = getDirectives(length + 1, operation)
+
+            val styledOperation = applyOperationStyle(this, !useHeader)
+            val header = SpannableString("\n@Header(DejaVuHeader) operation: Operation\n")
+
+            if (useHeader) {
+                TextUtils.concat(
+                        restMethod,
+                        getMethod(useSingle, header, operation, responseClass),
+                        "\n\n/** Runtime header values:\n\n${directives}\n*/"
+                )
+            } else {
+                TextUtils.concat(
+                        restMethod,
+                        styledOperation,
+                        directives,
+                        getMethod(useSingle, null, operation, responseClass)
+                )
+            }
         }
     }
 
-    private fun getAnnotationName(type: Type) =
+    private fun getAnnotationName(type: Type, isAnnotation: Boolean) =
             when (type) {
-                Type.CACHE -> "@Cache"
-                Type.DO_NOT_CACHE -> "@DoNotCache"
-                Type.INVALIDATE -> "@Invalidate"
-                Type.CLEAR -> "@Clear"
-            }
+                Type.CACHE -> "Cache"
+                Type.DO_NOT_CACHE -> "DoNotCache"
+                Type.INVALIDATE -> "Invalidate"
+                Type.CLEAR -> "Clear"
+            }.let { ifElse(isAnnotation, "@$it", it) }
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
             ifElse(
                     operation is Remote,
                     "@GET(\"fact\")",
-                    "@DELETE(\"fact\")"
+                    "@OPTIONS(\"fact\")"
             ),
             true
     )
@@ -175,7 +190,8 @@ class InstructionView @JvmOverloads constructor(
         }
     }
 
-    private fun applyOperationStyle(operation: String): SpannableString {
+    private fun applyOperationStyle(operation: String,
+                                    isAnnotation: Boolean): SpannableString {
         return SpannableString("\n$operation").apply {
             setSpan(
                     ForegroundColorSpan(orange),
@@ -211,26 +227,30 @@ class InstructionView @JvmOverloads constructor(
     }
 
     private fun getMethod(useSingle: Boolean,
+                          callParameter: SpannableString?,
                           operation: Operation,
                           responseClass: Class<*>): CharSequence =
             with(operation) {
-                when (this) {
-                    is Cache -> "${ifElse(
-                            priority.freshness.hasSingleResponse,
-                            "Single",
-                            "Observable"
-                    )}<${responseClass.simpleName}>"
+                val wrapped = ifElse(
+                        operation is Operation.Local, //TODO had support for ad-hoc use of DejaVuResult
+                        "DejaVuResult<%s>",
+                        "%s"
+                ).format(responseClass.simpleName)
 
-                    else -> "CacheOperation<${responseClass.simpleName}>"
+                val rxType = ifElse(
+                        useSingle,
+                        "Single<%s>",
+                        "Observable<%s>"
+                ).format(wrapped)
+
+                SpannableString("\nfun call(${callParameter ?: ""}): $rxType").apply {
+                    val leftBracket = indexOf('(')
+                    setColourSpan(orange, 0, 4)
+                    setColourSpan(yellow, 4, leftBracket)
+                    setBoldSpan(0, leftBracket)
+                    setColourSpan(white, leftBracket, length)
                 }
-            }.let { SpannableString("\nfun call(): $it") }
-                    .apply {
-                        val leftBracket = indexOf('(')
-                        setColourSpan(orange, 0, 4)
-                        setColourSpan(yellow, 4, leftBracket)
-                        setBoldSpan(0, leftBracket)
-                        setColourSpan(white, leftBracket, length)
-                    }
+            }
 
     private fun SpannableString.setColourSpan(colour: Int,
                                               start: Int,

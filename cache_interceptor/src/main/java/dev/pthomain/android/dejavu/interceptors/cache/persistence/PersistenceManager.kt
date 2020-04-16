@@ -27,8 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.interceptors.cache.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.interceptors.response.Response
@@ -97,9 +96,12 @@ interface PersistenceManager<E>
          *
          * @return whether the data is FRESH or STALE
          */
-        fun ((Long?) -> Date).getCacheStatus(expiryDate: Date) = ifElse(
+        fun ((Long?) -> Date).getCacheStatus(
+                expiryDate: Date,
+                operation: Cache = Cache()
+        ) = ifElse(
                 this(null).time >= expiryDate.time,
-                STALE,
+                ifElse(operation.priority.network.isLocalOnly(), OFFLINE_STALE, STALE),
                 FRESH
         )
     }

@@ -59,6 +59,7 @@ internal class ExpandableListAdapter(context: Context)
     private var callStart = 0L
 
     fun onStart(useSingle: Boolean,
+                useHeader: Boolean,
                 operation: Operation) {
         headers.clear()
         children.clear()
@@ -68,7 +69,7 @@ internal class ExpandableListAdapter(context: Context)
 
         val header = "Retrofit Call"
         headers.add(header)
-        children[header] = listOf(Pair(useSingle, operation))
+        children[header] = listOf(Triple(useSingle, useHeader, operation))
 
         notifyDataSetChanged()
     }
@@ -167,6 +168,7 @@ internal class ExpandableListAdapter(context: Context)
                 REFRESHED -> "network"
                 FRESH,
                 STALE,
+                OFFLINE_STALE,
                 COULD_NOT_REFRESH -> "disk"
                 EMPTY -> "network or disk"
             } + ", " + (if (status.isFinal) "final" else "non-final")
@@ -209,12 +211,13 @@ internal class ExpandableListAdapter(context: Context)
                             text.visibility = View.VISIBLE
                             instruction.visibility = View.GONE
                             text.text = child
-                        } else if (child is Pair<*, *>) {
+                        } else if (child is Triple<*, *, *>) {
                             text.visibility = View.GONE
                             instruction.visibility = View.VISIBLE
                             instruction.setOperation(
                                     child.first as Boolean,
-                                    child.second as Operation,
+                                    child.second as Boolean,
+                                    child.third as Operation,
                                     CatFactResponse::class.java
                             )
                         }

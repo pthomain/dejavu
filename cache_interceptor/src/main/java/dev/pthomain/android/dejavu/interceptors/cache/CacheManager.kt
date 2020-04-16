@@ -114,10 +114,9 @@ internal class CacheManager<E>(
                 }
 
                 if (networkPriority.isLocalOnly()) {
-                    when (cachedResponse) {
-                        null -> emptyResponseFactory.createEmptyResponseObservable(requestToken)
-                        else -> Observable.just(cachedResponse)
-                    }
+                    if (cachedResponse == null)
+                        emptyResponseFactory.createEmptyResponseObservable(requestToken)
+                    else Observable.just(cachedResponse)
                 } else
                     getOnlineObservable(
                             cachedResponse,

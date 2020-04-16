@@ -51,14 +51,47 @@ internal class CompositePresenter(
         presenter = when (p1) {
             RETROFIT_ANNOTATION -> retrofitAnnotationDemoPresenter
             RETROFIT_HEADER -> retrofitHeaderDemoPresenter
+        }.apply {
+            useHeader = p1 == RETROFIT_HEADER
         }
+        useHeader = presenter.useHeader
     }
 
     override var useSingle = presenter.useSingle
+        set(value) {
+            field = value
+            presenter.useSingle = value
+        }
+
+    override var useHeader = presenter.useHeader
+        set(value) {
+            field = value
+            presenter.useHeader = value
+        }
+
     override var encrypt = presenter.encrypt
+        set(value) {
+            field = value
+            presenter.encrypt = value
+        }
+
     override var compress = presenter.compress
+        set(value) {
+            field = value
+            presenter.compress = value
+        }
+
     override var connectivityTimeoutOn = presenter.connectivityTimeoutOn
+        set(value) {
+            field = value
+            presenter.connectivityTimeoutOn = value
+        }
+
     override var freshness = presenter.freshness
+        set(value) {
+            field = value
+            presenter.freshness = value
+        }
 
     override fun loadCatFact(isRefresh: Boolean) {
         presenter.loadCatFact(isRefresh)

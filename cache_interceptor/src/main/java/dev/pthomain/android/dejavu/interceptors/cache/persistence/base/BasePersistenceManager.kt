@@ -167,17 +167,25 @@ abstract class BasePersistenceManager<E> internal constructor(
                 logger.d(this, "Returning cached $simpleName cached until $formattedDate")
 
                 with(wrapper) {
-                    Response(
-                            response,
-                            ResponseToken(
-                                    instructionToken.instruction,
-                                    dateFactory.getCacheStatus(expiryDate),
-                                    requestDate = cacheDate, //TODO check this
-                                    cacheDate = cacheDate,
-                                    expiryDate = expiryDate
-                            ),
-                            callDuration
+                    val operation = instructionToken.instruction.operation
+                    val status = dateFactory.getCacheStatus(
+                            expiryDate,
+                            operation
                     )
+
+                    if (operation.priority.freshness.isFreshOnly() && !status.isFresh) null
+                    else
+                        Response(
+                                response,
+                                ResponseToken(
+                                        instructionToken.instruction,
+                                        status,
+                                        requestDate = cacheDate, //TODO check this
+                                        cacheDate = cacheDate,
+                                        expiryDate = expiryDate
+                                ),
+                                callDuration
+                        )
                 }
             }
         } catch (e: SerialisationException) {

@@ -41,13 +41,13 @@ import dev.pthomain.android.dejavu.interceptors.response.*
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.glitchy.interceptor.Interceptor
-import dev.pthomain.android.glitchy.interceptor.Interceptor.SimpleInterceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
 import dev.pthomain.android.glitchy.interceptor.outcome.Outcome.Error
 import dev.pthomain.android.glitchy.interceptor.outcome.Outcome.Success
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
 import io.reactivex.Observable
+import io.reactivex.Single
 import retrofit2.Call
 import java.util.*
 
@@ -80,7 +80,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
         private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
-) : SimpleInterceptor()
+) : Interceptor
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -92,6 +92,19 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      */
     override fun apply(upstream: Observable<Any>) =
             composeInternal(upstream)
+
+    /**
+     * Composes Observables with the wrapped interceptors and only emits the
+     * final response (if intercepted).
+     *
+     * @param upstream the call to intercept
+     * @return the call intercepted with the inner interceptors
+     */
+    override fun apply(upstream: Single<Any>) =
+            upstream.toObservable()
+                    .compose(this)
+                    .filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
+                    .firstOrError()
 
     /**
      * Deals with the internal composition.

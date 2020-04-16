@@ -74,6 +74,7 @@ internal abstract class BaseDemoPresenter protected constructor(
         }
 
     final override var useSingle: Boolean = false
+    final override var useHeader: Boolean = false
     final override var encrypt: Boolean = false
     final override var compress: Boolean = false
     final override var freshness = ANY

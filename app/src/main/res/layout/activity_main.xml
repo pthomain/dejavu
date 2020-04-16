@@ -93,6 +93,41 @@
         android:orientation="horizontal">
 
         <RadioButton
+            android:id="@+id/radio_button_observable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_annotation"
+            android:text="Use Observable" />
+
+        <RadioButton
+            android:id="@+id/radio_button_single"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_header"
+            android:text="Use Single" />
+
+    </RadioGroup>
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <RadioButton
             android:id="@+id/radio_button_retrofit_annotation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -165,19 +200,6 @@
             android:layout_weight="1"
             android:labelFor="@id/checkbox_encrypt"
             android:text="Encrypt" />
-
-        <CheckBox
-            android:id="@+id/checkbox_use_single"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_use_single"
-            android:text="Singles" />
 
     </LinearLayout>
 

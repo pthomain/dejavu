@@ -92,7 +92,6 @@ enum class CacheStatus(
      * Returned with responses coming straight from the cache after their expiry date.
      * This only happens if the all of the following criteria are met:
      *
-     * - there is some stale data in the cache for this call
      *
      * - the freshOnly directive is set to false for this call
      *
@@ -100,6 +99,18 @@ enum class CacheStatus(
      * a final response is returned, i.e. either REFRESHED, COULD_NOT_REFRESH or EMPTY).
      */
     STALE(false, false, false, true),
+
+    /**
+     * Returned with responses coming straight from the cache after their expiry date.
+     * This only happens if the all of the following criteria are met:
+     *
+     * - there is some stale data in the cache for this call
+     *
+     * - the network priority is LOCAL_ONLY
+     *
+     *  This status differs from STALE in that it is final.
+     */
+    OFFLINE_STALE(true, false, false, true),
 
     /**
      * Returned after a STALE response with NETWORK data from a successful network call or
