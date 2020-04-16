@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -24,9 +24,12 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters.SingleDataClientAdapter
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters.SingleOperationsClientAdapter
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -55,25 +58,18 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-    protected fun catFactClient() =
-            if (useSingle) SingleClientWrapper(retrofit().create(SingleCatFactClient::class.java))
-            else retrofit().create(ObservableCatFactClient::class.java)
-
-    private class SingleClientWrapper(private val singleClient: SingleCatFactClient) : ObservableCatFactClient {
-        override fun get() = singleClient.get().toObservable()
-        override fun compressed() = singleClient.compressed().toObservable()
-        override fun encrypted() = singleClient.encrypted().toObservable()
-        override fun compressedEncrypted() = singleClient.compressedEncrypted().toObservable()
-        override fun freshOnly() = singleClient.freshOnly().toObservable()
-        override fun freshOnlyCompressed() = singleClient.freshOnlyCompressed().toObservable()
-        override fun freshOnlyEncrypted() = singleClient.freshOnlyEncrypted().toObservable()
-        override fun freshOnlyCompressedEncrypted() = singleClient.freshOnlyCompressedEncrypted().toObservable()
-        override fun refresh() = singleClient.refresh().toObservable()
-        override fun refreshFreshOnly() = singleClient.refreshFreshOnly().toObservable()
-        override fun clearCache() = singleClient.clearCache()
-        override fun invalidate() = singleClient.invalidate()
-        override fun offline() = singleClient.offline()
-        override fun offlineFreshOnly() = singleClient.offlineFreshOnly()
-        override fun instruct(instruction: CacheInstruction) = singleClient.instruct(instruction).toObservable()
+    protected fun dataClient() = with(retrofit()) {
+        if (useSingle)
+            SingleDataClientAdapter(create(SingleClients.Data::class.java))
+        else
+            create(ObservableClients.Data::class.java)
     }
+
+    protected fun operationsClient() = with(retrofit()) {
+        if (useSingle)
+            SingleOperationsClientAdapter(create(SingleClients.Operations::class.java))
+        else
+            create(ObservableClients.Operations::class.java)
+    }
+
 }

@@ -2,7 +2,7 @@
 
 <!--
   ~
-  ~  Copyright (C) 2017 Pierre Thomain
+  ~  Copyright (C) 2017-2020 Pierre Thomain
   ~
   ~  Licensed to the Apache Software Foundation (ASF) under one
   ~  or more contributor license agreements.  See the NOTICE file
@@ -93,6 +93,41 @@
         android:orientation="horizontal">
 
         <RadioButton
+            android:id="@+id/radio_button_observable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_annotation"
+            android:text="Use Observable" />
+
+        <RadioButton
+            android:id="@+id/radio_button_single"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_header"
+            android:text="Use Single" />
+
+    </RadioGroup>
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <RadioButton
             android:id="@+id/radio_button_retrofit_annotation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -118,19 +153,6 @@
             android:gravity="center_vertical"
             android:labelFor="@id/radio_button_retrofit_header"
             android:text="Use Retrofit Header" />
-
-        <RadioButton
-            android:id="@+id/radio_button_volley"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_volley"
-            android:text="Use Volley" />
 
     </RadioGroup>
 
@@ -179,19 +201,6 @@
             android:labelFor="@id/checkbox_encrypt"
             android:text="Encrypt" />
 
-        <CheckBox
-            android:id="@+id/checkbox_use_single"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_use_single"
-            android:text="Singles" />
-
     </LinearLayout>
 
     <LinearLayout
@@ -199,19 +208,6 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
         android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/checkbox_allow_non_final_for_single"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_allow_non_final_for_single"
-            android:text="Allow non-final for Singles" />
 
         <CheckBox
             android:id="@+id/checkbox_connectivity_timeout"

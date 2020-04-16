@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,22 +25,28 @@ package dev.pthomain.android.dejavu.demo
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Typeface
+import android.graphics.Typeface.BOLD
 import android.text.SpannableString
-import android.text.Spanned
+import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.AttributeSet
-import android.widget.TextView
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
+import androidx.appcompat.widget.AppCompatTextView
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 
-class InstructionView @JvmOverloads constructor(context: Context,
-                                                attrs: AttributeSet? = null,
-                                                defStyleAttr: Int = 0)
-    : TextView(context, attrs, defStyleAttr) {
+class InstructionView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatTextView(context, attrs, defStyleAttr) {
 
     private val orange = Color.parseColor("#CC7832")
     private val purple = Color.parseColor("#9876AA")
@@ -49,90 +55,99 @@ class InstructionView @JvmOverloads constructor(context: Context,
     private val blue = Color.parseColor("#467CDA")
     private val white = Color.parseColor("#A9B7C6")
 
-    fun setInstruction(useSingle: Boolean,
-                       instruction: CacheInstruction) {
-        text = instruction.operation.type.annotationName.let {
-            TextUtils.concat(
-                    getRestMethod(instruction.operation),
-                    applyOperationStyle(it),
-                    getDirectives(it.length + 1, instruction.operation),
-                    getMethod(useSingle, instruction)
-            )
+    fun setOperation(useSingle: Boolean,
+                     useHeader: Boolean,
+                     operation: Operation,
+                     responseClass: Class<*>) {
+        text = getAnnotationName(operation.type, !useHeader).run {
+            val restMethod = getRestMethod(operation)
+            val directives = getDirectives(length + 1, operation)
+
+            val styledOperation = applyOperationStyle(this, !useHeader)
+            val header = SpannableString("\n@Header(DejaVuHeader) operation: Operation\n")
+
+            if (useHeader) {
+                TextUtils.concat(
+                        restMethod,
+                        getMethod(useSingle, header, operation, responseClass),
+                        "\n\n/** Runtime header values:\n\n${directives}\n*/"
+                )
+            } else {
+                TextUtils.concat(
+                        restMethod,
+                        styledOperation,
+                        directives,
+                        getMethod(useSingle, null, operation, responseClass)
+                )
+            }
         }
     }
 
-    private fun getRestMethod(operation: Operation): CharSequence =
-            when (operation.type) {
-                DO_NOT_CACHE,
-                CACHE,
-                REFRESH,
-                OFFLINE -> "@GET(\"fact\")"
+    private fun getAnnotationName(type: Type, isAnnotation: Boolean) =
+            when (type) {
+                Type.CACHE -> "Cache"
+                Type.DO_NOT_CACHE -> "DoNotCache"
+                Type.INVALIDATE -> "Invalidate"
+                Type.CLEAR -> "Clear"
+            }.let { ifElse(isAnnotation, "@$it", it) }
 
-                INVALIDATE,
-                CLEAR -> "@DELETE(\"fact\")"
-            }.let {
-                applyAnnotationStyle(it, true)
-            }
+    private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
+            ifElse(
+                    operation is Remote,
+                    "@GET(\"fact\")",
+                    "@OPTIONS(\"fact\")"
+            ),
+            true
+    )
 
     private fun getDirectives(length: Int,
-                              operation: Operation): CharSequence =
-            "".padStart(length, ' ')
-                    .let { padding ->
-                        when (operation.type) {
-                            CACHE -> (operation as Operation.Expiring.Cache).let { cacheOperation ->
-                                arrayOf(
-                                        "freshOnly = ${cacheOperation.freshOnly}",
-                                        "durationInMillis = ${cacheOperation.durationInMillis ?: "-1L"}",
-                                        "mergeOnNextOnError = ${getOptionalBoolean(cacheOperation.mergeOnNextOnError)}",
-                                        "encrypt = ${getOptionalBoolean(cacheOperation.encrypt)}",
-                                        "compress = ${getOptionalBoolean(cacheOperation.compress)}"
-                                )
-                            }
+                              operation: Operation): CharSequence {
+        val padding = "".padStart(length, ' ')
 
-                            REFRESH -> (operation as Operation.Expiring.Refresh).let { refreshOperation ->
-                                arrayOf(
-                                        "freshOnly = ${refreshOperation.freshOnly}",
-                                        "durationInMillis = ${refreshOperation.durationInMillis ?: "-1L"}",
-                                        "mergeOnNextOnError = ${getOptionalBoolean(refreshOperation.mergeOnNextOnError)}"
-                                )
-                            }
+        val directives = with(operation) {
+            when (this) {
+                is Cache -> arrayOf(
+                        "priority = ${priority.name}",
+                        "durationInSeconds = $durationInSeconds",
+                        "connectivityTimeoutInSeconds = $connectivityTimeoutInSeconds",
+                        "encrypt = $encrypt",
+                        "compress = $compress"
+                )
 
-                            OFFLINE -> (operation as Operation.Expiring.Offline).let { offlineOperation ->
-                                arrayOf(
-                                        "freshOnly = ${offlineOperation.freshOnly}",
-                                        "mergeOnNextOnError = ${getOptionalBoolean(offlineOperation.mergeOnNextOnError)}"
-                                )
-                            }
+                is Clear -> arrayOf(
+                        "clearStaleEntriesOnly = $clearStaleEntriesOnly"
+                )
 
-                            CLEAR -> arrayOf(
-                                    "typeToClear = ${(operation as Operation.Clear).typeToClear}",
-                                    "clearStaleEntriesOnly = ${operation.clearStaleEntriesOnly}"
-                            )
+                is Invalidate -> emptyArray()
 
-                            INVALIDATE,
-                            DO_NOT_CACHE -> emptyArray()
-                        }.let { directives ->
-                            directives.mapIndexed { index, directive ->
-                                applyDirectiveStyle(
-                                        (if (index == 0) "" else padding)
-                                                .plus(directive)
-                                                .plus((if (index != directives.size - 1) ",\n" else ""))
-                                )
-                            }
-                        }.let {
-                            if (it.isEmpty()) ""
-                            else {
-                                val array = arrayOfNulls<CharSequence>(it.size)
-                                it.forEachIndexed { index, charSequence ->
-                                    array[index] = charSequence
-                                }
-                                TextUtils.concat("(", TextUtils.concat(*array), ")")
-                            }
-                        }
-                    }.let {
-                        if (it.isEmpty()) it
-                        else applyAnnotationStyle(it, false)
-                    }
+                else -> emptyArray()
+            }
+        }
+
+        val styledDirectives = directives.mapIndexed { index, directive ->
+            applyDirectiveStyle(
+                    (if (index == 0) "" else padding)
+                            .plus(directive)
+                            .plus((if (index != directives.size - 1) ",\n" else ""))
+            )
+        }
+
+        val bracketedDirectives = ifElse(
+                styledDirectives.isEmpty(),
+                "" as CharSequence,
+                styledDirectives
+        ).let {
+            val array = arrayOfNulls<CharSequence>(styledDirectives.size)
+            styledDirectives.forEachIndexed { index, charSequence ->
+                array[index] = charSequence
+            }
+            TextUtils.concat("(", TextUtils.concat(*array), ")")
+        }!!
+
+        return bracketedDirectives.swapLambdaWhen(bracketedDirectives.isNotEmpty()) {
+            applyAnnotationStyle(it!!, false)
+        }!!
+    }
 
     private fun applyAnnotationStyle(it: CharSequence,
                                      colourParameters: Boolean): SpannableString {
@@ -144,50 +159,51 @@ class InstructionView @JvmOverloads constructor(context: Context,
                     ForegroundColorSpan(orange),
                     0,
                     leftBracket,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
             setSpan(
                     ForegroundColorSpan(white),
                     leftBracket,
                     leftBracket + 1,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
             if (colourParameters) {
                 setSpan(
                         ForegroundColorSpan(green),
                         leftBracket + 1,
                         rightBracket,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
             setSpan(
                     ForegroundColorSpan(white),
                     rightBracket,
                     rightBracket + 1,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
             setSpan(
-                    StyleSpan(Typeface.BOLD),
+                    StyleSpan(BOLD),
                     0,
                     leftBracket,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
 
-    private fun applyOperationStyle(operation: String): SpannableString {
+    private fun applyOperationStyle(operation: String,
+                                    isAnnotation: Boolean): SpannableString {
         return SpannableString("\n$operation").apply {
             setSpan(
                     ForegroundColorSpan(orange),
                     0,
                     operation.length + 1,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
             setSpan(
-                    StyleSpan(Typeface.BOLD),
+                    StyleSpan(BOLD),
                     0,
                     operation.length + 1,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
@@ -199,64 +215,62 @@ class InstructionView @JvmOverloads constructor(context: Context,
                     ForegroundColorSpan(blue),
                     0,
                     equal + 1,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
             setSpan(
                     ForegroundColorSpan(purple),
                     equal + 1,
                     directive.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    SPAN_EXCLUSIVE_EXCLUSIVE
             )
         }
     }
 
-    private fun getOptionalBoolean(optional: Boolean?) =
-            "OptionalBoolean.".plus(
-                    when {
-                        optional == null -> "DEFAULT"
-                        optional -> "TRUE"
-                        else -> "FALSE"
-                    }
-            )
-
     private fun getMethod(useSingle: Boolean,
-                          instruction: CacheInstruction): CharSequence =
-            ("\nfun call(): " + when (instruction.operation.type) {
-                CACHE,
-                REFRESH -> "${if (useSingle) "Single" else "Observable"}<${instruction.responseClass.simpleName}>"
+                          callParameter: SpannableString?,
+                          operation: Operation,
+                          responseClass: Class<*>): CharSequence =
+            with(operation) {
+                val wrapped = ifElse(
+                        operation is Operation.Local, //TODO had support for ad-hoc use of DejaVuResult
+                        "DejaVuResult<%s>",
+                        "%s"
+                ).format(responseClass.simpleName)
 
-                DO_NOT_CACHE,
-                OFFLINE -> "Single<${instruction.responseClass.simpleName}>"
+                val rxType = ifElse(
+                        useSingle,
+                        "Single<%s>",
+                        "Observable<%s>"
+                ).format(wrapped)
 
-                INVALIDATE,
-                CLEAR -> "Completable"
-            }).let {
-                val leftBracket = it.indexOf('(')
-                SpannableString(it).apply {
-                    setSpan(
-                            ForegroundColorSpan(orange),
-                            0,
-                            4,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    setSpan(
-                            ForegroundColorSpan(yellow),
-                            4,
-                            leftBracket,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    setSpan(
-                            StyleSpan(Typeface.BOLD),
-                            0,
-                            leftBracket,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    setSpan(
-                            ForegroundColorSpan(white),
-                            leftBracket,
-                            it.length,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
+                SpannableString("\nfun call(${callParameter ?: ""}): $rxType").apply {
+                    val leftBracket = indexOf('(')
+                    setColourSpan(orange, 0, 4)
+                    setColourSpan(yellow, 4, leftBracket)
+                    setBoldSpan(0, leftBracket)
+                    setColourSpan(white, leftBracket, length)
                 }
             }
+
+    private fun SpannableString.setColourSpan(colour: Int,
+                                              start: Int,
+                                              end: Int) {
+        setSpan(
+                ForegroundColorSpan(colour),
+                start,
+                end,
+                SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+
+    private fun SpannableString.setBoldSpan(start: Int,
+                                            end: Int) {
+        setSpan(
+                StyleSpan(BOLD),
+                start,
+                end,
+                SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+
 }

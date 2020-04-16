@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -24,22 +24,23 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.cache.serialisation.Hasher
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.*
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.InvalidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.interceptors.cache.serialisation.Hasher
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.test.*
-import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
 import io.reactivex.Single
+import io.reactivex.annotations.SchedulerSupport.SINGLE
 import io.reactivex.observers.TestObserver
 import org.junit.Test
 import java.util.*
@@ -49,88 +50,115 @@ class DejaVuInterceptorUnitTest {
     private val start = 1234L
     private val mockDateFactory: (Long?) -> Date = { Date(start) }
 
-    private lateinit var mockErrorInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<Any, ResponseWrapper<Glitch>>
-    private lateinit var mockCacheInterceptorFactory: (CacheToken, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
-    private lateinit var mockResponseInterceptorFactory: (CacheToken, Boolean, Boolean, Long) -> ObservableTransformer<ResponseWrapper<Glitch>, Any>
-    private lateinit var mockConfiguration: CacheConfiguration<Glitch>
+    private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<Glitch>
+    private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>
+    private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
+    private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
+    private lateinit var mockConfiguration: DejaVuConfiguration<Glitch>
     private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: RequestMetadata.UnHashed
-    private lateinit var mockHashedMetadata: RequestMetadata.Hashed
-    private lateinit var mockErrorInterceptor: ObservableTransformer<Any, ResponseWrapper<Glitch>>
-    private lateinit var mockCacheInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, ResponseWrapper<Glitch>>
-    private lateinit var mockResponseInterceptor: ObservableTransformer<ResponseWrapper<Glitch>, Any>
-    private lateinit var mockInstructionToken: CacheToken
+    private lateinit var mockRequestMetadata: PlainRequestMetadata
+    private lateinit var mockValidHashedMetadata: ValidRequestMetadata
+    private lateinit var mockInvalidHashedMetadata: InvalidRequestMetadata
+    private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, Glitch>
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
+    private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, Glitch>
+    private lateinit var mockResponseInterceptor: ResponseInterceptor<*, *, Glitch>
+    private lateinit var mockCacheToken: InstructionToken<*>
     private lateinit var mockUpstreamObservable: Observable<Any>
-    private lateinit var mockErrorResponseObservable: Observable<ResponseWrapper<Glitch>>
-    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<Glitch>>
+    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<*, *, Glitch>>
+    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<*, *, Glitch>>
     private lateinit var mockResponseObservable: Observable<Any>
-    private lateinit var errorTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var cacheTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var responseTokenCaptor: KArgumentCaptor<CacheToken>
-    private lateinit var targetFactory: DejaVuInterceptor.Factory<Glitch>
+    private lateinit var mockHashingErrorObservable: Observable<Any>
+    private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken<*>>
+    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<InstructionToken<*>>
+    private lateinit var networkOperationCaptor: KArgumentCaptor<Cache?>
+    private lateinit var responseTokenCaptor: KArgumentCaptor<InstructionToken<*>>
 
-    private fun setUp(operation: CacheInstruction.Operation,
-                      rxType: AnnotationProcessor.RxType): DejaVuInterceptor<Glitch> {
+    private val mockException = IllegalStateException("test")
+
+    private fun setUp(operation: Operation,
+                      rxType: RxType,
+                      isHashingSuccess: Boolean): DejaVuInterceptor<Glitch> {
         mockErrorInterceptorFactory = mock()
         mockCacheInterceptorFactory = mock()
         mockResponseInterceptorFactory = mock()
+        mockNetworkInterceptorFactory = mock()
         mockConfiguration = mock()
         mockHasher = mock()
 
-        mockErrorInterceptor = ObservableTransformer { mockErrorResponseObservable }
-        mockCacheInterceptor = ObservableTransformer { mockCacheResponseObservable }
-        mockResponseInterceptor = ObservableTransformer { mockResponseObservable }
+        mockErrorInterceptor = mock()
+        mockCacheInterceptor = mock()
+        mockResponseInterceptor = mock()
+        mockNetworkInterceptor = mock()
 
         mockRequestMetadata = defaultRequestMetadata()
-        mockHashedMetadata = mock()
+        mockValidHashedMetadata = mock()
+        mockInvalidHashedMetadata = mock()
 
         mockInstructionToken = instructionToken(operation)
-        mockUpstreamObservable = Observable.just("" as Any)
-        mockErrorResponseObservable = Observable.just(mock())
-        mockCacheResponseObservable = Observable.just(mock())
-        mockResponseObservable = Observable.just("" as Any)
+
+        mockUpstreamObservable = mock()
+        mockNetworkObservable = mock()
+        mockCacheResponseObservable = mock()
+        mockResponseObservable = mock()
+        mockHashingErrorObservable = Observable.error(mockException)
 
         whenever(mockHasher.hash(eq(mockRequestMetadata))).thenReturn(mock())
 
-        targetFactory = DejaVuInterceptor.Factory(
-                mockHasher,
-                mockDateFactory,
-                mockErrorInterceptorFactory,
-                mockCacheInterceptorFactory,
-                mockResponseInterceptorFactory,
-                mockConfiguration
-        )
-
         errorTokenCaptor = argumentCaptor()
-        cacheTokenCaptor = argumentCaptor()
+        cacheCacheTokenCaptor = argumentCaptor()
+        networkOperationCaptor = argumentCaptor()
         responseTokenCaptor = argumentCaptor()
 
-        whenever(mockErrorInterceptorFactory.invoke(
-                errorTokenCaptor.capture(),
-                eq(start)
+        whenever(mockErrorInterceptorFactory.create(
+                errorTokenCaptor.capture()
         )).thenReturn(mockErrorInterceptor)
 
-        whenever(mockCacheInterceptorFactory.invoke(
-                cacheTokenCaptor.capture(),
+        whenever(mockNetworkInterceptorFactory.create(
+                eq(mockErrorInterceptor),
+                networkOperationCaptor.capture(),
+                eq(start)
+        )).thenReturn(mockNetworkInterceptor)
+
+        whenever(mockCacheInterceptorFactory.create(
+                eq(mockErrorInterceptor),
+                cacheCacheTokenCaptor.capture(),
                 eq(start)
         )).thenReturn(mockCacheInterceptor)
 
-        whenever(mockResponseInterceptorFactory.invoke(
+        whenever(mockResponseInterceptorFactory.create(
                 responseTokenCaptor.capture(),
-                eq(rxType == SINGLE),
-                eq(rxType == COMPLETABLE),
+                eq(rxType),
                 eq(start)
         )).thenReturn(mockResponseInterceptor)
 
-        whenever(mockHasher.hash(mockRequestMetadata)).thenReturn(mockHashedMetadata)
+        if (isHashingSuccess) {
+            whenever(mockUpstreamObservable.compose(eq(mockNetworkInterceptor))).thenReturn(mockNetworkObservable)
+            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
+            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockResponseObservable)
+        } else {
+            whenever(mockNetworkInterceptor.apply(eq(mockHashingErrorObservable))).thenReturn(mockNetworkObservable)
+            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
+            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockHashingErrorObservable)
+        }
 
-        whenever(mockConfiguration.compress).thenReturn(true)
-        whenever(mockConfiguration.encrypt).thenReturn(true)
+        whenever(mockHasher.hash(mockRequestMetadata)).thenReturn(
+                ifElse(isHashingSuccess, mockValidHashedMetadata, mockInvalidHashedMetadata)
+        )
 
-        return targetFactory.create(
-                mockInstructionToken.instruction,
-                mockRequestMetadata
-        ) as DejaVuInterceptor<Glitch>
+        return DejaVuInterceptor(
+                rxType,
+                operation,
+                mockRequestMetadata,
+                mockConfiguration,
+                mockHasher,
+                mockDateFactory,
+                { mockHashingErrorObservable },
+                mockErrorInterceptorFactory,
+                mockNetworkInterceptorFactory,
+                mockCacheInterceptorFactory,
+                mockResponseInterceptorFactory
+        )
     }
 
     @Test
@@ -145,98 +173,115 @@ class DejaVuInterceptorUnitTest {
 
     @Test
     fun testApplyCompletable() {
-        testApply(COMPLETABLE)
+        testApply(WRAPPABLE)
     }
 
-    private fun testApply(rxType: AnnotationProcessor.RxType) {
+    private fun testApply(rxType: RxType) {
         operationSequence { operation ->
             trueFalseSequence { isCacheEnabled ->
-                val target = setUp(operation, rxType)
-                val testObserver = TestObserver<Any>()
+                trueFalseSequence { isHashingSuccess ->
 
-                val context = "Operation = $operation,\nisCacheEnabled = $isCacheEnabled"
-
-                when (rxType) {
-                    OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
-                    SINGLE -> target.apply(Single.just("" as Any)).subscribe(testObserver)
-                    COMPLETABLE -> target.apply(Completable.complete()).subscribe(testObserver)
-                }
-
-                val errorToken = errorTokenCaptor.firstValue
-                val cacheToken = cacheTokenCaptor.firstValue
-                val responseToken = responseTokenCaptor.firstValue
-
-                assertEqualsWithContext(
-                        errorToken,
-                        cacheToken,
-                        "Error token and cache token should be the same",
-                        context
-                )
-
-                assertEqualsWithContext(
-                        cacheToken,
-                        responseToken,
-                        "Response token and cache token should be the same",
-                        context
-                )
-
-                if (!isCacheEnabled) {
-                    assertTrueWithContext(
-                            errorToken.instruction.operation.type == DO_NOT_CACHE,
-                            "Cache token should be DO_NOT_CACHE when isCacheEnabled == false",
-                            context
+                    val target = setUp(
+                            operation,
+                            rxType,
+                            isHashingSuccess
                     )
-                }
+                    val testObserver = TestObserver<Any>()
 
-                assertEqualsWithContext(
-                        mockHashedMetadata,
-                        errorToken.requestMetadata,
-                        "Request metadata didn't match",
-                        context
-                )
+                    val context = "Operation = $operation," +
+                            "\nisCacheEnabled = $isCacheEnabled," +
+                            "\nisHashingSuccess = $isHashingSuccess"
 
-                if (operation is Expiring) {
-                    if (operation.compress == null) {
+                    val mockSingle = mock<Single<Any>>()
+                    whenever(mockSingle.toObservable()).thenReturn(mockUpstreamObservable)
+                    whenever(mockResponseObservable.firstOrError()).thenReturn(mockSingle)
+
+                    when (rxType) {
+                        OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
+                        SINGLE -> target.apply(mockSingle).subscribe(testObserver)
+                        WRAPPABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
+                    }
+
+                    val errorToken = errorTokenCaptor.firstValue
+                    val cacheCacheToken = cacheCacheTokenCaptor.firstValue
+                    val networkOperation = networkOperationCaptor.firstValue
+                    val responseToken = responseTokenCaptor.firstValue
+
+                    if (!isHashingSuccess) {
                         assertTrueWithContext(
-                                errorToken.isCompressed,
-                                "Token value for isCompressed should be true",
-                                context
+                                testObserver.errorCount() == 1,
+                                "A hashing error should have been emitted"
+                        )
+
+                        assertTrueWithContext(
+                                testObserver.errors().first() == mockException,
+                                "The wrong exception was emitted"
                         )
                     } else {
                         assertEqualsWithContext(
-                                operation.compress,
-                                errorToken.isCompressed,
-                                "Token value for isCompressed didn't match operation's value",
+                                cacheCacheToken.instruction.operation,
+                                networkOperation,
+                                "Cache tokens for cache and network interceptors didn't match",
                                 context
                         )
-                    }
 
-                    if (operation.encrypt == null) {
-                        assertTrueWithContext(
-                                errorToken.isEncrypted,
-                                "Token value for isEncrypted should be true",
-                                context
-                        )
-                    } else {
                         assertEqualsWithContext(
-                                operation.encrypt,
-                                errorToken.isEncrypted,
-                                "Token value for isEncrypted didn't match operation's value",
+                                errorToken,
+                                cacheCacheToken,
+                                "Error token and cache token should be the same",
                                 context
                         )
-                    }
-                } else {
-                    assertTrueWithContext(
-                            errorToken.isCompressed,
-                            "Token value for isCompressed should be true",
-                            context
 
-                    )
-                    assertTrueWithContext(
-                            errorToken.isEncrypted,
-                            "Token value for isEncrypted should be true",
-                            context
-                    )
+                        assertEqualsWithContext(
+                                cacheCacheToken,
+                                responseToken,
+                                "Response token and cache token should be the same",
+                                context
+                        )
+
+                        if (!isCacheEnabled) {
+                            assertTrueWithContext(
+                                    errorToken.instruction.operation.type == DO_NOT_CACHE,
+                                    "Cache token should be DO_NOT_CACHE when isCacheEnabled == false",
+                                    context
+                            )
+                        }
+
+                        assertEqualsWithContext(
+                                mockValidHashedMetadata,
+                                errorToken.instruction.requestMetadata,
+                                "Request metadata didn't match",
+                                context
+                        )
+
+                        if (operation is Cache) {
+                            assertEqualsWithContext(
+                                    operation.compress,
+                                    errorToken.isCompressed,
+                                    "Token value for isCompressed didn't match operation's value",
+                                    context
+                            )
+
+                            assertEqualsWithContext(
+                                    operation.encrypt,
+                                    errorToken.isEncrypted,
+                                    "Token value for isEncrypted didn't match operation's value",
+                                    context
+                            )
+                        } else {
+                            assertTrueWithContext(
+                                    errorToken.isCompressed,
+                                    "Token value for isCompressed should be true",
+                                    context
+
+                            )
+                            assertTrueWithContext(
+                                    errorToken.isEncrypted,
+                                    "Token value for isEncrypted should be true",
+                                    context
+                            )
+                        }
+                    }
                 }
             }
         }

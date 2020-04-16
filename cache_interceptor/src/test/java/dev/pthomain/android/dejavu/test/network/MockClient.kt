@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -107,7 +107,7 @@ class MockClient : Interceptor {
         source.write(response.toByteArray())
         val body = RealResponseBody("text/plain", response.length.toLong(), source)
         responseBuilder.body(body)
-        enqueueResponse(MockClient.ResponseWrapper(responseBuilder, httpCode))
+        enqueueResponse(ResponseWrapper(responseBuilder, httpCode))
     }
 
     /**

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,20 +27,19 @@ package dev.pthomain.android.dejavu.test
 import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.RequestMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.response.ResponseWrapper
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.DEFAULT_URL
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory.Companion.INVALID_HASH
+import dev.pthomain.android.dejavu.injection.integration.module.NOW
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.*
@@ -56,6 +55,7 @@ import java.lang.reflect.Type
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
                         action: () -> Unit,
+                        context: String? = null,
                         checkCause: Boolean = false) {
     try {
         action()
@@ -63,17 +63,21 @@ fun <E> expectException(exceptionType: Class<E>,
         val toCheck = if (checkCause) e.cause else e
 
         if (toCheck != null && exceptionType == toCheck.javaClass) {
-            assertEquals("The exception did not have the right message",
+            assertEquals(
+                    withContext("The exception did not have the right message", context),
                     message,
                     toCheck.message
             )
             return
         } else {
-            fail("Expected exception was not caught: $exceptionType, another one was caught instead $toCheck")
+            fail(withContext(
+                    "Expected exception was not caught: $exceptionType, another one was caught instead $toCheck",
+                    context
+            ))
         }
     }
 
-    fail("Expected exception was not caught: $exceptionType")
+    fail(withContext("Expected exception was not caught: $exceptionType", context))
 }
 
 fun assertTrueWithContext(assumption: Boolean,
@@ -173,8 +177,8 @@ fun assertGlitchWithContext(expectedGlitch: Glitch?,
     }
 }
 
-internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<Glitch>,
-                                              actual: ResponseWrapper<Glitch>,
+internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<*, *, Glitch>,
+                                              actual: ResponseWrapper<*, *, Glitch>,
                                               context: String? = null) {
     assertEqualsWithContext(
             expected.responseClass,
@@ -258,73 +262,45 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
     }
 }
 
-internal fun defaultResponseWrapper(metadata: CacheMetadata<Glitch>,
+internal fun defaultResponseWrapper(metadata: ResponseMetadata<Cache, ResponseToken<Cache>, Glitch>,
                                     response: TestResponse?) = ResponseWrapper(
         TestResponse::class.java,
         response,
         metadata
 )
 
-fun defaultRequestMetadata() = RequestMetadata.UnHashed(
+fun defaultRequestMetadata() = PlainRequestMetadata(
         TestResponse::class.java,
         DEFAULT_URL
 )
 
-fun instructionToken(operation: Operation = Cache()) = CacheToken.fromInstruction(
+fun instructionToken(operation: Operation = Cache()) = RequestToken(
         CacheInstruction(
-                TestResponse::class.java,
-                operation
+                operation,
+                ValidRequestMetadata(
+                        TestResponse::class.java,
+                        DEFAULT_URL,
+                        null,
+                        INVALID_HASH,
+                        INVALID_HASH
+                )
         ),
-        true,
-        true,
-        RequestMetadata.Hashed(
-                TestResponse::class.java,
-                DEFAULT_URL,
-                null,
-                INVALID_HASH,
-                INVALID_HASH
-        )
+        NETWORK,
+        NOW
 )
+
+fun prioritySequence(action: (CachePriority) -> Unit) =
+        CachePriority.values().asSequence()
+                .forEach(action::invoke)
 
 inline fun operationSequence(action: (Operation) -> Unit) {
     sequenceOf(
-            Operation.DoNotCache,
+            Remote.DoNotCache,
             Invalidate,
             Clear(),
-            Clear(null, true),
-            Clear(TestResponse::class.java),
-            Clear(TestResponse::class.java, true),
-            Offline(true, mergeOnNextOnError = null),
-            Offline(false, mergeOnNextOnError = null),
-            Offline(true, mergeOnNextOnError = false),
-            Offline(false, mergeOnNextOnError = false),
-            Offline(true, mergeOnNextOnError = true),
-            Offline(false, mergeOnNextOnError = true),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-            Refresh(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-            Refresh(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-            Refresh(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-            Refresh(freshOnly = false, filterFinal = false, mergeOnNextOnError = true),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = null),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = null),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = null),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = null),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = false),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = false),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = false),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = false),
-            Cache(freshOnly = true, filterFinal = true, mergeOnNextOnError = true),
-            Cache(freshOnly = true, filterFinal = false, mergeOnNextOnError = true),
-            Cache(freshOnly = false, filterFinal = true, mergeOnNextOnError = true),
-            Cache(freshOnly = false, filterFinal = false, mergeOnNextOnError = true)
-    ).forEach(action)
+            Clear(true)
+    ).plus(CachePriority.values().asSequence().map { Cache(it, encrypt = true, compress = true) })
+            .forEach(action)
 }
 
 inline fun trueFalseSequence(action: (Boolean) -> Unit) {
@@ -338,39 +314,12 @@ inline fun cacheStatusSequence(action: (CacheStatus) -> Unit) {
 fun isStatusValid(cacheStatus: CacheStatus,
                   operation: Operation) = when (operation) {
 
-    is Operation.Expiring.Offline -> if (operation.freshOnly) {
-        listOf(
-                NETWORK,
-                EMPTY
-        )
-    } else {
-        listOf(
-                NETWORK,
-                STALE,
-                EMPTY
-        )
-    }.contains(cacheStatus)
+    is Cache -> operation.priority.possibleStatuses.contains(cacheStatus)
 
-    is Operation.Expiring -> if (operation.freshOnly) {
-        listOf(
-                NETWORK,
-                FRESH,
-                REFRESHED
-        )
-    } else {
-        listOf(
-                NETWORK,
-                FRESH,
-                STALE,
-                REFRESHED,
-                COULD_NOT_REFRESH
-        )
-    }.contains(cacheStatus)
+    Remote.DoNotCache -> cacheStatus == NOT_CACHED
 
-    Operation.DoNotCache -> cacheStatus == NOT_CACHED
-
-    Invalidate,
-    is Clear -> cacheStatus == EMPTY
+    is Invalidate,
+    is Clear -> cacheStatus == DONE
 }
 
 inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> Unit) {
@@ -385,12 +334,13 @@ inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> 
 
 fun callAdapterFactory(rxClass: Class<*>,
                        retrofit: Retrofit,
-                       constructor: Function3<Type, Array<Annotation>, Retrofit, CallAdapter<Any, Any>>) =
+                       targetClass: Class<*>,
+                       constructor: (Type, Array<Annotation>, Retrofit) -> CallAdapter<Any, Any>) =
         constructor.invoke(
                 object : ParameterizedType {
                     override fun getRawType() = rxClass
                     override fun getOwnerType() = null
-                    override fun getActualTypeArguments() = arrayOf<Type>(TestResponse::class.java)
+                    override fun getActualTypeArguments() = arrayOf<Type>(targetClass)
                 },
                 arrayOf(
                         getAnnotation<GET>(listOf("/")),

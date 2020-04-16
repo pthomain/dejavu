@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,17 +25,14 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
-import kotlin.reflect.KClass
 
 /**
  * Retrofit annotation for calls made with an associated CLEAR directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
+ * @see dev.pthomain.android.dejavu.interceptors.cache.instruction.Clear
  *
- * @param typeToClear the response type to clear (use Any to clear all the entries)
  * @param clearStaleEntriesOnly whether or not to clear only the stale entries
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Clear(val typeToClear: KClass<*> = Any::class,
-                       val clearStaleEntriesOnly: Boolean = false)
+annotation class Clear(val clearStaleEntriesOnly: Boolean = false)
 

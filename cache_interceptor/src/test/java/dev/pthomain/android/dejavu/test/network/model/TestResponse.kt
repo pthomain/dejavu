@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,35 +23,16 @@
 
 package dev.pthomain.android.dejavu.test.network.model
 
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.response.HasResponseMetadata
 
-class TestResponse : ArrayList<User>(), CacheMetadata.Holder<Glitch> {
+class TestResponse : ArrayList<User>(), HasResponseMetadata<TestResponse, Cache> {
 
-    @Transient
-    override lateinit var metadata: CacheMetadata<Glitch>
+    override lateinit var cacheToken: ResponseToken<Cache, TestResponse>
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as TestResponse
-
-        if (other.size != size) return false
-
-        this.forEachIndexed { index, user ->
-            if (other[index] != user) return false
-        }
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + metadata.hashCode()
-        return result
-    }
+    override lateinit var callDuration: CallDuration
 
     companion object {
         var STUB_FILE = "api_stub_test.json"

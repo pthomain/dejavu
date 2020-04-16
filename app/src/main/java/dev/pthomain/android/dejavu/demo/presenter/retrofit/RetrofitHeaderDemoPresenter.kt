@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -24,44 +24,60 @@
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.*
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring.Offline
+import dev.pthomain.android.boilerplate.core.utils.rx.observable
+import dev.pthomain.android.boilerplate.core.utils.rx.single
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.response.Empty
+import dev.pthomain.android.dejavu.interceptors.response.Response
+import dev.pthomain.android.dejavu.interceptors.response.Result
+import io.reactivex.Observable
+import io.reactivex.Single
 
 internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(isRefresh: Boolean,
-                                       encrypt: Boolean,
-                                       compress: Boolean,
-                                       freshOnly: Boolean) =
-            executeOperation(when {
-                isRefresh -> Expiring.Refresh(freshOnly = freshOnly)
-                else -> Expiring.Cache(
-                        encrypt = encrypt,
-                        compress = compress,
-                        freshOnly = freshOnly
-                )
-            })
+    override fun getDataObservable(cachePriority: CachePriority,
+                                   encrypt: Boolean,
+                                   compress: Boolean) =
+            executeOperation(Cache(
+                    priority = cachePriority,
+                    encrypt = encrypt,
+                    compress = compress
+            )).flatMap {
+                when (it) {
+                    is Response<CatFactResponse, *> -> it.response.observable()
+                    is Empty<*, *, *> -> Observable.error(it.exception)
+                    is Result<*, *> -> Observable.empty()
+                }
+            }
 
-    override fun getOfflineSingle(freshOnly: Boolean) =
-            executeOperation(Offline(freshOnly)).firstOrError()
+    override fun getOfflineSingle(freshness: FreshnessPriority) =
+            executeOperation(
+                    Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
+            ).firstOrError().flatMap {
+                when (it) {
+                    is Response<CatFactResponse, *> -> it.response.single()
+                    is Empty<*, *, *> -> Single.error(it.exception)
+                    is Result<*, *> -> Single.error(NoSuchElementException("This operation does not emit any response: ${it.cacheToken.instruction.operation.type}"))
+                }
+            }
 
-    override fun getClearEntriesCompletable() =
+    override fun getClearEntriesResult() =
             executeOperation(Clear())
-                    .ignoreElements()!!
 
-    override fun getInvalidateCompletable() =
+    override fun getInvalidateResult() =
             executeOperation(Invalidate)
-                    .ignoreElements()!!
 
-    private fun executeOperation(cacheOperation: CacheInstruction.Operation) =
-            catFactClient().instruct(CacheInstruction(
-                    CatFactResponse::class.java,
-                    cacheOperation
-            ))
+    private fun executeOperation(cacheOperation: Operation) =
+            operationsClient().execute(cacheOperation)
 
 }

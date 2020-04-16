@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,41 +23,51 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
 
 internal class RetrofitAnnotationDemoPresenter(demoActivity: DemoActivity,
                                                uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getResponseObservable(isRefresh: Boolean,
-                                       encrypt: Boolean,
-                                       compress: Boolean,
-                                       freshOnly: Boolean) =
-            if (isRefresh) {
-                when {
-                    freshOnly -> catFactClient().refreshFreshOnly()
-                    else -> catFactClient().refresh()
-                }
-            } else {
-                when {
-                    freshOnly && compress && encrypt -> catFactClient().freshOnlyCompressedEncrypted()
-                    freshOnly && compress -> catFactClient().freshOnlyCompressed()
-                    freshOnly && encrypt -> catFactClient().freshOnlyEncrypted()
-                    freshOnly -> catFactClient().freshOnly()
-                    compress && encrypt -> catFactClient().compressedEncrypted()
-                    compress -> catFactClient().compressed()
-                    encrypt -> catFactClient().encrypted()
-                    else -> catFactClient().get()
+    override fun getDataObservable(cachePriority: CachePriority,
+                                   encrypt: Boolean,
+                                   compress: Boolean) =
+            with(cachePriority) {
+                val client = dataClient()
+                if (network == NETWORK_FIRST) {
+                    when (freshness) {
+                        FRESH_ONLY -> client.refreshFreshOnly()
+                        else -> client.refresh()
+                    }
+                } else {
+                    when {
+                        freshness.isFreshOnly() && compress && encrypt -> client.freshOnlyCompressedEncrypted()
+                        freshness.isFreshOnly() && compress -> client.freshOnlyCompressed()
+                        freshness.isFreshOnly() && encrypt -> client.freshOnlyEncrypted()
+                        freshness.isFreshOnly() -> client.freshOnly()
+                        compress && encrypt -> client.compressedEncrypted()
+                        compress -> client.compressed()
+                        encrypt -> client.encrypted()
+                        else -> client.get()
+                    }
                 }
             }
 
-    override fun getOfflineSingle(freshOnly: Boolean) =
-            if (freshOnly) catFactClient().offlineFreshOnly()
-            else catFactClient().offline()
+    override fun getOfflineSingle(freshness: FreshnessPriority) = ifElse(
+            freshness == FRESH_ONLY,
+            dataClient().offlineFreshOnly(),
+            dataClient().offline()
+    )
 
-    override fun getClearEntriesCompletable() = catFactClient().clearCache()
+    override fun getClearEntriesResult() =
+            operationsClient().clearCache()
 
-    override fun getInvalidateCompletable() = catFactClient().invalidate()
-
+    override fun getInvalidateResult() =
+            operationsClient().invalidate()
 }

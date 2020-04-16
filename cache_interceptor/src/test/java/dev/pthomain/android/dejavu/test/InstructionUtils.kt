@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,33 +23,16 @@
 
 package dev.pthomain.android.dejavu.test
 
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Clear
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Expiring
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase
 import kotlin.reflect.full.createInstance
 
-fun assertInstruction(expectedInstruction: CacheInstruction,
-                      actualInstruction: CacheInstruction?,
-                      context: String? = null) {
-    assertEqualsWithContext(
-            expectedInstruction.responseClass,
-            actualInstruction?.responseClass,
-            "Instruction response class didn't match",
-            context
-    )
-
-    assertInstruction(
-            expectedInstruction.operation,
-            actualInstruction,
-            context
-    )
-}
-
 fun assertInstruction(expectedOperation: Operation,
-                      actualInstruction: CacheInstruction?,
+                      actualInstruction: CacheInstruction<*>?,
                       context: String? = null) {
     TestCase.assertNotNull(
             withContext("Instruction shouldn't be null", context),
@@ -58,7 +41,7 @@ fun assertInstruction(expectedOperation: Operation,
 
     actualInstruction?.apply {
         assertEqualsWithContext(
-                responseClass,
+                requestMetadata.responseClass,
                 TestResponse::class.java,
                 "Response class should be TestResponse",
                 context
@@ -89,42 +72,42 @@ fun assertOperation(expectedOperation: Operation,
                 context
         )
 
-        is Expiring -> assertExpiring(
+        is Cache -> assertExpiring(
                 expectedOperation,
-                actualOperation as Expiring,
+                actualOperation as Cache,
                 context
         )
     }
 }
 
-private fun assertExpiring(expectedOperation: Expiring,
-                           actualOperation: Expiring,
+private fun assertExpiring(expectedOperation: Cache,
+                           actualOperation: Cache,
                            context: String? = null) {
     assertEqualsWithContext(
-            expectedOperation.durationInMillis,
-            actualOperation.durationInMillis,
-            "durationInMillis didn't match",
+            expectedOperation.durationInSeconds,
+            actualOperation.durationInSeconds,
+            "durationInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.connectivityTimeoutInMillis,
-            actualOperation.connectivityTimeoutInMillis,
-            "connectivityTimeoutInMillis didn't match",
+            expectedOperation.connectivityTimeoutInSeconds,
+            actualOperation.connectivityTimeoutInSeconds,
+            "connectivityTimeoutInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.freshOnly,
-            actualOperation.freshOnly,
-            "freshOnly didn't match",
+            expectedOperation.requestTimeOutInSeconds,
+            actualOperation.requestTimeOutInSeconds,
+            "requestTimeOutInSeconds didn't match",
             context
     )
 
     assertEqualsWithContext(
-            expectedOperation.mergeOnNextOnError,
-            actualOperation.mergeOnNextOnError,
-            "mergeOnNextOnError didn't match",
+            expectedOperation.priority,
+            actualOperation.priority,
+            "priority didn't match",
             context
     )
 
@@ -141,13 +124,6 @@ private fun assertExpiring(expectedOperation: Expiring,
             "compress didn't match",
             context
     )
-
-    assertEqualsWithContext(
-            expectedOperation.filterFinal,
-            actualOperation.filterFinal,
-            "filterFinal didn't match",
-            context
-    )
 }
 
 private fun assertClear(expectedOperation: Clear,
@@ -159,17 +135,7 @@ private fun assertClear(expectedOperation: Clear,
             "clearStaleEntriesOnly didn't match",
             context
     )
-
-    assertEqualsWithContext(
-            expectedOperation.typeToClear,
-            actualOperation.typeToClear,
-            "typeToClear didn't match",
-            context
-    )
 }
-
-fun cacheInstruction(operation: Operation) =
-        CacheInstruction(TestResponse::class.java, operation)
 
 inline fun <reified T : Annotation> getAnnotationParams(args: List<Any?>?) =
         if (args == null) emptyMap()

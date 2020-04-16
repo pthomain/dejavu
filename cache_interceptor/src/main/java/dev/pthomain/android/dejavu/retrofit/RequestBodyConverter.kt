@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,13 +27,13 @@ import okhttp3.Request
 import okio.Buffer
 import java.io.IOException
 
-/**
- * Converts a request's body to String
- *
- * @param request the OkHttp request
- * @return the request's body as a String
- */
 class RequestBodyConverter : (Request) -> String? {
+    /**
+     * Converts a request's body to String
+     *
+     * @param p1 the OkHttp request
+     * @return the request's body as a String
+     */
     override fun invoke(p1: Request) =
             try {
                 Buffer().apply {
@@ -42,4 +42,5 @@ class RequestBodyConverter : (Request) -> String? {
             } catch (e: IOException) {
                 null
             }
+
 }

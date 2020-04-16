@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -36,7 +36,6 @@ import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyDemoPresenter
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -106,23 +105,13 @@ internal class DemoViewModule(private val demoActivity: DemoActivity,
 
     @Provides
     @Singleton
-    fun provideVolleyPresenter(compositeLogger: CompositeLogger) =
-            VolleyDemoPresenter(
-                    demoActivity,
-                    compositeLogger
-            )
-
-    @Provides
-    @Singleton
     fun provideCompositePresenter(retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
-                                  retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
-                                  volleyDemoPresenter: VolleyDemoPresenter) =
+                                  retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter) =
             CompositePresenter(
                     demoActivity,
                     retrofitAnnotationDemoPresenter,
                     retrofitAnnotationDemoPresenter,
-                    retrofitHeaderDemoPresenter,
-                    volleyDemoPresenter
+                    retrofitHeaderDemoPresenter
             )
 
     @Provides

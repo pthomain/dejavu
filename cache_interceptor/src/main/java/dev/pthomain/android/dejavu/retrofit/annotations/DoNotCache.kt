@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -28,7 +28,7 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
 
 /**
  * Retrofit annotation for calls made with an associated DO_NOT_CACHE directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.DoNotCache
+ * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.DoNotCache
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)

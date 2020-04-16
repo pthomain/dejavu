@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,17 +25,22 @@ package dev.pthomain.android.dejavu.demo.gson
 
 
 import com.google.gson.JsonParseException
-import dev.pthomain.android.dejavu.interceptors.internal.error.ErrorCode.UNEXPECTED_RESPONSE
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
+import dev.pthomain.android.dejavu.interceptors.error.DejaVuGlitchFactory
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
 /**
- * Custom ErrorFactory implementation handling Gson specific errors
+ * Custom Glitch ErrorFactory implementation handling extra Gson specific exceptions.
  */
-class GsonGlitchFactory : GlitchFactory() {
+class GsonGlitchFactory private constructor(private val parentFactory: DejaVuGlitchFactory)
+    : ErrorFactory<Glitch> by parentFactory {
 
-    override fun getError(throwable: Throwable) =
+    constructor() : this(DejaVuGlitchFactory(GlitchFactory()))
+
+    override fun invoke(throwable: Throwable) =
             when (throwable) {
                 is JsonParseException -> Glitch(
                         throwable,
@@ -43,7 +48,7 @@ class GsonGlitchFactory : GlitchFactory() {
                         UNEXPECTED_RESPONSE,
                         throwable.message
                 )
-                else -> super.getError(throwable)
+                else -> parentFactory.invoke(throwable)
             }
 
 }

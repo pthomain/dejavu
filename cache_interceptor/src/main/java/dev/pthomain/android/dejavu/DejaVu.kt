@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,75 +23,88 @@
 
 package dev.pthomain.android.dejavu
 
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.injection.component.CacheComponent
-import dev.pthomain.android.dejavu.injection.component.DaggerDefaultCacheComponent
-import dev.pthomain.android.dejavu.injection.module.DefaultCacheModule
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.interceptors.internal.error.GlitchFactory
-import dev.pthomain.android.dejavu.retrofit.RetrofitCallAdapterFactory
-import io.reactivex.Observable
-import io.reactivex.Single
+import android.content.Context
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration
+import dev.pthomain.android.dejavu.configuration.Serialiser
+import dev.pthomain.android.dejavu.injection.DejaVuComponent
+import dev.pthomain.android.dejavu.injection.glitch.DaggerGlitchDejaVuComponent
+import dev.pthomain.android.dejavu.injection.glitch.GlitchDejaVuModule
+import dev.pthomain.android.dejavu.interceptors.cache.persistence.statistics.StatisticsCompiler
+import dev.pthomain.android.dejavu.interceptors.error.DejaVuGlitchFactory
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
  */
-class DejaVu<E> internal constructor(private val component: CacheComponent<E>)
-        where E : Exception,
+class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
+    : StatisticsCompiler by component.statisticsCompiler()
+        where E : Throwable,
               E : NetworkErrorPredicate {
 
     /**
-     * Provides the current configuration
+     * Provides the current configuration.
      */
-    val configuration: CacheConfiguration<E> = component.configuration()
+    val configuration = component.configuration()
 
     /**
-     * Provides the adapter factory to use with Retrofit
+     * Provides the OkHttp header interceptor to add to your OkHttp setup if you plan
+     * to use header instructions.
+     *
+     * NB: Header instructions would work without this interceptor but the header would be sent
+     * alongside the request to the API server. This might not be an issue, but if it is,
+     * this interceptor will remove the header before the network call is made.
      */
-    val retrofitCallAdapterFactory: RetrofitCallAdapterFactory<E> = component.retrofitCacheAdapterFactory()
+    val headerInterceptor = component.headerInterceptor()
 
     /**
-     * Provides a generic DejaVuInterceptor factory to use with any Observable/Single/Completable
+     * Provides the adapter factory to use with Retrofit.
      */
-    val dejaVuInterceptor: DejaVuInterceptor.Factory<E> = component.dejaVuInterceptorFactory()
+    val retrofitCallAdapterFactory = component.retrofitCallAdapterFactory()
 
     /**
-     * Provides an observable emitting the responses metadata, for logging/stats purposes or to use
-     * as an alternative to implementing the CacheMetadata.Holder interface on responses.
+     * Provides a generic DejaVuInterceptor factory to use with any Observable / Single / CacheOperation.
+     * @see dev.pthomain.android.dejavu.interceptors.RxType
      */
-    val cacheMetadataObservable: Observable<CacheMetadata<E>> = component.cacheMetadataObservable()
-
-    /**
-     * Returns a Single emitting current cache statistics
-     */
-    fun statistics() = component.statisticsCompiler()?.getStatistics()
-            ?: Single.error(IllegalStateException("The cache is not using a database to persist its data"))
+    val dejaVuInterceptorFactory = component.dejaVuInterceptorFactory()
 
     companion object {
 
         /**
          * Use this value to provide the cache instruction as a header (this will override any existing call annotation)
          */
-        const val DejaVuHeader = "DejaVuHeader"
-
-        private fun defaultComponentProvider() = { cacheConfiguration: CacheConfiguration<Glitch> ->
-            DaggerDefaultCacheComponent
-                    .builder()
-                    .defaultCacheModule(DefaultCacheModule(cacheConfiguration))
-                    .build()
-        }
+        const val DejaVuHeader = "DejaVuHeader" //TODO find a way to strip this after processing
 
         /**
-         * @return Builder for CacheConfiguration
+         * @return Builder for DejaVuConfiguration
          */
-        fun builder() =
-                CacheConfiguration.builder(
-                        GlitchFactory(),
-                        defaultComponentProvider()
-                )
+        fun <E> builder(context: Context,
+                        serialiser: Serialiser,
+                        errorFactory: ErrorFactory<E>,
+                        componentProvider: (DejaVuConfiguration<E>) -> DejaVuComponent<E>)
+                where E : Throwable,
+                      E : NetworkErrorPredicate = DejaVuConfiguration.Builder(
+                errorFactory,
+                context,
+                serialiser,
+                componentProvider
+        )
+
+        /**
+         * @return Builder for DejaVuConfiguration
+         */
+        fun defaultBuilder(context: Context,
+                           serialiser: Serialiser) = builder(
+                context,
+                serialiser,
+                DejaVuGlitchFactory(GlitchFactory())
+        ) {
+            DaggerGlitchDejaVuComponent
+                    .builder()
+                    .glitchDejaVuModule(GlitchDejaVuModule(it))
+                    .build()
+        }
 
     }
 }

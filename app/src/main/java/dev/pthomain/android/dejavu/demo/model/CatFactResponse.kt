@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.demo.model
 
-import dev.pthomain.android.dejavu.response.Cacheable
+import dev.pthomain.android.dejavu.interceptors.response.Cacheable
 
-class CatFactResponse : Cacheable() {
+class CatFactResponse : Cacheable<CatFactResponse>() {
 
     var fact: String? = null
 

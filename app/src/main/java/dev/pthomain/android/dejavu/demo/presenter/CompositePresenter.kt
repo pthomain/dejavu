@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,41 +27,71 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.DemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyDemoPresenter
 import io.reactivex.disposables.CompositeDisposable
 
-internal class CompositePresenter(override val mvpView: DemoActivity,
-                                  private var presenter: DemoPresenter,
-                                  private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
-                                  private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
-                                  private val volleyDemoPresenter: VolleyDemoPresenter)
-    : DemoPresenter, Callback1<Method> {
+internal class CompositePresenter(
+        override val mvpView: DemoActivity,
+        private var presenter: DemoPresenter,
+        private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
+        private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter
+) : DemoPresenter, Callback1<Method> {
 
     override var subscriptions = CompositeDisposable()
 
     enum class Method {
         RETROFIT_ANNOTATION,
-        RETROFIT_HEADER,
-        VOLLEY
+        RETROFIT_HEADER
     }
 
     override fun invoke(p1: Method) {
         presenter = when (p1) {
             RETROFIT_ANNOTATION -> retrofitAnnotationDemoPresenter
             RETROFIT_HEADER -> retrofitHeaderDemoPresenter
-            VOLLEY -> volleyDemoPresenter
+        }.apply {
+            useHeader = p1 == RETROFIT_HEADER
         }
+        useHeader = presenter.useHeader
     }
 
     override var useSingle = presenter.useSingle
-    override var allowNonFinalForSingle = presenter.allowNonFinalForSingle
+        set(value) {
+            field = value
+            presenter.useSingle = value
+        }
+
+    override var useHeader = presenter.useHeader
+        set(value) {
+            field = value
+            presenter.useHeader = value
+        }
+
     override var encrypt = presenter.encrypt
+        set(value) {
+            field = value
+            presenter.encrypt = value
+        }
+
     override var compress = presenter.compress
-    override var freshOnly = presenter.freshOnly
+        set(value) {
+            field = value
+            presenter.compress = value
+        }
+
     override var connectivityTimeoutOn = presenter.connectivityTimeoutOn
+        set(value) {
+            field = value
+            presenter.connectivityTimeoutOn = value
+        }
+
+    override var freshness = presenter.freshness
+        set(value) {
+            field = value
+            presenter.freshness = value
+        }
 
     override fun loadCatFact(isRefresh: Boolean) {
         presenter.loadCatFact(isRefresh)
@@ -79,5 +109,5 @@ internal class CompositePresenter(override val mvpView: DemoActivity,
         presenter.offline()
     }
 
-    override fun getCacheInstruction() = presenter.getCacheInstruction()
+    override fun getCacheOperation() = presenter.getCacheOperation()
 }

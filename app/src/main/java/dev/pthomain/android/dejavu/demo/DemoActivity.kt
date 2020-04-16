@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -33,13 +33,18 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
+import com.uber.rxdogtag.RxDogTag
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
-import dev.pthomain.android.cache_interceptor.demo.R
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.*
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import io.reactivex.plugins.RxJavaPlugins
 
 
@@ -57,13 +62,13 @@ internal class DemoActivity
     private val invalidateButton by lazy { findViewById<View>(R.id.invalidate_button)!! }
     private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
 
+    private val observableRadio by lazy { findViewById<View>(R.id.radio_button_observable)!! }
+    private val singleRadio by lazy { findViewById<View>(R.id.radio_button_single)!! }
+
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
-    private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val allowNonFinalForSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_allow_non_final_for_single)!! }
     private val connectivityTimeoutCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_connectivity_timeout)!! }
-    private val useSingleCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_use_single)!! }
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
@@ -82,6 +87,7 @@ internal class DemoActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RxDogTag.install()
         onCreateComponent(savedInstanceState)
     }
 
@@ -111,15 +117,15 @@ internal class DemoActivity
         offlineButton.setOnClickListener { presenter.offline() }
         invalidateButton.setOnClickListener { presenter.invalidate() }
 
+        observableRadio.setOnClickListener { presenter.useSingle = false }
+        singleRadio.setOnClickListener { presenter.useSingle = true }
+
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
-        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        allowNonFinalForSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.allowNonFinalForSingle = isChecked }
         connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }
-        useSingleCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.useSingle = isChecked }
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshOnly = isChecked }
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 
@@ -140,7 +146,11 @@ internal class DemoActivity
     }
 
     override fun showCatFact(response: CatFactResponse) {
-        listAdapter.showCatFact(response)
+        listAdapter.showResponse(response)
+    }
+
+    override fun showResult(result: DejaVuResult<CatFactResponse>) {
+        listAdapter.showDejaVuResult(result)
     }
 
     override fun onCallStarted() {
@@ -148,7 +158,8 @@ internal class DemoActivity
             setButtonsEnabled(false)
             listAdapter.onStart(
                     presenter.useSingle,
-                    presenter.getCacheInstruction()
+                    presenter.useHeader,
+                    presenter.getCacheOperation()
             )
         }
     }

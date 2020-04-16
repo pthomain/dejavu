@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -27,10 +27,12 @@ import dagger.Component
 import dev.pthomain.android.boilerplate.core.mvp.base.MvpContract.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -39,6 +41,7 @@ internal class DemoMvpContract {
     interface DemoMvpView : MvpView<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         fun showCatFact(response: CatFactResponse)
+        fun showResult(result: DejaVuResult<CatFactResponse>)
         fun onCallStarted()
         fun onCallComplete()
 
@@ -47,17 +50,17 @@ internal class DemoMvpContract {
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         var useSingle: Boolean
-        var allowNonFinalForSingle: Boolean
+        var useHeader: Boolean
         var encrypt: Boolean
         var compress: Boolean
-        var freshOnly: Boolean
+        var freshness: FreshnessPriority
         var connectivityTimeoutOn: Boolean
 
         fun loadCatFact(isRefresh: Boolean)
         fun clearEntries()
         fun invalidate()
         fun offline()
-        fun getCacheInstruction(): CacheInstruction
+        fun getCacheOperation(): Operation
 
     }
 

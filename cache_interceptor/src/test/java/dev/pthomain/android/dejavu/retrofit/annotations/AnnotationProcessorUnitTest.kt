@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -24,56 +24,30 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.DO_NOT_CACHE
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.OFFLINE
-import dev.pthomain.android.dejavu.interceptors.internal.error.Glitch
-import dev.pthomain.android.dejavu.retrofit.annotations.AnnotationProcessor.RxType.OBSERVABLE
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.configuration.DejaVuConfiguration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import org.junit.Before
 import org.junit.Test
 
 class AnnotationProcessorUnitTest {
 
-    private val defaultCacheDuration = 4321L
-    private val defaultNetworkTimeOut = 1234L
     private val responseKClass = TestResponse::class
     private val responseClass = responseKClass.java
 
-    private lateinit var configuration: CacheConfiguration<Glitch>
     private lateinit var target: AnnotationProcessor<Glitch>
 
     @Before
     fun setUp() {
-        configuration = mock()
-
-        whenever(configuration.logger).thenReturn(mock())
-        whenever(configuration.cachePredicate).thenReturn({ _, _ -> false })
-        whenever(configuration.cacheDurationInMillis).thenReturn(defaultCacheDuration)
-        whenever(configuration.connectivityTimeoutInMillis).thenReturn(defaultNetworkTimeOut)
-        whenever(configuration.mergeOnNextOnError).thenReturn(true)
-        whenever(configuration.encrypt).thenReturn(true)
-        whenever(configuration.compress).thenReturn(true)
-
-        target = AnnotationProcessor(configuration)
+        target = AnnotationProcessor(mock())
     }
 
     @Test
-    fun testProcessWithNoAnnotationsCacheAllByDefaultFalse() {
-        testProcessWithNoAnnotations(false)
-    }
-
-    @Test
-    fun testProcessWithNoAnnotationsCacheAllByDefaultTrue() {
-        testProcessWithNoAnnotations(true)
-    }
-
-    private fun testProcessWithNoAnnotations(cacheAllByDefault: Boolean) {
-        whenever(configuration.cachePredicate).thenReturn({ _, _ -> cacheAllByDefault })
-
+    fun testProcessWithNoAnnotations() {
         val instruction = target.process(
                 arrayOf(),
                 OBSERVABLE,
@@ -89,8 +63,7 @@ class AnnotationProcessorUnitTest {
     @Test
     fun testProcessWithTwoAnnotations() {
         val expectedErrorMessage = ("More than one cache annotation defined for method returning"
-                + " ${OBSERVABLE.getTypedName(responseClass)}, found ${OFFLINE.annotationName}"
-                + " after existing annotation ${DO_NOT_CACHE.annotationName}."
+                + " Observable<TestResponse>, found @Cache after existing annotation @DoNotCache."
                 + " Only one annotation can be used for this method.")
 
         expectException(
@@ -100,7 +73,7 @@ class AnnotationProcessorUnitTest {
                     target.process(
                             arrayOf(
                                     getAnnotation<DoNotCache>(emptyList()),
-                                    getAnnotation<Offline>(emptyList())
+                                    getAnnotation<Cache>(emptyList())
                             ),
                             OBSERVABLE,
                             responseClass
@@ -110,229 +83,98 @@ class AnnotationProcessorUnitTest {
     }
 
     @Test
-    fun testProcessCacheDefaultDurations() {
+    fun testProcessCache() {
+        prioritySequence { priority ->
+            trueFalseSequence { encrypt ->
+                trueFalseSequence { compress ->
+                    trueFalseSequence { useDefaultDurations ->
+                        testProcessCache(
+                                priority,
+                                encrypt,
+                                compress,
+                                useDefaultDurations
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun testProcessCache(priority: CachePriority,
+                                 encrypt: Boolean,
+                                 compress: Boolean,
+                                 useDefaultDurations: Boolean) {
+        val durationInSeconds = ifElse(useDefaultDurations, -1, 123)
+        val connectivityTimeoutInSeconds = ifElse(useDefaultDurations, -1, 234)
+        val requestTimeOutInSeconds = ifElse(useDefaultDurations, -1, 345)
+
         testProcessAnnotation(
                 getAnnotation<Cache>(listOf(
-                        true,
-                        -1L,
-                        -1L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
+                        priority,
+                        durationInSeconds,
+                        connectivityTimeoutInSeconds,
+                        requestTimeOutInSeconds,
+                        encrypt,
+                        compress
                 )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                defaultCacheDuration,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessCacheDefaultNetworkTimeout() {
-        testProcessAnnotation(
-                getAnnotation<Cache>(listOf(
-                        true,
-                        4567L,
-                        -1L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                4567L,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessCacheNoDefaultDurations() {
-        testProcessAnnotation(
-                getAnnotation<Cache>(listOf(
-                        true,
-                        4567L,
-                        5678L,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Cache(
-                                4567L,
-                                5678L,
-                                true,
-                                true,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshDefaultDurations() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        -1L,
-                        -1L,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                defaultCacheDuration,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshDefaultNetworkTimeout() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        4567L,
-                        -1L,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                4567L,
-                                defaultNetworkTimeOut,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessRefreshNoDefaultDurations() {
-        testProcessAnnotation(
-                getAnnotation<Refresh>(listOf(
-                        true,
-                        4567L,
-                        5678L,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Refresh(
-                                4567L,
-                                5678L,
-                                true,
-                                true,
-                                false
-                        )
-                )
-        )
-    }
-
-    @Test
-    fun testProcessOffline() {
-        testProcessAnnotation(
-                getAnnotation<Offline>(listOf()),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Offline()
-                )
-        )
-    }
-
-    @Test
-    fun testProcessOfflineWithArgs() {
-        testProcessAnnotation(
-                getAnnotation<Offline>(listOf(
-                        true,
-                        OptionalBoolean.TRUE
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Expiring.Offline(
-                                true,
-                                true
-                        )
+                Operation.Cache(
+                        priority,
+                        ifElse(useDefaultDurations, DEFAULT_CACHE_DURATION_IN_SECONDS, durationInSeconds),
+                        ifElse(useDefaultDurations, null, connectivityTimeoutInSeconds),
+                        ifElse(useDefaultDurations, null, requestTimeOutInSeconds),
+                        encrypt,
+                        compress
                 )
         )
     }
 
     @Test
     fun testProcessInvalidate() {
-        testProcessAnnotation(
-                getAnnotation<Invalidate>(listOf(responseKClass)),
-                cacheInstruction(
-                        CacheInstruction.Operation.Invalidate
-                )
-        )
+        trueFalseSequence { useRequestParameters ->
+            testProcessAnnotation(
+                    getAnnotation<Invalidate>(listOf(useRequestParameters)),
+                    Operation.Local.Invalidate(useRequestParameters)
+            )
+        }
     }
 
     @Test
     fun testProcessDoNotCache() {
         testProcessAnnotation(
-                getAnnotation<DoNotCache>(listOf()),
-                cacheInstruction(
-                        CacheInstruction.Operation.DoNotCache
-                )
+                getAnnotation<DoNotCache>(emptyList()),
+                Remote.DoNotCache
         )
     }
 
     @Test
     fun testProcessClearTargetResponseClass() {
-        testProcessAnnotation(
-                getAnnotation<Clear>(listOf(
-                        responseKClass,
-                        false
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(responseClass)
-                )
-        )
-    }
-
-    @Test
-    fun testProcessClearTargetResponseClassOlderEntries() {
-        testProcessAnnotation(
-                getAnnotation<Clear>(listOf(
-                        responseKClass,
-                        true
-                )),
-                cacheInstruction(
-                        CacheInstruction.Operation.Clear(
-                                responseClass,
-                                true
+        trueFalseSequence { clearStaleEntriesOnly ->
+            trueFalseSequence { useRequestParameters ->
+                testProcessAnnotation(
+                        getAnnotation<Clear>(listOf(
+                                clearStaleEntriesOnly,
+                                useRequestParameters
+                        )),
+                        Operation.Local.Clear(
+                                clearStaleEntriesOnly,
+                                useRequestParameters
                         )
                 )
-        )
+            }
+        }
     }
 
     private fun testProcessAnnotation(annotation: Annotation,
-                                      expectedInstruction: CacheInstruction) {
-        val actualInstruction = target.process(
+                                      expectedOperation: Operation) {
+        val actualOperation = target.process(
                 arrayOf(annotation),
                 OBSERVABLE,
                 responseClass
-        )
+        )!!
 
-        assertInstruction(
-                expectedInstruction,
-                actualInstruction,
+        assertOperation(
+                expectedOperation,
+                actualOperation,
                 "Failed processing annotation $annotation"
         )
     }

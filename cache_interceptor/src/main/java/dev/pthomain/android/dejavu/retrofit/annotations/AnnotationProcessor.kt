@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -23,65 +23,55 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.CacheConfiguration
-import dev.pthomain.android.dejavu.configuration.CacheInstruction
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation
-import dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Type.*
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.*
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.CacheException.Type.ANNOTATION
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 /**
  * Processes Retrofit annotations and generates a CacheInstruction if needed.
  *
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction
+ * @see CacheInstruction
  */
-internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfiguration<E>)
-        where  E : Exception,
+internal class AnnotationProcessor<E>(private val logger: Logger)
+        where  E : Throwable,
                E : NetworkErrorPredicate {
-
-    private val logger = cacheConfiguration.logger
 
     /**
      * Processes the annotations on the Retrofit call and tries to convert them to a CacheInstruction
      * if applicable.
      *
      * @param annotations the calls annotations as provided by the Retrofit call adapter.
-     * @param rxType the type of RxJava operation for this call
      * @param responseClass the target response class
      *
-     * @return the processed CacheInstruction if applicable
+     * @return the processed cache operation if applicable
      */
     @Throws(CacheException::class)
     fun process(annotations: Array<Annotation>,
-                rxType: RxType,
-                responseClass: Class<*>): CacheInstruction? {
-        var instruction: CacheInstruction? = null
+                responseClass: Class<*>): Operation? {
+        var operation: Operation? = null
 
         annotations.forEach { annotation ->
             when (annotation) {
                 is Cache -> CACHE
                 is DoNotCache -> DO_NOT_CACHE
                 is Invalidate -> INVALIDATE
-                is Refresh -> REFRESH
-                is Offline -> OFFLINE
                 is Clear -> CLEAR
                 else -> null
-            }?.let { operation ->
-                instruction = getInstruction(
-                        instruction,
-                        rxType,
-                        responseClass,
+            }?.let {
+                operation = getOperation(
                         operation,
+                        responseClass,
+                        it,
                         annotation
                 )
             }
         }
 
-        return instruction
+        return operation
     }
 
     @Throws(CacheException::class)
@@ -91,101 +81,61 @@ internal class AnnotationProcessor<E>(private val cacheConfiguration: CacheConfi
     }
 
     /**
-     * Returns a cache instructions for the given annotation and checks for duplicate annotations
+     * Returns a cache operation for the given annotation and checks for duplicate annotations
      * on the same call.
      *
-     * @param currentInstruction the previous existing annotation if found, to detect duplicates
-     * @param rxType the RxJava type
+     * @param currentOperation the previous existing annotation if found, to detect duplicates
      * @param responseClass the targeted response class for this call
      * @param foundOperation the operation type associated with the given annotation
      * @param annotation the annotation being processed
-     * @return the processed cache instruction for the given annotation
+     * @return the processed cache operation for the given annotation
      */
     @Throws(CacheException::class)
-    private fun getInstruction(currentInstruction: CacheInstruction?,
-                               rxType: RxType,
-                               responseClass: Class<*>,
-                               foundOperation: Operation.Type,
-                               annotation: Annotation): CacheInstruction? {
-        if (currentInstruction != null) {
+    private fun getOperation(currentOperation: Operation?,
+                             responseClass: Class<*>,
+                             foundOperation: Type,
+                             annotation: Annotation): Operation? {
+        if (currentOperation != null) {
             CacheException(
                     ANNOTATION,
                     "More than one cache annotation defined for method returning"
-                            + " ${rxType.getTypedName(responseClass)}, found ${foundOperation.annotationName}"
-                            + " after existing annotation ${currentInstruction.operation.type.annotationName}."
+                            + " ${responseClass.name}, found ${getAnnotationName(foundOperation)}"
+                            + " after existing annotation ${getAnnotationName(currentOperation.type)}."
                             + " Only one annotation can be used for this method."
             ).logAndThrow()
         }
 
-        return when (annotation) {
-            is Cache -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Cache(
-                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it },
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value,
-                            annotation.encrypt.value,
-                            annotation.compress.value
-                    )
-            )
-
-            is Refresh -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Refresh(
-                            annotation.durationInMillis.let { if (it == -1L) cacheConfiguration.cacheDurationInMillis else it }, //FIXME re-use value used for Cache if available (leave this to -1 and let DatabaseManager deal with it)
-                            annotation.connectivityTimeoutInMillis.let { if (it == -1L) cacheConfiguration.connectivityTimeoutInMillis else it },
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value
-                    )
-            )
-
-            is Offline -> CacheInstruction(
-                    responseClass,
-                    Operation.Expiring.Offline(
-                            annotation.freshOnly,
-                            annotation.mergeOnNextOnError.value
-                    )
-            )
-
-            is Invalidate -> CacheInstruction(
-                    annotation.typeToInvalidate.java,
-                    Operation.Invalidate
-            )
-
-            is Clear -> {
-                CacheInstruction(
-                        annotation.typeToClear.java,
-                        Operation.Clear(
-                                annotation.typeToClear.java.let { ifElse(it == Any::class.java, null, it) },
-                                annotation.clearStaleEntriesOnly
-                        )
+        return with(annotation) {
+            when (this) {
+                is Cache -> Remote.Cache(
+                        priority,
+                        durationInSeconds,
+                        connectivityTimeoutInSeconds,
+                        requestTimeOutInSeconds,
+                        encrypt,
+                        compress
                 )
+
+                is DoNotCache -> Remote.DoNotCache
+                is Invalidate -> Local.Invalidate
+                is Clear -> Local.Clear(clearStaleEntriesOnly)
+                else -> null
             }
-
-            is DoNotCache -> CacheInstruction(
-                    responseClass,
-                    Operation.DoNotCache
-            )
-
-            else -> null
         }
     }
 
     /**
-     * Represents a RxJava type
+     * Converts the operation type into a String annotation
+     *
+     * @param type the operation's type.
+     * @return the String representation of the type's annotation
      */
-    enum class RxType(val rxClass: Class<*>) {
-        OBSERVABLE(Observable::class.java),
-        SINGLE(Single::class.java),
-        COMPLETABLE(Completable::class.java);
-
-        /**
-         * @return a String representation of the typed Rx object
-         */
-        fun getTypedName(responseClass: Class<*>) =
-                if (this == COMPLETABLE) rxClass.simpleName
-                else "${rxClass.simpleName}<${responseClass.simpleName}>"
-    }
+    private fun getAnnotationName(type: Type) =
+            when (type) {
+                CACHE -> "@Cache"
+                DO_NOT_CACHE -> "@DoNotCache"
+                INVALIDATE -> "@Invalidate"
+                CLEAR -> "@Clear"
+            }
 
 }

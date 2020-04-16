@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,28 +25,39 @@ package dev.pthomain.android.dejavu.test
 
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
-import dev.pthomain.android.dejavu.configuration.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.CacheMetadata
-import dev.pthomain.android.dejavu.interceptors.internal.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.injection.integration.module.NOW
+import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.CallDuration
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.interceptors.response.DejaVuResult
+import dev.pthomain.android.dejavu.interceptors.response.Response
 import io.reactivex.Observable
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
                   private val gson: Gson) {
 
-    fun <E, R> observeStubbedResponse(fileName: String,
-                                      responseClass: Class<R>,
-                                      cacheToken: CacheToken)
-            : Observable<R> where E : Exception,
-                                  E : NetworkErrorPredicate,
-                                  R : CacheMetadata.Holder<E> =
+    fun <R : Any> observeStubbedResponse(fileName: String,
+                                         responseClass: Class<R>,
+                                         cacheToken: RequestToken<Cache, R>)
+            : Observable<out DejaVuResult<R>> =
             observeFile(fileName)
                     .map { gson.fromJson(it, responseClass) }
-                    .doOnNext {
-                        it.metadata = CacheMetadata(
-                                cacheToken,
-                                null,
-                                CacheMetadata.Duration(0, 0, 0)
+                    .map {
+                        Response(
+                                it,
+                                with(cacheToken) {
+                                    ResponseToken(
+                                            instruction,
+                                            FRESH,
+                                            NOW,
+                                            NOW,
+                                            NOW
+                                    )
+                                },
+                                CallDuration(0, 0, 0)
                         )
                     }
 

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2017 Pierre Thomain
+ *  Copyright (C) 2017-2020 Pierre Thomain
  *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
@@ -25,14 +25,12 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
-import kotlin.reflect.KClass
 
 /**
  * Retrofit annotation for calls made with an associated INVALIDATE directive.
- * @see dev.pthomain.android.dejavu.configuration.CacheInstruction.Operation.Invalidate
- *
- * @param typeToInvalidate the response type to invalidate
+ * @see dev.pthomain.android.dejavu.configuration.instruction.Operation.Invalidate
+ * @param useRequestParameters whether or not the request parameters should be used to identify the unique cached entry to invalidate
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Invalidate(val typeToInvalidate: KClass<*>)
+annotation class Invalidate(val useRequestParameters: Boolean = false)
