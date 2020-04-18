@@ -44,7 +44,7 @@ internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
                     .baseUrl(BASE_URL)
                     .client(getOkHttpClient(uiLogger))
                     .addConverterFactory(GsonConverterFactory.create(gson))
-                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory)
+                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory())
                     .build()
 
     private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {

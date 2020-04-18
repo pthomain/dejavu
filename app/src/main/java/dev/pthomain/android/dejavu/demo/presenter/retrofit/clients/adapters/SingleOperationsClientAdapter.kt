@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters
 
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
 
 class SingleOperationsClientAdapter(private val singleClient: SingleClients.Operations)
     : ObservableClients.Operations {
