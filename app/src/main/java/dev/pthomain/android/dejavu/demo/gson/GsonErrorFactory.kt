@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.demo.gson
 
 
 import com.google.gson.JsonParseException
-import dev.pthomain.android.dejavu.interceptors.error.DejaVuGlitchFactory
+import dev.pthomain.android.dejavu.error.DejaVuGlitchFactory
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch

@@ -32,16 +32,16 @@ import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.cache.metadata.response.*
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Local
-import dev.pthomain.android.dejavu.interceptors.cache.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.interceptors.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.interceptors.response.*
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -245,11 +245,11 @@ internal class ExpandableListAdapter(context: Context)
         ) : InternalResult<Remote, ResponseToken<Remote, CatFactResponse>>(response)
 
         class Result<O : Local>(
-                val result: dev.pthomain.android.dejavu.interceptors.response.Result<CatFactResponse, O>
+                val result: dev.pthomain.android.dejavu.cache.metadata.response.Result<CatFactResponse, O>
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(result)
 
         class Empty<O : Remote>(
-                val empty: dev.pthomain.android.dejavu.interceptors.response.Empty<CatFactResponse, O, Glitch>
+                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, Glitch>
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(empty)
     }
 

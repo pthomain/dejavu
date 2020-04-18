@@ -88,7 +88,7 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':cache_interceptor')
+    implementation project(path: ':core')
     implementation appDependencies.multiDex
 
     implementation appDependencies.dagger
