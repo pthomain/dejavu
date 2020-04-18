@@ -20,10 +20,3 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'

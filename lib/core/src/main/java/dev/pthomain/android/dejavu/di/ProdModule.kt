@@ -20,10 +20,25 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.dejavu.di
+
+import dagger.Module
+import dagger.Provides
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import java.util.*
+import javax.inject.Singleton
+
+@Module
+abstract class ProdModule<E>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+
+    @Provides
+    @Singleton
+    fun provideDateFactory() = object : Function1<Long?, Date> {
+        override fun get(t1: Long?) = t1?.let { Date(it) } ?: Date()
+    }
+
+}
+

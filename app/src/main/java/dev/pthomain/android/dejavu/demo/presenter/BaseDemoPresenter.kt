@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.demo.presenter
 
-import android.os.Build.VERSION.SDK_INT
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.gson.Gson
@@ -50,10 +49,9 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.persistence.PersistenceManagerFactory
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.*
+import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
+import dev.pthomain.android.glitch.DejaVuGlitchBuilder
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -84,21 +82,16 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVu.defaultBuilder(context(), GsonSerialiser(gson))
+    private fun newDejaVu() = DejaVuGlitchBuilder(context(), GsonSerialiser(gson))
             .withLogger(uiLogger)
-            .withPersistence(true, ::pickPersistenceMode)
-            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
+//            .withPersistence(::pickPersistenceMode)
+//            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
             .withErrorFactory(GsonGlitchFactory())
             .build()
 
-    private fun pickPersistenceMode(persistenceManagerFactory: PersistenceManagerFactory<Glitch>) =
-            with(persistenceManagerFactory) {
-                when (persistenceType) {
-                    FILE -> filePersistenceManagerFactory.create()
-                    DATABASE -> databasePersistenceManagerFactory!!.create()
-                    MEMORY -> memoryPersistenceManagerFactory.create()
-                }
-            }
+    //FIXME use enum in core
+//    private fun pickPersistenceMode(): PersistenceManager<Glitch> =
+//            MemoP
 
     final override fun getCacheOperation() =
             when (instructionType) {

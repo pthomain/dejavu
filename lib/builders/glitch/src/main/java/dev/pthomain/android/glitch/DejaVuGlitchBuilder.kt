@@ -20,10 +20,27 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.glitch
+
+import android.content.Context
+import dev.pthomain.android.dejavu.builders.configuration.ConfigurationBuilder
+import dev.pthomain.android.dejavu.error.DejaVuGlitchFactory
+import dev.pthomain.android.dejavu.serialisation.Serialiser
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+
+class DejaVuGlitchBuilder(
+        context: Context,
+        serialiser: Serialiser
+) : ConfigurationBuilder<Glitch>(
+        DejaVuGlitchFactory(GlitchFactory()),
+        context,
+        serialiser,
+        {
+            DaggerGlitchDejaVuComponent
+                    .builder()
+                    .glitchDejaVuModule(GlitchDejaVuModule(it))
+                    .build()
+        }
+)

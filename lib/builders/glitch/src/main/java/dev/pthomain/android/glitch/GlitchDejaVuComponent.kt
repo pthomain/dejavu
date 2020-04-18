@@ -20,10 +20,14 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.glitch
+
+import dagger.Component
+import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import javax.inject.Singleton
+
+@Singleton
+@Component(modules = [GlitchDejaVuModule::class])
+internal interface GlitchDejaVuComponent : DejaVuComponent<Glitch>

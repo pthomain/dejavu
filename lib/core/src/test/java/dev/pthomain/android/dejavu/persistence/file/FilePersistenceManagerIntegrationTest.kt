@@ -20,10 +20,14 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.dejavu.persistence.file
+
+import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerIntegrationTest
+import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
+
+internal class FilePersistenceManagerIntegrationTest
+    : BasePersistenceManagerIntegrationTest<KeyValuePersistenceManager<Glitch>>(
+        { it.filePersistenceManagerFactory.create() as KeyValuePersistenceManager<Glitch> }
+)

@@ -20,10 +20,24 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.dejavu.persistence.sqlite
+
+import android.database.Cursor
+
+/**
+ * This class wraps the Cursor in an Iterable interface.
+ *
+ * @param cursor the cursor to iterate over
+ */
+class CursorIterator internal constructor(
+        private val cursor: Cursor
+) : Iterator<Cursor>, Iterable<Cursor> {
+    override fun iterator() = this
+    override fun next() = cursor
+    override fun hasNext() = try {
+        cursor.moveToNext()
+    } catch (e: Exception) {
+        false
+    }
+}

@@ -21,9 +21,12 @@
  *
  */
 
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.github.dcendents.android-maven'
+group = 'com.github.pthomain'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -31,13 +34,9 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.2"
-        vectorDrawables.useSupportLibrary = true
-
-        aaptOptions {
-            additionalParameters "--no-version-vectors"
-        }
+        versionCode 1
+        versionName "1.0"
+        consumerProguardFiles 'proguard-rules-lib.pro'
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -48,21 +47,16 @@ android {
 
     buildTypes {
         debug {
-            multiDexEnabled true
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
 
         release {
-            multiDexEnabled false
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            multiDexEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     packagingOptions {
@@ -73,41 +67,84 @@ android {
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/app_release.kotlin_module'
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/license.txt'
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/eclipse.inf'
+        exclude 'META-INF/index.list'
+        exclude 'META-INF/INDEX.LIST'
         exclude 'about_files/LICENSE-2.0.txt'
         exclude 'plugin.xml'
         exclude 'plugin.properties'
     }
 
+    configurations.all {
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.1'
+        resolutionStrategy.force 'com.google.guava:guava:20.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
+    useLibrary 'android.test.mock'
+}
+
+sourceSets {
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 dependencies {
-    implementation project(':lib:builders:glitch')
-    implementation project(':lib:modules:persistence:file')
-    implementation project(':lib:modules:persistence:memory')
-//    implementation project(':lib:modules:persistence:sqlite')
+    implementation project(':lib:core')
+
+    implementation appDependencies.jitPack
     implementation appDependencies.multiDex
+
+    implementation appDependencies.androidXcore
+    implementation appDependencies.androidXsqlite
 
     implementation appDependencies.dagger
     kapt appDependencies.daggerCompiler
 
-    implementation appDependencies.boilerplate_ui
-    implementation appDependencies.rxDogTag
+    implementation appDependencies.requery
 
-    implementation appDependencies.okHttp
-    implementation appDependencies.okHttpLogging
+    testImplementation appDependencies.requery
+    testImplementation appDependencies.androidXsqlite
 
-    implementation appDependencies.retrofitConverterGson
-    implementation appDependencies.gson
+    testImplementation appDependencies.dagger
+    kaptTest appDependencies.daggerCompiler
 
-    implementation appDependencies.appCompat
-    implementation appDependencies.browser
+    testImplementation appDependencies.androidXroom
 }
 
 repositories {

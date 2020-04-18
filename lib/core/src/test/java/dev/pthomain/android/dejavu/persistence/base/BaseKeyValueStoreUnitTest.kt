@@ -20,10 +20,44 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.dejavu.persistence.base
+
+import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
+import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
+import org.junit.Before
+
+
+abstract class BaseKeyValueStoreUnitTest<S : KeyValueStore<String, String, Incomplete>> {
+
+    private lateinit var target: S
+
+    @Before
+    fun setUp() {
+//        target = setUpTarget()
+    }
+
+    abstract fun setUpTarget(): S
+
+//    fun testFindPartialKey() {
+//
+//
+//    }
+//
+//    abstract fun testFindPartialKey()
+
+    fun get() {
+
+    }
+
+//    abstract fun get(hasResult: Boolean)
+
+//    fun save()
+//
+//    fun values(): Map<K, V>
+//
+//    fun delete(key: K)
+//
+//    fun rename(oldKey: K, newKey: K)
+
+}

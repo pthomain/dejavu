@@ -20,10 +20,13 @@
  *  under the License.
  *
  */
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:builders:glitch'
-include ':lib:core'
-include ':app'
+
+package dev.pthomain.android.dejavu.persistence.database
+
+import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerIntegrationTest
+
+internal class DatabasePersistenceManagerIntegrationTest
+    : BasePersistenceManagerIntegrationTest<dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch>>(
+        { it.databasePersistenceManagerFactory!!.create() as dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch> }
+)
