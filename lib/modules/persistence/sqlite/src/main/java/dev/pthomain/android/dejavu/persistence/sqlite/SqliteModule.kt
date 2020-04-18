@@ -45,42 +45,38 @@ abstract class SqliteModule<E> where E : Throwable,
     @Provides
     @Singleton
     fun provideDatabasePersistenceManagerFactory(configuration: DejaVu.Configuration<E>,
-                                                 database: SupportSQLiteDatabase?,
+                                                 database: SupportSQLiteDatabase,
                                                  dateFactory: Function1<Long?, Date>,
-                                                 serialisationManagerFactory: SerialisationManager.Factory<E>) =
-            if (database != null)
-                DatabasePersistenceManager.Factory(
-                        database,
-                        serialisationManagerFactory,
-                        configuration,
-                        dateFactory::get,
-                        ::mapToContentValues
-                )
-            else null
+                                                 serialisationManager: SerialisationManager<E>) =
+            DatabasePersistenceManager(
+                    database,
+                    serialisationManager,
+                    configuration,
+                    dateFactory::get,
+                    ::mapToContentValues
+            )
 
     @Provides
     @Singleton
-    fun provideSqlOpenHelperCallback(configuration: DejaVu.Configuration<E>): SupportSQLiteOpenHelper.Callback? =
+    fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback =
             SqlOpenHelperCallback(DATABASE_VERSION)
 
     @Provides
     @Singleton
     @Synchronized
-    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper?) =
-            sqlOpenHelper?.writableDatabase
+    fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper) =
+            sqlOpenHelper.writableDatabase
 
     @Provides
     @Singleton
     fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback?): SupportSQLiteOpenHelper? =
-            callback?.let {
-                RequerySQLiteOpenHelperFactory().create(
-                        SupportSQLiteOpenHelper.Configuration.builder(context)
-                                .name(DATABASE_NAME)
-                                .callback(it)
-                                .build()
-                )
-            }
+                             callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper =
+            RequerySQLiteOpenHelperFactory().create(
+                    SupportSQLiteOpenHelper.Configuration.builder(context)
+                            .name(DATABASE_NAME)
+                            .callback(callback)
+                            .build()
+            )
 
     @Provides
     @Singleton

@@ -29,12 +29,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.decoration.compression.CompressionSerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.decoration.encryption.EncryptionSerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.decoration.file.FileSerialisationDecorator
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -142,56 +138,4 @@ class SerialisationManager<E> internal constructor(
                 }
     }
 
-    /**
-     * Factory providing an instance of SerialisationManager
-     *
-     * @param errorFactory the factory converting throwables to custom exceptions
-     * @param serialiser instance of Serialiser in charge of serialising a model to a String (typically JSON)
-     * @param byteToStringConverter a factory converting a ByteArray to a String
-     * @param fileSerialisationDecorator a SerialisationDecorator used specifically for file serialisation
-     * @param compressionSerialisationDecorator a SerialisationDecorator used for payload compression
-     * @param encryptionSerialisationDecorator a SerialisationDecorator used for payload encryption
-     */
-    class Factory<E> internal constructor(
-            private val serialiser: Serialiser,
-            private val errorFactory: ErrorFactory<E>,
-            private val dateFactory: (Long?) -> Date,
-            private val byteToStringConverter: (ByteArray) -> String,
-            private val fileSerialisationDecorator: FileSerialisationDecorator<E>,
-            private val compressionSerialisationDecorator: CompressionSerialisationDecorator<E>,
-            private val encryptionSerialisationDecorator: EncryptionSerialisationDecorator<E>?
-    ) where E : Throwable,
-            E : NetworkErrorPredicate {
-
-        /**
-         * Factory providing an instance of SerialisationManager
-         *
-         * @param persistenceType the chosen type of persistence
-         * @param disableEncryption whether or not to disable encryption, typically for memory cache
-         * @return a SerialisationManager instance
-         */
-        fun create(persistenceType: Type,
-                   disableEncryption: Boolean = false): SerialisationManager<E> {
-            val decoratorList = LinkedList<SerialisationDecorator<E>>().apply {
-                if (persistenceType == FILE) add(fileSerialisationDecorator) //TODO check if this is really needed
-                if (encryptionSerialisationDecorator != null && !disableEncryption) add(encryptionSerialisationDecorator)
-                add(compressionSerialisationDecorator)
-            }
-
-            return SerialisationManager(
-                    errorFactory,
-                    dateFactory,
-                    serialiser,
-                    byteToStringConverter,
-                    decoratorList
-            )
-        }
-
-        enum class Type {
-            FILE,
-            DATABASE,
-            MEMORY
-        }
-
-    }
 }

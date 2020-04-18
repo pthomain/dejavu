@@ -49,7 +49,6 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.glitch.DejaVuGlitchBuilder
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
@@ -63,7 +62,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     private var instructionType: Type = CACHE
     private var networkPriority: NetworkPriority = LOCAL_FIRST
-    private var persistenceType = FILE
+//    private var persistenceType = FILE
 
     final override var connectivityTimeoutOn: Boolean = true
         set(value) {
@@ -82,7 +81,8 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVuGlitchBuilder(context(), GsonSerialiser(gson))
+    private fun newDejaVu() = DejaVuGlitchBuilder(context())
+            .withSerialiser(GsonSerialiser(gson))
             .withLogger(uiLogger)
 //            .withPersistence(::pickPersistenceMode)
 //            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))

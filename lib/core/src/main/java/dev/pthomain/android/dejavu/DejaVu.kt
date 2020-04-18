@@ -33,7 +33,6 @@ import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.mumbo.base.EncryptionManager
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
@@ -69,7 +68,6 @@ class DejaVu<E> internal constructor(
             internal val logger: Logger,
             internal val errorFactory: ErrorFactory<E>,
             internal val serialiser: Serialiser,
-            internal val encryptionManager: EncryptionManager?,
             internal val persistenceManager: PersistenceManager<E>,
             internal val operationPredicate: (metadata: RequestMetadata<*>) -> Operation.Remote?,
             internal val durationPredicate: (TransientResponse<*>) -> Int?

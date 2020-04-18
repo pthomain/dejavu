@@ -21,44 +21,47 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.serialisation.compression
 
-import android.net.Uri
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.di.Function1
+import dev.pthomain.android.dejavu.di.Function3
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import org.iq80.snappy.Snappy
 import javax.inject.Singleton
 
 @Module
-abstract class SerialisationModule<E> where E : Throwable,
-                                            E : NetworkErrorPredicate {
-    @Provides
-    @Singleton
-    internal fun provideSerialiser(configuration: Configuration<E>) =
-            configuration.serialiser
+abstract class CompressionModule<E> where E : Throwable,
+                                          E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    internal fun provideByteToStringConverter() =
-            object : Function1<ByteArray, String> {
-                override fun get(t1: ByteArray) = String(t1)
+    internal fun provideCompresser() =
+            object : Function1<ByteArray, ByteArray> {
+                override fun get(t1: ByteArray) =
+                        Snappy.compress(t1)
             }
 
     @Provides
     @Singleton
-    internal fun provideFileNameSerialiser() =
-            FileNameSerialiser()
+    internal fun provideUncompresser() =
+            object : Function3<ByteArray, Int, Int, ByteArray> {
+                override fun get(t1: ByteArray, t2: Int, t3: Int) =
+                        Snappy.uncompress(t1, t2, t3)
+            }
 
     @Provides
     @Singleton
-    internal fun provideHasher(logger: Logger,
-                               uriParser: Function1<String, Uri>) =
-            Hasher.Factory(
+    internal fun provideCompressionSerialisationDecorator(
+            logger: Logger,
+            compresser: Function1<ByteArray, ByteArray>,
+            uncompresser: Function3<ByteArray, Int, Int, ByteArray>
+    ) =
+            CompressionSerialisationDecorator<E>(
                     logger,
-                    uriParser::get
-            ).create()
-
+                    compresser::get,
+                    uncompresser::get
+            )
 }

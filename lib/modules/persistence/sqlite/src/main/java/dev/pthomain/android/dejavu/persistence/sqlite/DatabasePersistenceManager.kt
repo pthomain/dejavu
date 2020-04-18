@@ -33,14 +33,12 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedReques
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.DATABASE
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
@@ -223,24 +221,6 @@ class DatabasePersistenceManager<E> internal constructor(
                 throw SerialisationException("Could not save the response to database", e)
             }
         }
-    }
-
-    //TODO remove this
-    class Factory<E> internal constructor(private val database: SupportSQLiteDatabase,
-                                          private val serialisationManagerFactory: SerialisationManager.Factory<E>,
-                                          private val configuration: Configuration<E>,
-                                          private val dateFactory: (Long?) -> Date,
-                                          private val contentValuesFactory: (Map<String, *>) -> ContentValues)
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
-
-        fun create(): PersistenceManager<E> = DatabasePersistenceManager(
-                database,
-                serialisationManagerFactory.create(DATABASE),
-                configuration,
-                dateFactory,
-                contentValuesFactory
-        )
     }
 
 }

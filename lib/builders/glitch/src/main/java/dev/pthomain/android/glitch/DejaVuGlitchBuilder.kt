@@ -24,19 +24,14 @@
 package dev.pthomain.android.glitch
 
 import android.content.Context
-import dev.pthomain.android.dejavu.builders.configuration.ConfigurationBuilder
+import dev.pthomain.android.dejavu.configuration.ConfigurationBuilder
 import dev.pthomain.android.dejavu.error.DejaVuGlitchFactory
-import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
-class DejaVuGlitchBuilder(
-        context: Context,
-        serialiser: Serialiser
-) : ConfigurationBuilder<Glitch>(
+class DejaVuGlitchBuilder(context: Context) : ConfigurationBuilder<Glitch>(
         DejaVuGlitchFactory(GlitchFactory()),
         context,
-        serialiser,
         {
             DaggerGlitchDejaVuComponent
                     .builder()

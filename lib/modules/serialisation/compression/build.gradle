@@ -135,6 +135,9 @@ dependencies {
     implementation appDependencies.dagger
     kapt appDependencies.daggerCompiler
 
+    implementation appDependencies.snappy
+
+    testImplementation appDependencies.snappy
     testImplementation appDependencies.dagger
     kaptTest appDependencies.daggerCompiler
 }

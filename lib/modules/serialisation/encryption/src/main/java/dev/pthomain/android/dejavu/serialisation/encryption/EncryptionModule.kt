@@ -21,44 +21,26 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.serialisation.encryption
 
-import android.net.Uri
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.di.Function1
+import dev.pthomain.android.dejavu.serialisation.compression.EncryptionSerialisationDecorator
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.mumbo.base.EncryptionManager
 import javax.inject.Singleton
 
 @Module
-abstract class SerialisationModule<E> where E : Throwable,
-                                            E : NetworkErrorPredicate {
-    @Provides
-    @Singleton
-    internal fun provideSerialiser(configuration: Configuration<E>) =
-            configuration.serialiser
+abstract class EncryptionModule<E>(
+        private val encryptionManager: EncryptionManager
+) where  E : Throwable,
+         E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    internal fun provideByteToStringConverter() =
-            object : Function1<ByteArray, String> {
-                override fun get(t1: ByteArray) = String(t1)
-            }
-
-    @Provides
-    @Singleton
-    internal fun provideFileNameSerialiser() =
-            FileNameSerialiser()
-
-    @Provides
-    @Singleton
-    internal fun provideHasher(logger: Logger,
-                               uriParser: Function1<String, Uri>) =
-            Hasher.Factory(
-                    logger,
-                    uriParser::get
-            ).create()
+    internal fun provideEncryptionSerialisationDecorator(encryptionManager: EncryptionManager) =
+            EncryptionSerialisationDecorator<E>(
+                    encryptionManager
+            )
 
 }

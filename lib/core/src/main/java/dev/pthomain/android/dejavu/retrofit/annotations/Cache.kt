@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
-import dev.pthomain.android.dejavu.builders.configuration.CachePredicate.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
+import dev.pthomain.android.dejavu.configuration.CachePredicate.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
 

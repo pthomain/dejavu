@@ -21,4 +21,4 @@
   ~
   -->
 
-<manifest package="dev.pthomain.android.dejavu.persistence.memory" />
+<manifest package="dev.pthomain.android.dejavu.serialisation.encryption" />

@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.builders.configuration
+package dev.pthomain.android.dejavu.configuration
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 

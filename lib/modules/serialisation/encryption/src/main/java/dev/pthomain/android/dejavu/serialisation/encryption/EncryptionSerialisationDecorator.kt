@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.decoration.encryption
+package dev.pthomain.android.dejavu.serialisation.compression
 
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken

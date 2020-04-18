@@ -30,9 +30,9 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.serialisation.compression.EncryptionSerialisationDecorator.Companion.DATA_TAG
 import dev.pthomain.android.dejavu.serialisation.decoration.BaseSerialisationDecoratorUnitTest
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.serialisation.decoration.encryption.EncryptionSerialisationDecorator.Companion.DATA_TAG
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.expectException
 import dev.pthomain.android.dejavu.test.instructionToken
@@ -44,13 +44,13 @@ class EncryptionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitT
 
     private lateinit var mockEncryptionManager: EncryptionManager
 
-    private lateinit var target: EncryptionSerialisationDecorator<Glitch>
+    private lateinit var target: dev.pthomain.android.dejavu.serialisation.compression.EncryptionSerialisationDecorator<Glitch>
 
     @Before
     override fun setUp() {
         super.setUp()
         mockEncryptionManager = mock()
-        target = EncryptionSerialisationDecorator(
+        target = dev.pthomain.android.dejavu.serialisation.compression.EncryptionSerialisationDecorator(
                 mockEncryptionManager
         )
     }

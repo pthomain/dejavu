@@ -21,9 +21,8 @@
  *
  */
 
-package dev.pthomain.android.dejavu.builders.configuration
+package dev.pthomain.android.dejavu.configuration
 
-import android.annotation.SuppressLint
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
@@ -36,24 +35,18 @@ import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.mumbo.Mumbo
-import dev.pthomain.android.mumbo.base.EncryptionManager
 
 abstract class ConfigurationBuilder<E>(
         private val errorFactory: ErrorFactory<E>,
         private val context: Context,
-        private val serialiser: Serialiser,
         private val componentProvider: (Configuration<E>) -> DejaVuComponent<E>
-) : ModuleBuilder<E, ConfigurationBuilder<E>>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     private var logger: Logger = SilentLogger
     private var customErrorFactory: ErrorFactory<E>? = null
-    private var encryptionManager: EncryptionManager? = null
-
     private var persistenceManager: PersistenceManager<E>? = null
-
+    private var serialiser: Serialiser? = null
     private var operationPredicate: (RequestMetadata<*>) -> Remote? = CachePredicate.Inactive
     private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
 
@@ -64,38 +57,22 @@ abstract class ConfigurationBuilder<E>(
             apply { this.logger = logger }
 
     /**
+     * Sets custom logger.
+     */
+    fun withSerialiser(serialiser: Serialiser) =
+            apply { this.serialiser = serialiser }
+
+    /**
+     * Sets chose PersistenceManager.
+     */
+    fun withPersistenceManager(persistenceManager: PersistenceManager<E>) =
+            apply { this.persistenceManager = persistenceManager }
+
+    /**
      * Sets a custom ErrorFactory implementation.
      */
     fun withErrorFactory(errorFactory: ErrorFactory<E>) =
             apply { this.customErrorFactory = errorFactory }
-
-    /**
-     * Sets the EncryptionManager implementation. Can be used to provide a custom implementation
-     * or to choose one provided by the Mumbo library. For compatibility reasons, the default is
-     * Facebook Conceal, but apps targeting API 23+ should use Tink (JetPack).
-     *
-     * @param mumboPicker picker for the encryption implementation, with a choice of:
-     * - Facebook's Conceal for API levels < 23 (see https://facebook.github.io/conceal)
-     * - AndroidX's JetPack Security (Tink) implementation for API level >= 23 only (see https://developer.android.com/jetpack/androidx/releases/security)
-     * - custom implementation using the EncryptionManager interface
-     *
-     * NB: if you are targeting API level 23 or above, you should use Tink as it is a more secure implementation.
-     * However if your API level target is less than 23, using Tink will trigger a runtime exception.
-     */
-    final override fun withEncryption(encryptionManager: EncryptionManager) =
-            apply { this.encryptionManager = encryptionManager }
-
-    private fun defaultEncryptionManager(mumbo: Mumbo,
-                                         context: Context) = with(mumbo) {
-        with(context.packageManager.getApplicationInfo(
-                context.packageName,
-                0
-        )) {
-            @SuppressLint("NewApi")
-            if (targetSdkVersion >= 23) tink()
-            else conceal()
-        }
-    }
 
     /**
      * Provide a different PersistenceManager to handle the persistence of the cached requests.
@@ -107,7 +84,7 @@ abstract class ConfigurationBuilder<E>(
      *
      * @param persistenceManager the PersistenceManager implementation to override the default one
      */
-    final override fun withPersistence(persistenceManager: PersistenceManager<E>) =
+    fun withPersistence(persistenceManager: PersistenceManager<E>) =
             apply { this.persistenceManager = persistenceManager }
 
     /**
@@ -153,13 +130,15 @@ abstract class ConfigurationBuilder<E>(
                                 context.applicationContext,
                                 logger,
                                 customErrorFactory ?: errorFactory,
-                                serialiser,
-                                encryptionManager,
-                                persistenceManager!!, //FIXME
+                                checkProvided(serialiser),
+                                checkProvided(persistenceManager),
                                 operationPredicate,
                                 durationPredicate
                         ).also { logger.d(this, "DejaVu set up with the following configuration: $it") }
                 )
         )
     }
+
+    private inline fun <reified T> checkProvided(target: T?): T = target
+            ?: throw IllegalStateException("Please provide an instance of ${T::class.java.simpleName}")
 }

@@ -27,8 +27,10 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
+import dev.pthomain.android.dejavu.persistence.file.serialisation.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -58,16 +60,22 @@ abstract class FileModule<E>(
     @Provides
     internal fun provideFilePersistenceManager(
             fileStoreFactory: FileStore.Factory<E>,
-            serialisationManagerFactory: SerialisationManager.Factory<E>,
             configuration: DejaVu.Configuration<E>,
             dateFactory: (Long?) -> Date,
-            fileNameSerialiser: FileNameSerialiser
+            fileNameSerialiser: FileNameSerialiser,
+            serialisationManager: SerialisationManager<E>
     ): PersistenceManager<E> =
             KeyValuePersistenceManager(
                     configuration,
                     dateFactory,
                     fileNameSerialiser,
                     fileStoreFactory.create(cacheDirectory),
-                    serialisationManagerFactory.create(SerialisationManager.Factory.Type.FILE)
+                    serialisationManager
             )
+
+    @Provides
+    @Singleton
+    internal fun provideFileSerialisationDecorator(byteToStringConverter: Function1<ByteArray, String>) =
+            FileSerialisationDecorator<E>(byteToStringConverter::get)
+
 }

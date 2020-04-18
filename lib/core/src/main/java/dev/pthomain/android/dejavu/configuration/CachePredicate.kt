@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.builders.configuration
+package dev.pthomain.android.dejavu.configuration
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST

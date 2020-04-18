@@ -115,6 +115,7 @@ sourceSets {
     }
 }
 
+
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from android.sourceSets.main.java.srcDirs
@@ -125,50 +126,21 @@ artifacts {
 }
 
 dependencies {
+    compileOnly project(':lib:core')
+
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex
 
-    api appDependencies.kotlinJdk8
-    api appDependencies.kotlinReflect
-
     compileOnly appDependencies.jsr250
-    implementation appDependencies.androidAnnotations
-
-    api appDependencies.glitchy
-    api appDependencies.boilerplate
-
     implementation appDependencies.dagger
     kapt appDependencies.daggerCompiler
 
-    api appDependencies.rxJava
-    api appDependencies.rxKotlin
-    api appDependencies.rxAndroid
-
-    api appDependencies.retrofit
-    api appDependencies.retrofitAdapterRxJava
-
-    implementation appDependencies.fliptables
+    api appDependencies.mumbo
 
     testImplementation appDependencies.dagger
     kaptTest appDependencies.daggerCompiler
-
-    testImplementation appDependencies.retrofitConverterGson
-    testImplementation appDependencies.gson
-
-    testImplementation appDependencies.androidXtestCore
-    testImplementation appDependencies.androidXtestRunner
-    testImplementation appDependencies.androidXtestRules
-    testImplementation appDependencies.androidXjUnit
-
-    testImplementation appDependencies.mockitoCore
-    testImplementation appDependencies.robolectric
-    testImplementation appDependencies.okHttpMock
-    testImplementation appDependencies.mockitoKotlin
-
-    testImplementation appDependencies.reactiveNetwork
 }
 
 repositories {
     mavenCentral()
 }
-

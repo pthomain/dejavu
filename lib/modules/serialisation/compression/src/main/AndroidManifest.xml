@@ -21,4 +21,4 @@
   ~
   -->
 
-<manifest package="dev.pthomain.android.dejavu.serialisation.compression"></manifest>
+<manifest package="dev.pthomain.android.dejavu.serialisation.compression" />

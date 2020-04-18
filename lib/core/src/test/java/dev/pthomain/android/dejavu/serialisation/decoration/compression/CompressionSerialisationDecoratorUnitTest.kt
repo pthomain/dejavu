@@ -38,7 +38,7 @@ class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnit
     private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
     private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
 
-    private lateinit var target: CompressionSerialisationDecorator<Glitch>
+    private lateinit var target: dev.pthomain.android.dejavu.serialisation.compression.CompressionSerialisationDecorator<Glitch>
 
     @Before
     override fun setUp() {
@@ -46,7 +46,7 @@ class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnit
         mockCompresser = mock()
         mockUncompresser = mock()
 
-        target = CompressionSerialisationDecorator(
+        target = dev.pthomain.android.dejavu.serialisation.compression.CompressionSerialisationDecorator(
                 mock(),
                 mockCompresser,
                 mockUncompresser

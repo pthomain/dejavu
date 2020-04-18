@@ -30,8 +30,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.MEMORY
+import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton
@@ -51,7 +50,7 @@ abstract class MemoryModule<E>(
     @Provides
     internal fun provideMemoryPersistenceManager(
             memoryStoreFactory: MemoryStore.Factory,
-            serialisationManagerFactory: Factory<E>,
+            serialisationManager: SerialisationManager<E>,
             configuration: DejaVu.Configuration<E>,
             dateFactory: (Long?) -> Date,
             fileNameSerialiser: FileNameSerialiser
@@ -61,6 +60,6 @@ abstract class MemoryModule<E>(
                     dateFactory,
                     fileNameSerialiser,
                     memoryStoreFactory.create(maxEntries),
-                    serialisationManagerFactory.create(MEMORY, disableEncryption)
+                    serialisationManager
             )
 }

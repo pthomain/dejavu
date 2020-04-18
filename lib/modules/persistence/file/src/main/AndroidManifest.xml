@@ -21,4 +21,4 @@
   ~
   -->
 
-<manifest package="dev.pthomain.android.dejavu.persistence.sqlite" />
+<manifest package="dev.pthomain.android.dejavu.persistence.file" />

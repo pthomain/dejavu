@@ -41,7 +41,7 @@ class FileSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitTest() 
 
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
 
-    private lateinit var target: FileSerialisationDecorator<Glitch>
+    private lateinit var target: dev.pthomain.android.dejavu.persistence.file.serialisation.FileSerialisationDecorator<Glitch>
 
     @Before
     override fun setUp() {
@@ -50,7 +50,7 @@ class FileSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitTest() 
 
         whenever(mockByteToStringConverter.invoke(eq(mockPayload))).thenReturn(mockSerialisedPayload)
 
-        target = FileSerialisationDecorator(
+        target = dev.pthomain.android.dejavu.persistence.file.serialisation.FileSerialisationDecorator(
                 mockByteToStringConverter
         )
     }
