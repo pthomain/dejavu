@@ -27,9 +27,9 @@ import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser.Companion.isValidFormat
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.io.*
 
@@ -39,7 +39,7 @@ class FileStore private constructor(
         private val fileInputStreamFactory: (File) -> InputStream,
         private val fileOutputStreamFactory: (File) -> OutputStream,
         private val fileReader: (InputStream) -> ByteArray,
-        private val fileNameSerialiser: FileNameSerialiser,
+        private val keySerialiser: KeySerialiser,
         private val cacheDirectory: File
 ) : KeyValueStore<String, String, Incomplete> {
 
@@ -64,7 +64,7 @@ class FileStore private constructor(
      * @return the matching entry if present
      */
     override fun get(key: String) =
-            fileNameSerialiser.deserialise(key).copy(
+            keySerialiser.deserialise(key).copy(
                     data = fileInputStreamFactory(fileFactory(cacheDirectory, key)).useAndLogError(
                             fileReader::invoke,
                             logger
@@ -120,7 +120,7 @@ class FileStore private constructor(
     class Factory<E> internal constructor(
             private val logger: Logger,
             private val configuration: Configuration<E>,
-            private val fileNameSerialiser: FileNameSerialiser
+            private val keySerialiser: KeySerialiser
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
@@ -131,7 +131,7 @@ class FileStore private constructor(
                         { BufferedInputStream(FileInputStream(it)) },
                         { BufferedOutputStream(FileOutputStream(it)) },
                         { it.readBytes() },
-                        fileNameSerialiser,
+                        keySerialiser,
                         cacheDirectory
                 )
     }

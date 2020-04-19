@@ -32,7 +32,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.instructionToken

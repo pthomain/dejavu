@@ -21,13 +21,20 @@
  *
  */
 
-package dev.pthomain.android.glitch
+package dev.pthomain.android.dejavu.glitch
 
-import dagger.Component
-import dev.pthomain.android.dejavu.di.DejaVuComponent
+import android.content.Context
+import dev.pthomain.android.dejavu.configuration.ConfigurationBuilder
+import dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import javax.inject.Singleton
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
-@Singleton
-@Component(modules = [GlitchDejaVuModule::class])
-internal interface GlitchDejaVuComponent : DejaVuComponent<Glitch>
+class DejaVuGlitchBuilder(context: Context) : ConfigurationBuilder<Glitch>(
+        DejaVuGlitchFactory(GlitchFactory()),
+        context,
+        {
+            DaggerGlitchDejaVuComponent.builder()
+                    .glitchDejaVuModule(GlitchDejaVuModule(it))
+                    .build()
+        }
+)

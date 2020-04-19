@@ -28,9 +28,9 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.TransientResponse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
+import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.di.DejaVuComponent
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
@@ -67,8 +67,8 @@ class DejaVu<E> internal constructor(
             val context: Context,
             internal val logger: Logger,
             internal val errorFactory: ErrorFactory<E>,
-            internal val serialiser: Serialiser,
-            internal val persistenceManager: PersistenceManager<E>,
+            val serialiser: Serialiser,
+            val persistenceManager: PersistenceManager<E>,
             internal val operationPredicate: (metadata: RequestMetadata<*>) -> Operation.Remote?,
             internal val durationPredicate: (TransientResponse<*>) -> Int?
     ) where E : Throwable,

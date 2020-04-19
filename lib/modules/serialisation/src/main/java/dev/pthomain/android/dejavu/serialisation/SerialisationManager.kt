@@ -23,12 +23,11 @@
 
 package dev.pthomain.android.dejavu.serialisation
 
-import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.SerialisationException
+import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
@@ -110,7 +109,7 @@ class SerialisationManager<E> internal constructor(
             instructionToken: CacheToken<Cache, R>,
             data: ByteArray,
             metadata: SerialisationDecorationMetadata
-    ): Response<R, Cache> {
+    ): R {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val responseClass = requestMetadata.responseClass
         var deserialised = data
@@ -123,19 +122,9 @@ class SerialisationManager<E> internal constructor(
             )
         }
 
-        return byteToStringConverter(deserialised)
-                .let { serialiser.deserialise(it, responseClass) }
-                .let {
-                    Response(
-                            it,
-                            ResponseToken(
-                                    instructionToken.instruction,
-                                    NOT_CACHED,
-                                    dateFactory(null)
-                            ),
-                            CallDuration(0, 0, 0)
-                    )
-                }
+        return serialiser.deserialise(
+                byteToStringConverter(deserialised),
+                responseClass
+        )
     }
-
 }

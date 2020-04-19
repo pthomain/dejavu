@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
+import dev.pthomain.android.DejaVu.Configuration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.DejaVu.Configuration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor

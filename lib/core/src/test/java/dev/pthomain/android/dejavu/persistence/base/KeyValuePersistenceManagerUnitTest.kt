@@ -28,14 +28,14 @@ import dev.pthomain.android.dejavu.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.INVALID_HASH
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Complete
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser.Companion.SEPARATOR
+import dev.pthomain.android.dejavu.serialisation.KeySerialiser
+import dev.pthomain.android.dejavu.serialisation.KeySerialiser.Companion.SEPARATOR
 import dev.pthomain.android.dejavu.test.assertByteArrayEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -51,7 +51,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private lateinit var mockWrongCacheDataHolder1: Incomplete
     private lateinit var mockIncompleteCacheDataHolder: Incomplete
     private lateinit var mockCompleteCacheDataHolder: Complete
-    private lateinit var mockFileNameSerialiser: FileNameSerialiser
+    private lateinit var mockKeySerialiser: dev.pthomain.android.dejavu.serialisation.KeySerialiser
     private lateinit var mockDejaVu.Configuration: DejaVu.Configuration<Glitch>
     private lateinit var mockKeyValueStore: KeyValueStore<String, String, Incomplete>
 
@@ -63,7 +63,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private val invalidatedEntryName = "invalidatedEntryName"
 
     override fun setUp(instructionToken: InstructionToken): KeyValuePersistenceManager<Glitch> {
-        mockFileNameSerialiser = mock()
+        mockKeySerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(
                 mockCacheDateTime,
@@ -97,7 +97,7 @@ internal class KeyValuePersistenceManagerUnitTest
         return KeyValuePersistenceManager(
                 mockDejaVu.Configuration,
                 mockDateFactory,
-                mockFileNameSerialiser,
+                mockKeySerialiser,
                 mockKeyValueStore,
                 mockSerialisationManager
         )
@@ -113,9 +113,9 @@ internal class KeyValuePersistenceManagerUnitTest
                 entryList[2] to mockWrongCacheDataHolder2
         ))
 
-        whenever(mockFileNameSerialiser.deserialise(eq(entryOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
-        whenever(mockFileNameSerialiser.deserialise(eq(entryOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
-        whenever(mockFileNameSerialiser.deserialise(eq(entryOfRightType))).thenReturn(mockRightCacheDataHolder)
+        whenever(mockKeySerialiser.deserialise(eq(entryOfWrongType1))).thenReturn(mockWrongCacheDataHolder1)
+        whenever(mockKeySerialiser.deserialise(eq(entryOfWrongType2))).thenReturn(mockWrongCacheDataHolder2)
+        whenever(mockKeySerialiser.deserialise(eq(entryOfRightType))).thenReturn(mockRightCacheDataHolder)
 
         val requestMetadata = instructionToken.instruction.requestMetadata
         if (requestMetadata.responseClass == TestResponse::class.java) {
@@ -145,7 +145,7 @@ internal class KeyValuePersistenceManagerUnitTest
                               hasPreviousResponse: Boolean,
                               isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
-            whenever(mockFileNameSerialiser.serialise(any()))
+            whenever(mockKeySerialiser.serialise(any()))
                     .thenReturn(mockEntryWithValidHash)
 
             whenever(mockKeyValueStore.get(eq(mockEntryWithValidHash))).thenReturn(mockRightCacheDataHolder)
@@ -167,7 +167,7 @@ internal class KeyValuePersistenceManagerUnitTest
                              isSerialisationSuccess: Boolean) {
         if (isSerialisationSuccess) {
             val dataHolderCaptor = argumentCaptor<Complete>()
-            verifyWithContext(mockFileNameSerialiser, context).serialise(dataHolderCaptor.capture())
+            verifyWithContext(mockKeySerialiser, context).serialise(dataHolderCaptor.capture())
             val cacheDataHolder = dataHolderCaptor.firstValue
 
             assertCacheDataHolder(
@@ -231,14 +231,14 @@ internal class KeyValuePersistenceManagerUnitTest
                 mockEntryWithValidHash to mockRightCacheDataHolder
         )
 
-        whenever(mockFileNameSerialiser.deserialise(
+        whenever(mockKeySerialiser.deserialise(
                 eq(instructionToken.instruction.requestMetadata),
                 eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder)
 
         val invalidatedHolder = mockCompleteCacheDataHolder.copy(expiryDate = 0L)
 
-        whenever(mockFileNameSerialiser.serialise(eq(invalidatedHolder)))
+        whenever(mockKeySerialiser.serialise(eq(invalidatedHolder)))
                 .thenReturn(invalidatedEntryName)
 
         whenever(mockKeyValueStore.values()).thenReturn(entryList)
@@ -300,7 +300,7 @@ internal class KeyValuePersistenceManagerUnitTest
 //
 //        whenever(mockFileReader.invoke(eq(mockInputStream))).thenReturn(mockBlob)
 
-        whenever(mockFileNameSerialiser.deserialise(
+        whenever(mockKeySerialiser.deserialise(
                 eq(instructionToken.instruction.requestMetadata),
                 eq(mockEntryWithValidHash)
         )).thenReturn(mockCompleteCacheDataHolder.copy(

@@ -23,16 +23,16 @@
 
 package dev.pthomain.android.dejavu.persistence.base.store
 
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -46,18 +46,20 @@ import java.util.*
  *
  * @param configuration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
- * @param fileNameSerialiser a class that handles the serialisation of the cache metadata to a file name.
+ * @param keySerialiser a class that handles the serialisation of the cache metadata to a file name.
  * @param store the KeyValueStore holding the data
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  */
 class KeyValuePersistenceManager<E>(
         configuration: Configuration<E>,
         dateFactory: (Long?) -> Date,
-        private val fileNameSerialiser: FileNameSerialiser,
+        logger: Logger,
+        private val keySerialiser: KeySerialiser,
         private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
         serialisationManager: SerialisationManager<E>
 ) : BasePersistenceManager<E>(
         configuration,
+        logger,
         serialisationManager,
         dateFactory
 ), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store
@@ -78,7 +80,7 @@ class KeyValuePersistenceManager<E>(
                 delete(it)
             }
 
-            val name = fileNameSerialiser.serialise(holder)
+            val name = keySerialiser.serialise(holder)
             save(name, holder.incomplete)
         }
     }
@@ -104,7 +106,7 @@ class KeyValuePersistenceManager<E>(
     override fun <R> clearCache(operation: Clear,
                                 requestMetadata: ValidRequestMetadata<R>) {
         val now = dateFactory(null).time
-        values().map { it.key to fileNameSerialiser.deserialise(it.key) }
+        values().map { it.key to keySerialiser.deserialise(it.key) }
                 .filter {
                     val holder = it.second
 
@@ -127,9 +129,9 @@ class KeyValuePersistenceManager<E>(
      */
     override fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
         findPartialKey(requestMetadata.requestHash)?.also { oldName ->
-            fileNameSerialiser.deserialise(requestMetadata, oldName).let {
+            keySerialiser.deserialise(requestMetadata, oldName).let {
                 if (it.expiryDate != 0L) {
-                    val newName = fileNameSerialiser.serialise(it.copy(expiryDate = 0L))
+                    val newName = keySerialiser.serialise(it.copy(expiryDate = 0L))
                     rename(oldName, newName)
                     return true
                 }

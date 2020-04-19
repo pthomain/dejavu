@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.serialisation.decoration.compression
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.decoration.BaseSerialisationDecoratorUnitTest
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext

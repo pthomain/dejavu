@@ -38,8 +38,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.di.integration.module.NOW
-import dev.pthomain.android.dejavu.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import junit.framework.TestCase.*

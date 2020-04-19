@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.test.*
@@ -43,9 +43,9 @@ import dev.pthomain.android.dejavu.utils.Utils.swapLambdaWhen
 import org.junit.Test
 import java.util.*
 
-internal abstract class BasePersistenceManagerUnitTest<T : PersistenceManager<Glitch>> {
+internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>> {
 
-    protected lateinit var mockSerialisationManager: SerialisationManager<Glitch>
+    protected lateinit var mockSerialisationManager: dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>
     protected lateinit var mockDateFactory: (Long?) -> Date
     protected lateinit var mockCacheToken: InstructionToken
     protected lateinit var mockResponseWrapper: ResponseWrapper<*, *, Glitch>

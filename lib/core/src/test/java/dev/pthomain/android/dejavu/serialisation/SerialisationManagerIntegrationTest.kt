@@ -29,7 +29,7 @@ import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
@@ -39,7 +39,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class SerialisationManagerIntegrationTest
-    : BaseIntegrationTest<SerialisationManager<Glitch>>({
+    : BaseIntegrationTest<dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>>({
     it.serialisationManagerFactory().create(FILE) //TODO test the factory
 }) {
 

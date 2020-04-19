@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.persistence.file
 
 import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.persistence.PersistenceManager.Companion.getCacheStatus
+import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser.Companion.isValidFormat
 import java.io.File
 import java.io.InputStream
 import java.util.*
@@ -41,7 +41,7 @@ import java.util.*
  * @param fileFactory a factory that returns a File for a given parent directory and file name
  * @param fileInputStreamFactory a factory that returns an InputStream for a given File
  * @param dateFactory the factory converting timestamps to Dates
- * @param fileNameSerialiser a class that handles the serialisation of the cache metadata to a file name.
+ * @param keySerialiser a class that handles the serialisation of the cache metadata to a file name.
  */
 internal class FileStatisticsCompiler(
         private val configuration: Configuration<*>,
@@ -49,7 +49,7 @@ internal class FileStatisticsCompiler(
         private val fileFactory: (File, String) -> File,
         private val fileInputStreamFactory: (File) -> InputStream,
         private val dateFactory: (Long?) -> Date,
-        private val fileNameSerialiser: FileNameSerialiser
+        private val keySerialiser: KeySerialiser
 ) : BaseStatisticsCompiler<String, List<String>>(configuration) { //TODO use KeyValueStore
 
     /**
@@ -58,7 +58,7 @@ internal class FileStatisticsCompiler(
      * @return the list of valid file names in the cache directory.
      */
     override fun loadEntries() =
-            cacheDirectory.list()!!.filter { isValidFormat(it) }
+            cacheDirectory.list()!!.filter(::isValidFormat)
 
     /**
      * Converts a file name to a CacheEntry.
@@ -67,7 +67,7 @@ internal class FileStatisticsCompiler(
      * @return the converted entry
      */
     override fun convert(entry: String): CacheEntry {
-        val dataHolder = fileNameSerialiser.deserialise(entry)
+        val dataHolder = keySerialiser.deserialise(entry)
 
         val file = fileFactory(cacheDirectory, entry)
         val responseClassName = fileInputStreamFactory(file).reader().buffered().readLine()

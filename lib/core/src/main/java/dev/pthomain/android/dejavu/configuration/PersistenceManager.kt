@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence
+package dev.pthomain.android.dejavu.configuration
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
@@ -30,7 +30,6 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 
@@ -46,7 +45,7 @@ interface PersistenceManager<E>
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): Response<R, Cache>?
+    fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): CacheData<R>?
 
     /**
      * Caches a given response.
@@ -105,4 +104,11 @@ interface PersistenceManager<E>
                 FRESH
         )
     }
+
+    data class CacheData<R : Any>(
+            val data: R,
+            val requestDate: Date,
+            val cacheDate: Date,
+            val expiryDate: Date
+    )
 }

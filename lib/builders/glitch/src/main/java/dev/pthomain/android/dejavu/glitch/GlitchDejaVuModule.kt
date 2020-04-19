@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.glitch
+package dev.pthomain.android.dejavu.glitch
 
 import dagger.Module
 import dev.pthomain.android.dejavu.DejaVu.Configuration

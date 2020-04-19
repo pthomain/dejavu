@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.cache.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.response.*
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NETWORK
@@ -37,7 +38,6 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
-import dev.pthomain.android.dejavu.serialisation.Hasher
 import dev.pthomain.android.glitchy.interceptor.Interceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.interceptor.outcome.Outcome

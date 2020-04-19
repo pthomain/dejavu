@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
@@ -32,8 +33,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
+import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import java.util.*
@@ -102,16 +104,28 @@ internal class CacheManager<E>(
                 val simpleName = instruction.requestMetadata.responseClass.simpleName
 
                 logger.d(this, "Checking for cached $simpleName")
+
                 val cachedResponse = persistenceManager.getCachedResponse(requestToken)
+                        ?.run {
+                            val status = dateFactory.getCacheStatus(
+                                    expiryDate,
+                                    instruction.operation
+                            )
+                            if (cacheOperation.priority.freshness.isFreshOnly() && !status.isFresh) null
+                            else Response(
+                                    data,
+                                    ResponseToken(
+                                            instruction,
+                                            status,
+                                            requestDate,
+                                            cacheDate,
+                                            expiryDate
+                                    ),
+                                    CallDuration(0, 0, 0) //FIXME
+                            )
+                        }
 
                 val diskDuration = (dateFactory(null).time - requestToken.requestDate.time).toInt()
-
-                if (cachedResponse != null) {
-                    logger.d(
-                            this,
-                            "Found cached $simpleName, status: ${cachedResponse.cacheToken.status}"
-                    )
-                }
 
                 if (networkPriority.isLocalOnly()) {
                     if (cachedResponse == null)

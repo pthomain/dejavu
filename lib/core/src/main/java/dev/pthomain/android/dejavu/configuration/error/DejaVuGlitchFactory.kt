@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.error
+package dev.pthomain.android.dejavu.configuration.error
 
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory

@@ -30,7 +30,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -44,12 +44,16 @@ abstract class SqliteModule<E> where E : Throwable,
 
     @Provides
     @Singleton
-    fun provideDatabasePersistenceManagerFactory(configuration: DejaVu.Configuration<E>,
-                                                 database: SupportSQLiteDatabase,
-                                                 dateFactory: Function1<Long?, Date>,
-                                                 serialisationManager: SerialisationManager<E>) =
+    fun provideDatabasePersistenceManagerFactory(
+            configuration: Configuration<E>,
+            logger: Logger,
+            database: SupportSQLiteDatabase,
+            dateFactory: Function1<Long?, Date>,
+            serialisationManager: SerialisationManager<E>
+    ) =
             DatabasePersistenceManager(
                     database,
+                    logger,
                     serialisationManager,
                     configuration,
                     dateFactory::get,
@@ -69,8 +73,10 @@ abstract class SqliteModule<E> where E : Throwable,
 
     @Provides
     @Singleton
-    fun provideSqlOpenHelper(context: Context,
-                             callback: SupportSQLiteOpenHelper.Callback): SupportSQLiteOpenHelper =
+    fun provideSqlOpenHelper(
+            context: Context,
+            callback: SupportSQLiteOpenHelper.Callback
+    ): SupportSQLiteOpenHelper =
             RequerySQLiteOpenHelperFactory().create(
                     SupportSQLiteOpenHelper.Configuration.builder(context)
                             .name(DATABASE_NAME)
@@ -80,10 +86,12 @@ abstract class SqliteModule<E> where E : Throwable,
 
     @Provides
     @Singleton
-    fun provideDatabaseStatisticsCompiler(configuration: DejaVu.Configuration<E>,
-                                          logger: Logger,
-                                          database: SupportSQLiteDatabase,
-                                          dateFactory: Function1<Long?, Date>) =
+    fun provideDatabaseStatisticsCompiler(
+            configuration: Configuration<E>,
+            logger: Logger,
+            database: SupportSQLiteDatabase,
+            dateFactory: Function1<Long?, Date>
+    ) =
             DatabaseStatisticsCompiler(
                     configuration,
                     logger,

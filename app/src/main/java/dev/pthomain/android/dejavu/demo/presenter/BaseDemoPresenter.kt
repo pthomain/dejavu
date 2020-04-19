@@ -49,7 +49,7 @@ import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.glitch.DejaVuGlitchBuilder
+import dev.pthomain.android.dejavu.glitch.DejaVuGlitchBuilder
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.Single

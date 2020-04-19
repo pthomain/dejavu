@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.serialisation.decoration
 import androidx.annotation.CallSuper
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.trueFalseSequence
 import org.junit.Before

@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
 /**
  * Custom Serialiser implementation wrapping Gson
  */
-class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
+class GsonSerialiser(private val gson: Gson) : dev.pthomain.android.dejavu.serialisation.SimpleSerialiser() {
 
     override fun <O : Any> serialise(target: O) =
             gson.toJson(target)!!

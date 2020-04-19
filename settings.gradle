@@ -20,11 +20,13 @@
  *  under the License.
  *
  */
+include ':lib:core'
+include ':lib:builders:glitch'
+include ':lib:modules:serialisation'
+include ':lib:modules:serialisation:compression'
+include ':lib:modules:serialisation:encryption'
+include ':lib:modules:persistence'
 include ':lib:modules:persistence:file'
 include ':lib:modules:persistence:memory'
 include ':lib:modules:persistence:sqlite'
-include ':lib:modules:serialisation:compression'
-include ':lib:modules:serialisation:encryption'
-include ':lib:builders:glitch'
-include ':lib:core'
 include ':app'

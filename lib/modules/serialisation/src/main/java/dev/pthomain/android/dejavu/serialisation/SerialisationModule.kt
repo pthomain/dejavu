@@ -23,14 +23,26 @@
 
 package dev.pthomain.android.dejavu.serialisation
 
+import dagger.Module
+import dagger.Provides
+import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import javax.inject.Singleton
 
-/**
- * An exception representing a failure during the serialisation process.
- *
- * @param message the description of the error
- * @param cause the optional original exception
- */
-class SerialisationException(
-        message: String?,
-        cause: Throwable? = null
-) : Exception(message, cause)
+@Module
+abstract class SerialisationModule<E>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+
+    @Provides
+    @Singleton
+    internal fun provideSerialiser(configuration: Configuration<E>) =
+            configuration.serialiser
+
+    @Provides
+    @Singleton
+    internal fun provideByteToStringConverter() =
+            object : Function1<ByteArray, String> {
+                override fun get(t1: ByteArray) = String(t1)
+            }
+}

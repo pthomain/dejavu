@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
@@ -112,7 +113,7 @@ internal class OperationResolver<E, R> private constructor(
      */
     private fun getHeaderOperation(call: Call<Any>): Operation? {
         logger.d(this, "Checking cache header on $methodDescription")
-        val header = call.request().header(DejaVu.DejaVuHeader) ?: return null
+        val header = call.request().header(DejaVuHeader) ?: return null
 
         val operation = try {
             header.toOperation()

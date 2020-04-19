@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.database
 
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerIntegrationTest
 
 internal class DatabasePersistenceManagerIntegrationTest

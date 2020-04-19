@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.serialisation.decoration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 /**

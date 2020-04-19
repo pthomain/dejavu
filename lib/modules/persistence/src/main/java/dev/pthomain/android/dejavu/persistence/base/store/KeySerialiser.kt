@@ -21,18 +21,18 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
-import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
 
 /**
  * Provides methods handling the serialisation and deserialisation of the required cache metadata
  * to be used as a File name for the purpose of filtering and querying of the cached responses.
  */
-class FileNameSerialiser {
+class KeySerialiser {
 
     /**
      * Serialises the required cache metadata to be used as a File name for the purpose of
@@ -69,7 +69,7 @@ class FileNameSerialiser {
     fun deserialise(fileName: String) =
             if (isValidFormat(fileName)) {
                 with(fileName.split(SEPARATOR)) {
-                    Incomplete(
+                    CacheDataHolder.Incomplete(
                             get(0).toLong(),
                             get(1).toLong(),
                             ByteArray(0),

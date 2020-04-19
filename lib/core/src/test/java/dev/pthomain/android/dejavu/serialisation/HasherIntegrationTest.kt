@@ -37,7 +37,7 @@ import java.security.MessageDigest
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDejaVuComponent::hasher) {
+internal class HasherIntegrationTest : BaseIntegrationTest<dev.pthomain.android.dejavu.serialisation.Hasher>(IntegrationDejaVuComponent::hasher) {
 
     private val paramsKeys = "bedac"
     private val paramsKeysInOrder = "abcde"
@@ -177,9 +177,9 @@ internal class HasherIntegrationTest : BaseIntegrationTest<Hasher>(IntegrationDe
     @Test
     @Throws(Exception::class)
     fun testHash() {
-        val sha1Hasher = Hasher(mock(), MessageDigest.getInstance("SHA-1")) { Uri.parse(it) }
-        val md5Hasher = Hasher(mock(), MessageDigest.getInstance("MD5")) { Uri.parse(it) }
-        val defaultHasher = Hasher(mock(), null) { Uri.parse(it) }
+        val sha1Hasher = dev.pthomain.android.dejavu.serialisation.Hasher(mock(), MessageDigest.getInstance("SHA-1")) { Uri.parse(it) }
+        val md5Hasher = dev.pthomain.android.dejavu.serialisation.Hasher(mock(), MessageDigest.getInstance("MD5")) { Uri.parse(it) }
+        val defaultHasher = dev.pthomain.android.dejavu.serialisation.Hasher(mock(), null) { Uri.parse(it) }
 
         for (i in strings.indices) {
             assertEqualsWithContext(

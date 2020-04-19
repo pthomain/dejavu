@@ -28,7 +28,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.persistence.PersistenceManager.Companion.getCacheStatus
+import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler

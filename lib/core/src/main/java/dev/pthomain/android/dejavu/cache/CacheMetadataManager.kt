@@ -32,7 +32,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*

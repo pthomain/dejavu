@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.configuration
 
 /**
  * Interface for custom serialisation
@@ -70,3 +70,14 @@ abstract class SimpleSerialiser : Serialiser {
     final override fun canHandleType(targetClass: Class<*>) = true
     final override fun canHandleSerialisedFormat(serialised: String) = true
 }
+
+/**
+ * An exception representing a failure during the serialisation process.
+ *
+ * @param message the description of the error
+ * @param cause the optional original exception
+ */
+class SerialisationException(
+        message: String?,
+        cause: Throwable? = null
+) : Exception(message, cause)

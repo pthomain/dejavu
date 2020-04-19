@@ -28,7 +28,7 @@ import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.compression.EncryptionSerialisationDecorator.Companion.DATA_TAG
 import dev.pthomain.android.dejavu.serialisation.decoration.BaseSerialisationDecoratorUnitTest
@@ -107,7 +107,7 @@ class EncryptionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitT
 
                     if (encryptionFails) {
                         expectException(
-                                SerialisationException::class.java,
+                                dev.pthomain.android.dejavu.serialisation.SerialisationException::class.java,
                                 ifElse(isSerialisation, "Could not encrypt data", "Could not decrypt data"),
                                 { call() },
                                 context

@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.di
 import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
-import dev.pthomain.android.dejavu.persistence.statistics.StatisticsCompiler
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import retrofit2.CallAdapter
 
@@ -63,6 +62,7 @@ interface DejaVuComponent<E>
     /**
      * Provides statistics about the content of the cache.
      */
-    fun statisticsCompiler(): StatisticsCompiler
+    //FIXME
+//    fun statisticsCompiler(): dev.pthomain.android.dejavu.persistence.statistics.StatisticsCompiler
 
 }

@@ -27,8 +27,8 @@ import androidx.annotation.CallSuper
 import androidx.test.core.app.ApplicationProvider
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.mock
+import dev.pthomain.android.DejaVu
 import dev.pthomain.android.dejavu.BuildConfig
-import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
@@ -75,9 +75,9 @@ internal abstract class BaseIntegrationTest<T : Any>(
     protected lateinit var cacheComponent: IntegrationDejaVuComponent
     protected lateinit var target: T
 
-    private lateinit var dejaVu: DejaVu<Glitch>
+    private lateinit var dejaVu: dev.pthomain.android.DejaVu<Glitch>
 
-    protected open val configuration = DejaVu.Configuration(
+    protected open val configuration = dev.pthomain.android.DejaVu.Configuration(
             ApplicationProvider.getApplicationContext(),
             mock(),
             GlitchFactory(),
@@ -97,12 +97,12 @@ internal abstract class BaseIntegrationTest<T : Any>(
         }
     }
 
-    protected fun setUpWithConfiguration(configuration: DejaVu.Configuration<Glitch>) {
+    protected fun setUpWithConfiguration(configuration: dev.pthomain.android.DejaVu.Configuration<Glitch>) {
         cacheComponent = DaggerIntegrationDejaVuComponent.builder()
                 .integrationDejaVuModule(IntegrationModule(configuration))
                 .build()
 
-        dejaVu = DejaVu(cacheComponent)
+        dejaVu = dev.pthomain.android.DejaVu(cacheComponent)
 
         val testComponent = DaggerIntegrationTestComponent.builder()
                 .integrationTestModule(IntegrationTestModule(dejaVu))

@@ -28,7 +28,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -42,7 +42,7 @@ import org.junit.Test
 class SerialisationManagerUnitTest {
 
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
-    private lateinit var mockSerialiser: Serialiser
+    private lateinit var mockSerialiser: dev.pthomain.android.dejavu.serialisation.Serialiser
     private lateinit var mockSerialisationDecorator1: SerialisationDecorator<Glitch>
     private lateinit var mockSerialisationDecorator2: SerialisationDecorator<Glitch>
     private lateinit var mockMetadata: SerialisationDecorationMetadata
@@ -56,7 +56,7 @@ class SerialisationManagerUnitTest {
     private val mockSerialisedByteArray1 = "mockSerialisedByteArray1".toByteArray()
     private val mockSerialisedByteArray2 = "mockSerialisedByteArray2".toByteArray()
 
-    private lateinit var target: SerialisationManager<Glitch>
+    private lateinit var target: dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>
 
     @Before
     fun setUp() {
@@ -72,7 +72,7 @@ class SerialisationManagerUnitTest {
                 mockSerialisationDecorator1,
                 mockSerialisationDecorator2
         )
-        target = SerialisationManager(
+        target = dev.pthomain.android.dejavu.serialisation.SerialisationManager(
                 mockErrorFactory,
                 mockSerialiser,
                 mockByteToStringConverter,
@@ -124,7 +124,7 @@ class SerialisationManagerUnitTest {
 
         if (isNullResponse) {
             expectException(
-                    SerialisationException::class.java,
+                    dev.pthomain.android.dejavu.serialisation.SerialisationException::class.java,
                     "Could not serialise the given response",
                     { target.serialise(mockWrapper, mockMetadata) },
                     context

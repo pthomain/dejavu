@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.di.integration.module
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
+import dev.pthomain.android.DejaVu
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
@@ -40,11 +40,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
-internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
+internal class IntegrationTestModule(private val dejaVu: dev.pthomain.android.DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideDejaVu(): DejaVu<Glitch> = dejaVu
+    fun provideDejaVu(): dev.pthomain.android.DejaVu<Glitch> = dejaVu
 
     @Provides
     @Singleton
@@ -53,7 +53,7 @@ internal class IntegrationTestModule(private val dejaVu: DejaVu<Glitch>) {
 
     @Provides
     @Singleton
-    fun provideRetrofitCacheAdapterFactory(dejaVu: DejaVu<Glitch>) =
+    fun provideRetrofitCacheAdapterFactory(dejaVu: dev.pthomain.android.DejaVu<Glitch>) =
             dejaVu.retrofitCallAdapterFactory
 
     @Provides

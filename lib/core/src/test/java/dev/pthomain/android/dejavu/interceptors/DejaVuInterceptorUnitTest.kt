@@ -31,7 +31,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequest
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.serialisation.Hasher
 import dev.pthomain.android.dejavu.test.*
@@ -52,7 +52,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
     private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
     private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
-    private lateinit var mockHasher: Hasher
+    private lateinit var mockHasher: dev.pthomain.android.dejavu.serialisation.Hasher
     private lateinit var mockRequestMetadata: PlainRequestMetadata
     private lateinit var mockValidHashedMetadata: ValidRequestMetadata
     private lateinit var mockInvalidHashedMetadata: InvalidRequestMetadata

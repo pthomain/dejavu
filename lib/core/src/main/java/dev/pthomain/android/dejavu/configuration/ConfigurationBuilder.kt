@@ -31,8 +31,6 @@ import dev.pthomain.android.dejavu.cache.TransientResponse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.di.DejaVuComponent
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
@@ -57,16 +55,10 @@ abstract class ConfigurationBuilder<E>(
             apply { this.logger = logger }
 
     /**
-     * Sets custom logger.
+     * Sets custom Serialiser.
      */
     fun withSerialiser(serialiser: Serialiser) =
             apply { this.serialiser = serialiser }
-
-    /**
-     * Sets chose PersistenceManager.
-     */
-    fun withPersistenceManager(persistenceManager: PersistenceManager<E>) =
-            apply { this.persistenceManager = persistenceManager }
 
     /**
      * Sets a custom ErrorFactory implementation.

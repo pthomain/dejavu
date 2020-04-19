@@ -27,7 +27,7 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.decoration.BaseSerialisationDecoratorUnitTest
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
@@ -93,7 +93,7 @@ class FileSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnitTest() 
 
             if (deserialisationFails) {
                 expectException(
-                        SerialisationException::class.java,
+                        dev.pthomain.android.dejavu.serialisation.SerialisationException::class.java,
                         "Could not extract the payload",
                         {
                             target.decorateSerialisation(

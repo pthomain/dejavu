@@ -31,7 +31,7 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException.Type.SERIALISATION
@@ -49,7 +49,7 @@ import java.util.*
 class ResponseMetadataManagerUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
-    private lateinit var mockPersistenceManager: PersistenceManager<Glitch>
+    private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>
     private lateinit var mockDateFactory: (Long?) -> Date
 
     private val now = 321L

@@ -147,8 +147,6 @@ dependencies {
     api appDependencies.retrofit
     api appDependencies.retrofitAdapterRxJava
 
-    implementation appDependencies.fliptables
-
     testImplementation appDependencies.dagger
     kaptTest appDependencies.daggerCompiler
 

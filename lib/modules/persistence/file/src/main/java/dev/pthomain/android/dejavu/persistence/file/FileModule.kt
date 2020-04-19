@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.persistence.file
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
 import dev.pthomain.android.dejavu.di.Function1
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.persistence.file.serialisation.FileSerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -39,7 +39,7 @@ import javax.inject.Singleton
 
 @Module
 abstract class FileModule<E>(
-        configuration: DejaVu.Configuration<E>,
+        configuration: Configuration<E>,
         private val cacheDirectory: java.io.File = configuration.context.cacheDir
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -48,27 +48,29 @@ abstract class FileModule<E>(
     @Singleton
     internal fun provideFileStoreFactory(
             logger: Logger,
-            configuration: DejaVu.Configuration<E>,
-            fileNameSerialiser: FileNameSerialiser
+            configuration: Configuration<E>,
+            keySerialiser: KeySerialiser
     ) =
             FileStore.Factory(
                     logger,
                     configuration,
-                    fileNameSerialiser
+                    keySerialiser
             )
 
     @Provides
     internal fun provideFilePersistenceManager(
             fileStoreFactory: FileStore.Factory<E>,
-            configuration: DejaVu.Configuration<E>,
+            configuration: Configuration<E>,
+            logger: Logger,
             dateFactory: (Long?) -> Date,
-            fileNameSerialiser: FileNameSerialiser,
+            keySerialiser: KeySerialiser,
             serialisationManager: SerialisationManager<E>
     ): PersistenceManager<E> =
             KeyValuePersistenceManager(
                     configuration,
                     dateFactory,
-                    fileNameSerialiser,
+                    logger,
+                    keySerialiser,
                     fileStoreFactory.create(cacheDirectory),
                     serialisationManager
             )

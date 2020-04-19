@@ -21,22 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence
+package dev.pthomain.android.dejavu.glitch
 
-import dagger.Module
-import dagger.Provides
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dagger.Component
+import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import javax.inject.Singleton
 
-@Module
-abstract class PersistenceModule<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
-
-    @Provides
-    @Singleton
-    fun providePersistenceManager(configuration: Configuration<E>): PersistenceManager<E> =
-            configuration.persistenceManager
-
-}
+@Singleton
+@Component(modules = [GlitchDejaVuModule::class])
+internal interface GlitchDejaVuComponent : DejaVuComponent<Glitch>

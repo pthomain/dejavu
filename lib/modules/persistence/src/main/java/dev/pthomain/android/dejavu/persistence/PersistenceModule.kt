@@ -21,36 +21,34 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.persistence
 
 import android.net.Uri
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.cache.Hasher
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
 import dev.pthomain.android.dejavu.di.Function1
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import javax.inject.Singleton
 
 @Module
-abstract class SerialisationModule<E> where E : Throwable,
-                                            E : NetworkErrorPredicate {
-    @Provides
-    @Singleton
-    internal fun provideSerialiser(configuration: Configuration<E>) =
-            configuration.serialiser
+abstract class PersistenceModule<E>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    internal fun provideByteToStringConverter() =
-            object : Function1<ByteArray, String> {
-                override fun get(t1: ByteArray) = String(t1)
-            }
+    internal fun providePersistenceManager(configuration: Configuration<E>): PersistenceManager<E> =
+            configuration.persistenceManager
 
     @Provides
     @Singleton
-    internal fun provideFileNameSerialiser() =
-            FileNameSerialiser()
+    internal fun provideFileNameSerialiser() = KeySerialiser()
+
 
     @Provides
     @Singleton
@@ -60,5 +58,4 @@ abstract class SerialisationModule<E> where E : Throwable,
                     logger,
                     uriParser::get
             ).create()
-
 }

@@ -26,21 +26,20 @@ package dev.pthomain.android.dejavu.persistence.memory
 import androidx.collection.LruCache
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
+import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.serialisation.FileNameSerialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton
 
 @Module
-abstract class MemoryModule<E>(
-        private val maxEntries: Int = 20,
-        private val disableEncryption: Boolean = false
-) where E : Throwable,
-        E : NetworkErrorPredicate {
+abstract class MemoryModule<E>(private val maxEntries: Int = 20)
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
@@ -51,14 +50,16 @@ abstract class MemoryModule<E>(
     internal fun provideMemoryPersistenceManager(
             memoryStoreFactory: MemoryStore.Factory,
             serialisationManager: SerialisationManager<E>,
-            configuration: DejaVu.Configuration<E>,
+            configuration: Configuration<E>,
+            logger: Logger,
             dateFactory: (Long?) -> Date,
-            fileNameSerialiser: FileNameSerialiser
+            keySerialiser: KeySerialiser
     ): PersistenceManager<E> =
             KeyValuePersistenceManager(
                     configuration,
                     dateFactory,
-                    fileNameSerialiser,
+                    logger,
+                    keySerialiser,
                     memoryStoreFactory.create(maxEntries),
                     serialisationManager
             )

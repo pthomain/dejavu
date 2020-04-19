@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.cache.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertNotNullWithContext
 import dev.pthomain.android.dejavu.test.assertNullWithContext
@@ -41,9 +41,9 @@ import org.junit.Test
 import java.util.*
 
 //TODO memory
-internal abstract class BasePersistenceManagerIntegrationTest<T : PersistenceManager<Glitch>>(
+internal abstract class BasePersistenceManagerIntegrationTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>>(
         targetExtractor: (PersistenceManagerFactory<Glitch>) -> T
-) : BaseIntegrationTest<PersistenceManager<Glitch>>({ targetExtractor(it.persistenceManagerFactory()) }) {
+) : BaseIntegrationTest<dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>>({ targetExtractor(it.persistenceManagerFactory()) }) {
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {

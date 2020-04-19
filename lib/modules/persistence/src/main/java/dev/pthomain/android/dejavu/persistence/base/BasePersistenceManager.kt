@@ -23,17 +23,18 @@
 
 package dev.pthomain.android.dejavu.persistence.base
 
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.persistence.PersistenceManager.Companion.getCacheStatus
-import dev.pthomain.android.dejavu.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
+import dev.pthomain.android.dejavu.configuration.PersistenceManager.CacheData
+import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
+import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -49,6 +50,7 @@ import java.util.*
  */
 abstract class BasePersistenceManager<E>(
         private val configuration: Configuration<E>,
+        protected val logger: Logger,
         private val serialisationManager: SerialisationManager<E>,
         protected val dateFactory: (Long?) -> Date
 ) : PersistenceManager<E>
@@ -56,7 +58,6 @@ abstract class BasePersistenceManager<E>(
               E : NetworkErrorPredicate {
 
     private val dateFormat = SimpleDateFormat("MMM dd h:m:s", Locale.UK)
-    protected val logger = configuration.logger
 
     /**
      * Serialises the response and generates all the associated metadata for caching.
@@ -102,7 +103,7 @@ abstract class BasePersistenceManager<E>(
      * @return a cached entry if available, or null otherwise
      * @throws SerialisationException in case the deserialisation failed
      */
-    final override fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): Response<R, Cache>? {
+    final override fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): CacheData<R>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
 
         logger.d(this, "Checking for cached ${requestMetadata.responseClass.simpleName}")
@@ -152,7 +153,7 @@ abstract class BasePersistenceManager<E>(
                                       expiryDate: Date,
                                       isCompressed: Boolean,
                                       isEncrypted: Boolean,
-                                      localData: ByteArray): Response<R, Cache>? {
+                                      localData: ByteArray): CacheData<R>? {
         val requestMetadata = instructionToken.instruction.requestMetadata
         val simpleName = requestMetadata.responseClass.simpleName
 
@@ -162,31 +163,27 @@ abstract class BasePersistenceManager<E>(
                     localData,
                     //FIXME those values might change for a new call (previous data could have been encrypted but the flags on the new instruction might differ)
                     SerialisationDecorationMetadata(isEncrypted, isCompressed)
-            ).let { wrapper ->
+            ).let { response ->
                 val formattedDate = dateFormat.format(expiryDate)
                 logger.d(this, "Returning cached $simpleName cached until $formattedDate")
 
-                with(wrapper) {
-                    val operation = instructionToken.instruction.operation
-                    val status = dateFactory.getCacheStatus(
-                            expiryDate,
-                            operation
-                    )
+                val operation = instructionToken.instruction.operation
+                val status = dateFactory.getCacheStatus(
+                        expiryDate,
+                        operation
+                )
 
-                    if (operation.priority.freshness.isFreshOnly() && !status.isFresh) null
-                    else
-                        Response(
-                                response,
-                                ResponseToken(
-                                        instructionToken.instruction,
-                                        status,
-                                        requestDate = cacheDate, //TODO check this
-                                        cacheDate = cacheDate,
-                                        expiryDate = expiryDate
-                                ),
-                                callDuration
-                        )
-                }
+                logger.d(
+                        this,
+                        "Found cached $simpleName, status: $status"
+                )
+
+                CacheData(
+                        response,
+                        requestDate = cacheDate, //TODO check this
+                        cacheDate = cacheDate,
+                        expiryDate = expiryDate
+                )
             }
         } catch (e: SerialisationException) {
             logger.e(this, "Could not deserialise $simpleName: clearing the cache")

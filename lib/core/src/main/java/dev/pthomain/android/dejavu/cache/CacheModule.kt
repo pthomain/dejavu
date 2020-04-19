@@ -27,9 +27,9 @@ import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.configuration.PersistenceManager
 import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton

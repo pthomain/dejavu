@@ -21,10 +21,9 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.cache
 
 import android.net.Uri
-import androidx.annotation.VisibleForTesting
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InvalidRequestMetadata
@@ -40,7 +39,7 @@ import java.security.MessageDigest
  * @param messageDigest the hashing algorithm
  * @param uriParser a factory converting String to Uri
  */
-internal class Hasher(
+class Hasher internal constructor(
         private val logger: Logger,
         private val messageDigest: MessageDigest?,
         private val uriParser: (String) -> Uri
@@ -88,8 +87,7 @@ internal class Hasher(
      * @param uri the URI to sort
      * @return a String representing the parameters sorted in alphabetical order
      */
-    @VisibleForTesting
-    fun getSortedParameters(uri: Uri) =
+    private fun getSortedParameters(uri: Uri) =
             uri.queryParameterNames
                     .sorted()
                     .joinToString(separator = "&") {
@@ -103,7 +101,7 @@ internal class Hasher(
      * @return the hashed String
      */
     @Throws(UnsupportedEncodingException::class)
-    fun hash(text: String) =
+    private fun hash(text: String) =
             if (messageDigest == null) {
                 var hash: Long = 7
                 for (element in text) {

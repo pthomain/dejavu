@@ -52,13 +52,13 @@ import javax.inject.Singleton
 internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
 
     fun dateFactory(): Function1<Long?, Date>
-    fun serialiser(): Serialiser
+    fun serialiser(): dev.pthomain.android.dejavu.serialisation.Serialiser
     fun encryptionManager(): EncryptionManager?
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
-    fun hasher(): Hasher
-    fun serialisationManagerFactory(): SerialisationManager.Factory<Glitch>
+    fun hasher(): dev.pthomain.android.dejavu.serialisation.Hasher
+    fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<Glitch>
     fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<Glitch>?
     fun filePersistenceManagerFactory(): KeyValuePersistenceManager.FileFactory<Glitch>
     fun fileStoreFactory(): dev.pthomain.android.dejavu.persistence.file.FileStore.Factory<Glitch>

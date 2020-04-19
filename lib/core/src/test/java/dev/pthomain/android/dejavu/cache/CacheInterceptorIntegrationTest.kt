@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.cache
 
-import dev.pthomain.android.dejavu.error.glitch.Glitch
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import org.junit.Test
