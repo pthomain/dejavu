@@ -28,7 +28,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.serialisation.compression.decorator.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
-import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.dejavu.shared.utils.Function3
 import org.iq80.snappy.Snappy
@@ -36,16 +36,18 @@ import javax.inject.Singleton
 
 object Compression {
 
-    object Builder : Component by DaggerCompression_Component
+    class Builder(logger: Logger = SilentLogger)
+        : Component by DaggerCompression_Component
             .builder()
+            .module(Module(logger))
             .build()
 
     @Singleton
     @dagger.Component(modules = [Module::class])
     internal interface Component : SerialisationComponent
 
-    @dagger.Module(includes = [SharedModule::class])
-    internal class Module {
+    @dagger.Module
+    internal class Module(private val logger: Logger) {
 
         @Provides
         @Singleton
@@ -66,7 +68,6 @@ object Compression {
         @Provides
         @Singleton
         internal fun provideCompressionSerialisationDecorator(
-                logger: Logger,
                 compresser: Function1<ByteArray, ByteArray>,
                 uncompresser: Function3<ByteArray, Int, Int, ByteArray>
         ): SerialisationDecorator =

@@ -36,6 +36,8 @@ import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
@@ -43,9 +45,15 @@ import javax.inject.Singleton
 
 object SqlitePersistence {
 
-    class Builder(context: Context) : Component by DaggerSqlitePersistence_Component
+    class Builder(
+            context: Context,
+            logger: Logger = SilentLogger
+    ) : Component by DaggerSqlitePersistence_Component
             .builder()
-            .module(Module(context.applicationContext))
+            .sharedModule(SharedModule(
+                    context.applicationContext,
+                    logger
+            ))
             .build()
 
     @Singleton
@@ -53,7 +61,7 @@ object SqlitePersistence {
     internal interface Component : PersistenceComponent
 
     @dagger.Module(includes = [PersistenceModule::class])
-    internal class Module(private val context: Context) {
+    internal class Module {
 
         @Provides
         @Singleton
@@ -85,6 +93,7 @@ object SqlitePersistence {
         @Provides
         @Singleton
         internal fun provideSqlOpenHelper(
+                context: Context,
                 callback: SupportSQLiteOpenHelper.Callback
         ): SupportSQLiteOpenHelper =
                 RequerySQLiteOpenHelperFactory().create(

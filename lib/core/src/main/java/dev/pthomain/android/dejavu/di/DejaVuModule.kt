@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.di
 
-import android.content.Context
 import android.net.Uri
 import dagger.Module
 import dagger.Provides
@@ -38,16 +37,11 @@ import javax.inject.Singleton
 
 @Module(includes = [SharedModule::class])
 abstract class DejaVuModule<E>(
-        private val context: Context,
         private val errorFactory: ErrorFactory<E>,
         private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
         private val durationPredicate: (TransientResponse<*>) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
-
-    @Provides
-    @Singleton
-    internal fun provideContext() = context
 
     @Provides
     @Singleton

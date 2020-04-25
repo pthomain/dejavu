@@ -34,16 +34,23 @@ import dev.pthomain.android.dejavu.persistence.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import java.util.*
 import javax.inject.Singleton
 
 object FilePersistence {
 
-    class Builder(context: Context)
-        : Component by DaggerFilePersistence_Component
+    class Builder(
+            context: Context,
+            logger: Logger = SilentLogger
+    ) : Component by DaggerFilePersistence_Component
             .builder()
-            .module(Module(context.applicationContext))
+            .sharedModule(SharedModule(
+                    context.applicationContext,
+                    logger
+            ))
             .build()
 
     @Singleton
@@ -54,7 +61,7 @@ object FilePersistence {
     }
 
     @dagger.Module(includes = [PersistenceModule::class])
-    internal class Module(private val context: Context) {
+    internal class Module {
 
         @Provides
         @Singleton
@@ -94,6 +101,7 @@ object FilePersistence {
         @Provides
         @Singleton
         internal fun provideFilePersistenceManager(
+                context: Context,
                 filePersistenceManagerFactory: FilePersistenceManagerFactory
         ) =
                 filePersistenceManagerFactory.create(context.cacheDir)

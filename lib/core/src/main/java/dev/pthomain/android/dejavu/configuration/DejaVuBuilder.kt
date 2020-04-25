@@ -30,12 +30,13 @@ import dev.pthomain.android.dejavu.cache.TransientResponse
 import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.shared.PersistenceManager
 import dev.pthomain.android.dejavu.shared.Serialiser
+import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
-abstract class ConfigurationBuilder<E>
+abstract class DejaVuBuilder<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -44,7 +45,7 @@ abstract class ConfigurationBuilder<E>
     private var errorFactory: ErrorFactory<E>? = null
     private var persistenceManager: PersistenceManager? = null
     private var serialiser: Serialiser? = null
-    private var operationPredicate: (RequestMetadata<*>) -> Remote? = CachePredicate.Inactive
+    private var operationPredicate: (RequestMetadata<*>) -> Remote? = OperationPredicate.Inactive
     private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
 
     /**

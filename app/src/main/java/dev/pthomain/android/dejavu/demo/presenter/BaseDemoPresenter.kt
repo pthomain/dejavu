@@ -31,7 +31,7 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.builders.glitch.DejaVuGlitchBuilder
+import dev.pthomain.android.dejavu.builders.glitch.GlitchDejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
@@ -79,7 +79,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVuGlitchBuilder()
+    private fun newDejaVu() = GlitchDejaVu.Builder()
             .withSerialiser(GsonSerialiser(gson))
             .withLogger(uiLogger)
 //            .withPersistence(::pickPersistenceMode)

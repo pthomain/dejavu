@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.shared.di
 
+import android.content.Context
 import android.net.Uri
 import dagger.Module
 import dagger.Provides
@@ -34,8 +35,13 @@ import javax.inject.Singleton
 
 @Module
 class SharedModule(
+        private val context: Context,
         private val logger: Logger
 ) {
+
+    @Provides
+    @Singleton
+    internal fun provideContext() = context.applicationContext
 
     @Provides
     @Singleton
@@ -55,4 +61,10 @@ class SharedModule(
                     logger,
                     uriParser::get
             )
+}
+
+object SilentLogger : Logger {
+    override fun d(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
 }

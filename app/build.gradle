@@ -91,7 +91,7 @@ dependencies {
     implementation project(':lib:builders:glitch')
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
-//    implementation project(':lib:modules:persistence:sqlite')
+    implementation project(':lib:modules:persistence:sqlite')
     implementation appDependencies.multiDex
 
     implementation appDependencies.dagger

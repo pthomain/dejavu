@@ -30,14 +30,14 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
 
-sealed class CachePredicate(
+sealed class OperationPredicate(
         private val operation: Remote?
 ) : (RequestMetadata<*>) -> Remote? {
 
     override fun invoke(requestMetadata: RequestMetadata<*>) = operation
 
-    object Inactive : CachePredicate(null)
-    object CacheNone : CachePredicate(DoNotCache)
-    object CacheAll : CachePredicate(Cache(STALE_ACCEPTED_FIRST, DEFAULT_CACHE_DURATION_IN_SECONDS))
+    object Inactive : OperationPredicate(null)
+    object OperationNone : OperationPredicate(DoNotCache)
+    object OperationAll : OperationPredicate(Cache(STALE_ACCEPTED_FIRST, DEFAULT_CACHE_DURATION_IN_SECONDS))
 
 }

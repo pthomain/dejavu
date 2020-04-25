@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.memory.di
 
+import android.content.Context
 import androidx.collection.LruCache
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
@@ -34,15 +35,24 @@ import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFa
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import java.util.*
 import javax.inject.Singleton
 
 object MemoryPersistence {
 
-    class Builder(private val maxEntries: Int = 20)
-        : Component by DaggerMemoryPersistence_Component
+    class Builder(
+            context: Context,
+            maxEntries: Int = 20,
+            logger: Logger = SilentLogger
+    ) : Component by DaggerMemoryPersistence_Component
             .builder()
+            .sharedModule(SharedModule(
+                    context.applicationContext,
+                    logger
+            ))
             .module(Module(maxEntries))
             .build()
 
