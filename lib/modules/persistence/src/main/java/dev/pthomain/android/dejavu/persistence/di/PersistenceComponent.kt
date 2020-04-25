@@ -21,12 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.file.di
+package dev.pthomain.android.dejavu.persistence.di
 
-import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
+import dev.pthomain.android.dejavu.shared.PersistenceManager
 
-internal interface FilePersistenceComponent {
-
-    fun factory(): FilePersistenceManagerFactory
-
+interface PersistenceComponent {
+    fun persistenceManager(): PersistenceManager
 }

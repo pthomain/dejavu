@@ -27,6 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.shared.PersistenceManager
 import java.io.File
 import java.util.*
 
@@ -38,7 +39,7 @@ internal class FilePersistenceManagerFactory(
         private val serialisationManager: SerialisationManager
 ) {
 
-    fun create(cacheDirectory: File) =
+    fun create(cacheDirectory: File): PersistenceManager =
             KeyValuePersistenceManager(
                     dateFactory,
                     logger,

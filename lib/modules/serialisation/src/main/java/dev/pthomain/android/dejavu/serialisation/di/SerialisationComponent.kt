@@ -21,19 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.di
+package dev.pthomain.android.dejavu.serialisation.di
 
-import dagger.Module
-import dagger.Provides
-import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
-import dev.pthomain.android.dejavu.serialisation.di.SerialisationModule
-import javax.inject.Singleton
+import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 
-@Module(includes = [SerialisationModule::class])
-class PersistenceModule {
-
-    @Provides
-    @Singleton
-    internal fun provideFileNameSerialiser() = KeySerialiser()
-
+interface SerialisationComponent {
+    fun serialisationDecorator(): SerialisationDecorator
 }

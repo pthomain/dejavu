@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.encryption
+package dev.pthomain.android.dejavu.serialisation.encryption.decorator
 
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator

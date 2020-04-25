@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.compression
+package dev.pthomain.android.dejavu.serialisation.compression.decorator
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata

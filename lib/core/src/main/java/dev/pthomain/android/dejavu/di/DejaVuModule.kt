@@ -47,29 +47,29 @@ abstract class DejaVuModule<E>(
 
     @Provides
     @Singleton
-    fun provideContext() = context
+    internal fun provideContext() = context
 
     @Provides
     @Singleton
-    fun provideErrorFactory() = errorFactory
+    internal fun provideErrorFactory() = errorFactory
 
     @Provides
     @Singleton
-    fun provideOperationPredicate() =
+    internal fun provideOperationPredicate() =
             object : Function1<RequestMetadata<*>, Operation.Remote?> {
                 override fun get(t1: RequestMetadata<*>) = operationPredicate(t1)
             }
 
     @Provides
     @Singleton
-    fun provideDurationPredicate() =
+    internal fun provideDurationPredicate() =
             object : Function1<TransientResponse<*>, Int?> {
                 override fun get(t1: TransientResponse<*>) = durationPredicate(t1)
             }
 
     @Provides
     @Singleton
-    fun provideUriParser() = object : Function1<String, Uri> {
+    internal fun provideUriParser() = object : Function1<String, Uri> {
         override fun get(t1: String) = Uri.parse(t1)
     }
 

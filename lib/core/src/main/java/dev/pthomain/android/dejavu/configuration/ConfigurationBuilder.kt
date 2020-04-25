@@ -116,7 +116,6 @@ abstract class ConfigurationBuilder<E>
     fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
             apply { this.durationPredicate = durationPredicate }
 
-
     protected abstract fun componentProvider(
             context: Context,
             logger: Logger,
