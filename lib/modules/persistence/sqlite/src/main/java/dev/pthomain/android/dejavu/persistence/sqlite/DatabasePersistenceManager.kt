@@ -28,19 +28,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.CacheToken
+import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.util.*
 
@@ -49,24 +47,20 @@ import java.util.*
  *
  * @param database the opened database
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
- * @param configuration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
  * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
-class DatabasePersistenceManager<E> internal constructor(
+class DatabasePersistenceManager internal constructor(
         private val database: SupportSQLiteDatabase,
         logger: Logger,
-        serialisationManager: SerialisationManager<E>,
-        configuration: Configuration<E>,
+        serialisationManager: SerialisationManager,
         dateFactory: (Long?) -> Date,
         private val contentValuesFactory: (Map<String, *>) -> ContentValues
-) : BasePersistenceManager<E>(
-        configuration,
+) : BasePersistenceManager(
         logger,
         serialisationManager,
         dateFactory
-) where E : Throwable,
-        E : NetworkErrorPredicate {
+) {
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -77,8 +71,10 @@ class DatabasePersistenceManager<E> internal constructor(
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R> clearCache(operation: Clear,
-                                requestMetadata: ValidRequestMetadata<R>) {
+    override fun <R : Any> clearCache(
+            operation: Clear,
+            requestMetadata: ValidRequestMetadata<R>
+    ) {
         val olderEntriesClause = ifElse(
                 operation.clearStaleEntriesOnly,
                 "${EXPIRY_DATE.columnName} < ?",
@@ -115,7 +111,7 @@ class DatabasePersistenceManager<E> internal constructor(
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>): CacheDataHolder? {
+    override fun <R : Any> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>): CacheDataHolder? {
         val projection = arrayOf(
                 DATE.columnName,
                 EXPIRY_DATE.columnName,
@@ -173,7 +169,7 @@ class DatabasePersistenceManager<E> internal constructor(
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
+    override fun <R : Any> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
         val map = mapOf(EXPIRY_DATE.columnName to 0)
         val selection = "${TOKEN.columnName} = ?"
         val selectionArgs = arrayOf(requestMetadata.requestHash) //TODO classHash
@@ -203,8 +199,11 @@ class DatabasePersistenceManager<E> internal constructor(
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R : Any> cache(responseWrapper: Response<R, Cache>) {
-        with(serialise(responseWrapper)) {
+    override fun <R : Any> cache(
+            response: R,
+            instructionToken: CacheToken<Cache, R>,
+    ) {
+        with(serialise(response, instructionToken)) {
             val values = HashMap<String, Any>()
             values[TOKEN.columnName] = requestMetadata.requestHash
             values[DATE.columnName] = cacheDate

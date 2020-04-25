@@ -31,25 +31,23 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.builders.glitch.DejaVuGlitchBuilder
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.LOCAL_FIRST
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.glitch.DejaVuGlitchBuilder
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority.*
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -81,12 +79,11 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVuGlitchBuilder(context())
+    private fun newDejaVu() = DejaVuGlitchBuilder()
             .withSerialiser(GsonSerialiser(gson))
             .withLogger(uiLogger)
 //            .withPersistence(::pickPersistenceMode)
 //            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
-            .withErrorFactory(GsonGlitchFactory())
             .build()
 
     //FIXME use enum in core
@@ -120,7 +117,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun offline() {
         instructionType = CACHE
-        networkPriority = NetworkPriority.LOCAL_ONLY
+        networkPriority = LOCAL_ONLY
         subscribeData(getOfflineSingle(freshness).toObservable())
     }
 

@@ -35,9 +35,10 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-internal abstract class BaseRetrofitDemoPresenter(demoActivity: DemoActivity,
-                                                  uiLogger: Logger)
-    : BaseDemoPresenter(demoActivity, uiLogger) {
+internal abstract class BaseRetrofitDemoPresenter(
+        demoActivity: DemoActivity,
+        uiLogger: Logger
+) : BaseDemoPresenter(demoActivity, uiLogger) {
 
     private fun retrofit() =
             Retrofit.Builder()

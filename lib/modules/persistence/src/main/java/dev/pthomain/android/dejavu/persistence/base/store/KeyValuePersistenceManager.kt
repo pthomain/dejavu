@@ -24,17 +24,15 @@
 package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.CacheToken
+import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import java.util.*
 
 /**
@@ -44,27 +42,22 @@ import java.util.*
  * Be careful to encrypt the data if you change this directory to a publicly readable directory,
  * see DejaVu.Configuration.Builder().encryptByDefault().
  *
- * @param configuration the global cache configuration
  * @param dateFactory class providing the time, for the purpose of testing
  * @param keySerialiser a class that handles the serialisation of the cache metadata to a file name.
  * @param store the KeyValueStore holding the data
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  */
-class KeyValuePersistenceManager<E>(
-        configuration: Configuration<E>,
+class KeyValuePersistenceManager(
         dateFactory: (Long?) -> Date,
         logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
-        serialisationManager: SerialisationManager<E>
-) : BasePersistenceManager<E>(
-        configuration,
+        serialisationManager: SerialisationManager
+) : BasePersistenceManager(
         logger,
         serialisationManager,
         dateFactory
-), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store {
 
     /**
      * Caches a given response.
@@ -73,8 +66,11 @@ class KeyValuePersistenceManager<E>(
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R : Any> cache(responseWrapper: Response<R, Cache>) {
-        serialise(responseWrapper).let { holder ->
+    override fun <R : Any> cache(
+            response: R,
+            instructionToken: CacheToken<Cache, R>
+    ) {
+        serialise(response, instructionToken).let { holder ->
 
             findPartialKey(holder.requestMetadata.requestHash)?.let {
                 delete(it)
@@ -92,7 +88,7 @@ class KeyValuePersistenceManager<E>(
      *
      * @return the cached data as a CacheDataHolder
      */
-    override fun <R> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>) =
+    override fun <R : Any> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>) =
             findPartialKey(requestMetadata.requestHash)?.let(::get)
 
     /**
@@ -103,8 +99,10 @@ class KeyValuePersistenceManager<E>(
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R> clearCache(operation: Clear,
-                                requestMetadata: ValidRequestMetadata<R>) {
+    override fun <R : Any> clearCache(
+            operation: Clear,
+            requestMetadata: ValidRequestMetadata<R>
+    ) {
         val now = dateFactory(null).time
         values().map { it.key to keySerialiser.deserialise(it.key) }
                 .filter {
@@ -127,7 +125,7 @@ class KeyValuePersistenceManager<E>(
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun <R> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
+    override fun <R : Any> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
         findPartialKey(requestMetadata.requestHash)?.also { oldName ->
             keySerialiser.deserialise(requestMetadata, oldName).let {
                 if (it.expiryDate != 0L) {

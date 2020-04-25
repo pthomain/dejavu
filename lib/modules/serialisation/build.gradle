@@ -123,10 +123,12 @@ artifacts {
 }
 
 dependencies {
+    api project(':lib:modules:shared')
     api project(':lib:core')
-
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex
+
+    api appDependencies.boilerplate
 
     compileOnly appDependencies.jsr250
     implementation appDependencies.dagger

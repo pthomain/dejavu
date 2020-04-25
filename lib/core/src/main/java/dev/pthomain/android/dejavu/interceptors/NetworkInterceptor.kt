@@ -27,11 +27,11 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
-import dev.pthomain.android.dejavu.utils.swapWhenDefault
+import dev.pthomain.android.dejavu.shared.token.RequestToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.shared.utils.swapWhenDefault
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -70,12 +70,12 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R
             with(requestToken.instruction) {
                 if (operation is Cache) {
                     upstream.compose {
-                        with(operation.requestTimeOutInSeconds) {
+                        with((operation as Cache).requestTimeOutInSeconds) {
                             if (this != null && this > 0) it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
                             else it
                         }
                     }.compose {
-                        operation.connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
+                        (operation as Cache).connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
                             upstream.swapLambdaWhen(timeOut > 0L) {
                                 upstream.waitForNetwork(context, logger)
                                         .timeout(timeOut.toLong(), SECONDS)

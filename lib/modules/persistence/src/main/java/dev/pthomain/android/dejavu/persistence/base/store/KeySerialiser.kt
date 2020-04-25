@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
 
 /**
  * Provides methods handling the serialisation and deserialisation of the required cache metadata
@@ -41,7 +41,7 @@ class KeySerialiser {
      * @param cacheDataHolder the model containing the metadata required for the name serialisation
      * @return the file name to use to save the response associated to the given metadata
      */
-    fun <R> serialise(cacheDataHolder: CacheDataHolder.Complete<R>) =
+    fun <R : Any> serialise(cacheDataHolder: CacheDataHolder.Complete<R>) =
             with(cacheDataHolder) {
                 listOf(
                         cacheDate.toString(),
@@ -92,8 +92,8 @@ class KeySerialiser {
      * @throws SerialisationException if the given file name is invalid
      */
     @Throws(SerialisationException::class)
-    fun <R> deserialise(requestMetadata: HashedRequestMetadata<R>,
-                        fileName: String) =
+    fun <R : Any> deserialise(requestMetadata: HashedRequestMetadata<R>,
+                              fileName: String) =
             with(deserialise(fileName)) {
                 CacheDataHolder.Complete(
                         requestMetadata, //TODO verify that responseClassHash matches the hash on the metadata

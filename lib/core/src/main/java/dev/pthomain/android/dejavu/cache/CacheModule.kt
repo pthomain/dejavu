@@ -26,41 +26,45 @@ package dev.pthomain.android.dejavu.cache
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.configuration.PersistenceManager
-import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton
 
 
 @Module
-abstract class CacheModule<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+abstract class CacheModule<E>(
+        private val persistenceManager: PersistenceManager
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    internal fun provideCacheMetadataManager(configuration: Configuration<E>,
-                                             logger: Logger,
-                                             persistenceManager: PersistenceManager<E>,
-                                             dateFactory: Function1<Long?, Date>) =
+    internal fun provideCacheMetadataManager(
+            logger: Logger,
+            errorFactory: ErrorFactory<E>,
+            durationPredicate: Function1<TransientResponse<*>, Int?>,
+            dateFactory: Function1<Long?, Date>
+    ) =
             CacheMetadataManager(
-                    configuration.errorFactory,
+                    errorFactory,
                     persistenceManager,
                     dateFactory::get,
-                    configuration.durationPredicate,
+                    durationPredicate::get,
                     logger
             )
 
     @Provides
     @Singleton
-    internal fun provideCacheManager(logger: Logger,
-                                     persistenceManager: PersistenceManager<E>,
-                                     cacheMetadataManager: CacheMetadataManager<E>,
-                                     dateFactory: Function1<Long?, Date>,
-                                     emptyResponseFactory: EmptyResponseFactory<E>) =
+    internal fun provideCacheManager(
+            logger: Logger,
+            cacheMetadataManager: CacheMetadataManager<E>,
+            dateFactory: Function1<Long?, Date>,
+            emptyResponseFactory: EmptyResponseFactory<E>
+    ) =
             CacheManager(
                     persistenceManager,
                     cacheMetadataManager,

@@ -29,13 +29,13 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException.Type.SERIALISATION
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.*
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

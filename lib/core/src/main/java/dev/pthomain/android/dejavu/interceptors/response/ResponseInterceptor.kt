@@ -25,12 +25,11 @@ package dev.pthomain.android.dejavu.interceptors.response
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.cache.metadata.response.*
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
@@ -54,7 +53,6 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val configuration: Configuration<E>,
         private val isWrapped: Boolean
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
@@ -108,7 +106,6 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
     }
 
     internal class Factory<E>(
-            private val configuration: Configuration<E>,
             private val logger: Logger,
             private val dateFactory: (Long?) -> Date,
             private val emptyResponseFactory: EmptyResponseFactory<E>
@@ -119,7 +116,6 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
                 logger,
                 dateFactory,
                 emptyResponseFactory,
-                configuration,
                 isWrapped
         )
     }

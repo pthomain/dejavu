@@ -28,7 +28,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import dev.pthomain.android.dejavu.cache.CacheManager
 import dev.pthomain.android.dejavu.di.DejaVuComponent
-import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.di.integration.module.IntegrationModule
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
@@ -38,9 +37,8 @@ import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.serialisation.Hasher
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.serialisation.Serialiser
+import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
+import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -57,7 +55,7 @@ internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
-    fun hasher(): dev.pthomain.android.dejavu.serialisation.Hasher
+    fun hasher(): Hasher
     fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<Glitch>
     fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<Glitch>?
     fun filePersistenceManagerFactory(): KeyValuePersistenceManager.FileFactory<Glitch>

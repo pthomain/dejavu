@@ -27,11 +27,11 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.shared.token.InstructionToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertResponseWrapperWithContext
 import org.junit.Assert.assertEquals

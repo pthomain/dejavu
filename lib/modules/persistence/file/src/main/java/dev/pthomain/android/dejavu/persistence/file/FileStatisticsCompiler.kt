@@ -23,12 +23,11 @@
 
 package dev.pthomain.android.dejavu.persistence.file
 
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
+import dev.pthomain.android.dejavu.shared.token.getCacheStatus
 import java.io.File
 import java.io.InputStream
 import java.util.*
@@ -44,13 +43,12 @@ import java.util.*
  * @param keySerialiser a class that handles the serialisation of the cache metadata to a file name.
  */
 internal class FileStatisticsCompiler(
-        private val configuration: Configuration<*>,
         private val cacheDirectory: File,
         private val fileFactory: (File, String) -> File,
         private val fileInputStreamFactory: (File) -> InputStream,
         private val dateFactory: (Long?) -> Date,
         private val keySerialiser: KeySerialiser
-) : BaseStatisticsCompiler<String, List<String>>(configuration) { //TODO use KeyValueStore
+) : BaseStatisticsCompiler<String, List<String>>() { //TODO use KeyValueStore
 
     /**
      * Returns an list of valid file names in the cache directory representing a cached response.

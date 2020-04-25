@@ -29,8 +29,8 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.dejavu.di.DejaVuModule
-import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.persistence.PersistenceModule.Companion.DATABASE_NAME
+import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import java.util.*
 import javax.inject.Singleton

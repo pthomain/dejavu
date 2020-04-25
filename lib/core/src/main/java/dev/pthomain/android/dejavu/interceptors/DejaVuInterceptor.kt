@@ -23,21 +23,21 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.cache.Hasher
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.*
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NETWORK
-import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.NETWORK
+import dev.pthomain.android.dejavu.shared.token.RequestToken
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
+import dev.pthomain.android.dejavu.shared.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.glitchy.interceptor.Interceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
@@ -71,8 +71,8 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val isWrapped: Boolean,
         private val operation: Operation,
         private val requestMetadata: PlainRequestMetadata<R>,
-        private val configuration: Configuration<E>,
         private val hasher: Hasher,
+        private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val hashingErrorObservableFactory: () -> Observable<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
@@ -142,7 +142,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         .compose(responseInterceptor)
             }
         } else {
-            configuration.logger.e(
+            logger.e(
                     this,
                     "The request metadata could not be hashed, this request won't be cached: $requestMetadata"
             )
@@ -195,12 +195,12 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      */
     class Factory<E> internal constructor(
             private val hasher: Hasher,
+            private val logger: Logger,
             private val dateFactory: (Long?) -> Date,
             private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
             private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
             private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
-            private val operationResolverFactory: OperationResolver.Factory<E>,
-            private val configuration: Configuration<E>
+            private val operationResolverFactory: OperationResolver.Factory<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
@@ -240,8 +240,8 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         isWrapped,
                         operation,
                         requestMetadata,
-                        configuration,
                         hasher,
+                        logger,
                         dateFactory,
                         { Observable.error(IllegalStateException("The request could not be hashed")) },
                         networkInterceptorFactory,

@@ -25,14 +25,11 @@ package dev.pthomain.android.dejavu.persistence.statistics
 
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Single
 import javax.inject.Singleton
 
 @Module
-abstract class StatisticsModule<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+abstract class StatisticsModule {
 
     @Provides
     @Singleton

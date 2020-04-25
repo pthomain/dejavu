@@ -125,9 +125,7 @@ artifacts {
 }
 
 dependencies {
-    api project(':lib:core')
-    api project(':lib:modules:serialisation')
-    api project(':lib:modules:persistence')
+    api project(':lib:builders')
 
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex

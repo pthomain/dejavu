@@ -125,6 +125,8 @@ artifacts {
 }
 
 dependencies {
+    api project(':lib:modules:shared')
+
     implementation appDependencies.jitPack
     implementation appDependencies.multiDex
 
@@ -135,7 +137,6 @@ dependencies {
     implementation appDependencies.androidAnnotations
 
     api appDependencies.glitchy
-    api appDependencies.boilerplate
 
     implementation appDependencies.dagger
     kapt appDependencies.daggerCompiler

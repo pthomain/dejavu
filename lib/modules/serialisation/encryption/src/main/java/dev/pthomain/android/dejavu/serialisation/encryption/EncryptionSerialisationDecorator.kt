@@ -23,13 +23,9 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption
 
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.SerialisationException
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
 /**
@@ -38,11 +34,9 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * @param encryptionManager an instance of EncryptionManager
  * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.Builder.withEncryption
  */
-internal class EncryptionSerialisationDecorator<E>(
+internal class EncryptionSerialisationDecorator(
         private val encryptionManager: EncryptionManager
-) : SerialisationDecorator<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) : SerialisationDecorator {
 
     /**
      * Implements optional encryption during the serialisation process.
@@ -55,7 +49,7 @@ internal class EncryptionSerialisationDecorator<E>(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateSerialisation(
-            responseWrapper: Response<R, Cache>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ) =
@@ -75,7 +69,7 @@ internal class EncryptionSerialisationDecorator<E>(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
-            instructionToken: CacheToken<Cache, R>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ) =

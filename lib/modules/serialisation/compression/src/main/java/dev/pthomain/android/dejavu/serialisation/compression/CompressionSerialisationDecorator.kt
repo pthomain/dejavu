@@ -24,13 +24,9 @@
 package dev.pthomain.android.dejavu.serialisation.compression
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.SerialisationException
 
 /**
  * Optional compression step of the serialisation process
@@ -39,13 +35,11 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
  * @param compresser a function compressing an input ByteArray
  * @param uncompresser a function decompressing an input ByteArray
  */
-internal class CompressionSerialisationDecorator<E>(
+internal class CompressionSerialisationDecorator(
         private val logger: Logger,
         private val compresser: (ByteArray) -> ByteArray,
         private val uncompresser: (ByteArray, Int, Int) -> ByteArray
-) : SerialisationDecorator<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) : SerialisationDecorator {
 
     /**
      * Implements optional compression during the serialisation process.
@@ -58,7 +52,7 @@ internal class CompressionSerialisationDecorator<E>(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateSerialisation(
-            responseWrapper: Response<R, Cache>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ) =
@@ -66,7 +60,7 @@ internal class CompressionSerialisationDecorator<E>(
                 compresser(payload).also { compressed ->
                     logCompression(
                             compressed,
-                            responseWrapper.response.javaClass.simpleName,
+                            responseClass.simpleName,
                             payload
                     )
                 }
@@ -83,7 +77,7 @@ internal class CompressionSerialisationDecorator<E>(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
-            instructionToken: CacheToken<Cache, R>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ) =
@@ -91,7 +85,7 @@ internal class CompressionSerialisationDecorator<E>(
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
-                            instructionToken.instruction.requestMetadata.responseClass.simpleName,
+                            responseClass.simpleName,
                             it
                     )
                 }

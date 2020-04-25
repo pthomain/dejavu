@@ -23,33 +23,49 @@
 
 package dev.pthomain.android.dejavu.di
 
+import android.content.Context
 import android.net.Uri
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.dejavu.DejaVu.Configuration
+import dev.pthomain.android.dejavu.cache.TransientResponse
+import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import javax.inject.Singleton
 
-@Module
-abstract class DejaVuModule<E>(private val configuration: Configuration<E>)
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+@Module(includes = [SharedModule::class])
+abstract class DejaVuModule<E>(
+        private val context: Context,
+        private val errorFactory: ErrorFactory<E>,
+        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+        private val durationPredicate: (TransientResponse<*>) -> Int?
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     @Provides
     @Singleton
-    fun provideContext() = configuration.context
+    fun provideContext() = context
 
     @Provides
     @Singleton
-    fun provideConfiguration() = configuration
+    fun provideErrorFactory() = errorFactory
 
     @Provides
     @Singleton
-    fun provideErrorFactory() = configuration.errorFactory
+    fun provideOperationPredicate() =
+            object : Function1<RequestMetadata<*>, Operation.Remote?> {
+                override fun get(t1: RequestMetadata<*>) = operationPredicate(t1)
+            }
 
     @Provides
     @Singleton
-    fun provideLogger() = configuration.logger
+    fun provideDurationPredicate() =
+            object : Function1<TransientResponse<*>, Int?> {
+                override fun get(t1: TransientResponse<*>) = durationPredicate(t1)
+            }
 
     @Provides
     @Singleton

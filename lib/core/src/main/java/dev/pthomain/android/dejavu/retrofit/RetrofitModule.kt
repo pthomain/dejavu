@@ -26,11 +26,13 @@ package dev.pthomain.android.dejavu.retrofit
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnTypeParser
+import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.glitchy.Glitchy
 import dev.pthomain.android.glitchy.interceptor.Interceptors
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
@@ -73,12 +75,12 @@ abstract class RetrofitModule<E> where E : Throwable,
     @Provides
     @Singleton
     internal fun provideOperationResolverFactory(
-            configuration: Configuration<E>,
+            operationPredicate: Function1<RequestMetadata<*>, Operation.Remote?>,
             requestBodyConverter: RequestBodyConverter,
             logger: Logger
     ) =
-            OperationResolver.Factory(
-                    configuration,
+            OperationResolver.Factory<E>(
+                    operationPredicate::get,
                     requestBodyConverter,
                     logger
             )

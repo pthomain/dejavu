@@ -25,20 +25,18 @@ package dev.pthomain.android.dejavu.serialisation.encryption
 
 import dagger.Module
 import dagger.Provides
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import javax.inject.Singleton
 
 @Module
-abstract class EncryptionModule<E>(
+class EncryptionModule(
         private val encryptionManager: EncryptionManager
-) where  E : Throwable,
-         E : NetworkErrorPredicate {
+) {
 
     @Provides
     @Singleton
     internal fun provideEncryptionSerialisationDecorator() =
-            EncryptionSerialisationDecorator<E>(
+            EncryptionSerialisationDecorator(
                     encryptionManager
             )
 

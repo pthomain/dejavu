@@ -27,15 +27,16 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.expectException
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.trueFalseSequence
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import org.junit.Before
 import org.junit.Test
 
@@ -56,7 +57,7 @@ class SerialisationManagerUnitTest {
     private val mockSerialisedByteArray1 = "mockSerialisedByteArray1".toByteArray()
     private val mockSerialisedByteArray2 = "mockSerialisedByteArray2".toByteArray()
 
-    private lateinit var target: dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>
+    private lateinit var target: SerialisationManager<Glitch>
 
     @Before
     fun setUp() {
@@ -72,7 +73,7 @@ class SerialisationManagerUnitTest {
                 mockSerialisationDecorator1,
                 mockSerialisationDecorator2
         )
-        target = dev.pthomain.android.dejavu.serialisation.SerialisationManager(
+        target = SerialisationManager(
                 mockErrorFactory,
                 mockSerialiser,
                 mockByteToStringConverter,

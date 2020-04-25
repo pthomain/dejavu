@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.base
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
 
 /**
  * Holds cache data for the purpose of persistence or filtering of the cached responses.
@@ -88,7 +88,7 @@ sealed class CacheDataHolder(
      * @param isCompressed whether or not the response was cached compressed
      * @param isEncrypted whether or not the response was cached encrypted
      */
-    data class Complete<R>(
+    data class Complete<R : Any>(
             val requestMetadata: HashedRequestMetadata<R>,
             override val cacheDate: Long,
             override val expiryDate: Long,

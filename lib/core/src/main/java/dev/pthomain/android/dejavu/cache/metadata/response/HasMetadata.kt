@@ -23,10 +23,10 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.response
 
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.CacheToken
+import dev.pthomain.android.dejavu.shared.token.RequestToken
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
 
 interface HasCallDuration {
     var callDuration: CallDuration

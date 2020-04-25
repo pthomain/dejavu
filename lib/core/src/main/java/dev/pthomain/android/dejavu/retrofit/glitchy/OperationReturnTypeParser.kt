@@ -25,9 +25,9 @@ package dev.pthomain.android.dejavu.retrofit.glitchy
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType

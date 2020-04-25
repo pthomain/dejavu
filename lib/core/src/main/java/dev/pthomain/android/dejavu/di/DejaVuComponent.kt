@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.di
 
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
@@ -32,11 +31,6 @@ import retrofit2.CallAdapter
 interface DejaVuComponent<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
-
-    /**
-     * Provides the current configuration.
-     */
-    fun configuration(): Configuration<E>
 
     /**
      * Provides a generic DejaVuInterceptor factory to use with any Observable / Single / CacheOperation.

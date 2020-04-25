@@ -24,15 +24,15 @@
 package dev.pthomain.android.dejavu.retrofit.annotations.processor
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException.Type.ANNOTATION
+import dev.pthomain.android.dejavu.shared.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.*
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
 /**

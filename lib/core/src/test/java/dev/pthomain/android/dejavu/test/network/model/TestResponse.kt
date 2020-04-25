@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.test.network.model
 
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.HasResponseMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 class TestResponse : ArrayList<User>(), HasResponseMetadata<TestResponse, Cache> {
 

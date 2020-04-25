@@ -93,12 +93,12 @@ class MemoryStore internal constructor(
         }
     }
 
-    class Factory internal constructor(private val lruCacheFactory: (Int) -> LruCache<String, Incomplete>) {
-
+    class Factory internal constructor(
+            private val lruCacheFactory: (Int) -> LruCache<String, Incomplete>
+    ) {
         fun create(maxEntries: Int = 20) = MemoryStore(
                 lruCacheFactory(maxEntries)
         )
-
     }
 
 }

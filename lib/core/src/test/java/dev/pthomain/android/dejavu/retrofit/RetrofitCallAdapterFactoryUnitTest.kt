@@ -25,12 +25,12 @@ package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata.Companion.DEFAULT_URL
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
+import dev.pthomain.android.dejavu.shared.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata.Companion.DEFAULT_URL
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertFalseWithContext
 import dev.pthomain.android.dejavu.test.callAdapterFactory

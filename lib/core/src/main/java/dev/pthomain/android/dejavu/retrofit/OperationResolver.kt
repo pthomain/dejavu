@@ -26,20 +26,19 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.DejaVu.Companion.DejaVuHeader
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.toOperation
 import dev.pthomain.android.dejavu.retrofit.OperationResolver.Method.*
+import dev.pthomain.android.dejavu.shared.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.toOperation
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import okhttp3.Request
 import retrofit2.Call
 
 internal class OperationResolver<E, R> private constructor(
-        private val configuration: Configuration<E>,
         private val responseClass: Class<R>,
         private val requestBodyConverter: (Request) -> String?,
+        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
         private val annotationOperation: Operation?,
         private val methodDescription: String,
         private val logger: Logger
@@ -104,7 +103,7 @@ internal class OperationResolver<E, R> private constructor(
      */
     private fun getPredicateOperation(requestMetadata: RequestMetadata<R>): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
-        return configuration.operationPredicate(requestMetadata)
+        return operationPredicate(requestMetadata)
     }
 
     /**
@@ -150,18 +149,20 @@ internal class OperationResolver<E, R> private constructor(
     )
 
     internal class Factory<E>(
-            private val configuration: Configuration<E>,
+            private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
             private val requestBodyConverter: (Request) -> String?,
             private val logger: Logger
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
-        fun <R> create(methodDescription: String,
-                       responseClass: Class<R>,
-                       annotationOperation: Operation?) = OperationResolver(
-                configuration,
+        fun <R> create(
+                methodDescription: String,
+                responseClass: Class<R>,
+                annotationOperation: Operation?
+        ) = OperationResolver<E, R>(
                 responseClass,
                 requestBodyConverter,
+                operationPredicate,
                 annotationOperation,
                 methodDescription,
                 logger

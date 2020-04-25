@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.response
 
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
 
 /**
  * Default implementation of CacheMetadata.Holder. Have the response extend this class

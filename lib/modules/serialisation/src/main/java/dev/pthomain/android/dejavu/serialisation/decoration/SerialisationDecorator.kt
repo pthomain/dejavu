@@ -23,19 +23,14 @@
 
 package dev.pthomain.android.dejavu.serialisation.decoration
 
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.SerialisationException
 
 /**
  * Interface representing a step in the serialisation process provided as a list to the
  * SerialisationManager to be executed in their defined order during serialisation
  * (and in reverse during deserialisation).
  */
-interface SerialisationDecorator<E> where E : Throwable,
-                                          E : NetworkErrorPredicate {
+interface SerialisationDecorator {
 
     /**
      * Implements a single concern during the serialisation process.
@@ -48,7 +43,7 @@ interface SerialisationDecorator<E> where E : Throwable,
      */
     @Throws(SerialisationException::class)
     fun <R : Any> decorateSerialisation(
-            responseWrapper: Response<R, Cache>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ): ByteArray
@@ -64,7 +59,7 @@ interface SerialisationDecorator<E> where E : Throwable,
      */
     @Throws(SerialisationException::class)
     fun <R : Any> decorateDeserialisation(
-            instructionToken: CacheToken<Cache, R>,
+            responseClass: Class<R>,
             metadata: SerialisationDecorationMetadata,
             payload: ByteArray
     ): ByteArray

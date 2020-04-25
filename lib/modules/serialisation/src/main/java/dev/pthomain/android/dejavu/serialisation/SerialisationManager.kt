@@ -23,16 +23,12 @@
 
 package dev.pthomain.android.dejavu.serialisation
 
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.SerialisationException
-import dev.pthomain.android.dejavu.configuration.Serialiser
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import java.util.*
+import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.Serialiser
+import dev.pthomain.android.dejavu.shared.token.CacheToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 /**
  * Handles the different steps of the serialisation of the response.
@@ -42,14 +38,11 @@ import java.util.*
  * @param byteToStringConverter a factory converting a ByteArray to a String
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
-class SerialisationManager<E> internal constructor(
-        private val errorFactory: ErrorFactory<E>,
-        private val dateFactory: (Long?) -> Date,
+class SerialisationManager internal constructor(
         private val serialiser: Serialiser,
         private val byteToStringConverter: (ByteArray) -> String,
-        private val decoratorList: List<SerialisationDecorator<E>>
-) where E : Throwable,
-        E : NetworkErrorPredicate {
+        private val decoratorList: List<SerialisationDecorator>
+) {
 
     private val reversedDecoratorList = decoratorList.reversed()
 
@@ -64,11 +57,10 @@ class SerialisationManager<E> internal constructor(
      */
     @Throws(SerialisationException::class)
     fun <R : Any> serialise(
-            responseWrapper: Response<R, Cache>,
+            response: R,
             metadata: SerialisationDecorationMetadata
     ): ByteArray {
-        val response = responseWrapper.response
-        val responseClass = responseWrapper.cacheToken.instruction.requestMetadata.responseClass
+        val responseClass = response::class.java
 
         return when {
             responseClass == String::class.java -> (response as String)
@@ -83,7 +75,7 @@ class SerialisationManager<E> internal constructor(
 
             decoratorList.forEach {
                 serialised = it.decorateSerialisation(
-                        responseWrapper,
+                        responseClass,
                         metadata,
                         serialised
                 )
@@ -110,13 +102,12 @@ class SerialisationManager<E> internal constructor(
             data: ByteArray,
             metadata: SerialisationDecorationMetadata
     ): R {
-        val requestMetadata = instructionToken.instruction.requestMetadata
-        val responseClass = requestMetadata.responseClass
         var deserialised = data
+        val responseClass = instructionToken.instruction.requestMetadata.responseClass
 
         reversedDecoratorList.forEach {
             deserialised = it.decorateDeserialisation(
-                    instructionToken,
+                    responseClass,
                     metadata,
                     deserialised
             )

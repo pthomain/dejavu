@@ -25,15 +25,13 @@ package dev.pthomain.android.dejavu.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.io.*
 
-class FileStore private constructor(
+internal class FileStore private constructor(
         private val logger: Logger,
         private val fileFactory: (File, String) -> File,
         private val fileInputStreamFactory: (File) -> InputStream,
@@ -117,14 +115,12 @@ class FileStore private constructor(
                 .renameTo(fileFactory(cacheDirectory, newKey))
     }
 
-    class Factory<E> internal constructor(
+    internal class Factory(
             private val logger: Logger,
-            private val configuration: Configuration<E>,
             private val keySerialiser: KeySerialiser
-    ) where E : Throwable,
-            E : NetworkErrorPredicate {
+    ) {
 
-        fun create(cacheDirectory: File = configuration.context.cacheDir) =
+        fun create(cacheDirectory: File) =
                 FileStore(
                         logger,
                         ::File,

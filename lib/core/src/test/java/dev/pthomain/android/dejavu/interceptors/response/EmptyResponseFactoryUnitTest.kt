@@ -24,8 +24,8 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertNotNullWithContext
 import dev.pthomain.android.dejavu.test.assertNullWithContext

@@ -27,15 +27,15 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.PersistenceManager
-import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.shared.token.RequestToken
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.getCacheStatus
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import java.util.*
@@ -50,7 +50,7 @@ import java.util.*
  * @param logger a Logger instance
  */
 internal class CacheManager<E>(
-        private val persistenceManager: PersistenceManager<E>,
+        private val persistenceManager: PersistenceManager,
         private val cacheMetadataManager: CacheMetadataManager<E>,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
         private val dateFactory: (Long?) -> Date,
@@ -206,11 +206,10 @@ internal class CacheManager<E>(
                                     ) //TODO check expiry date etc
                                 }
 
-                                persistenceManager.cache(Response(
+                                persistenceManager.cache(
                                         wrapper.response,
-                                        cacheToken,
-                                        wrapper.callDuration
-                                ))
+                                        cacheToken
+                                )
                             } catch (e: Exception) {
                                 return@map cacheMetadataManager.setSerialisationFailedMetadata(
                                         wrapper,

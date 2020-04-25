@@ -27,13 +27,13 @@ import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
 import dev.pthomain.android.dejavu.cache.CacheManager
-import dev.pthomain.android.dejavu.cache.Hasher
-import dev.pthomain.android.dejavu.di.Function1
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.retrofit.OperationResolver
+import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
+import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
 import javax.inject.Singleton
@@ -61,12 +61,12 @@ abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    internal fun provideResponseInterceptor(configuration: Configuration<E>,
-                                            logger: Logger,
-                                            dateFactory: Function1<Long?, Date>,
-                                            emptyResponseFactory: EmptyResponseFactory<E>) =
+    internal fun provideResponseInterceptor(
+            logger: Logger,
+            dateFactory: Function1<Long?, Date>,
+            emptyResponseFactory: EmptyResponseFactory<E>
+    ) =
             ResponseInterceptor.Factory(
-                    configuration,
                     logger,
                     dateFactory::get,
                     emptyResponseFactory
@@ -74,8 +74,8 @@ abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    internal fun provideEmptyResponseFactory(configuration: Configuration<E>) =
-            EmptyResponseFactory(configuration.errorFactory)
+    internal fun provideEmptyResponseFactory(errorFactory: ErrorFactory<E>) =
+            EmptyResponseFactory(errorFactory)
 
     @Provides
     @Singleton
@@ -84,21 +84,23 @@ abstract class InterceptorModule<E>
 
     @Provides
     @Singleton
-    internal fun provideDejaVuInterceptorFactory(hasher: Hasher,
-                                                 configuration: Configuration<E>,
-                                                 dateFactory: Function1<Long?, Date>,
-                                                 networkInterceptorFactory: NetworkInterceptor.Factory<E>,
-                                                 cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-                                                 operationResolverFactory: OperationResolver.Factory<E>,
-                                                 responseInterceptorFactory: ResponseInterceptor.Factory<E>) =
+    internal fun provideDejaVuInterceptorFactory(
+            hasher: Hasher,
+            logger: Logger,
+            dateFactory: Function1<Long?, Date>,
+            networkInterceptorFactory: NetworkInterceptor.Factory<E>,
+            cacheInterceptorFactory: CacheInterceptor.Factory<E>,
+            operationResolverFactory: OperationResolver.Factory<E>,
+            responseInterceptorFactory: ResponseInterceptor.Factory<E>
+    ) =
             DejaVuInterceptor.Factory(
                     hasher,
+                    logger,
                     dateFactory::get,
                     networkInterceptorFactory,
                     cacheInterceptorFactory,
                     responseInterceptorFactory,
-                    operationResolverFactory,
-                    configuration
+                    operationResolverFactory
             )
 
 }

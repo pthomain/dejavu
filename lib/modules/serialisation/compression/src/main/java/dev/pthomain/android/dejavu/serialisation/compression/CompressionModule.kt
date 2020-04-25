@@ -26,15 +26,13 @@ package dev.pthomain.android.dejavu.serialisation.compression
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.di.Function1
-import dev.pthomain.android.dejavu.di.Function3
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.dejavu.shared.utils.Function3
 import org.iq80.snappy.Snappy
 import javax.inject.Singleton
 
 @Module
-abstract class CompressionModule<E> where E : Throwable,
-                                          E : NetworkErrorPredicate {
+class CompressionModule {
 
     @Provides
     @Singleton
@@ -59,9 +57,10 @@ abstract class CompressionModule<E> where E : Throwable,
             compresser: Function1<ByteArray, ByteArray>,
             uncompresser: Function3<ByteArray, Int, Int, ByteArray>
     ) =
-            CompressionSerialisationDecorator<E>(
+            CompressionSerialisationDecorator(
                     logger,
                     compresser::get,
                     uncompresser::get
             )
 }
+

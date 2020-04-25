@@ -126,7 +126,6 @@ artifacts {
 }
 
 dependencies {
-    api project(':lib:core')
     api project(':lib:modules:serialisation')
 
     implementation appDependencies.jitPack

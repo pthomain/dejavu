@@ -25,15 +25,15 @@ package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InvalidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.serialisation.Hasher
+import dev.pthomain.android.dejavu.shared.token.InstructionToken
+import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
+import dev.pthomain.android.dejavu.shared.token.instruction.InvalidRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.*
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -52,7 +52,7 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
     private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
     private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
-    private lateinit var mockHasher: dev.pthomain.android.dejavu.serialisation.Hasher
+    private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: PlainRequestMetadata
     private lateinit var mockValidHashedMetadata: ValidRequestMetadata
     private lateinit var mockInvalidHashedMetadata: InvalidRequestMetadata

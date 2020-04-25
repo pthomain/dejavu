@@ -23,17 +23,14 @@
 
 package dev.pthomain.android.dejavu.persistence.statistics
 
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.FRESH
 import io.reactivex.Single
 import java.util.*
 
 /**
  * Skeletal implementation implementing StatisticsCompiler
  */
-abstract class BaseStatisticsCompiler<T, I : Iterable<T>>(
-        private val configuration: Configuration<*>
-) : StatisticsCompiler {
+abstract class BaseStatisticsCompiler<T, I : Iterable<T>> : StatisticsCompiler {
 
     /**
      * @return a Single emitting cache statistics
@@ -77,7 +74,7 @@ abstract class BaseStatisticsCompiler<T, I : Iterable<T>>(
 
         val entrySummaries = entries.map {
             val values = it.value
-            val fresh = values.count { it.status == CacheStatus.FRESH }
+            val fresh = values.count { it.status == FRESH }
             val stale = values.size - fresh
             var oldest: Date? = null
             var latest: Date? = null
@@ -104,10 +101,7 @@ abstract class BaseStatisticsCompiler<T, I : Iterable<T>>(
             )
         }
 
-        return CacheStatistics(
-                configuration,
-                entrySummaries
-        )
+        return CacheStatistics(entrySummaries)
     }
 
 }

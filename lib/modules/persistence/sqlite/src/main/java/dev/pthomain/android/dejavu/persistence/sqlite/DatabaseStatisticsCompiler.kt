@@ -27,12 +27,11 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.DejaVu.Configuration
-import dev.pthomain.android.dejavu.configuration.PersistenceManager.Companion.getCacheStatus
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
+import dev.pthomain.android.dejavu.shared.token.getCacheStatus
 import java.util.*
 
 /**
@@ -44,11 +43,10 @@ import java.util.*
  * @param database the SQLite database containing the cache entries
  */
 class DatabaseStatisticsCompiler internal constructor(
-        configuration: Configuration<*>,
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val database: SupportSQLiteDatabase
-) : BaseStatisticsCompiler<Cursor, CursorIterator>(configuration) {
+) : BaseStatisticsCompiler<Cursor, CursorIterator>() {
 
     private val projection = arrayOf(
             CLASS.columnName,

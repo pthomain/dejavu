@@ -28,11 +28,11 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.responseClass
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.PersistenceManager
+import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.token.CacheStatus.*
+import dev.pthomain.android.dejavu.shared.token.RequestToken
+import dev.pthomain.android.dejavu.shared.token.ResponseToken
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import java.util.*
@@ -47,7 +47,7 @@ import java.util.*
  */
 internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
-        private val persistenceManager: PersistenceManager<E>,
+        private val persistenceManager: PersistenceManager,
         private val dateFactory: (Long?) -> Date,
         private val durationPredicate: (TransientResponse<*>) -> Int?,
         private val logger: Logger
