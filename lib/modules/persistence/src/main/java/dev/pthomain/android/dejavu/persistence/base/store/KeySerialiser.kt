@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
 
 /**

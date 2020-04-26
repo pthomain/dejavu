@@ -30,10 +30,11 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.CacheToken
 import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
@@ -61,6 +62,8 @@ class DatabasePersistenceManager internal constructor(
         serialisationManager,
         dateFactory
 ) {
+
+    override val decorator: SerialisationDecorator? = null
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).

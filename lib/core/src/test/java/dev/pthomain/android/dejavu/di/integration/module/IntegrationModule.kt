@@ -36,7 +36,6 @@ import java.util.*
 import javax.inject.Singleton
 
 @Module(includes = [
-    dev.pthomain.android.glitch.GlitchSerialisationModule::class,
     dev.pthomain.android.glitch.GlitchPersistenceModule::class,
     dev.pthomain.android.glitch.GlitchStatisticsModule::class,
     dev.pthomain.android.glitch.GlitchInterceptorModule::class,

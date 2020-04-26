@@ -26,17 +26,19 @@ package dev.pthomain.android.dejavu.persistence.file
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import java.io.File
 import java.util.*
 
-internal class FilePersistenceManagerFactory(
+class FilePersistenceManagerFactory internal constructor(
         private val dateFactory: (Long?) -> Date,
         private val logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val storeFactory: FileStore.Factory,
-        private val serialisationManager: SerialisationManager
+        private val serialisationManager: SerialisationManager,
+        private val fileSerialisationDecorator: SerialisationDecorator
 ) {
 
     fun create(cacheDirectory: File): PersistenceManager =
@@ -45,7 +47,8 @@ internal class FilePersistenceManagerFactory(
                     logger,
                     keySerialiser,
                     storeFactory.create(cacheDirectory),
-                    serialisationManager
+                    serialisationManager,
+                    fileSerialisationDecorator
             )
 
 }

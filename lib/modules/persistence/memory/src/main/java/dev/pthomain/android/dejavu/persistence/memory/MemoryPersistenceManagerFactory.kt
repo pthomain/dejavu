@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.persistence.memory
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import java.util.*
 
 class MemoryPersistenceManagerFactory internal constructor(

@@ -76,7 +76,7 @@ sealed class HashedRequestMetadata<R : Any>(
         requestBody
 )
 
-data class ValidRequestMetadata<R : Any> internal constructor(
+data class ValidRequestMetadata<R : Any>(
         override val responseClass: Class<R>,
         override val url: String,
         override val requestBody: String?,
@@ -90,7 +90,7 @@ data class ValidRequestMetadata<R : Any> internal constructor(
         classHash
 )
 
-data class InvalidRequestMetadata<R : Any> internal constructor(
+data class InvalidRequestMetadata<R : Any>(
         override val responseClass: Class<R>
 ) : HashedRequestMetadata<R>(
         responseClass,

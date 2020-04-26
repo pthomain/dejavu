@@ -26,8 +26,9 @@ package dev.pthomain.android.dejavu.persistence.base.store
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.CacheToken
 import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
@@ -52,7 +53,8 @@ class KeyValuePersistenceManager(
         logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
-        serialisationManager: SerialisationManager
+        serialisationManager: SerialisationManager,
+        override val decorator: SerialisationDecorator? = null
 ) : BasePersistenceManager(
         logger,
         serialisationManager,

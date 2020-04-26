@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.serialisation.compression
 import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.serialisation.compression.decorator.CompressionSerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.dejavu.shared.utils.Function3
 import org.iq80.snappy.Snappy

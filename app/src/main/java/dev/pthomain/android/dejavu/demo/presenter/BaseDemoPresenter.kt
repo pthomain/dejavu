@@ -37,6 +37,7 @@ import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
@@ -79,10 +80,14 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = GlitchDejaVu.Builder()
-            .withSerialiser(GsonSerialiser(gson))
+    private fun newDejaVu() = GlitchDejaVu.Builder(
+                    context(),
+                    FilePersistence.Builder(
+                            context(),
+                            GsonSerialiser(gson)
+                    ).persistenceManager()
+            )
             .withLogger(uiLogger)
-//            .withPersistence(::pickPersistenceMode)
 //            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
             .build()
 

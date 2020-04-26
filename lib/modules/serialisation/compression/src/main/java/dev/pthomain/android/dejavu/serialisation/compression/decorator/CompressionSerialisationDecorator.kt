@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.serialisation.compression.decorator
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 /**
  * Optional compression step of the serialisation process
@@ -53,10 +53,10 @@ internal class CompressionSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateSerialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
-            if (metadata.isCompressed) {
+            if (operation.compress) {
                 compresser(payload).also { compressed ->
                     logCompression(
                             compressed,
@@ -78,10 +78,10 @@ internal class CompressionSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
-            if (metadata.isCompressed) {
+            if (operation.compress) {
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,

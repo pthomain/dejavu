@@ -31,13 +31,15 @@ import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.di.PersistenceComponent
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.shared.PersistenceManager
 import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import java.util.*
@@ -47,9 +49,15 @@ object SqlitePersistence {
 
     class Builder(
             context: Context,
+            serialiser: Serialiser,
+            vararg decorators: SerialisationDecorator,
             logger: Logger = SilentLogger
     ) : Component by DaggerSqlitePersistence_Component
             .builder()
+            .module(Module(
+                    decorators.asList(),
+                    serialiser
+            ))
             .sharedModule(SharedModule(
                     context.applicationContext,
                     logger
@@ -60,8 +68,11 @@ object SqlitePersistence {
     @dagger.Component(modules = [Module::class])
     internal interface Component : PersistenceComponent
 
-    @dagger.Module(includes = [PersistenceModule::class])
-    internal class Module {
+    @dagger.Module
+    internal class Module(
+            decoratorList: List<SerialisationDecorator>,
+            serialiser: Serialiser
+    ) : PersistenceModule(decoratorList, serialiser) {
 
         @Provides
         @Singleton
@@ -115,6 +126,7 @@ object SqlitePersistence {
                         dateFactory::get,
                         database
                 )
+
     }
 
     internal const val DATABASE_NAME = "dejavu.db"

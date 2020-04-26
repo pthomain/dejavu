@@ -21,9 +21,9 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.decoration
+package dev.pthomain.android.dejavu.shared.serialisation
 
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 /**
  * Interface representing a step in the serialisation process provided as a list to the
@@ -44,7 +44,7 @@ interface SerialisationDecorator {
     @Throws(SerialisationException::class)
     fun <R : Any> decorateSerialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ): ByteArray
 
@@ -60,7 +60,7 @@ interface SerialisationDecorator {
     @Throws(SerialisationException::class)
     fun <R : Any> decorateDeserialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ): ByteArray
 

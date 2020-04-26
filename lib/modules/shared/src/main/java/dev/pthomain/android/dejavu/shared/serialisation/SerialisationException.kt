@@ -21,16 +21,15 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.decoration
+package dev.pthomain.android.dejavu.shared.serialisation
 
-//TODO find a more dynamic way to represent this
 /**
- * Represents metadata to be used by the SerialisationDecorators
+ * An exception representing a failure during the serialisation process.
  *
- * @param isCompressed whether or not the payload needs to be compressed or uncompressed
- * @param isEncrypted whether or not the payload needs to be encrypted or decrypted
+ * @param message the description of the error
+ * @param cause the optional original exception
  */
-data class SerialisationDecorationMetadata(
-        val isCompressed: Boolean,
-        val isEncrypted: Boolean
-)
+class SerialisationException(
+        message: String?,
+        cause: Throwable? = null
+) : Exception(message, cause)

@@ -21,13 +21,10 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation
+package dev.pthomain.android.dejavu.persistence.serialisation
 
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.SerialisationException
-import dev.pthomain.android.dejavu.shared.Serialiser
-import dev.pthomain.android.dejavu.shared.token.CacheToken
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 /**
@@ -58,7 +55,8 @@ class SerialisationManager internal constructor(
     @Throws(SerialisationException::class)
     fun <R : Any> serialise(
             response: R,
-            metadata: SerialisationDecorationMetadata
+            operation: Cache,
+            optionalDecorator: SerialisationDecorator?
     ): ByteArray {
         val responseClass = response::class.java
 
@@ -73,10 +71,14 @@ class SerialisationManager internal constructor(
         }.let {
             var serialised = it.toByteArray()
 
-            decoratorList.forEach {
+            val decoratorSequence = decoratorList.asSequence()
+            val decorators = optionalDecorator?.let { sequenceOf(it) }?.plus(decoratorSequence)
+                    ?: decoratorSequence
+
+            decorators.forEach {
                 serialised = it.decorateSerialisation(
                         responseClass,
-                        metadata,
+                        operation,
                         serialised
                 )
             }
@@ -84,6 +86,7 @@ class SerialisationManager internal constructor(
             serialised
         }
     }
+
 
     /**
      * Deserialises the given payload first to a ByteArray using the provided Serialiser,
@@ -98,17 +101,21 @@ class SerialisationManager internal constructor(
      */
     @Throws(SerialisationException::class)
     fun <R : Any> deserialise(
-            instructionToken: CacheToken<Cache, R>,
+            responseClass: Class<R>,
+            operation: Cache,
             data: ByteArray,
-            metadata: SerialisationDecorationMetadata
+            optionalDecorator: SerialisationDecorator?
     ): R {
         var deserialised = data
-        val responseClass = instructionToken.instruction.requestMetadata.responseClass
 
-        reversedDecoratorList.forEach {
+        val decoratorSequence = reversedDecoratorList.asSequence()
+        val decorators = optionalDecorator?.let { decoratorSequence.plus(it) }
+                ?: decoratorSequence
+
+        decorators.forEach {
             deserialised = it.decorateDeserialisation(
                     responseClass,
-                    metadata,
+                    operation,
                     deserialised
             )
         }

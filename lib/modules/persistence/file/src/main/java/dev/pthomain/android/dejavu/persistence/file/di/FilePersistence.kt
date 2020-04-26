@@ -32,10 +32,11 @@ import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.persistence.file.FileStore
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import java.util.*
 import javax.inject.Singleton
@@ -44,9 +45,15 @@ object FilePersistence {
 
     class Builder(
             context: Context,
+            serialiser: Serialiser,
+            vararg decorators: SerialisationDecorator,
             logger: Logger = SilentLogger
     ) : Component by DaggerFilePersistence_Component
             .builder()
+            .module(Module(
+                    decorators.asList(),
+                    serialiser
+            ))
             .sharedModule(SharedModule(
                     context.applicationContext,
                     logger
@@ -55,13 +62,15 @@ object FilePersistence {
 
     @Singleton
     @dagger.Component(modules = [Module::class])
-    internal interface Component : PersistenceComponent {
+    interface Component : PersistenceComponent {
         fun persistenceManagerFactory(): FilePersistenceManagerFactory
-        fun serialisationDecorator(): SerialisationDecorator
     }
 
-    @dagger.Module(includes = [PersistenceModule::class])
-    internal class Module {
+    @dagger.Module
+    internal class Module(
+            decoratorList: List<SerialisationDecorator>,
+            serialiser: Serialiser
+    ) : PersistenceModule(decoratorList, serialiser) {
 
         @Provides
         @Singleton
@@ -88,14 +97,16 @@ object FilePersistence {
                 dateFactory: Function1<Long?, Date>,
                 keySerialiser: KeySerialiser,
                 storeFactory: FileStore.Factory,
-                serialisationManager: SerialisationManager
+                serialisationManager: SerialisationManager,
+                serialisationDecorator: SerialisationDecorator
         ) =
                 FilePersistenceManagerFactory(
                         dateFactory::get,
                         logger,
                         keySerialiser,
                         storeFactory,
-                        serialisationManager
+                        serialisationManager,
+                        serialisationDecorator
                 )
 
         @Provides

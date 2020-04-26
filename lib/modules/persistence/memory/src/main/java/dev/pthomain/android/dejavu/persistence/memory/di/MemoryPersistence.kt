@@ -33,10 +33,12 @@ import dev.pthomain.android.dejavu.persistence.di.PersistenceComponent
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
+import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.shared.PersistenceManager
 import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import java.util.*
 import javax.inject.Singleton
@@ -45,6 +47,8 @@ object MemoryPersistence {
 
     class Builder(
             context: Context,
+            serialiser: Serialiser,
+            vararg decorators: SerialisationDecorator,
             maxEntries: Int = 20,
             logger: Logger = SilentLogger
     ) : Component by DaggerMemoryPersistence_Component
@@ -53,7 +57,11 @@ object MemoryPersistence {
                     context.applicationContext,
                     logger
             ))
-            .module(Module(maxEntries))
+            .module(Module(
+                    decorators.asList(),
+                    serialiser,
+                    maxEntries
+            ))
             .build()
 
     @Singleton
@@ -62,8 +70,12 @@ object MemoryPersistence {
         fun persistenceManagerFactory(): MemoryPersistenceManagerFactory
     }
 
-    @dagger.Module(includes = [PersistenceModule::class])
-    internal class Module(private val maxEntries: Int = 20) {
+    @dagger.Module
+    internal class Module(
+            decoratorList: List<SerialisationDecorator>,
+            serialiser: Serialiser,
+            private val maxEntries: Int
+    ) : PersistenceModule(decoratorList, serialiser) {
 
         @Provides
         @Singleton

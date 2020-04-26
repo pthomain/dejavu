@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.serialisation.encryption
 
 import dagger.Provides
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
 import dev.pthomain.android.dejavu.serialisation.encryption.decorator.EncryptionSerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.mumbo.base.EncryptionManager
 import javax.inject.Singleton
 

@@ -29,61 +29,28 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.TransientResponse
 import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.shared.PersistenceManager
-import dev.pthomain.android.dejavu.shared.Serialiser
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 
-abstract class DejaVuBuilder<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+abstract class DejaVuBuilder<E>(
+        private val context: Context,
+        private val errorFactory: ErrorFactory<E>,
+        private val persistenceManager: PersistenceManager
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     private var logger: Logger = SilentLogger
-    private var context: Context? = null
-    private var errorFactory: ErrorFactory<E>? = null
-    private var persistenceManager: PersistenceManager? = null
-    private var serialiser: Serialiser? = null
     private var operationPredicate: (RequestMetadata<*>) -> Remote? = OperationPredicate.Inactive
     private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
 
     /**
      * Sets custom logger.
      */
-    fun withContext(context: Context) =
-            apply { this.context = context }
-
-    /**
-     * Sets custom logger.
-     */
     fun withLogger(logger: Logger) =
             apply { this.logger = logger }
-
-    /**
-     * Sets custom Serialiser.
-     */
-    fun withSerialiser(serialiser: Serialiser) =
-            apply { this.serialiser = serialiser }
-
-    /**
-     * Sets a custom ErrorFactory implementation.
-     */
-    fun withErrorFactory(errorFactory: ErrorFactory<E>) =
-            apply { this.errorFactory = errorFactory }
-
-    /**
-     * Provide a different PersistenceManager to handle the persistence of the cached requests.
-     * The default implementation is FilePersistenceManager which saves the responses to
-     * the filesystem.
-     *
-     * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.base.KeyValuePersistenceManager
-     * @see dev.pthomain.android.dejavu.interceptors.cache.persistence.database.DatabasePersistenceManager
-     *
-     * @param persistenceManager the PersistenceManager implementation to override the default one
-     */
-    fun withPersistence(persistenceManager: PersistenceManager) =
-            apply { this.persistenceManager = persistenceManager }
 
     /**
      * Sets a predicate for ad-hoc response caching. This predicate will be called for every
@@ -121,7 +88,6 @@ abstract class DejaVuBuilder<E>
             context: Context,
             logger: Logger,
             errorFactory: ErrorFactory<E>,
-            serialiser: Serialiser,
             persistenceManager: PersistenceManager,
             operationPredicate: (metadata: RequestMetadata<*>) -> Remote?,
             durationPredicate: (TransientResponse<*>) -> Int?
@@ -132,16 +98,12 @@ abstract class DejaVuBuilder<E>
      */
     fun build() = DejaVu(
             componentProvider(
-                    checkProvided(context?.applicationContext),
+                    context.applicationContext,
                     logger,
-                    checkProvided(errorFactory),
-                    checkProvided(serialiser),
-                    checkProvided(persistenceManager),
+                    errorFactory,
+                    persistenceManager,
                     operationPredicate,
                     durationPredicate
             )
     )
-
-    private inline fun <reified T> checkProvided(target: T?): T = target
-            ?: throw IllegalStateException("Please provide an instance of ${T::class.java.simpleName}")
 }

@@ -39,7 +39,7 @@ class Hasher internal constructor(
         private val uriParser: (String) -> Uri
 ) {
 
-    private var messageDigest: MessageDigest? = null
+    private val messageDigest: (String) -> String
 
     init {
         var messageDigest = tryOrNull(
@@ -61,6 +61,20 @@ class Hasher internal constructor(
                 MessageDigest.getInstance("MD5").also {
                     logger.d(this, "Using MD5 hasher")
                 }
+            }
+        }
+
+        this.messageDigest = { input ->
+            if (messageDigest == null) {
+                var hash: Long = 7
+                for (element in input) {
+                    hash = hash * 31 + element.toLong()
+                }
+                hash.toString()
+            } else {
+                val textBytes = input.toByteArray(charset("UTF-8"))
+                messageDigest.update(textBytes, 0, textBytes.size)
+                bytesToString(messageDigest.digest())
             }
         }
     }
@@ -121,18 +135,7 @@ class Hasher internal constructor(
      * @return the hashed String
      */
     @Throws(UnsupportedEncodingException::class)
-    private fun hash(text: String) =
-            if (messageDigest == null) {
-                var hash: Long = 7
-                for (element in text) {
-                    hash = hash * 31 + element.toLong()
-                }
-                hash.toString()
-            } else {
-                val textBytes = text.toByteArray(charset("UTF-8"))
-                messageDigest!!.update(textBytes, 0, textBytes.size)
-                bytesToString(messageDigest!!.digest())
-            }
+    private fun hash(text: String) = messageDigest(text)
 
     /**
      * Serialises a byte array to hexadecimal.

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.serialisation.di
 
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 
 interface SerialisationComponent {
     fun serialisationDecorator(): SerialisationDecorator

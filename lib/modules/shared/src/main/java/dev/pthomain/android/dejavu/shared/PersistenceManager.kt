@@ -23,6 +23,8 @@
 
 package dev.pthomain.android.dejavu.shared
 
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.CacheToken
 import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
@@ -30,6 +32,12 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
 import java.util.*
 
 interface PersistenceManager {
+
+    /**
+     * An optional serialisation decorators, if require as an extra step for persistence.
+     */
+    val decorator: SerialisationDecorator?
+
     /**
      * Returns a cached entry if available
      *
@@ -39,7 +47,9 @@ interface PersistenceManager {
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun <R : Any> getCachedResponse(instructionToken: CacheToken<Cache, R>): CacheData<R>?
+    fun <R : Any> find(
+            instructionToken: CacheToken<Cache, R>
+    ): CacheData<R>?
 
     /**
      * Caches a given response.

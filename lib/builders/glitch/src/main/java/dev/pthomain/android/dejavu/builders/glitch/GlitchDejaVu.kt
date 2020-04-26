@@ -35,7 +35,6 @@ import dev.pthomain.android.dejavu.interceptors.InterceptorModule
 import dev.pthomain.android.dejavu.persistence.statistics.StatisticsModule
 import dev.pthomain.android.dejavu.retrofit.RetrofitModule
 import dev.pthomain.android.dejavu.shared.PersistenceManager
-import dev.pthomain.android.dejavu.shared.Serialiser
 import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
@@ -48,24 +47,26 @@ import javax.inject.Singleton
 object GlitchDejaVu {
 
     class Builder(
+            context: Context,
+            persistenceManager: PersistenceManager,
             errorFactory: ErrorFactory<Glitch> = DejaVuGlitchFactory(GlitchFactory())
-    ) : DejaVuBuilder<Glitch>() {
-
-        init {
-            withErrorFactory(errorFactory)
-        }
+    ) : DejaVuBuilder<Glitch>(
+            context,
+            errorFactory,
+            persistenceManager
+    ) {
 
         override fun componentProvider(
                 context: Context,
                 logger: Logger,
                 errorFactory: ErrorFactory<Glitch>,
-                serialiser: Serialiser,
                 persistenceManager: PersistenceManager,
                 operationPredicate: (metadata: RequestMetadata<*>) -> Operation.Remote?,
                 durationPredicate: (TransientResponse<*>) -> Int?
         ): DejaVuComponent<Glitch> =
                 DaggerGlitchDejaVu_Component.builder()
                         .sharedModule(SharedModule(context, logger))
+                        .glitchCacheModule(GlitchCacheModule(persistenceManager))
                         .module(Module(
                                 errorFactory,
                                 operationPredicate,

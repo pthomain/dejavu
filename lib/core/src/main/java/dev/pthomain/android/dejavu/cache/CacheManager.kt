@@ -105,7 +105,7 @@ internal class CacheManager<E>(
 
                 logger.d(this, "Checking for cached $simpleName")
 
-                val cachedResponse = persistenceManager.getCachedResponse(requestToken)
+                val cachedResponse = persistenceManager.find(requestToken)
                         ?.run {
                             val status = dateFactory.getCacheStatus(
                                     expiryDate,

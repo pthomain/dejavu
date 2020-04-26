@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption.decorator
 
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
 /**
@@ -50,10 +50,10 @@ internal class EncryptionSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateSerialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
-            if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
+            if (operation.encrypt && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.encryptBytes(payload, DATA_TAG)
                         ?: throw SerialisationException("Could not encrypt data")
             } else payload
@@ -70,10 +70,10 @@ internal class EncryptionSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
-            if (metadata.isEncrypted && encryptionManager.isEncryptionAvailable) {
+            if (operation.encrypt && encryptionManager.isEncryptionAvailable) {
                 encryptionManager.decryptBytes(payload, DATA_TAG)
                         ?: throw SerialisationException("Could not decrypt data")
             } else payload

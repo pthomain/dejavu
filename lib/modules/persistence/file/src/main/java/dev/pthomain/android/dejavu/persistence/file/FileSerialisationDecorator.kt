@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.persistence.file
 
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.SerialisationException
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 
 /**
  * Optional file metadata step of the serialisation process (only affecting file persistence).
@@ -48,7 +48,7 @@ internal class FileSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateSerialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
             responseClass.name
@@ -68,7 +68,7 @@ internal class FileSerialisationDecorator(
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
             responseClass: Class<R>,
-            metadata: SerialisationDecorationMetadata,
+            operation: Cache,
             payload: ByteArray
     ) =
             byteToStringConverter(payload).let {
