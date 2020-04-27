@@ -48,9 +48,9 @@ object MemoryPersistence {
     class Builder(
             context: Context,
             serialiser: Serialiser,
-            vararg decorators: SerialisationDecorator,
-            maxEntries: Int = 20,
-            logger: Logger = SilentLogger
+            decorators: List<SerialisationDecorator>,
+            logger: Logger = SilentLogger,
+            maxEntries: Int = 20
     ) : Component by DaggerMemoryPersistence_Component
             .builder()
             .sharedModule(SharedModule(
@@ -58,7 +58,7 @@ object MemoryPersistence {
                     logger
             ))
             .module(Module(
-                    decorators.asList(),
+                    decorators,
                     serialiser,
                     maxEntries
             ))

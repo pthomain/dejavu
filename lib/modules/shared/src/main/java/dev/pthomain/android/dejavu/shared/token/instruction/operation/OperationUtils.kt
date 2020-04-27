@@ -55,7 +55,7 @@ internal fun Operation.serialise(vararg arguments: Any?): String {
     }.let {
         if (it.replace("$SEPARATOR+", "").isBlank()) operationName
         else "$operationName$SEPARATOR$it"
-    } ?: operationName
+    }
 }
 
 /**

@@ -50,12 +50,12 @@ object SqlitePersistence {
     class Builder(
             context: Context,
             serialiser: Serialiser,
-            vararg decorators: SerialisationDecorator,
+            decorators: List<SerialisationDecorator>,
             logger: Logger = SilentLogger
     ) : Component by DaggerSqlitePersistence_Component
             .builder()
             .module(Module(
-                    decorators.asList(),
+                    decorators,
                     serialiser
             ))
             .sharedModule(SharedModule(

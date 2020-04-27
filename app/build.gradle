@@ -86,6 +86,9 @@ dependencies {
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
+    implementation project(':lib:modules:serialisation:compression')
+    implementation project(':lib:modules:serialisation:encryption')
+
     implementation appDependencies.multiDex
 
     implementation appDependencies.dagger

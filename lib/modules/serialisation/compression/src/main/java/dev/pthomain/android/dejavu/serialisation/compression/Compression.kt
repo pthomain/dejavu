@@ -30,8 +30,8 @@ import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
 import dev.pthomain.android.dejavu.shared.di.SilentLogger
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
-import dev.pthomain.android.dejavu.shared.utils.Function3
 import org.xerial.snappy.Snappy
+import javax.inject.Named
 import javax.inject.Singleton
 
 object Compression {
@@ -51,6 +51,7 @@ object Compression {
 
         @Provides
         @Singleton
+        @Named("compresser")
         internal fun provideCompresser() =
                 object : Function1<ByteArray, ByteArray> {
                     override fun get(t1: ByteArray) =
@@ -59,6 +60,7 @@ object Compression {
 
         @Provides
         @Singleton
+        @Named("uncompresser")
         internal fun provideUncompresser() =
                 object : Function1<ByteArray, ByteArray> {
                     override fun get(t1: ByteArray) = Snappy.uncompress(t1)
@@ -67,8 +69,8 @@ object Compression {
         @Provides
         @Singleton
         internal fun provideCompressionSerialisationDecorator(
-                compresser: Function1<ByteArray, ByteArray>,
-                uncompresser: Function3<ByteArray, Int, Int, ByteArray>
+                @Named("compresser") compresser: Function1<ByteArray, ByteArray>,
+                @Named("uncompresser") uncompresser: Function1<ByteArray, ByteArray>
         ): SerialisationDecorator =
                 CompressionSerialisationDecorator(
                         logger,

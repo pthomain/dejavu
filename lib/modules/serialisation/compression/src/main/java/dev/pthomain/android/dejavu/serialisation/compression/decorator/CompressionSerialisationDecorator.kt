@@ -33,12 +33,12 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
  *
  * @param logger a Logger instance
  * @param compresser a function compressing an input ByteArray
- * @param uncompresser a function decompressing an input ByteArray
+ * @param uncompresser a function uncompressing an input ByteArray
  */
 internal class CompressionSerialisationDecorator(
         private val logger: Logger,
         private val compresser: (ByteArray) -> ByteArray,
-        private val uncompresser: (ByteArray, Int, Int) -> ByteArray
+        private val uncompresser: (ByteArray) -> ByteArray
 ) : SerialisationDecorator {
 
     /**
@@ -67,13 +67,13 @@ internal class CompressionSerialisationDecorator(
             } else payload
 
     /**
-     * Implements optional decompression during the deserialisation process.
+     * Implements optional uncompression during the deserialisation process.
      *
      * @param instructionToken the request's instruction token associated with the payload being deserialised
      * @param metadata the overall metadata associated with the current serialisation
      * @param payload the payload being serialised
-     * @return the decompressed payload
-     * @throws SerialisationException in case this decompression step failed
+     * @return the uncompressed payload
+     * @throws SerialisationException in case this uncompression step failed
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> decorateDeserialisation(
@@ -82,7 +82,7 @@ internal class CompressionSerialisationDecorator(
             payload: ByteArray
     ) =
             if (operation.compress) {
-                uncompresser(payload, 0, payload.size).also {
+                uncompresser(payload).also {
                     logCompression(
                             payload,
                             responseClass.simpleName,

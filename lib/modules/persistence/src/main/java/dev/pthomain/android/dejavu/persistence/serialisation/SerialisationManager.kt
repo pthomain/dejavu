@@ -38,7 +38,7 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
 class SerialisationManager internal constructor(
         private val serialiser: Serialiser,
         private val byteToStringConverter: (ByteArray) -> String,
-        private val decoratorList: List<SerialisationDecorator>
+        private val decoratorList: List<SerialisationDecorator> //TODO order list to put compression before encryption
 ) {
 
     private val reversedDecoratorList = decoratorList.reversed()

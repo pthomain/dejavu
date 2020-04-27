@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.presenter
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
 import com.google.gson.Gson
@@ -41,6 +42,8 @@ import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Persistence.
 import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
+import dev.pthomain.android.dejavu.serialisation.compression.Compression
+import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
@@ -53,6 +56,7 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -81,37 +85,57 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected val gson = Gson()
     private val serialiser = GsonSerialiser(gson)
 
-    private val filePersistenceComponent = FilePersistence.Builder(
+    private val compressionDecorator = Compression
+            .Builder(uiLogger)
+            .serialisationDecorator()
+
+    private val encryptionDecorator = with(Mumbo(demoActivity, uiLogger)) {
+        Encryption
+                .Builder(if (SDK_INT >= 23) tink() else conceal())
+                .serialisationDecorator()
+    }
+
+    private fun getDecorators() = when {
+        encrypt && compress -> listOf(compressionDecorator, encryptionDecorator)
+        encrypt -> listOf(encryptionDecorator)
+        compress -> listOf(compressionDecorator)
+        else -> emptyList()
+    }
+
+    private fun filePersistenceComponent() = FilePersistence.Builder(
             demoActivity,
             serialiser,
-            logger = uiLogger
+            getDecorators(),
+            uiLogger
     )
 
-    private val memoryPersistenceComponent = MemoryPersistence.Builder(
+    private fun memoryPersistenceComponent() = MemoryPersistence.Builder(
             demoActivity,
             serialiser,
-            logger = uiLogger
+            getDecorators(),
+            uiLogger
     )
 
-    private val sqlitePersistenceComponent = SqlitePersistence.Builder(
+    private fun sqlitePersistenceComponent() = SqlitePersistence.Builder(
             demoActivity,
             serialiser,
-            logger = uiLogger
+            getDecorators(),
+            uiLogger
     )
 
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = GlitchDejaVu.Builder(
+    private fun newDejaVu() = GlitchDejaVu
+            .Builder(
                     demoActivity,
                     when (persistence) {
-                        FILE -> filePersistenceComponent
-                        MEMORY -> memoryPersistenceComponent
-                        SQLITE -> sqlitePersistenceComponent
+                        FILE -> filePersistenceComponent()
+                        MEMORY -> memoryPersistenceComponent()
+                        SQLITE -> sqlitePersistenceComponent()
                     }.persistenceManager()
             )
             .withLogger(uiLogger)
-//            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
             .build()
 
     final override fun getCacheOperation() =
