@@ -32,6 +32,8 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
  *
  * @param byteToStringConverter an factory converting bytes to Strings
  */
+//FIXME
+@Deprecated("Use response class from request metadata and validate the response class hash from the filename instead.")
 internal class FileSerialisationDecorator(
         private val byteToStringConverter: (ByteArray) -> String
 ) : SerialisationDecorator {

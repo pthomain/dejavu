@@ -68,7 +68,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     private var instructionType: Type = CACHE
     private var networkPriority: NetworkPriority = LOCAL_FIRST
-    private var persistence = SQLITE
+    private var persistence = MEMORY
 
     final override var connectivityTimeoutOn: Boolean = true
         set(value) {

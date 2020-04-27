@@ -89,7 +89,8 @@ class MemoryStore internal constructor(
         val oldEntry = lruCache.get(oldKey)
         if (oldEntry != null) {
             delete(oldKey)
-            lruCache.put(newKey, oldEntry)
+            //FIXME only use the serialised key for file persistence and use the request hash as a key for memory
+            lruCache.put(newKey, oldEntry.copy(expiryDate = 0))
         }
     }
 
