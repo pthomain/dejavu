@@ -38,12 +38,6 @@ android {
         aaptOptions {
             additionalParameters "--no-version-vectors"
         }
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                includeCompileClasspath true
-            }
-        }
     }
 
     buildTypes {
@@ -88,7 +82,13 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':core')
+    implementation project(':lib:builders:glitch')
+    implementation project(':lib:modules:persistence:file')
+    implementation project(':lib:modules:persistence:memory')
+    implementation project(':lib:modules:persistence:sqlite')
+    implementation project(':lib:modules:serialisation:compression')
+    implementation project(':lib:modules:serialisation:encryption')
+
     implementation appDependencies.multiDex
 
     implementation appDependencies.dagger

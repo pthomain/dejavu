@@ -20,5 +20,15 @@
  *  under the License.
  *
  */
-
-include ':app', ':core'
+include ':lib:core'
+include ':lib:modules:shared'
+include ':lib:modules:serialisation'
+include ':lib:modules:serialisation:compression'
+include ':lib:modules:serialisation:encryption'
+include ':lib:modules:persistence'
+include ':lib:modules:persistence:file'
+include ':lib:modules:persistence:memory'
+include ':lib:modules:persistence:sqlite'
+include ':lib:builders'
+include ':lib:builders:glitch'
+include ':app'

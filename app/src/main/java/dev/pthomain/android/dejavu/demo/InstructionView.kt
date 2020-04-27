@@ -34,13 +34,13 @@ import android.text.style.StyleSpan
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.*
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
+import dev.pthomain.android.dejavu.shared.utils.swapLambdaWhen
 
 class InstructionView @JvmOverloads constructor(
         context: Context,
@@ -85,10 +85,10 @@ class InstructionView @JvmOverloads constructor(
 
     private fun getAnnotationName(type: Type, isAnnotation: Boolean) =
             when (type) {
-                Type.CACHE -> "Cache"
-                Type.DO_NOT_CACHE -> "DoNotCache"
-                Type.INVALIDATE -> "Invalidate"
-                Type.CLEAR -> "Clear"
+                CACHE -> "Cache"
+                DO_NOT_CACHE -> "DoNotCache"
+                INVALIDATE -> "Invalidate"
+                CLEAR -> "Clear"
             }.let { ifElse(isAnnotation, "@$it", it) }
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
@@ -232,7 +232,7 @@ class InstructionView @JvmOverloads constructor(
                           responseClass: Class<*>): CharSequence =
             with(operation) {
                 val wrapped = ifElse(
-                        operation is Operation.Local, //TODO had support for ad-hoc use of DejaVuResult
+                        operation is Local, //TODO had support for ad-hoc use of DejaVuResult
                         "DejaVuResult<%s>",
                         "%s"
                 ).format(responseClass.simpleName)

@@ -32,40 +32,43 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.builders.glitch.GlitchDejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.LOCAL_FIRST
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.gson.GsonGlitchFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.persistence.PersistenceManagerFactory
-import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.*
+import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Persistence.*
+import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
+import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
+import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
+import dev.pthomain.android.dejavu.serialisation.compression.Compression
+import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority.*
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.mumbo.Mumbo
 import io.reactivex.Observable
 import io.reactivex.Single
 
 internal abstract class BaseDemoPresenter protected constructor(
-        demoActivity: DemoActivity,
+        private val demoActivity: DemoActivity,
         protected val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
     private var instructionType: Type = CACHE
     private var networkPriority: NetworkPriority = LOCAL_FIRST
-    private var persistenceType = FILE
+    private var persistence = MEMORY
 
     final override var connectivityTimeoutOn: Boolean = true
         set(value) {
@@ -80,25 +83,60 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var freshness = ANY
 
     protected val gson = Gson()
+    private val serialiser = GsonSerialiser(gson)
+
+    private val compressionDecorator = Compression
+            .Builder(uiLogger)
+            .serialisationDecorator()
+
+    private val encryptionDecorator = with(Mumbo(demoActivity, uiLogger)) {
+        Encryption
+                .Builder(if (SDK_INT >= 23) tink() else conceal())
+                .serialisationDecorator()
+    }
+
+    private fun getDecorators() = when {
+        encrypt && compress -> listOf(compressionDecorator, encryptionDecorator)
+        encrypt -> listOf(encryptionDecorator)
+        compress -> listOf(compressionDecorator)
+        else -> emptyList()
+    }
+
+    private fun filePersistenceComponent() = FilePersistence.Builder(
+            demoActivity,
+            serialiser,
+            getDecorators(),
+            uiLogger
+    )
+
+    private fun memoryPersistenceComponent() = MemoryPersistence.Builder(
+            demoActivity,
+            serialiser,
+            getDecorators(),
+            uiLogger
+    )
+
+    private fun sqlitePersistenceComponent() = SqlitePersistence.Builder(
+            demoActivity,
+            serialiser,
+            getDecorators(),
+            uiLogger
+    )
 
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = DejaVu.defaultBuilder(context(), GsonSerialiser(gson))
+    private fun newDejaVu() = GlitchDejaVu
+            .Builder(
+                    demoActivity,
+                    when (persistence) {
+                        FILE -> filePersistenceComponent()
+                        MEMORY -> memoryPersistenceComponent()
+                        SQLITE -> sqlitePersistenceComponent()
+                    }.persistenceManager()
+            )
             .withLogger(uiLogger)
-            .withPersistence(true, ::pickPersistenceMode)
-            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
-            .withErrorFactory(GsonGlitchFactory())
             .build()
-
-    private fun pickPersistenceMode(persistenceManagerFactory: PersistenceManagerFactory<Glitch>) =
-            with(persistenceManagerFactory) {
-                when (persistenceType) {
-                    FILE -> filePersistenceManagerFactory.create()
-                    DATABASE -> databasePersistenceManagerFactory!!.create()
-                    MEMORY -> memoryPersistenceManagerFactory.create()
-                }
-            }
 
     final override fun getCacheOperation() =
             when (instructionType) {
@@ -127,7 +165,7 @@ internal abstract class BaseDemoPresenter protected constructor(
 
     final override fun offline() {
         instructionType = CACHE
-        networkPriority = NetworkPriority.LOCAL_ONLY
+        networkPriority = LOCAL_ONLY
         subscribeData(getOfflineSingle(freshness).toObservable())
     }
 
@@ -179,6 +217,12 @@ internal abstract class BaseDemoPresenter protected constructor(
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"
         internal const val ENDPOINT = "fact"
+    }
+
+    enum class Persistence {
+        FILE,
+        MEMORY,
+        SQLITE
     }
 }
 

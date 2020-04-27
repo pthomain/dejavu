@@ -23,12 +23,13 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
 
-class SingleOperationsClientAdapter(private val singleClient: SingleClients.Operations)
-    : ObservableClients.Operations {
+class SingleOperationsClientAdapter(
+        private val singleClient: SingleClients.Operations
+) : ObservableClients.Operations {
 
     override fun clearCache() =
             singleClient.clearCache().toObservable()
