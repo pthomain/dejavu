@@ -38,12 +38,6 @@ android {
         aaptOptions {
             additionalParameters "--no-version-vectors"
         }
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                includeCompileClasspath true
-            }
-        }
     }
 
     buildTypes {

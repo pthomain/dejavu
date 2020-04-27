@@ -35,12 +35,6 @@ android {
         versionCode 1
         versionName "1.0"
         consumerProguardFiles 'proguard-rules-lib.pro'
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                includeCompileClasspath true
-            }
-        }
     }
 
     buildTypes {
@@ -55,6 +49,10 @@ android {
             multiDexEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules-lib.pro'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 
     packagingOptions {
@@ -115,17 +113,33 @@ sourceSets {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from android.sourceSets.main.java.srcDirs
+    from android.sourceSets.main.java.sourceFiles
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task classesJar(type: Jar) {
+    from "$buildDir/intermediates/classes/release"
 }
 
 artifacts {
+    archives classesJar
+    archives javadocJar
     archives sourcesJar
 }
 
 dependencies {
     api project(':lib:modules:shared')
     api project(':lib:core')
-    implementation appDependencies.jitPack
+
     implementation appDependencies.multiDex
 
     api appDependencies.boilerplate

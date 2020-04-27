@@ -55,7 +55,11 @@ internal abstract class BaseRetrofitDemoPresenter(
     }
 
     private fun getHttpLoggingInterceptor(logger: Logger) =
-            HttpLoggingInterceptor { logger.d(this, it) }.apply {
+            HttpLoggingInterceptor(object : HttpLoggingInterceptor.Logger {
+                override fun log(message: String) {
+                    logger.d(this, message)
+                }
+            }).apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 

@@ -22,10 +22,7 @@
  */
 
 buildscript {
-    ext {
-        kotlin_version = '1.4-M1'
-    }
-    ext.kotlinVersion = '1.4-M1'
+    ext.kotlinVersion = '1.3.50'
 
     repositories {
         google()
@@ -59,40 +56,42 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 28
     buildToolsVersion = '28.0.2'
-    multidexVersion = '2.0.0'
+    multidexVersion = '2.0.1'
 
     jitPackVersion = '1.0'
 
     daggerVersion = '2.13'
     jsr250Version = '1.0'
 
-    rxJavaVersion = '2.2.17'
+    rxJavaVersion = '2.2.19'
     rxKotlinVersion = '2.4.0'
     rxAndroidVersion = '2.1.1'
-    rxDogTagVersion = '0.3.0'
+    rxDogTagVersion = '1.0.0'
 
     boilerplateVersion = '4.0'
     mumboVersion = '2.0'
     glitchyVersion = '1.8'
-    fliptablesVersion = '1.0.2'
+    fliptablesVersion = '1.1.0'
 
-    snappyVersion = '0.4'
+    snappyVersion = '1.1.7.3'
     requeryVersion = '3.25.3'
-    androidXsqliteVersion = '2.0.0'
+    androidXsqliteVersion = '2.1.0'
+    androidXroomVersion = '2.2.5'
+    androidCompatVersion = '1.1.0'
 
-    gsonVersion = '2.8.5'
-    retrofitVersion = '2.7.1'
-    okhttpVersion = '3.10.0'
-    reactiveNetworkVersion = '3.0.1'
+    gsonVersion = '2.8.6'
+    retrofitVersion = '2.8.1'
+    okhttpVersion = '4.5.0'
+    reactiveNetworkVersion = '3.0.8'
 
     playServicesVersion = '10.2.1'
-    androidXversion = '1.0.0'
+    androidXversion = '1.2.0'
     androidXtestVersion = '1.1.0'
 
     jUnitVersion = '4.12'
-    mockitoVersion = '2.1.0'
-    robolectricVersion = '4.0.2'
-    mockitoKotlinVersion = '2.0.0'
+    mockitoVersion = '3.3.3'
+    robolectricVersion = '4.3.1'
+    mockitoKotlinVersion = '2.2.0'
 
     appDependencies = [
             jitPack               : "com.github.jitpack:gradle-simple:$jitPackVersion",
@@ -100,8 +99,8 @@ ext {
             multiDex              : "androidx.multidex:multidex:$multidexVersion",
             androidXcore          : "androidx.core:core:$androidXversion",
             androidXsqlite        : "androidx.sqlite:sqlite:$androidXsqliteVersion",
-            androidXroom          : "androidx.room:room-runtime:$androidXsqliteVersion",
-            appCompat             : "androidx.appcompat:appcompat:$androidXversion",
+            androidXroom          : "androidx.room:room-runtime:$androidXroomVersion",
+            appCompat             : "androidx.appcompat:appcompat:$androidCompatVersion",
             browser               : "androidx.browser:browser:$androidXversion",
             reactiveNetwork       : "com.github.pwittchen:reactivenetwork-rx2:$reactiveNetworkVersion",
 
@@ -117,7 +116,6 @@ ext {
             daggerCompiler        : "com.google.dagger:dagger-compiler:$daggerVersion",
 
             jsr250                : "javax.annotation:jsr250-api:$jsr250Version",
-            androidAnnotations    : "androidx.annotation:annotation:$androidXversion",
 
             boilerplate           : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
             boilerplate_ui        : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
@@ -133,13 +131,13 @@ ext {
             okHttpLogging         : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
 
             gson                  : "com.google.code.gson:gson:$gsonVersion",
-            snappy                : "org.iq80.snappy:snappy:$snappyVersion",
+            snappy                : "org.xerial.snappy:snappy-java:$snappyVersion",
             requery               : "io.requery:sqlite-android:$requeryVersion",
 
-            androidXtestCore      : "androidx.test:core:$androidXversion",
+            androidXtestCore      : "androidx.test:core:$androidXtestVersion",
             androidXtestRunner    : "androidx.test:runner:$androidXtestVersion",
             androidXtestRules     : "androidx.test:rules:$androidXtestVersion",
-            androidXjUnit         : "androidx.test.ext:junit:$androidXversion",
+            androidXjUnit         : "androidx.test.ext:junit:$androidXtestVersion",
 
             mockitoCore           : "org.mockito:mockito-core:$mockitoVersion",
             robolectric           : "org.robolectric:robolectric:$robolectricVersion",

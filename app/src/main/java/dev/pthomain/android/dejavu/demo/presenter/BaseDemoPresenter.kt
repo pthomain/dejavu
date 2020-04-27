@@ -37,7 +37,10 @@ import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Persistence.*
 import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
+import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
+import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
@@ -54,14 +57,14 @@ import io.reactivex.Observable
 import io.reactivex.Single
 
 internal abstract class BaseDemoPresenter protected constructor(
-        demoActivity: DemoActivity,
+        private val demoActivity: DemoActivity,
         protected val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
     private var instructionType: Type = CACHE
     private var networkPriority: NetworkPriority = LOCAL_FIRST
-//    private var persistenceType = FILE
+    private var persistence = SQLITE
 
     final override var connectivityTimeoutOn: Boolean = true
         set(value) {
@@ -76,24 +79,40 @@ internal abstract class BaseDemoPresenter protected constructor(
     final override var freshness = ANY
 
     protected val gson = Gson()
+    private val serialiser = GsonSerialiser(gson)
+
+    private val filePersistenceComponent = FilePersistence.Builder(
+            demoActivity,
+            serialiser,
+            logger = uiLogger
+    )
+
+    private val memoryPersistenceComponent = MemoryPersistence.Builder(
+            demoActivity,
+            serialiser,
+            logger = uiLogger
+    )
+
+    private val sqlitePersistenceComponent = SqlitePersistence.Builder(
+            demoActivity,
+            serialiser,
+            logger = uiLogger
+    )
 
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
     private fun newDejaVu() = GlitchDejaVu.Builder(
-                    context(),
-                    FilePersistence.Builder(
-                            context(),
-                            GsonSerialiser(gson)
-                    ).persistenceManager()
+                    demoActivity,
+                    when (persistence) {
+                        FILE -> filePersistenceComponent
+                        MEMORY -> memoryPersistenceComponent
+                        SQLITE -> sqlitePersistenceComponent
+                    }.persistenceManager()
             )
             .withLogger(uiLogger)
 //            .withEncryption(ifElse(SDK_INT >= 23, Mumbo::tink, Mumbo::conceal))
             .build()
-
-    //FIXME use enum in core
-//    private fun pickPersistenceMode(): PersistenceManager<Glitch> =
-//            MemoP
 
     final override fun getCacheOperation() =
             when (instructionType) {
@@ -174,6 +193,12 @@ internal abstract class BaseDemoPresenter protected constructor(
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"
         internal const val ENDPOINT = "fact"
+    }
+
+    enum class Persistence {
+        FILE,
+        MEMORY,
+        SQLITE
     }
 }
 

@@ -204,7 +204,7 @@ class DatabasePersistenceManager internal constructor(
     @Throws(SerialisationException::class)
     override fun <R : Any> cache(
             response: R,
-            instructionToken: CacheToken<Cache, R>,
+            instructionToken: CacheToken<Cache, R>
     ) {
         with(serialise(response, instructionToken)) {
             val values = HashMap<String, Any>()
