@@ -52,7 +52,7 @@ class FilePersistence(
             )
         }
 
-        single {
+        single<SerialisationDecorator> {
             FileSerialisationDecorator(::String)
         }
 
