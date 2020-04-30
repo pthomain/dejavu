@@ -23,48 +23,147 @@
 
 package dev.pthomain.android.dejavu.di
 
+import android.content.Context
 import android.net.Uri
-import dagger.Module
-import dagger.Provides
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.cache.CacheManager
+import dev.pthomain.android.dejavu.cache.CacheMetadataManager
 import dev.pthomain.android.dejavu.cache.TransientResponse
+import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
+import dev.pthomain.android.dejavu.interceptors.NetworkInterceptor
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.retrofit.OperationResolver
+import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
+import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
+import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
+import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
+import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnTypeParser
 import dev.pthomain.android.dejavu.shared.di.SharedModule
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.glitchy.Glitchy
+import dev.pthomain.android.glitchy.interceptor.Interceptors
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import javax.inject.Singleton
+import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
+import java.util.*
 
-@Module(includes = [SharedModule::class])
-abstract class DejaVuModule<E>(
+class DejaVuModule<E>(
+        context: Context,
+        logger: Logger,
         private val errorFactory: ErrorFactory<E>,
-        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+        persistenceModule: PersistenceManager.ModuleProvider,
+        private val operationPredicate: (RequestMetadata<*>) -> Remote?,
         private val durationPredicate: (TransientResponse<*>) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
-    @Provides
-    @Singleton
-    internal fun provideErrorFactory() = errorFactory
+    private val sharedModule = SharedModule(context, logger).module
 
-    @Provides
-    @Singleton
-    internal fun provideOperationPredicate() =
-            object : Function1<RequestMetadata<*>, Operation.Remote?> {
-                override fun get(t1: RequestMetadata<*>) = operationPredicate(t1)
-            }
+    val modules = sharedModule + persistenceModule.modules + module {
 
-    @Provides
-    @Singleton
-    internal fun provideDurationPredicate() =
-            object : Function1<TransientResponse<*>, Int?> {
-                override fun get(t1: TransientResponse<*>) = durationPredicate(t1)
-            }
+        single { errorFactory }
 
-    @Provides
-    @Singleton
-    internal fun provideUriParser() = object : Function1<String, Uri> {
-        override fun get(t1: String) = Uri.parse(t1)
+        single<(String) -> Uri> { Uri::parse }
+
+        single {
+            NetworkInterceptor.Factory<E>(
+                    get(),
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get
+            )
+        }
+
+        single {
+            CacheInterceptor.Factory<E>(get())
+        }
+
+        single {
+            CacheMetadataManager<E>(
+                    get(),
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    durationPredicate::invoke,
+                    get()
+            )
+        }
+
+        single {
+            CacheManager<E>(
+                    get(),
+                    get(),
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get()
+            )
+        }
+
+        single {
+            ResponseInterceptor.Factory<E>(
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get()
+            )
+        }
+
+        single {
+            EmptyResponseFactory<E>(get())
+        }
+
+        single { HeaderInterceptor() }
+
+        single {
+            DejaVuInterceptor.Factory<E>(
+                    get(),
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(),
+                    get(),
+                    get(),
+                    get()
+            )
+        }
+
+        single { AnnotationProcessor<E>(get()) }
+
+        single { DejaVuReturnTypeParser<E>() }
+
+        single<ReturnTypeParser<OperationReturnType>> {
+            OperationReturnTypeParser<E>(
+                    get(),
+                    get(),
+                    get()
+            )
+        }
+
+        single { RequestBodyConverter() }
+
+        single {
+            OperationResolver.Factory<E>(
+                    operationPredicate::invoke,
+                    get<RequestBodyConverter>(),
+                    get()
+            )
+        }
+
+        single<Interceptors<E>> {
+            Interceptors.After(get<DejaVuInterceptor.Factory<E>>().glitchyFactory)
+        }
+
+        single {
+            Glitchy.createCallAdapterFactory<E, OperationReturnType>(
+                    get(),
+                    get(),
+                    get()
+            )
+        }
     }
 
 }

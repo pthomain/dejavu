@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.persistence.base
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.shared.PersistenceManager
-import dev.pthomain.android.dejavu.shared.PersistenceManager.CacheData
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager.CacheData
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.shared.token.CacheToken
 import dev.pthomain.android.dejavu.shared.token.getCacheStatus

@@ -32,7 +32,6 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.builders.glitch.GlitchDejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
@@ -85,15 +84,11 @@ internal abstract class BaseDemoPresenter protected constructor(
     protected val gson = Gson()
     private val serialiser = GsonSerialiser(gson)
 
-    private val compressionDecorator = Compression
-            .Builder(uiLogger)
-            .serialisationDecorator()
+    private val compressionDecorator = Compression(uiLogger).serialisationDecorator
 
     private val encryptionDecorator = with(Mumbo(demoActivity, uiLogger)) {
-        Encryption
-                .Builder(if (SDK_INT >= 23) tink() else conceal())
-                .serialisationDecorator()
-    }
+        Encryption(if (SDK_INT >= 23) tink() else conceal())
+    }.serialisationDecorator
 
     private fun getDecorators() = when {
         encrypt && compress -> listOf(compressionDecorator, encryptionDecorator)
@@ -102,40 +97,33 @@ internal abstract class BaseDemoPresenter protected constructor(
         else -> emptyList()
     }
 
-    private fun filePersistenceComponent() = FilePersistence.Builder(
-            demoActivity,
-            serialiser,
+    private fun filePersistenceModule() = FilePersistence(
             getDecorators(),
-            uiLogger
+            serialiser
     )
 
-    private fun memoryPersistenceComponent() = MemoryPersistence.Builder(
-            demoActivity,
-            serialiser,
+    private fun memoryPersistenceModule() = MemoryPersistence(
             getDecorators(),
-            uiLogger
+            serialiser
     )
 
-    private fun sqlitePersistenceComponent() = SqlitePersistence.Builder(
-            demoActivity,
-            serialiser,
+    private fun sqlitePersistenceModule() = SqlitePersistence(
             getDecorators(),
-            uiLogger
+            serialiser
     )
 
     protected var dejaVu: DejaVu<Glitch> = newDejaVu()
         private set
 
-    private fun newDejaVu() = GlitchDejaVu
-            .Builder(
+    private fun newDejaVu() = DejaVu.defaultBuilder(
                     demoActivity,
                     when (persistence) {
-                        FILE -> filePersistenceComponent()
-                        MEMORY -> memoryPersistenceComponent()
-                        SQLITE -> sqlitePersistenceComponent()
-                    }.persistenceManager()
+                        FILE -> filePersistenceModule()
+                        MEMORY -> memoryPersistenceModule()
+                        SQLITE -> sqlitePersistenceModule()
+                    },
+                    uiLogger
             )
-            .withLogger(uiLogger)
             .build()
 
     final override fun getCacheOperation() =

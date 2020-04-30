@@ -24,98 +24,52 @@
 package dev.pthomain.android.dejavu.persistence.file.di
 
 import android.content.Context
-import dagger.Provides
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
-import dev.pthomain.android.dejavu.persistence.di.PersistenceComponent
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.persistence.file.FileStore
-import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.di.SharedModule
-import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.util.*
-import javax.inject.Singleton
 
-object FilePersistence {
+class FilePersistence(
+        decoratorList: List<SerialisationDecorator>,
+        serialiser: Serialiser
+) : PersistenceManager.ModuleProvider {
 
-    class Builder(
-            context: Context,
-            serialiser: Serialiser,
-            decorators: List<SerialisationDecorator>,
-            logger: Logger = SilentLogger
-    ) : Component by DaggerFilePersistence_Component
-            .builder()
-            .module(Module(
-                    decorators,
-                    serialiser
-            ))
-            .sharedModule(SharedModule(
-                    context.applicationContext,
-                    logger
-            ))
-            .build()
+    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
 
-    @Singleton
-    @dagger.Component(modules = [Module::class])
-    interface Component : PersistenceComponent {
-        fun persistenceManagerFactory(): FilePersistenceManagerFactory
-    }
+    override val modules = persistenceModule + module {
 
-    @dagger.Module
-    internal class Module(
-            decoratorList: List<SerialisationDecorator>,
-            serialiser: Serialiser
-    ) : PersistenceModule(decoratorList, serialiser) {
+        single {
+            FileStore.Factory(
+                    get(),
+                    get()
+            )
+        }
 
-        @Provides
-        @Singleton
-        internal fun provideFileStoreFactory(
-                logger: Logger,
-                keySerialiser: KeySerialiser
-        ) =
-                FileStore.Factory(
-                        logger,
-                        keySerialiser
-                )
+        single {
+            FileSerialisationDecorator(::String)
+        }
 
-        @Provides
-        @Singleton
-        internal fun provideFileSerialisationDecorator(
-                byteToStringConverter: Function1<ByteArray, String>
-        ): SerialisationDecorator =
-                FileSerialisationDecorator(byteToStringConverter::get)
+        single {
+            FilePersistenceManagerFactory(
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(),
+                    get(),
+                    get(),
+                    get(),
+                    get()
+            )
+        }
 
-        @Provides
-        @Singleton
-        internal fun provideFilePersistenceManagerFactory(
-                logger: Logger,
-                dateFactory: Function1<Long?, Date>,
-                keySerialiser: KeySerialiser,
-                storeFactory: FileStore.Factory,
-                serialisationManager: SerialisationManager,
-                serialisationDecorator: SerialisationDecorator
-        ) =
-                FilePersistenceManagerFactory(
-                        dateFactory::get,
-                        logger,
-                        keySerialiser,
-                        storeFactory,
-                        serialisationManager,
-                        serialisationDecorator
-                )
-
-        @Provides
-        @Singleton
-        internal fun provideFilePersistenceManager(
-                context: Context,
-                filePersistenceManagerFactory: FilePersistenceManagerFactory
-        ) =
-                filePersistenceManagerFactory.create(context.cacheDir)
+        single {
+            get<FilePersistenceManagerFactory>().create(get<Context>().cacheDir)
+        }
 
     }
 }

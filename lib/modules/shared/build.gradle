@@ -141,14 +141,6 @@ dependencies {
 
     api appDependencies.boilerplate
 
-    compileOnly appDependencies.jsr250
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
-
-    testImplementation appDependencies.dagger
-    kaptTest appDependencies.daggerCompiler
-}
-
-repositories {
-    mavenCentral()
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 }

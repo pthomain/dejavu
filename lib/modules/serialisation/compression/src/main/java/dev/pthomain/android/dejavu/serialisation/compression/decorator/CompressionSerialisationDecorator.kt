@@ -38,7 +38,7 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.
 internal class CompressionSerialisationDecorator(
         private val logger: Logger,
         private val compresser: (ByteArray) -> ByteArray,
-        private val uncompresser: (ByteArray) -> ByteArray
+        private val uncompresser: (ByteArray, Int, Int) -> ByteArray
 ) : SerialisationDecorator {
 
     /**
@@ -82,7 +82,7 @@ internal class CompressionSerialisationDecorator(
             payload: ByteArray
     ) =
             if (operation.compress) {
-                uncompresser(payload).also {
+                uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
                             responseClass.simpleName,

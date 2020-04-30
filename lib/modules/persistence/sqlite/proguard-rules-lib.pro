@@ -125,7 +125,7 @@
 ## https://square.github.io/retrofit/ ##
 
 -dontwarn retrofit2.**
--keep class retrofit2.** { *; }
+-keep class retrofit3.** { *; }
 -keepattributes Signature
 -keepattributes Exceptions
 

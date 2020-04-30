@@ -23,96 +23,51 @@
 
 package dev.pthomain.android.dejavu.persistence.memory.di
 
-import android.content.Context
 import androidx.collection.LruCache
-import dagger.Provides
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.persistence.di.PersistenceComponent
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
-import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.PersistenceManager
-import dev.pthomain.android.dejavu.shared.di.SharedModule
-import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.util.*
-import javax.inject.Singleton
 
-object MemoryPersistence {
+class MemoryPersistence(
+        decoratorList: List<SerialisationDecorator>,
+        serialiser: Serialiser,
+        private val maxEntries: Int = 20
+) : PersistenceManager.ModuleProvider {
 
-    class Builder(
-            context: Context,
-            serialiser: Serialiser,
-            decorators: List<SerialisationDecorator>,
-            logger: Logger = SilentLogger,
-            maxEntries: Int = 20
-    ) : Component by DaggerMemoryPersistence_Component
-            .builder()
-            .sharedModule(SharedModule(
-                    context.applicationContext,
-                    logger
-            ))
-            .module(Module(
-                    decorators,
-                    serialiser,
-                    maxEntries
-            ))
-            .build()
+    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
 
-    @Singleton
-    @dagger.Component(modules = [Module::class])
-    internal interface Component : PersistenceComponent {
-        fun persistenceManagerFactory(): MemoryPersistenceManagerFactory
-    }
+    override val modules = persistenceModule + module {
 
-    @dagger.Module
-    internal class Module(
-            decoratorList: List<SerialisationDecorator>,
-            serialiser: Serialiser,
-            private val maxEntries: Int
-    ) : PersistenceModule(decoratorList, serialiser) {
+        single {
+            MemoryPersistenceManagerFactory(
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(),
+                    get(),
+                    get(),
+                    get()
+            )
+        }
 
-        @Provides
-        @Singleton
-        internal fun provideMemoryPersistenceManagerFactory(
-                dateFactory: Function1<Long?, Date>,
-                logger: Logger,
-                keySerialiser: KeySerialiser,
-                storeFactory: MemoryStore.Factory,
-                serialisationManager: SerialisationManager
-        ) =
-                MemoryPersistenceManagerFactory(
-                        dateFactory::get,
-                        logger,
-                        keySerialiser,
-                        storeFactory,
-                        serialisationManager
-                )
+        single {
+            MemoryStore.Factory(::LruCache)
+        }
 
-        @Provides
-        @Singleton
-        internal fun provideMemoryStoreFactory() =
-                MemoryStore.Factory { LruCache(it) }
-
-        @Provides
-        internal fun provideMemoryPersistenceManager(
-                dateFactory: Function1<Long?, Date>,
-                logger: Logger,
-                memoryStoreFactory: MemoryStore.Factory,
-                serialisationManager: SerialisationManager,
-                keySerialiser: KeySerialiser
-        ): PersistenceManager =
-                KeyValuePersistenceManager(
-                        dateFactory::get,
-                        logger,
-                        keySerialiser,
-                        memoryStoreFactory.create(maxEntries),
-                        serialisationManager
-                )
+        single<PersistenceManager> {
+            KeyValuePersistenceManager(
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(),
+                    get(),
+                    get<MemoryStore.Factory>().create(maxEntries),
+                    get()
+            )
+        }
     }
 }

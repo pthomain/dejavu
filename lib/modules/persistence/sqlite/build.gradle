@@ -21,11 +21,15 @@
  *  
  */
 
+//plugins {
+//    id 'maven-publish'
+//}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'dev.pthomain.dejavu'
 
@@ -139,29 +143,71 @@ artifacts {
     archives sourcesJar
 }
 
+//afterEvaluate {
+//    publishing {
+//        repositories {
+//            maven {
+//                name = "GitHubPackages"
+//                url = uri("https://maven.pkg.github.com/pthomain/dejavu")
+//                credentials {
+//                    Properties properties = new Properties()
+//                    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//                    username = properties.getProperty("gpr.user")
+//                    password = properties.getProperty("gpr.key")
+//                }
+//            }
+//        }
+//        publications {
+//            sqlite(MavenPublication) {
+//                groupId = 'dev.pthomain.dejavu'
+//                artifactId = 'persistence-sqlite'
+//                version = dejaVuVersion
+//                artifact("$buildDir/outputs/aar/sqlite-release.aar")
+//            }
+//            mavenJava(MavenPublication) {
+//                pom {
+//                    name = 'DejaVu'
+//                    description = 'Dead simple Retrofit / RxJava cache'
+//                    url = 'https://github.com/pthomain/dejavu'
+//                    licenses {
+//                        license {
+//                            name = 'The Apache License, Version 2.0'
+//                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+//                        }
+//                    }
+//                    developers {
+//                        developer {
+//                            id = 'pthomain'
+//                            name = 'Pierre Thomain'
+//                        }
+//                    }
+//                    scm {
+//                        connection = 'scm:git:git://github.com/pthomain/dejavu.git'
+//                        developerConnection = 'scm:git:ssh://github.com/pthomain/dejavu.git'
+//                        url = 'https://github.com/pthomain/dejavu'
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
 dependencies {
     api project(':lib:modules:persistence')
 
-    implementation appDependencies.jitPack
+//    implementation appDependencies.jitPack
     implementation appDependencies.multiDex
 
     implementation appDependencies.androidXcore
     implementation appDependencies.androidXsqlite
 
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 
     implementation appDependencies.requery
 
     testImplementation appDependencies.requery
     testImplementation appDependencies.androidXsqlite
 
-    testImplementation appDependencies.dagger
-    kaptTest appDependencies.daggerCompiler
-
     testImplementation appDependencies.androidXroom
-}
-
-repositories {
-    mavenCentral()
 }

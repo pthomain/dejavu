@@ -21,11 +21,15 @@
  *
  */
 
+//plugins {
+//    id 'maven-publish'
+//}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'dev.pthomain.dejavu'
 
@@ -140,23 +144,60 @@ artifacts {
     archives sourcesJar
 }
 
+//afterEvaluate {
+//    publishing {
+//        repositories {
+//            maven {
+//                name = "GitHubPackages"
+//                url = uri("https://maven.pkg.github.com/pthomain/dejavu")
+//                credentials {
+//                    Properties properties = new Properties()
+//                    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+//                    username = properties.getProperty("gpr.user")
+//                    password = properties.getProperty("gpr.key")
+//                }
+//            }
+//        }
+//        publications {
+//            compression(MavenPublication) {
+//                groupId = 'dev.pthomain.dejavu'
+//                artifactId = 'compression-snappy'
+//                version = dejaVuVersion
+//                artifact("$buildDir/outputs/aar/compression-release.aar")
+//            }
+//            mavenJava(MavenPublication) {
+//                pom {
+//                    name = 'DejaVu'
+//                    description = 'Dead simple Retrofit / RxJava cache'
+//                    url = 'https://github.com/pthomain/dejavu'
+//                    licenses {
+//                        license {
+//                            name = 'The Apache License, Version 2.0'
+//                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+//                        }
+//                    }
+//                    developers {
+//                        developer {
+//                            id = 'pthomain'
+//                            name = 'Pierre Thomain'
+//                        }
+//                    }
+//                    scm {
+//                        connection = 'scm:git:git://github.com/pthomain/dejavu.git'
+//                        developerConnection = 'scm:git:ssh://github.com/pthomain/dejavu.git'
+//                        url = 'https://github.com/pthomain/dejavu'
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
 dependencies {
     api project(':lib:modules:serialisation')
 
-    implementation appDependencies.jitPack
+//    implementation appDependencies.jitPack
     implementation appDependencies.multiDex
 
-    compileOnly appDependencies.jsr250
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
-
     implementation appDependencies.snappy
-
-    testImplementation appDependencies.snappy
-    testImplementation appDependencies.dagger
-    kaptTest appDependencies.daggerCompiler
-}
-
-repositories {
-    mavenCentral()
 }

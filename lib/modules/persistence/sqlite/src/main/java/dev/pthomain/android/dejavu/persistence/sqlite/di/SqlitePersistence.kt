@@ -24,127 +24,77 @@
 package dev.pthomain.android.dejavu.persistence.sqlite.di
 
 import android.content.ContentValues
-import android.content.Context
-import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
-import dagger.Provides
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.persistence.di.PersistenceComponent
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
-import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
-import dev.pthomain.android.dejavu.shared.PersistenceManager
-import dev.pthomain.android.dejavu.shared.di.SharedModule
-import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.util.*
-import javax.inject.Singleton
 
-object SqlitePersistence {
+class SqlitePersistence(
+        decoratorList: List<SerialisationDecorator>,
+        serialiser: Serialiser
+) : PersistenceManager.ModuleProvider {
 
-    class Builder(
-            context: Context,
-            serialiser: Serialiser,
-            decorators: List<SerialisationDecorator>,
-            logger: Logger = SilentLogger
-    ) : Component by DaggerSqlitePersistence_Component
-            .builder()
-            .module(Module(
-                    decorators,
-                    serialiser
-            ))
-            .sharedModule(SharedModule(
-                    context.applicationContext,
-                    logger
-            ))
-            .build()
+    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
 
-    @Singleton
-    @dagger.Component(modules = [Module::class])
-    internal interface Component : PersistenceComponent
+    override val modules = persistenceModule + module {
 
-    @dagger.Module
-    internal class Module(
-            decoratorList: List<SerialisationDecorator>,
-            serialiser: Serialiser
-    ) : PersistenceModule(decoratorList, serialiser) {
+        single<PersistenceManager> {
+            DatabasePersistenceManager(
+                    get(),
+                    get(),
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    ::mapToContentValues
+            )
+        }
+        single { SqlOpenHelperCallback(DATABASE_VERSION) }
 
-        @Provides
-        @Singleton
-        internal fun provideDatabasePersistenceManagerFactory(
-                logger: Logger,
-                database: SupportSQLiteDatabase,
-                dateFactory: Function1<Long?, Date>,
-                serialisationManager: SerialisationManager
-        ): PersistenceManager =
-                DatabasePersistenceManager(
-                        database,
-                        logger,
-                        serialisationManager,
-                        dateFactory::get,
-                        ::mapToContentValues
-                )
+        single { get<SupportSQLiteOpenHelper>().writableDatabase }
 
-        @Provides
-        @Singleton
-        internal fun provideSqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback =
-                SqlOpenHelperCallback(DATABASE_VERSION)
+        single {
+            RequerySQLiteOpenHelperFactory().create(
+                    SupportSQLiteOpenHelper.Configuration.builder(get())
+                            .name(DATABASE_NAME)
+                            .callback(get())
+                            .build()
+            )
+        }
 
-        @Provides
-        @Singleton
-        @Synchronized
-        internal fun provideDatabase(sqlOpenHelper: SupportSQLiteOpenHelper) =
-                sqlOpenHelper.writableDatabase
-
-        @Provides
-        @Singleton
-        internal fun provideSqlOpenHelper(
-                context: Context,
-                callback: SupportSQLiteOpenHelper.Callback
-        ): SupportSQLiteOpenHelper =
-                RequerySQLiteOpenHelperFactory().create(
-                        SupportSQLiteOpenHelper.Configuration.builder(context)
-                                .name(DATABASE_NAME)
-                                .callback(callback)
-                                .build()
-                )
-
-        @Provides
-        @Singleton
-        internal fun provideDatabaseStatisticsCompiler(
-                logger: Logger,
-                database: SupportSQLiteDatabase,
-                dateFactory: Function1<Long?, Date>
-        ) =
-                DatabaseStatisticsCompiler(
-                        logger,
-                        dateFactory::get,
-                        database
-                )
+        single {
+            DatabaseStatisticsCompiler(
+                    get(),
+                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get()
+            )
+        }
 
     }
+}
 
-    internal const val DATABASE_NAME = "dejavu.db"
-    internal const val DATABASE_VERSION = 1
+internal const val DATABASE_NAME = "dejavu.db"
+internal const val DATABASE_VERSION = 1
 
-    internal fun mapToContentValues(map: Map<String, *>) = ContentValues().apply {
-        for ((key, value) in map) {
-            when (value) {
-                is Boolean -> put(key, value)
-                is Float -> put(key, value)
-                is Double -> put(key, value)
-                is Long -> put(key, value)
-                is Int -> put(key, value)
-                is Byte -> put(key, value)
-                is ByteArray -> put(key, value)
-                is Short -> put(key, value)
-                is String -> put(key, value)
-            }
+internal fun mapToContentValues(map: Map<String, *>) = ContentValues().apply {
+    for ((key, value) in map) {
+        when (value) {
+            is Boolean -> put(key, value)
+            is Float -> put(key, value)
+            is Double -> put(key, value)
+            is Long -> put(key, value)
+            is Int -> put(key, value)
+            is Byte -> put(key, value)
+            is ByteArray -> put(key, value)
+            is Short -> put(key, value)
+            is String -> put(key, value)
         }
     }
 }

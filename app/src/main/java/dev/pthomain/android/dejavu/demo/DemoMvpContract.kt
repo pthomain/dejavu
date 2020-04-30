@@ -23,18 +23,18 @@
 
 package dev.pthomain.android.dejavu.demo
 
-import dagger.Component
+
 import dev.pthomain.android.boilerplate.core.mvp.base.MvpContract.*
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
+import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import javax.inject.Named
-import javax.inject.Singleton
+import org.koin.core.Koin
 
 internal class DemoMvpContract {
 
@@ -64,14 +64,16 @@ internal class DemoMvpContract {
 
     }
 
-    @Singleton
-    @Component(modules = [DemoViewModule::class])
-    interface DemoViewComponent : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent> {
+    class DemoViewComponent(
+            private val koin: Koin
+    ) : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
-        fun presenterSwitcher(): Callback1<Method>
+        fun presenterSwitcher() = koin.get<Callback1<Method>>()
 
-        @Named("boilerplate")
-        fun logger(): Logger
+        fun logger(): Logger = koin.get<CompositeLogger>()
+
+        override fun presenter() = koin.get<CompositePresenter>()
+
     }
 
 }

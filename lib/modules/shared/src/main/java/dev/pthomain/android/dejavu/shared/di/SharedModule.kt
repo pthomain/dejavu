@@ -24,47 +24,36 @@
 package dev.pthomain.android.dejavu.shared.di
 
 import android.content.Context
-import android.net.Uri
-import dagger.Module
-import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
 import dev.pthomain.android.dejavu.shared.utils.Function1
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 import java.util.*
-import javax.inject.Singleton
 
-@Module
 class SharedModule(
         private val context: Context,
         private val logger: Logger
 ) {
+    val module = module {
 
-    @Provides
-    @Singleton
-    internal fun provideContext() = context.applicationContext
+        single { context.applicationContext }
 
-    @Provides
-    @Singleton
-    internal fun provideLogger() = logger
+        single { logger }
 
-    @Provides
-    @Singleton
-    internal fun provideDateFactory() = object : Function1<Long?, Date> {
-        override fun get(t1: Long?) = t1?.let { Date(it) } ?: Date()
+        single<Function1<Long?, Date>>(named("dateFactory")) {
+            object : Function1<Long?, Date> {
+                override fun get(t1: Long?) = if (t1 == null) Date() else Date(t1)
+            }
+        }
+
+        single {
+            Hasher(
+                    get(),
+                    get()
+            )
+        }
     }
 
-    @Provides
-    @Singleton
-    internal fun provideHasher(logger: Logger,
-                               uriParser: Function1<String, Uri>) =
-            Hasher(
-                    logger,
-                    uriParser::get
-            )
 }
 
-object SilentLogger : Logger {
-    override fun d(tagOrCaller: Any, message: String) = Unit
-    override fun e(tagOrCaller: Any, message: String) = Unit
-    override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
-}

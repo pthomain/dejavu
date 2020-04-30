@@ -23,36 +23,13 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption
 
-import dagger.Provides
-import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
 import dev.pthomain.android.dejavu.serialisation.encryption.decorator.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import dev.pthomain.android.mumbo.base.EncryptionManager
-import javax.inject.Singleton
 
-object Encryption {
+class Encryption(encryptionManager: EncryptionManager) : SerialisationDecorator.Provider {
 
-    class Builder(encryptionManager: EncryptionManager)
-        : Component by DaggerEncryption_Component
-            .builder()
-            .module(Module(encryptionManager))
-            .build()
+    override val serialisationDecorator: SerialisationDecorator =
+            EncryptionSerialisationDecorator(encryptionManager)
 
-    @Singleton
-    @dagger.Component(modules = [Module::class])
-    internal interface Component : SerialisationComponent
-
-    @dagger.Module
-    internal class Module(
-            private val encryptionManager: EncryptionManager
-    ) {
-
-        @Provides
-        @Singleton
-        internal fun provideEncryptionSerialisationDecorator(): SerialisationDecorator =
-                EncryptionSerialisationDecorator(
-                        encryptionManager
-                )
-
-    }
 }

@@ -5,7 +5,7 @@
 Haven't I seen this somewhere?
 ------------------------------
 
-DéjàVu provides a locally controlled cache for API responses. It is used to:
+DejaVu provides a locally controlled cache for API responses. It is used to:
 
 - reduce the need for unnecessary network calls
 - speed up UI loading by displaying previous data while new data is being fetched
@@ -51,7 +51,7 @@ Update your existing Retrofit client by adding an annotation to the call you wan
 interface UserClient {
 
     @GET("users")
-    @Cache(durationInSeconds = 300) // DéjàVu cache annotation 
+    @Cache(durationInSeconds = 300) // DejaVu cache annotation 
     fun getUsers(
         status: UserStatus = ACTIVE,
         limit : Int = 20    
@@ -80,7 +80,7 @@ About v2.0
 
 Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. 
 New documentation covering the new features will be available once the library is out of beta.
-The library was renamed DéjàVu to avoid confusion with pre-existing similar libraries named RxCache.
+The library was renamed DejaVu to avoid confusion with pre-existing similar libraries named RxCache.
 
 Retrofit support
 ----------------

@@ -21,32 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.di
+package dev.pthomain.android.dejavu.shared
 
-import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
-import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import org.koin.dsl.module
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 
-class PersistenceModule(
-        private val decoratorList: List<SerialisationDecorator>,
-        private val serialiser: Serialiser
-) {
-
-    val module = module {
-
-        single { serialiser }
-
-        single {
-            SerialisationManager(
-                    serialiser,
-                    ::String,
-                    decoratorList
-            )
-        }
-
-        single { KeySerialiser() }
-
-    }
+object SilentLogger : Logger {
+    override fun d(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
 }

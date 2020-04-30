@@ -21,6 +21,10 @@
  *
  */
 
+//plugins {
+//    id 'maven'
+//}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -82,7 +86,13 @@ android {
 }
 
 dependencies {
-    implementation project(':lib:builders:glitch')
+//    implementation "dev.pthomain.dejavu:glitch:$dejaVuVersion"
+//    implementation "dev.pthomain.dejavu:persistence-file:$dejaVuVersion"
+//    implementation "dev.pthomain.dejavu:persistence-memory:$dejaVuVersion"
+//    implementation "dev.pthomain.dejavu:persistence-sqlite:$dejaVuVersion"
+//    implementation "dev.pthomain.dejavu:compression-snappy:$dejaVuVersion"
+//    implementation "dev.pthomain.dejavu:encryption-mumbo:$dejaVuVersion"
+
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
@@ -91,8 +101,8 @@ dependencies {
 
     implementation appDependencies.multiDex
 
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 
     implementation appDependencies.boilerplate_ui
     implementation appDependencies.rxDogTag
@@ -105,8 +115,4 @@ dependencies {
 
     implementation appDependencies.appCompat
     implementation appDependencies.browser
-}
-
-repositories {
-    mavenCentral()
 }
