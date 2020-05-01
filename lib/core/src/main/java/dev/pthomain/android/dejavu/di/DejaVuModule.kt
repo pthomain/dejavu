@@ -41,8 +41,8 @@ import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProc
 import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnTypeParser
-import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.glitchy.Glitchy
@@ -52,6 +52,7 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.util.*
 
 class DejaVuModule<E>(
         context: Context,
@@ -63,13 +64,26 @@ class DejaVuModule<E>(
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
-    private val sharedModule = SharedModule(context, logger).module
+    val modules = persistenceModule.modules + module {
 
-    val modules = sharedModule + persistenceModule.modules + module {
+        single { context.applicationContext }
+
+        single { logger }
+
+        single<(Long?) -> Date>(named("dateFactory")) {
+            { if (it == null) Date() else Date(it) }
+        }
 
         single { errorFactory }
 
         single<(String) -> Uri> { Uri::parse }
+
+        single {
+            Hasher(
+                    get(),
+                    get()
+            )
+        }
 
         single {
             NetworkInterceptor.Factory<E>(

@@ -34,7 +34,7 @@ import java.security.MessageDigest
  * @param logger a Logger instance
  * @param uriParser a factory converting String to Uri
  */
-class Hasher internal constructor(
+class Hasher(
         private val logger: Logger,
         private val uriParser: (String) -> Uri
 ) {

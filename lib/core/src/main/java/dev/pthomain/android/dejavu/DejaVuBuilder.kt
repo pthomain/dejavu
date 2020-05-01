@@ -31,7 +31,6 @@ import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.di.DejaVuModule
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
-import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
@@ -47,8 +46,6 @@ class DejaVuBuilder<E> internal constructor(
         private val persistenceManagerModule: PersistenceManager.ModuleProvider
 ) where E : Throwable,
         E : NetworkErrorPredicate {
-
-    private val sharedModule = SharedModule(context, logger)
 
     private var operationPredicate: (RequestMetadata<*>) -> Remote? = Inactive
     private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
