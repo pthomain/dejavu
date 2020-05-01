@@ -23,16 +23,10 @@
 
 package dev.pthomain.android.dejavu.persistence.statistics
 
-import dagger.Module
-import dagger.Provides
 import io.reactivex.Single
-import javax.inject.Singleton
 
-@Module
 abstract class StatisticsModule {
 
-    @Provides
-    @Singleton
     fun provideStatisticsCompiler(): StatisticsCompiler =
             object : StatisticsCompiler { //FIXME
                 override fun getStatistics() = Single.error<CacheStatistics>(

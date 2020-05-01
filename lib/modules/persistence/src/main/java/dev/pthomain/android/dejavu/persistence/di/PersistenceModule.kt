@@ -23,47 +23,30 @@
 
 package dev.pthomain.android.dejavu.persistence.di
 
-import dagger.Module
-import dagger.Provides
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.utils.Function1
-import javax.inject.Singleton
+import org.koin.dsl.module
 
-@Module(includes = [SharedModule::class])
-abstract class PersistenceModule(
+class PersistenceModule(
         private val decoratorList: List<SerialisationDecorator>,
         private val serialiser: Serialiser
 ) {
 
-    @Provides
-    @Singleton
-    internal fun provideSerialiser() = serialiser
+    val module = module {
 
-    @Provides
-    @Singleton
-    internal fun provideSerialisationManager(
-            serialiser: Serialiser,
-            byteToStringConverter: Function1<ByteArray, String>
-    ) =
+        single { serialiser }
+
+        single {
             SerialisationManager(
                     serialiser,
-                    byteToStringConverter::get,
+                    ::String,
                     decoratorList
             )
+        }
 
-    @Provides
-    @Singleton
-    internal fun provideByteToStringConverter() =
-            object : Function1<ByteArray, String> {
-                override fun get(t1: ByteArray) = String(t1)
-            }
+        single { KeySerialiser() }
 
-    @Provides
-    @Singleton
-    internal fun provideFileNameSerialiser() = KeySerialiser()
-
+    }
 }

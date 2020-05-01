@@ -144,14 +144,12 @@ dependencies {
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
 
-    compileOnly appDependencies.jsr250
-
     api appDependencies.glitchy
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     //https://stackoverflow.com/questions/56639529/duplicate-class-com-google-common-util-concurrent-listenablefuture-found-in-modu
 
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 
     api appDependencies.rxJava
     api appDependencies.rxKotlin
@@ -159,9 +157,6 @@ dependencies {
 
     api appDependencies.retrofit
     api appDependencies.retrofitAdapterRxJava
-
-    testImplementation appDependencies.dagger
-    kaptTest appDependencies.daggerCompiler
 
     testImplementation appDependencies.retrofitConverterGson
     testImplementation appDependencies.gson
@@ -177,9 +172,5 @@ dependencies {
     testImplementation appDependencies.mockitoKotlin
 
     testImplementation appDependencies.reactiveNetwork
-}
-
-repositories {
-    mavenCentral()
 }
 

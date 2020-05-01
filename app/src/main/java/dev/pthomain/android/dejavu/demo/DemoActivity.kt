@@ -46,6 +46,7 @@ import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETR
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import io.reactivex.plugins.RxJavaPlugins
+import org.koin.dsl.koinApplication
 
 
 internal class DemoActivity
@@ -80,10 +81,16 @@ internal class DemoActivity
 
     override fun getPresenter() = presenter
 
-    override fun initialiseComponent() = DaggerDemoMvpContract_DemoViewComponent
-            .builder()
-            .demoViewModule(DemoViewModule(this, this))
-            .build()
+    override fun initialiseComponent() = DemoViewComponent(
+            koinApplication {
+                modules(
+                        DemoViewModule(
+                                this@DemoActivity,
+                                this@DemoActivity
+                        ).module
+                )
+            }.koin
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

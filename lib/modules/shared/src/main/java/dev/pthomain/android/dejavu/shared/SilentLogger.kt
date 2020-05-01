@@ -21,12 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.shared.utils
+package dev.pthomain.android.dejavu.shared
 
-interface Function1<T1, R> {
-    fun get(t1: T1): R
-}
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 
-interface Function3<T1, T2, T3, R> {
-    fun get(t1: T1, t2: T2, t3: T3): R
+object SilentLogger : Logger {
+    override fun d(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, message: String) = Unit
+    override fun e(tagOrCaller: Any, t: Throwable, message: String?) = Unit
 }

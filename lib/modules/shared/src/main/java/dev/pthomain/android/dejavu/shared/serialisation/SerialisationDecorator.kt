@@ -64,4 +64,7 @@ interface SerialisationDecorator {
             payload: ByteArray
     ): ByteArray
 
+    interface Provider {
+        val serialisationDecorator: SerialisationDecorator
+    }
 }

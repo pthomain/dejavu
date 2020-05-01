@@ -23,60 +23,18 @@
 
 package dev.pthomain.android.dejavu.serialisation.compression
 
-import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.serialisation.compression.decorator.CompressionSerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.di.SerialisationComponent
-import dev.pthomain.android.dejavu.shared.di.SilentLogger
+import dev.pthomain.android.dejavu.shared.SilentLogger
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.utils.Function1
-import org.xerial.snappy.Snappy
-import javax.inject.Named
-import javax.inject.Singleton
+import org.iq80.snappy.Snappy
 
-object Compression {
+class Compression(logger: Logger = SilentLogger) : SerialisationDecorator.Provider {
 
-    class Builder(logger: Logger = SilentLogger)
-        : Component by DaggerCompression_Component
-            .builder()
-            .module(Module(logger))
-            .build()
-
-    @Singleton
-    @dagger.Component(modules = [Module::class])
-    internal interface Component : SerialisationComponent
-
-    @dagger.Module
-    internal class Module(private val logger: Logger) {
-
-        @Provides
-        @Singleton
-        @Named("compresser")
-        internal fun provideCompresser() =
-                object : Function1<ByteArray, ByteArray> {
-                    override fun get(t1: ByteArray) =
-                            Snappy.compress(t1)
-                }
-
-        @Provides
-        @Singleton
-        @Named("uncompresser")
-        internal fun provideUncompresser() =
-                object : Function1<ByteArray, ByteArray> {
-                    override fun get(t1: ByteArray) = Snappy.uncompress(t1)
-                }
-
-        @Provides
-        @Singleton
-        internal fun provideCompressionSerialisationDecorator(
-                @Named("compresser") compresser: Function1<ByteArray, ByteArray>,
-                @Named("uncompresser") uncompresser: Function1<ByteArray, ByteArray>
-        ): SerialisationDecorator =
-                CompressionSerialisationDecorator(
-                        logger,
-                        compresser::get,
-                        uncompresser::get
-                )
-    }
+    override val serialisationDecorator: SerialisationDecorator =
+            CompressionSerialisationDecorator(
+                    logger,
+                    Snappy::compress,
+                    Snappy::uncompress
+            )
 }
-

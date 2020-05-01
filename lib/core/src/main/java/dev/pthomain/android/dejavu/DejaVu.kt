@@ -23,23 +23,55 @@
 
 package dev.pthomain.android.dejavu
 
+import android.content.Context
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory
 import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.dejavu.shared.SilentLogger
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
  */
-class DejaVu<E> internal constructor(
-        private val component: DejaVuComponent<E>
-) : DejaVuComponent<E> by component
+class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
+    : DejaVuComponent<E> by component
         where E : Throwable,
               E : NetworkErrorPredicate {
 
     companion object {
+
         /**
          * Use this value to provide the cache instruction as a header (this will override any existing call annotation)
          */
         const val DejaVuHeader = "DejaVuHeader"
+
+        fun defaultBuilder(
+                context: Context,
+                persistenceManagerModule: PersistenceManager.ModuleProvider,
+                logger: Logger = SilentLogger
+        ) = builder(
+                context,
+                DejaVuGlitchFactory(GlitchFactory()),
+                persistenceManagerModule,
+                logger
+        )
+
+        fun <E> builder(
+                context: Context,
+                errorFactory: ErrorFactory<E>,
+                persistenceManagerModule: PersistenceManager.ModuleProvider,
+                logger: Logger = SilentLogger
+        ) where E : Throwable,
+                E : NetworkErrorPredicate =
+                DejaVuBuilder(
+                        context.applicationContext,
+                        logger,
+                        errorFactory,
+                        persistenceManagerModule
+                )
     }
 
 }

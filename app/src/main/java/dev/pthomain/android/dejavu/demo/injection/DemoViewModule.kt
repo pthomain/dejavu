@@ -23,38 +23,34 @@
 
 package dev.pthomain.android.dejavu.demo.injection
 
-import dagger.Module
-import dagger.Provides
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.log.Printer
 import dev.pthomain.android.boilerplate.core.utils.log.SimpleLogger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.DemoMvpContract
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
-import javax.inject.Named
-import javax.inject.Singleton
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
-@Module
-internal class DemoViewModule(private val demoActivity: DemoActivity,
-                              private val onLogOutput: (String) -> Unit) {
+internal class DemoViewModule(
+        private val demoActivity: DemoActivity,
+        private val onLogOutput: (String) -> Unit
+) {
 
-    @Provides
-    @Singleton
-    @Named("boilerplate")
-    fun providerBoilerplateLogger(): Logger = SimpleLogger(
-            true,
-            demoActivity.packageName
-    )
+    val module = module {
 
-    @Provides
-    @Singleton
-    @Named("ui")
-    fun providerUiLogger() =
+        single<Logger>(named("boilerplate")) {
+            SimpleLogger(
+                    true,
+                    demoActivity.packageName
+            )
+        }
+
+        single<Logger>(named("ui")) {
             SimpleLogger(
                     true,
                     demoActivity.packageName,
@@ -76,52 +72,40 @@ internal class DemoViewModule(private val demoActivity: DemoActivity,
                                         .replace(Regex("\\n+"), "\n")
                                         .trim()
                     }
-            ) as Logger
-
-    @Provides
-    @Singleton
-    fun providerCompositeLogger(@Named("boilerplate") boilerplateLogger: Logger,
-                                @Named("ui") uiLogger: Logger) =
-            CompositeLogger(
-                    boilerplateLogger,
-                    uiLogger
             )
+        }
 
-    @Provides
-    @Singleton
-    fun provideRetrofitAnnotationPresenter(compositeLogger: CompositeLogger) =
+        single {
+            CompositeLogger(
+                    get(named("boilerplate")),
+                    get(named("ui"))
+            )
+        }
+
+        single {
             RetrofitAnnotationDemoPresenter(
                     demoActivity,
-                    compositeLogger
+                    get(named("ui"))
             )
+        }
 
-    @Provides
-    @Singleton
-    fun provideRetrofitHeaderPresenter(compositeLogger: CompositeLogger) =
+        single {
             RetrofitHeaderDemoPresenter(
                     demoActivity,
-                    compositeLogger
+                    get(named("ui"))
             )
+        }
 
-    @Provides
-    @Singleton
-    fun provideCompositePresenter(retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
-                                  retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter) =
+        single {
             CompositePresenter(
                     demoActivity,
-                    retrofitAnnotationDemoPresenter,
-                    retrofitAnnotationDemoPresenter,
-                    retrofitHeaderDemoPresenter
+                    get(),
+                    get()
             )
+        }
 
-    @Provides
-    @Singleton
-    fun provideDemoPresenter(compositePresenter: CompositePresenter) =
-            compositePresenter as DemoMvpContract.DemoPresenter
-
-    @Provides
-    @Singleton
-    fun providePresenterSwitcher(compositePresenter: CompositePresenter) =
-            compositePresenter as Callback1<Method>
-
+        single<Callback1<Method>> {
+            get<CompositePresenter>()
+        }
+    }
 }

@@ -141,16 +141,8 @@ dependencies {
 
     implementation appDependencies.multiDex
 
-    compileOnly appDependencies.jsr250
-    implementation appDependencies.dagger
-    kapt appDependencies.daggerCompiler
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 
     implementation appDependencies.fliptables
-
-    testImplementation appDependencies.dagger
-    kaptTest appDependencies.daggerCompiler
-}
-
-repositories {
-    mavenCentral()
 }

@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.shared.token.RequestToken
 import dev.pthomain.android.dejavu.shared.token.ResponseToken

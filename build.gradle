@@ -32,7 +32,7 @@ buildscript {
 
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:4.0.0-beta05'
+        classpath 'com.android.tools.build:gradle:4.1.0-alpha08'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.6'
     }
@@ -52,6 +52,8 @@ task clean(type: Delete) {
 }
 
 ext {
+    dejaVuVersion = '2.1.0-beta2'
+
     compileSdkVersion = 29
     minSdkVersion = 16
     targetSdkVersion = 28
@@ -60,8 +62,7 @@ ext {
 
     jitPackVersion = '1.0'
 
-    daggerVersion = '2.13'
-    jsr250Version = '1.0'
+    koinVersion = '2.1.5'
 
     rxJavaVersion = '2.2.19'
     rxKotlinVersion = '2.4.0'
@@ -70,10 +71,10 @@ ext {
 
     boilerplateVersion = '4.0'
     mumboVersion = '2.0'
-    glitchyVersion = '1.8'
+    glitchyVersion = '1.9'
     fliptablesVersion = '1.1.0'
 
-    snappyVersion = '1.1.7.3'
+    snappyVersion = '0.4'
     requeryVersion = '3.25.3'
     androidXsqliteVersion = '2.1.0'
     androidXroomVersion = '2.2.5'
@@ -94,55 +95,53 @@ ext {
     mockitoKotlinVersion = '2.2.0'
 
     appDependencies = [
-            jitPack               : "com.github.jitpack:gradle-simple:$jitPackVersion",
+            jitPack              : "com.github.jitpack:gradle-simple:$jitPackVersion",
 
-            multiDex              : "androidx.multidex:multidex:$multidexVersion",
-            androidXcore          : "androidx.core:core:$androidXversion",
-            androidXsqlite        : "androidx.sqlite:sqlite:$androidXsqliteVersion",
-            androidXroom          : "androidx.room:room-runtime:$androidXroomVersion",
-            appCompat             : "androidx.appcompat:appcompat:$androidCompatVersion",
-            browser               : "androidx.browser:browser:$androidXversion",
-            reactiveNetwork       : "com.github.pwittchen:reactivenetwork-rx2:$reactiveNetworkVersion",
+            multiDex             : "androidx.multidex:multidex:$multidexVersion",
+            androidXcore         : "androidx.core:core:$androidXversion",
+            androidXsqlite       : "androidx.sqlite:sqlite:$androidXsqliteVersion",
+            androidXroom         : "androidx.room:room-runtime:$androidXroomVersion",
+            appCompat            : "androidx.appcompat:appcompat:$androidCompatVersion",
+            browser              : "androidx.browser:browser:$androidXversion",
+            reactiveNetwork      : "com.github.pwittchen:reactivenetwork-rx2:$reactiveNetworkVersion",
 
-            kotlinJdk8            : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
-            kotlinReflect         : "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
+            kotlinJdk8           : "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion",
+            kotlinReflect        : "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
 
-            rxJava                : "io.reactivex.rxjava2:rxjava:$rxJavaVersion",
-            rxKotlin              : "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion",
-            rxAndroid             : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
-            rxDogTag              : "com.uber.rxdogtag:rxdogtag:$rxDogTagVersion",
+            rxJava               : "io.reactivex.rxjava2:rxjava:$rxJavaVersion",
+            rxKotlin             : "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion",
+            rxAndroid            : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
+            rxDogTag             : "com.uber.rxdogtag:rxdogtag:$rxDogTagVersion",
 
-            dagger                : "com.google.dagger:dagger:$daggerVersion",
-            daggerCompiler        : "com.google.dagger:dagger-compiler:$daggerVersion",
+            koinCore             : "org.koin:koin-core:$koinVersion",
+            koinCoreExt          : "org.koin:koin-core-ext:$koinVersion",
 
-            jsr250                : "javax.annotation:jsr250-api:$jsr250Version",
+            boilerplate          : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
+            boilerplate_ui       : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
+            mumbo                : "com.github.pthomain:mumbo:$mumboVersion",
+            glitchy              : "dev.pthomain:glitchy:$glitchyVersion",
+            fliptables           : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
 
-            boilerplate           : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
-            boilerplate_ui        : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
-            mumbo                 : "com.github.pthomain:mumbo:$mumboVersion",
-            glitchy               : "com.github.pthomain:glitchy:$glitchyVersion",
-            fliptables            : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
+            retrofit             : "com.squareup.retrofit2:retrofit:$retrofitVersion",
+            retrofitConverterGson: "com.squareup.retrofit2:converter-gson:$retrofitVersion",
+            retrofitAdapterRxJava: "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion",
 
-            retrofit              : "com.squareup.retrofit2:retrofit:$retrofitVersion",
-            retrofitConverterGson : "com.squareup.retrofit2:converter-gson:$retrofitVersion",
-            retrofitAdapterRxJava : "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion",
+            okHttp               : "com.squareup.okhttp3:okhttp:$okhttpVersion",
+            okHttpLogging        : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
 
-            okHttp                : "com.squareup.okhttp3:okhttp:$okhttpVersion",
-            okHttpLogging         : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
+            gson                 : "com.google.code.gson:gson:$gsonVersion",
+            snappy               : "org.iq80.snappy:snappy:$snappyVersion",
+            requery              : "io.requery:sqlite-android:$requeryVersion",
 
-            gson                  : "com.google.code.gson:gson:$gsonVersion",
-            snappy                : "org.xerial.snappy:snappy-java:$snappyVersion",
-            requery               : "io.requery:sqlite-android:$requeryVersion",
+            androidXtestCore     : "androidx.test:core:$androidXtestVersion",
+            androidXtestRunner   : "androidx.test:runner:$androidXtestVersion",
+            androidXtestRules    : "androidx.test:rules:$androidXtestVersion",
+            androidXjUnit        : "androidx.test.ext:junit:$androidXtestVersion",
 
-            androidXtestCore      : "androidx.test:core:$androidXtestVersion",
-            androidXtestRunner    : "androidx.test:runner:$androidXtestVersion",
-            androidXtestRules     : "androidx.test:rules:$androidXtestVersion",
-            androidXjUnit         : "androidx.test.ext:junit:$androidXtestVersion",
-
-            mockitoCore           : "org.mockito:mockito-core:$mockitoVersion",
-            robolectric           : "org.robolectric:robolectric:$robolectricVersion",
-            okHttpMock            : "com.squareup.okhttp3:mockwebserver:$okhttpVersion",
-            mockitoKotlin         : "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+            mockitoCore          : "org.mockito:mockito-core:$mockitoVersion",
+            robolectric          : "org.robolectric:robolectric:$robolectricVersion",
+            okHttpMock           : "com.squareup.okhttp3:mockwebserver:$okhttpVersion",
+            mockitoKotlin        : "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
     ]
 }
 

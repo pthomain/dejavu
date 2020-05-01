@@ -21,36 +21,21 @@
  *
  */
 
-package dev.pthomain.android.dejavu.shared.di
+package dev.pthomain.android.dejavu.demo.dejavu.error
 
-import android.content.Context
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
-import java.util.*
+import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
 
-class SharedModule(
-        private val context: Context,
-        private val logger: Logger
-) {
-    val module = module {
+class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
 
-        single { context.applicationContext }
+    override val exceptionClass = CustomApiError::class.java
 
-        single { logger }
+    override fun invoke(p1: Throwable) = CustomApiError(p1)
 
-        single<(Long?) -> Date>(named("dateFactory")) {
-            { if (it == null) Date() else Date(it) }
-        }
-
-        single {
-            Hasher(
-                    get(),
-                    get()
-            )
-        }
-    }
-
+    override fun asHandledError(throwable: Throwable) =
+            if (throwable is CustomApiError && throwable.isNetworkError())
+                Outcome.Error(throwable)
+            else null
 }
+
 

@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
+import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
@@ -44,7 +45,7 @@ internal abstract class BaseRetrofitDemoPresenter(
             Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(getOkHttpClient(uiLogger))
-                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .addConverterFactory(GsonConverterFactory.create(Gson()))
                     .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory())
                     .build()
 

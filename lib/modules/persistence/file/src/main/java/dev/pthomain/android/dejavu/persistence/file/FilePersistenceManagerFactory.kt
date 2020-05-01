@@ -27,7 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
-import dev.pthomain.android.dejavu.shared.PersistenceManager
+import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
 import java.io.File
 import java.util.*

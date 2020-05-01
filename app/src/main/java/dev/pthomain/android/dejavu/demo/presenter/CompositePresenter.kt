@@ -35,10 +35,11 @@ import io.reactivex.disposables.CompositeDisposable
 
 internal class CompositePresenter(
         override val mvpView: DemoActivity,
-        private var presenter: DemoPresenter,
         private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
         private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter
 ) : DemoPresenter, Callback1<Method> {
+
+    private var presenter: DemoPresenter = retrofitAnnotationDemoPresenter
 
     override var subscriptions = CompositeDisposable()
 
