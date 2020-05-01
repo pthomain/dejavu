@@ -32,11 +32,9 @@ import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.utils.Function1
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.util.*
 
 class SqlitePersistence(
         decoratorList: List<SerialisationDecorator>,
@@ -52,7 +50,7 @@ class SqlitePersistence(
                     get(),
                     get(),
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     ::mapToContentValues
             )
         }
@@ -72,7 +70,7 @@ class SqlitePersistence(
         single {
             DatabaseStatisticsCompiler(
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get()
             )
         }

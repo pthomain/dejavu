@@ -45,7 +45,6 @@ import dev.pthomain.android.dejavu.shared.di.SharedModule
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.glitchy.Glitchy
 import dev.pthomain.android.glitchy.interceptor.Interceptors
 import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
@@ -53,7 +52,6 @@ import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.util.*
 
 class DejaVuModule<E>(
         context: Context,
@@ -77,7 +75,7 @@ class DejaVuModule<E>(
             NetworkInterceptor.Factory<E>(
                     get(),
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get
+                    get(named("dateFactory"))
             )
         }
 
@@ -89,7 +87,7 @@ class DejaVuModule<E>(
             CacheMetadataManager<E>(
                     get(),
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     durationPredicate::invoke,
                     get()
             )
@@ -100,7 +98,7 @@ class DejaVuModule<E>(
                     get(),
                     get(),
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get()
             )
         }
@@ -108,7 +106,7 @@ class DejaVuModule<E>(
         single {
             ResponseInterceptor.Factory<E>(
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get()
             )
         }
@@ -123,7 +121,7 @@ class DejaVuModule<E>(
             DejaVuInterceptor.Factory<E>(
                     get(),
                     get(),
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get(),
                     get(),
                     get(),

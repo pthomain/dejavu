@@ -31,10 +31,8 @@ import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.utils.Function1
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.util.*
 
 class FilePersistence(
         decoratorList: List<SerialisationDecorator>,
@@ -58,7 +56,7 @@ class FilePersistence(
 
         single {
             FilePersistenceManagerFactory(
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get(),
                     get(),
                     get(),

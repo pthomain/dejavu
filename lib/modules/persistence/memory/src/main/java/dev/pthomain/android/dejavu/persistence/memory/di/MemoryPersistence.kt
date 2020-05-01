@@ -31,10 +31,8 @@ import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.utils.Function1
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.util.*
 
 class MemoryPersistence(
         decoratorList: List<SerialisationDecorator>,
@@ -48,7 +46,7 @@ class MemoryPersistence(
 
         single {
             MemoryPersistenceManagerFactory(
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get(),
                     get(),
                     get(),
@@ -62,7 +60,7 @@ class MemoryPersistence(
 
         single<PersistenceManager> {
             KeyValuePersistenceManager(
-                    get<Function1<Long?, Date>>(named("dateFactory"))::get,
+                    get(named("dateFactory")),
                     get(),
                     get(),
                     get<MemoryStore.Factory>().create(maxEntries),

@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.shared.di
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.utils.Function1
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
@@ -41,10 +40,8 @@ class SharedModule(
 
         single { logger }
 
-        single<Function1<Long?, Date>>(named("dateFactory")) {
-            object : Function1<Long?, Date> {
-                override fun get(t1: Long?) = if (t1 == null) Date() else Date(t1)
-            }
+        single<(Long?) -> Date>(named("dateFactory")) {
+            { if (it == null) Date() else Date(it) }
         }
 
         single {
