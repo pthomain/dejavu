@@ -26,12 +26,12 @@ package dev.pthomain.android.dejavu.persistence.sqlite.di
 import android.content.ContentValues
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
-import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.Serialiser
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

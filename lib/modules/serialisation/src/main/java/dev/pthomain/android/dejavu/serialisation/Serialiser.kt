@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.serialisation
+package dev.pthomain.android.dejavu.serialisation
 
 /**
  * Interface for custom serialisation

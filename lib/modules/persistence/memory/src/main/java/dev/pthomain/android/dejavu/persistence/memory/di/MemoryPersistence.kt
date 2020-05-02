@@ -29,8 +29,8 @@ import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceMan
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
-import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.Serialiser
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

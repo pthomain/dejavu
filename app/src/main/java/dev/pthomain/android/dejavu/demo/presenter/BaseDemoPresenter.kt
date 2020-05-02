@@ -63,7 +63,7 @@ internal abstract class BaseDemoPresenter protected constructor(
     private var errorFactoryType = ErrorFactoryType.Custom
 
     private val dejaVuFactory = DejaVuFactory(uiLogger, demoActivity)
-    private fun newDejaVu() = dejaVuFactory.create(
+    private fun newDejaVu() = dejaVuFactory.createDejaVuRetrofit(
             encrypt,
             compress,
             errorFactoryType,

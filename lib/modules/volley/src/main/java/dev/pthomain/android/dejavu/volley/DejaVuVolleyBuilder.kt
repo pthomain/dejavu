@@ -1,0 +1,36 @@
+package dev.pthomain.android.dejavu.volley
+
+import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import org.koin.core.module.Module
+import org.koin.dsl.koinApplication
+import org.koin.dsl.module
+
+class DejaVuVolleyBuilder<E> internal constructor() : ExtensionBuilder<DejaVuVolleyBuilder<E>>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+
+    private var parentModules: List<Module>? = null
+
+    private val module = module {
+        single { VolleyObservable.Factory<E>(get(), get()) }
+    }
+
+    override fun accept(modules: List<Module>) = apply {
+        parentModules = modules
+    }
+
+    /**
+     * Returns an instance of DejaVu.
+     */
+    fun build(): DejaVuVolley<E> {
+        val parentModules = this.parentModules
+                ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
+
+        return koinApplication {
+            modules(parentModules + module)
+        }.koin.run {
+            DejaVuVolley(get(), get())
+        }
+    }
+}
