@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.demo.gson
 
 import com.google.gson.Gson
-import dev.pthomain.android.dejavu.persistence.serialisation.SimpleSerialiser
+import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
 
 /**
  * Custom Serialiser implementation wrapping Gson

@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.persistence.base.store
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
-import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
@@ -34,6 +33,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedReques
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import java.util.*
 
 /**

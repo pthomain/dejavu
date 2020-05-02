@@ -21,10 +21,8 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.serialisation
+package dev.pthomain.android.dejavu.serialisation
 
-import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 
 /**
@@ -35,7 +33,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
  * @param byteToStringConverter a factory converting a ByteArray to a String
  * @param decoratorList a list of SerialisationDecorator to be applied recursively during the serialisation process
  */
-class SerialisationManager internal constructor(
+class SerialisationManager(
         private val serialiser: Serialiser,
         private val byteToStringConverter: (ByteArray) -> String,
         private val decoratorList: List<SerialisationDecorator> //TODO order list to put compression before encryption

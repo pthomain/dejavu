@@ -21,15 +21,10 @@
  *
  */
 
-//plugins {
-//    id 'maven-publish'
-//}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-//apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'dev.pthomain.dejavu'
 
@@ -118,7 +113,6 @@ sourceSets {
     }
 }
 
-
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from android.sourceSets.main.java.srcDirs
@@ -159,11 +153,11 @@ artifacts {
 //            }
 //        }
 //        publications {
-//            encryption(MavenPublication) {
+//            retrofit(MavenPublication) {
 //                groupId = 'dev.pthomain.dejavu'
-//                artifactId = 'encryption-mumbo'
+//                artifactId = 'retrofit'
 //                version = dejaVuVersion
-//                artifact("$buildDir/outputs/aar/encryption-release.aar")
+//                artifact("$buildDir/outputs/aar/retrofit-release.aar")
 //            }
 //            mavenJava(MavenPublication) {
 //                pom {
@@ -195,10 +189,13 @@ artifacts {
 
 dependencies {
     compileOnly project(':lib:core')
-    implementation project(':lib:modules:serialisation')
+    compileOnly project(':lib:modules:serialisation')
 
-//    implementation appDependencies.jitPack
     implementation appDependencies.multiDex
 
-    api appDependencies.mumbo
+    api appDependencies.glitchyCore
+    implementation appDependencies.volley
+
+    implementation appDependencies.koinCore
+    implementation appDependencies.koinCoreExt
 }

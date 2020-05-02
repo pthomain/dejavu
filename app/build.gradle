@@ -86,15 +86,16 @@ android {
 }
 
 dependencies {
-//    implementation "dev.pthomain.dejavu:glitch:$dejaVuVersion"
-//    implementation "dev.pthomain.dejavu:persistence-file:$dejaVuVersion"
-//    implementation "dev.pthomain.dejavu:persistence-memory:$dejaVuVersion"
-//    implementation "dev.pthomain.dejavu:persistence-sqlite:$dejaVuVersion"
-//    implementation "dev.pthomain.dejavu:compression-snappy:$dejaVuVersion"
-//    implementation "dev.pthomain.dejavu:encryption-mumbo:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:glitch:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:persistence-file:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:persistence-memory:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:persistence-sqlite:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:compression-snappy:$dejaVuVersion"
+//    implementation "dev.pthomain.android.dejavu:encryption-mumbo:$dejaVuVersion"
 
     implementation project(':lib:core')
     implementation project(':lib:modules:retrofit')
+    implementation project(':lib:modules:volley')
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')

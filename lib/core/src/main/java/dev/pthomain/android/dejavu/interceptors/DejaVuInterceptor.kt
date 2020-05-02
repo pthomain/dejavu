@@ -205,9 +205,11 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
          * @param operation the cache operation for the intercepted call
          * @param requestMetadata the associated request metadata
          */
-        fun <R : Any> create(isWrapped: Boolean,
-                             operation: Operation,
-                             requestMetadata: PlainRequestMetadata<R>) =
+        fun <R : Any> create(
+                isWrapped: Boolean,
+                operation: Operation,
+                requestMetadata: PlainRequestMetadata<R>
+        ) =
                 DejaVuInterceptor(
                         isWrapped,
                         operation,

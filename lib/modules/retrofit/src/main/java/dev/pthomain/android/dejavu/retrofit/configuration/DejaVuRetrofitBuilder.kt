@@ -47,10 +47,10 @@ class DejaVuRetrofitBuilder<E> internal constructor() : ExtensionBuilder<DejaVuR
         val parentModules = this.parentModules
                 ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 
-        val koin = koinApplication {
+        return koinApplication {
             modules(parentModules + DejaVuRetrofitModule<E>().module)
-        }.koin
-
-        return DejaVuRetrofit(koin.get())
+        }.koin.run {
+            DejaVuRetrofit(get(), get())
+        }
     }
 }

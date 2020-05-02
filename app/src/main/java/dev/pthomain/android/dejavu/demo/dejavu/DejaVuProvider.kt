@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.demo.dejavu
 
 import android.content.Context
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
@@ -40,6 +40,7 @@ import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.compression.Compression
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
+import dev.pthomain.android.dejavu.volley.DejaVuVolley
 import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
@@ -57,7 +58,7 @@ class DejaVuFactory(
     private val compressionDecorator = Compression(uiLogger).serialisationDecorator
 
     private val encryptionDecorator = with(Mumbo(context, uiLogger)) {
-        Encryption(if (Build.VERSION.SDK_INT >= 23) tink() else conceal())
+        Encryption(if (SDK_INT >= 23) tink() else conceal()) //FIXME handle UnrecoverableKeyException by clearing the cache
     }.serialisationDecorator
 
     private fun getDecorators(
@@ -106,20 +107,51 @@ class DejaVuFactory(
             serialiser
     )
 
-    fun <E> create(
+    private fun <E> dejaVuBuilder(
+            errorFactoryType: ErrorFactoryType<E>,
             encrypt: Boolean,
             compress: Boolean,
-            errorFactoryType: ErrorFactoryType<E>,
             persistence: Persistence
     ) where E : Throwable,
-            E : NetworkErrorPredicate = DejaVu.builder(
+            E : NetworkErrorPredicate =
+            DejaVu.builder(
                     context,
                     errorFactoryType.errorFactory,
                     persistenceModuleProvider(encrypt, compress, persistence),
                     uiLogger
             )
-            .extend(DejaVuRetrofit.extension<E>())
-            .build()
+
+    fun <E> createDejaVuRetrofit(
+            encrypt: Boolean,
+            compress: Boolean,
+            errorFactoryType: ErrorFactoryType<E>,
+            persistence: Persistence
+    ) where E : Throwable,
+            E : NetworkErrorPredicate =
+            dejaVuBuilder(
+                    errorFactoryType,
+                    encrypt,
+                    compress,
+                    persistence
+            )
+                    .extend(DejaVuRetrofit.extension<E>())
+                    .build()
+
+    fun <E> createDejaVuVolley(
+            encrypt: Boolean,
+            compress: Boolean,
+            errorFactoryType: ErrorFactoryType<E>,
+            persistence: Persistence
+    ) where E : Throwable,
+            E : NetworkErrorPredicate =
+            dejaVuBuilder(
+                    errorFactoryType,
+                    encrypt,
+                    compress,
+                    persistence
+            )
+                    .extend(DejaVuVolley.extension<E>())
+                    .build()
 
     enum class Persistence {
         FILE,

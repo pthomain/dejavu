@@ -80,6 +80,7 @@ ext {
     androidCompatVersion = '1.1.0'
 
     gsonVersion = '2.8.6'
+    volleyVersion = '1.1.1'
     retrofitVersion = '2.8.1'
     okhttpVersion = '4.5.0'
     reactiveNetworkVersion = '3.0.8'
@@ -121,6 +122,8 @@ ext {
             glitchyCore          : "dev.pthomain.glitchy:core:$glitchyVersion",
             glitchyRetrofit      : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
             fliptables           : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
+
+            volley                : "com.android.volley:volley:$volleyVersion",
 
             retrofit             : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson: "com.squareup.retrofit2:converter-gson:$retrofitVersion",

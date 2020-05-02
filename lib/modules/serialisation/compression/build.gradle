@@ -195,6 +195,7 @@ artifacts {
 
 dependencies {
     compileOnly project(':lib:core')
+    implementation project(':lib:modules:serialisation')
 
 //    implementation appDependencies.jitPack
     implementation appDependencies.multiDex
