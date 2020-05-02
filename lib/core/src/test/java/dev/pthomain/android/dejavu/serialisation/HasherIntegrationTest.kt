@@ -27,8 +27,8 @@ package dev.pthomain.android.dejavu.serialisation
 import android.net.Uri
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.dejavu.di.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import org.junit.Test

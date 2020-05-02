@@ -23,8 +23,9 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.response
 
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.*
 
 /**
  * Default implementation of CacheMetadata.Holder. Have the response extend this class
@@ -35,11 +36,11 @@ import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
  *
  * @see dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
  */
-abstract class Cacheable<R : Any> : HasMetadata<R, Operation.Remote, ResponseToken<Operation.Remote, R>> {
+abstract class Cacheable<R : Any> : HasMetadata<R, Remote, ResponseToken<Remote, R>> {
 
     @Transient
     override lateinit var callDuration: CallDuration
 
     @Transient
-    override lateinit var cacheToken: ResponseToken<Operation.Remote, R>
+    override lateinit var cacheToken: ResponseToken<Remote, R>
 }

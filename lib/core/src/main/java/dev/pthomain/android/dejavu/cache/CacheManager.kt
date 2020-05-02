@@ -25,18 +25,18 @@ package dev.pthomain.android.dejavu.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.shared.token.RequestToken
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.getCacheStatus
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import java.util.*
 

@@ -34,7 +34,6 @@ buildscript {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
         classpath 'com.android.tools.build:gradle:4.1.0-alpha08'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.6'
     }
 }
 
@@ -71,7 +70,7 @@ ext {
 
     boilerplateVersion = '4.0'
     mumboVersion = '2.0'
-    glitchyVersion = '1.9'
+    glitchyVersion = '2.0'
     fliptablesVersion = '1.1.0'
 
     snappyVersion = '0.4'
@@ -119,7 +118,8 @@ ext {
             boilerplate          : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
             boilerplate_ui       : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
             mumbo                : "com.github.pthomain:mumbo:$mumboVersion",
-            glitchy              : "dev.pthomain:glitchy:$glitchyVersion",
+            glitchyCore          : "dev.pthomain.glitchy:core:$glitchyVersion",
+            glitchyRetrofit      : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
             fliptables           : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
 
             retrofit             : "com.squareup.retrofit2:retrofit:$retrofitVersion",

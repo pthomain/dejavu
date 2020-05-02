@@ -113,7 +113,7 @@ sourceSets {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from android.sourceSets.main.java.sourceFiles
+    from android.sourceSets.main.java.srcDirs
 }
 
 task javadoc(type: Javadoc) {
@@ -137,7 +137,7 @@ artifacts {
 }
 
 dependencies {
-    api project(':lib:modules:serialisation')
+    compileOnly project(':lib:core')
 
     implementation appDependencies.multiDex
 

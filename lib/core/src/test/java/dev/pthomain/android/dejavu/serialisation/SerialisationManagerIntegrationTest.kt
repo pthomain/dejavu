@@ -30,10 +30,11 @@ import dev.pthomain.android.boilerplate.core.utils.lambda.Action
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.shared.token.InstructionToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertResponseWrapperWithContext
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

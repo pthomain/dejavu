@@ -21,4 +21,8 @@
   ~
   -->
 
-<manifest package="dev.pthomain.android.dejavu.serialisation.encryption" />
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    package="dev.pthomain.android.dejavu.serialisation.encryption">
+
+    <uses-sdk tools:overrideLibrary="androidx.security" />
+</manifest>

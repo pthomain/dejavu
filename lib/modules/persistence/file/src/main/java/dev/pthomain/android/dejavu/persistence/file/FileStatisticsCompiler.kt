@@ -23,11 +23,11 @@
 
 package dev.pthomain.android.dejavu.persistence.file
 
+import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
-import dev.pthomain.android.dejavu.shared.token.getCacheStatus
 import java.io.File
 import java.io.InputStream
 import java.util.*

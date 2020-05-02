@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.persistence.file.di
 
 import android.content.Context
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

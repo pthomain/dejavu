@@ -23,12 +23,12 @@
 
 package dev.pthomain.android.dejavu.configuration.error
 
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.CONFIG
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.dejavu.cache.CacheException
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.ErrorCode.CONFIG
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
 
 /**
  * Default implementation of ErrorFactory handling some usual base exceptions.
@@ -36,7 +36,6 @@ import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
  * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.errorFactory for overriding this factory
  * @see Glitch
  */
-//TODO deprecate or wrap
 class DejaVuGlitchFactory(private val glitchFactory: GlitchFactory)
     : ErrorFactory<Glitch> by glitchFactory {
 

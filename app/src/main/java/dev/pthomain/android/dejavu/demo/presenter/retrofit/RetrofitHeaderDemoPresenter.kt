@@ -29,15 +29,15 @@ import dev.pthomain.android.boilerplate.core.utils.rx.single
 import dev.pthomain.android.dejavu.cache.metadata.response.Empty
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.Result
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority.LOCAL_ONLY
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
 import io.reactivex.Observable
 import io.reactivex.Single
 

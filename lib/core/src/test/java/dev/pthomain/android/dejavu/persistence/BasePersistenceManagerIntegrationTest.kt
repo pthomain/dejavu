@@ -25,12 +25,12 @@ package dev.pthomain.android.dejavu.persistence
 
 import com.google.common.net.HttpHeaders.REFRESH
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.shared.token.CacheStatus
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.shared.token.InstructionToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertNotNullWithContext
 import dev.pthomain.android.dejavu.test.assertNullWithContext

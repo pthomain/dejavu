@@ -26,31 +26,27 @@ package dev.pthomain.android.dejavu.configuration
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.cache.TransientResponse
-import dev.pthomain.android.dejavu.di.DejaVuComponent
-import dev.pthomain.android.dejavu.shared.SilentLogger
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.configuration.OperationPredicate.Inactive
+import dev.pthomain.android.dejavu.di.DejaVuModule
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import org.koin.dsl.koinApplication
 
-abstract class DejaVuBuilder<E>(
+class DejaVuBuilder<E> internal constructor(
         private val context: Context,
+        private val logger: Logger,
         private val errorFactory: ErrorFactory<E>,
-        private val persistenceManager: PersistenceManager
-) where E : Throwable,
-        E : NetworkErrorPredicate {
+        private val persistenceManagerModule: PersistenceManager.ModuleProvider
+) : Extendable
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
-    private var logger: Logger = SilentLogger
-    private var operationPredicate: (RequestMetadata<*>) -> Remote? = OperationPredicate.Inactive
+    private var operationPredicate: (RequestMetadata<*>) -> Remote? = Inactive
     private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
-
-    /**
-     * Sets custom logger.
-     */
-    fun withLogger(logger: Logger) =
-            apply { this.logger = logger }
 
     /**
      * Sets a predicate for ad-hoc response caching. This predicate will be called for every
@@ -84,26 +80,26 @@ abstract class DejaVuBuilder<E>(
     fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
             apply { this.durationPredicate = durationPredicate }
 
-    protected abstract fun componentProvider(
-            context: Context,
-            logger: Logger,
-            errorFactory: ErrorFactory<E>,
-            persistenceManager: PersistenceManager,
-            operationPredicate: (metadata: RequestMetadata<*>) -> Remote?,
-            durationPredicate: (TransientResponse<*>) -> Int?
-    ): DejaVuComponent<E>
+    override fun <B : ExtensionBuilder<B>> extend(extensionBuilder: B) =
+            extensionBuilder.accept(modules())
+
+    private fun modules() = DejaVuModule(
+            context.applicationContext,
+            logger,
+            errorFactory,
+            persistenceManagerModule,
+            operationPredicate,
+            durationPredicate
+    ).modules
 
     /**
      * Returns an instance of DejaVu.
      */
-    fun build() = DejaVu(
-            componentProvider(
-                    context.applicationContext,
-                    logger,
-                    errorFactory,
-                    persistenceManager,
-                    operationPredicate,
-                    durationPredicate
-            )
-    )
+    fun build(): DejaVu<E> {
+        val koin = koinApplication {
+            modules(this@DejaVuBuilder.modules())
+        }.koin
+
+        return DejaVu(koin.get())
+    }
 }

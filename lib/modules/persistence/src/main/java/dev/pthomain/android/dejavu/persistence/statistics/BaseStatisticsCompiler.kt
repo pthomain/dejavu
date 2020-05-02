@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.statistics
 
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
 import io.reactivex.Single
 import java.util.*
 

@@ -27,7 +27,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import dagger.Component
 import dev.pthomain.android.dejavu.cache.CacheManager
-import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.di.integration.module.IntegrationModule
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
@@ -37,7 +36,7 @@ import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.shared.utils.Function1
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.mumbo.base.EncryptionManager

@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.persistence.serialisation
 
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationException
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 
 /**
  * Handles the different steps of the serialisation of the response.

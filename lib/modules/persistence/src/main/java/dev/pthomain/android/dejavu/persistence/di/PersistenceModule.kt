@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.persistence.di
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import org.koin.dsl.module
 
 class PersistenceModule(

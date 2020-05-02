@@ -34,13 +34,13 @@ import android.text.style.StyleSpan
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.*
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
-import dev.pthomain.android.dejavu.shared.utils.swapLambdaWhen
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
+import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 
 class InstructionView @JvmOverloads constructor(
         context: Context,

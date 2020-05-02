@@ -25,28 +25,24 @@ package dev.pthomain.android.dejavu
 
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.configuration.DejaVuBuilder
 import dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory
-import dev.pthomain.android.dejavu.di.DejaVuComponent
-import dev.pthomain.android.dejavu.shared.SilentLogger
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.utils.SilentLogger
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
  */
-class DejaVu<E> internal constructor(component: DejaVuComponent<E>)
-    : DejaVuComponent<E> by component
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+class DejaVu<E> internal constructor(
+        val interceptorFactory: DejaVuInterceptor.Factory<E>
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
     companion object {
-
-        /**
-         * Use this value to provide the cache instruction as a header (this will override any existing call annotation)
-         */
-        const val DejaVuHeader = "DejaVuHeader"
 
         fun defaultBuilder(
                 context: Context,

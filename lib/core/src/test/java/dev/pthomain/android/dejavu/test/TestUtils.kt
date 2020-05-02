@@ -30,18 +30,20 @@ import com.nhaarman.mockitokotlin2.verify
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.di.integration.module.NOW
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
-import dev.pthomain.android.dejavu.shared.token.CacheStatus
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.*
-import dev.pthomain.android.dejavu.shared.token.RequestToken
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.*
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import junit.framework.TestCase.*
 import org.junit.Assert.assertArrayEquals
 import org.mockito.internal.verification.VerificationModeFactory
@@ -177,8 +179,8 @@ fun assertGlitchWithContext(expectedGlitch: Glitch?,
     }
 }
 
-internal fun assertResponseWrapperWithContext(expected: ResponseWrapper<*, *, Glitch>,
-                                              actual: ResponseWrapper<*, *, Glitch>,
+internal fun assertResponseWrapperWithContext(expected: MockClient.ResponseWrapper<*, *, Glitch>,
+                                              actual: MockClient.ResponseWrapper<*, *, Glitch>,
                                               context: String? = null) {
     assertEqualsWithContext(
             expected.responseClass,
@@ -263,7 +265,7 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
 }
 
 internal fun defaultResponseWrapper(metadata: ResponseMetadata<Cache, ResponseToken<Cache>, Glitch>,
-                                    response: TestResponse?) = ResponseWrapper(
+                                    response: TestResponse?) = MockClient.ResponseWrapper(
         TestResponse::class.java,
         response,
         metadata
@@ -344,7 +346,7 @@ fun callAdapterFactory(rxClass: Class<*>,
                 },
                 arrayOf(
                         getAnnotation<GET>(listOf("/")),
-                        getAnnotation<DoNotCache>(emptyList())
+                        getAnnotation<Remote.DoNotCache>(emptyList())
                 ),
                 retrofit
         )

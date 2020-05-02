@@ -33,16 +33,17 @@ import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory.Persistence.*
 import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
 import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiErrorFactory
 import dev.pthomain.android.dejavu.demo.gson.GsonSerialiser
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
+import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.compression.Compression
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
 import dev.pthomain.android.mumbo.Mumbo
 
 class DejaVuFactory(
@@ -110,14 +111,15 @@ class DejaVuFactory(
             compress: Boolean,
             errorFactoryType: ErrorFactoryType<E>,
             persistence: Persistence
-    ) where E : Throwable, E : NetworkErrorPredicate =
-            DejaVu.builder(
-                            context,
-                            errorFactoryType.errorFactory,
-                            persistenceModuleProvider(encrypt, compress, persistence),
-                            uiLogger
-                    )
-                    .build()
+    ) where E : Throwable,
+            E : NetworkErrorPredicate = DejaVu.builder(
+                    context,
+                    errorFactoryType.errorFactory,
+                    persistenceModuleProvider(encrypt, compress, persistence),
+                    uiLogger
+            )
+            .extend(DejaVuRetrofit.extension<E>())
+            .build()
 
     enum class Persistence {
         FILE,

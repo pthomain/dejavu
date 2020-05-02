@@ -27,7 +27,7 @@ import android.annotation.SuppressLint
 import com.jakewharton.fliptables.FlipTable
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.shared.token.CacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import java.text.SimpleDateFormat
 import java.util.*
 

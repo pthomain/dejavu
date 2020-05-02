@@ -28,17 +28,20 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
-import dev.pthomain.android.dejavu.shared.token.CacheStatus
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.*
+import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import io.reactivex.observers.TestObserver
@@ -144,14 +147,14 @@ class ResponseInterceptorUnitTest {
 
         val mockResponse = if (responseClass == String::class.java) "" else TestResponse()
 
-        val mockUpstreamWrapper = ResponseWrapper(
+        val mockUpstreamWrapper = MockClient.ResponseWrapper(
                 responseClass,
                 if (isEmptyUpstream) null else mockResponse,
                 mockUpstreamMetadata
         )
 
         val mockUpstreamObservable = if (isEmptyUpstreamObservable)
-            Observable.empty<ResponseWrapper<*, *, Glitch>>()
+            Observable.empty<MockClient.ResponseWrapper<*, *, Glitch>>()
         else
             Observable.just(mockUpstreamWrapper)
 
@@ -199,7 +202,7 @@ class ResponseInterceptorUnitTest {
                 eq(mockInstructionToken)
         )).thenReturn(mockEmptyResponseWrapper)
 
-        val mockEmptyResponse = ResponseWrapper<*, *, Glitch>(
+        val mockEmptyResponse = MockClient.ResponseWrapper<*, *, Glitch>(
                 String::class.java,
                 ifElse(
                         responseClass == String::class.java,

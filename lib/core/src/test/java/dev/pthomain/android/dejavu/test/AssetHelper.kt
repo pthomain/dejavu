@@ -26,13 +26,13 @@ package dev.pthomain.android.dejavu.test
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.retrofit.response.DejaVuResult
+import dev.pthomain.android.dejavu.retrofit.response.Response
 import dev.pthomain.android.dejavu.di.integration.module.NOW
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.FRESH
-import dev.pthomain.android.dejavu.shared.token.RequestToken
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import io.reactivex.Observable
 import java.io.*
 

@@ -93,6 +93,8 @@ dependencies {
 //    implementation "dev.pthomain.dejavu:compression-snappy:$dejaVuVersion"
 //    implementation "dev.pthomain.dejavu:encryption-mumbo:$dejaVuVersion"
 
+    implementation project(':lib:core')
+    implementation project(':lib:modules:retrofit')
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')

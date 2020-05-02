@@ -30,11 +30,11 @@ import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate.Inacti
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata.Companion.DEFAULT_URL
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.OperationSerialiser
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata.Companion.DEFAULT_URL
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.shared.metadata.token.instruction.operation.OperationSerialiser
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertTrueWithContext
 import dev.pthomain.android.dejavu.test.network.model.TestResponse

@@ -27,15 +27,17 @@ import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.response.responseClass
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.*
-import dev.pthomain.android.dejavu.shared.token.RequestToken
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import java.util.*
+import dev.pthomain.android.dejavu.cache.metadata.response.responseClass
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+
 
 /**
  * Handles the update of the ResponseWrapper's metadata.
@@ -145,9 +147,3 @@ internal class CacheMetadataManager<E>(
                     total = callDuration.network
             )
 }
-
-data class TransientResponse<R : Any>(
-        val response: R,
-        var cacheToken: RequestToken<Cache, R>
-)
-
