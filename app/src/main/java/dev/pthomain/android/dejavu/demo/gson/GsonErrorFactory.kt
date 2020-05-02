@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.demo.gson
 
 import com.google.gson.JsonParseException
 import dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.ErrorCode.UNEXPECTED_RESPONSE
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
 
 /**
  * Custom Glitch ErrorFactory implementation handling extra Gson specific exceptions.

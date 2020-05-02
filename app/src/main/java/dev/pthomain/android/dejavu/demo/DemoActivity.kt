@@ -37,14 +37,14 @@ import com.uber.rxdogtag.RxDogTag
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.dsl.koinApplication
 

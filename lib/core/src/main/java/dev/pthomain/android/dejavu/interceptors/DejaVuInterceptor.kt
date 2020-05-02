@@ -24,29 +24,25 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.response.*
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.OperationResolver
-import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.INSTRUCTION
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.NETWORK
-import dev.pthomain.android.dejavu.shared.token.RequestToken
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.CacheInstruction
-import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.glitchy.interceptor.Interceptor
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.interceptor.outcome.Outcome
-import dev.pthomain.android.glitchy.interceptor.outcome.Outcome.Error
-import dev.pthomain.android.glitchy.interceptor.outcome.Outcome.Success
-import dev.pthomain.android.glitchy.retrofit.type.ParsedType
+import dev.pthomain.android.dejavu.cache.metadata.response.*
+import dev.pthomain.android.dejavu.cache.metadata.response.LocalOperationToken
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NETWORK
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptor
+import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
+import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.*
 import io.reactivex.Observable
 import io.reactivex.Single
-import retrofit2.Call
 import java.util.*
 
 /**
@@ -55,7 +51,6 @@ import java.util.*
  * @param isWrapped whether or not the response should be wrapped in a CacheResult
  * @param operation the cache operation for the intercepted call
  * @param requestMetadata the associated request metadata
- * @param configuration the global cache configuration
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
  * @param hashingErrorObservableFactory the factory used to create a hashing error observable
@@ -199,37 +194,14 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             private val dateFactory: (Long?) -> Date,
             private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
             private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
-            private val operationResolverFactory: OperationResolver.Factory<E>
+            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate {
-
-        internal val glitchyFactory = object : Interceptor.Factory<E> {
-            override fun <M> create(
-                    parsedType: ParsedType<M>,
-                    call: Call<Any>
-            ): Interceptor? =
-                    with(parsedType.metadata) {
-                        if (this is OperationReturnType) {
-                            operationResolverFactory.create(
-                                    methodDescription,
-                                    dejaVuReturnType.responseClass,
-                                    annotationOperation
-                            ).getResolvedOperation(call)?.run {
-                                create(
-                                        dejaVuReturnType.isDejaVuResult,
-                                        operation,
-                                        requestMetadata as PlainRequestMetadata<out Any>
-                                )
-                            }
-                        } else null
-                    }
-        }
 
         /**
          * Provides an instance of DejaVuInterceptor
          *
-         * @param isWrapped whether or not the response should be wrapped in a CacheResult
+         * @param isWrapped whether or not the response should be wrapped in a DejaVuResult
          * @param operation the cache operation for the intercepted call
          * @param requestMetadata the associated request metadata
          */

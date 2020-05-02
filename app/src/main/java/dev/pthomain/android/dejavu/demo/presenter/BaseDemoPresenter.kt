@@ -29,25 +29,25 @@ import dev.pthomain.android.boilerplate.core.mvp.MvpPresenter
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
-import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory.Persistence.FILE
 import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.NetworkPriority.*
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Local.Invalidate
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.*
+import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -76,7 +76,7 @@ internal abstract class BaseDemoPresenter protected constructor(
             dejaVu = newDejaVu()
         }
 
-    protected var dejaVu: DejaVu<*> = newDejaVu()
+    protected var dejaVu: DejaVuRetrofit<*> = newDejaVu()
         private set
 
     final override var useSingle: Boolean = false

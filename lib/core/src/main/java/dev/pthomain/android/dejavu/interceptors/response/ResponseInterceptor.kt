@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.interceptors.response
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.observable
 import dev.pthomain.android.dejavu.cache.metadata.response.*
-import dev.pthomain.android.dejavu.shared.token.ResponseToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.*

@@ -23,9 +23,9 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption.decorator
 
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
 /**

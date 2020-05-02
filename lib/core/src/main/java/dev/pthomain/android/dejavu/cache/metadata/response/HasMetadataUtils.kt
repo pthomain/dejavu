@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.response
 
-import dev.pthomain.android.dejavu.shared.token.CacheToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 
 internal fun <O : Operation, R : Any> HasMetadata<R, O, out CacheToken<O, R>>.instruction() =
         cacheToken.instruction

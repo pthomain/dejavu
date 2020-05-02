@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.base
 
-import dev.pthomain.android.dejavu.shared.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 
 /**
  * Holds cache data for the purpose of persistence or filtering of the cached responses.

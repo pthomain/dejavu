@@ -113,7 +113,7 @@ sourceSets {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from android.sourceSets.main.java.sourceFiles
+    from android.sourceSets.main.java.srcDirs
 }
 
 task javadoc(type: Javadoc) {
@@ -137,16 +137,15 @@ artifacts {
 }
 
 dependencies {
-    api project(':lib:modules:shared')
-
     implementation appDependencies.multiDex
 
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
 
-    api appDependencies.glitchy
+    api appDependencies.glitchyCore
+
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
-    //https://stackoverflow.com/questions/56639529/duplicate-class-com-google-common-util-concurrent-listenablefuture-found-in-modu
+//https://stackoverflow.com/questions/56639529/duplicate-class-com-google-common-util-concurrent-listenablefuture-found-in-modu
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt
@@ -154,9 +153,6 @@ dependencies {
     api appDependencies.rxJava
     api appDependencies.rxKotlin
     api appDependencies.rxAndroid
-
-    api appDependencies.retrofit
-    api appDependencies.retrofitAdapterRxJava
 
     testImplementation appDependencies.retrofitConverterGson
     testImplementation appDependencies.gson

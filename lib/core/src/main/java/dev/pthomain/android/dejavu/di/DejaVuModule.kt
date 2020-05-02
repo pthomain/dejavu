@@ -28,47 +28,40 @@ import android.net.Uri
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.CacheManager
 import dev.pthomain.android.dejavu.cache.CacheMetadataManager
-import dev.pthomain.android.dejavu.cache.TransientResponse
+import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.interceptors.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.retrofit.OperationResolver
-import dev.pthomain.android.dejavu.retrofit.RequestBodyConverter
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
-import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
-import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnTypeParser
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.glitchy.Glitchy
-import dev.pthomain.android.glitchy.interceptor.Interceptors
-import dev.pthomain.android.glitchy.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
 
-class DejaVuModule<E>(
+internal class DejaVuModule<E>(
         context: Context,
         logger: Logger,
         private val errorFactory: ErrorFactory<E>,
         persistenceModule: PersistenceManager.ModuleProvider,
         private val operationPredicate: (RequestMetadata<*>) -> Remote?,
         private val durationPredicate: (TransientResponse<*>) -> Int?
-) where E : Throwable,
-        E : NetworkErrorPredicate {
+)
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
     val modules = persistenceModule.modules + module {
 
         single { context.applicationContext }
 
         single { logger }
+
+        single(named("operationPredicate")) { operationPredicate }
 
         single<(Long?) -> Date>(named("dateFactory")) {
             { if (it == null) Date() else Date(it) }
@@ -129,48 +122,11 @@ class DejaVuModule<E>(
             EmptyResponseFactory<E>(get())
         }
 
-        single { HeaderInterceptor() }
-
         single {
             DejaVuInterceptor.Factory<E>(
                     get(),
                     get(),
                     get(named("dateFactory")),
-                    get(),
-                    get(),
-                    get(),
-                    get()
-            )
-        }
-
-        single { AnnotationProcessor<E>(get()) }
-
-        single { DejaVuReturnTypeParser<E>() }
-
-        single<ReturnTypeParser<OperationReturnType>> {
-            OperationReturnTypeParser<E>(
-                    get(),
-                    get(),
-                    get()
-            )
-        }
-
-        single { RequestBodyConverter() }
-
-        single {
-            OperationResolver.Factory<E>(
-                    operationPredicate::invoke,
-                    get<RequestBodyConverter>(),
-                    get()
-            )
-        }
-
-        single<Interceptors<E>> {
-            Interceptors.After(get<DejaVuInterceptor.Factory<E>>().glitchyFactory)
-        }
-
-        single {
-            Glitchy.createCallAdapterFactory<E, OperationReturnType>(
                     get(),
                     get(),
                     get()

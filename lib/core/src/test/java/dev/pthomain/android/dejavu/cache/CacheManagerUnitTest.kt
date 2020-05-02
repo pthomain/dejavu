@@ -28,10 +28,9 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.token.CacheStatus.*
-import dev.pthomain.android.dejavu.shared.token.InstructionToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable

@@ -33,14 +33,16 @@ import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.shared.token.InstructionToken
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.INVALIDATE
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
+import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 
@@ -324,7 +326,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                                          instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
-                                         cachedResponse: ResponseWrapper<*, *, Glitch>?) {
+                                         cachedResponse: MockClient.ResponseWrapper<*, *, Glitch>?) {
         val queryCaptor = argumentCaptor<String>()
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 

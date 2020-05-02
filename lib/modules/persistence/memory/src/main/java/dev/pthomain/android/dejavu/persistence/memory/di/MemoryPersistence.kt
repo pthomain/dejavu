@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.persistence.memory.di
 
 import androidx.collection.LruCache
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.persistence.serialisation.Serialiser
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

@@ -20,13 +20,10 @@
  *  under the License.
  *
  */
-include ':lib'
 include ':lib:core'
-include ':lib:modules:shared'
-include ':lib:modules:serialisation'
+include ':lib:modules:retrofit'
 include ':lib:modules:serialisation:compression'
 include ':lib:modules:serialisation:encryption'
-include ':lib:modules:persistence'
 include ':lib:modules:persistence:file'
 include ':lib:modules:persistence:memory'
 include ':lib:modules:persistence:sqlite'

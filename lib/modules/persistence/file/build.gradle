@@ -120,7 +120,7 @@ sourceSets {
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
-    from android.sourceSets.main.java.sourceFiles
+    from android.sourceSets.main.java.srcDirs
 }
 
 task javadoc(type: Javadoc) {
@@ -193,6 +193,7 @@ artifacts {
 //}
 
 dependencies {
+    compileOnly project(':lib:core')
     api project(':lib:modules:persistence')
 
 //    implementation appDependencies.jitPack

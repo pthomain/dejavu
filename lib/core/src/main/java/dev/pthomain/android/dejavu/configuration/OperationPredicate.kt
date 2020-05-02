@@ -23,12 +23,12 @@
 
 package dev.pthomain.android.dejavu.configuration
 
-import dev.pthomain.android.dejavu.shared.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.DEFAULT_CACHE_DURATION_IN_SECONDS
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
 
 sealed class OperationPredicate(
         private val operation: Remote?

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.di
 
-import dev.pthomain.android.dejavu.shared.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 
 interface PersistenceComponent {
     fun persistenceManager(): PersistenceManager

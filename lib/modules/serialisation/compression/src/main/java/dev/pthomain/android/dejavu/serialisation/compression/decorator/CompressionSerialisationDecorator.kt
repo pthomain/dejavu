@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.serialisation.compression.decorator
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationDecorator
-import dev.pthomain.android.dejavu.shared.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.shared.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.SerialisationException
 
 /**
  * Optional compression step of the serialisation process
