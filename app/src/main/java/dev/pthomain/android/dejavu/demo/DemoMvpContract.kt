@@ -25,15 +25,14 @@ package dev.pthomain.android.dejavu.demo
 
 
 import dev.pthomain.android.boilerplate.core.mvp.base.MvpContract.*
-import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import org.koin.core.Koin
 
 internal class DemoMvpContract {
@@ -50,25 +49,23 @@ internal class DemoMvpContract {
     interface DemoPresenter : Presenter<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
         var useSingle: Boolean
-        var useHeader: Boolean
+        var method: Method
         var encrypt: Boolean
         var compress: Boolean
         var freshness: FreshnessPriority
-        var connectivityTimeoutOn: Boolean
 
         fun loadCatFact(isRefresh: Boolean)
         fun clearEntries()
         fun invalidate()
         fun offline()
         fun getCacheOperation(): Operation
-
     }
 
     class DemoViewComponent(
             private val koin: Koin
     ) : ViewComponent<DemoMvpView, DemoPresenter, DemoViewComponent> {
 
-        fun presenterSwitcher() = koin.get<Callback1<Method>>()
+        fun presenterSwitcher() = koin.get<(Method) -> Unit>()
 
         fun logger(): Logger = koin.get<CompositeLogger>()
 

@@ -31,6 +31,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
+import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Custom
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.FILE
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.SQLITE
@@ -129,6 +130,14 @@ class DejaVuFactory(
                   E : NetworkErrorPredicate =
             DejaVuRetrofitClient(
                     dejaVuRetrofit(errorFactoryType),
+                    logger
+            )
+
+    fun <E> createVolley(errorFactoryType: ErrorFactoryType<E>)
+            where E : Throwable,
+                  E : NetworkErrorPredicate =
+            DejaVuVolleyClient(
+                    dejaVuVolley(errorFactoryType),
                     logger
             )
 }

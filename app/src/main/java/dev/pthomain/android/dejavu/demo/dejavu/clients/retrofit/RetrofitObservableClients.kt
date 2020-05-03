@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
+import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate

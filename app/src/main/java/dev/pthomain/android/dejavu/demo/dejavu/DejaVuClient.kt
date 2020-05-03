@@ -9,8 +9,9 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.base.adapters.SingleOpera
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleOperationsClientAdapter
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
+import dev.pthomain.android.dejavu.volley.DejaVuVolley
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -74,4 +75,23 @@ class DejaVuRetrofitClient(
             }).apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
+}
+
+
+class DejaVuVolleyClient(
+        dejaVuVolley: DejaVuVolley<*>,
+        logger: Logger
+) : DejaVuClient<SingleClients.Operations, ObservableClients.Operations>(::SingleOperationsClientAdapter){
+
+    val observableFactory = dejaVuVolley.observableFactory
+
+    override val dataSingleClient: SingleClients.Data
+        get() = TODO("Not yet implemented")
+    override val dataObservableClient: ObservableClients.Data
+        get() = TODO("Not yet implemented")
+    override val operationSingleClient: SingleClients.Operations
+        get() = TODO("Not yet implemented")
+    override val operationObservableClient: ObservableClients.Operations
+        get() = TODO("Not yet implemented")
+
 }

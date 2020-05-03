@@ -99,12 +99,12 @@ internal class OperationReturnTypeParser<E>(
     }
 
     private fun getTypedName(responseClass: Class<*>,
-                             isWrapped: Boolean,
+                             asResult: Boolean,
                              isSingle: Boolean) =
             String.format(
                     ifElse(isSingle, "Single<%s>", "Observable<%s>"),
                     String.format(
-                            ifElse(isWrapped, "DejaVuResult<%s>", "%s"),
+                            ifElse(asResult, "DejaVuResult<%s>", "%s"),
                             responseClass.simpleName
                     )
             )

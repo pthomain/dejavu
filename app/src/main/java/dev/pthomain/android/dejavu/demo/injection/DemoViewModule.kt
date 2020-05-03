@@ -23,16 +23,16 @@
 
 package dev.pthomain.android.dejavu.demo.injection
 
-import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.log.Printer
 import dev.pthomain.android.boilerplate.core.utils.log.SimpleLogger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyPresenter
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -51,27 +51,32 @@ internal class DemoViewModule(
         }
 
         single<Logger>(named("ui")) {
-            SimpleLogger(
-                    true,
-                    demoActivity.packageName,
-                    object : Printer {
-                        override fun canPrint(className: String) =
-                                !className.contains(SimpleLogger::class.java.`package`!!.name)
+            CompositeLogger(
+                    get(named("boilerplate")),
+                    SimpleLogger(
+                            true,
+                            demoActivity.packageName,
+                            object : Printer {
+                                override fun canPrint(className: String) =
+                                        !className.contains(SimpleLogger::class.java.`package`!!.name)
 
-                        override fun print(priority: Int,
-                                           tag: String?,
-                                           targetClassName: String,
-                                           message: String) {
-                            clean(message).also {
-                                if (!it.isBlank()) onLogOutput(it)
+                                override fun print(
+                                        priority: Int,
+                                        tag: String?,
+                                        targetClassName: String,
+                                        message: String
+                                ) {
+                                    clean(message).also {
+                                        if (!it.isBlank()) onLogOutput(it)
+                                    }
+                                }
+
+                                private fun clean(message: String) =
+                                        message.replace(Regex("(\\([^)]+\\))"), "")
+                                                .replace(Regex("\\n+"), "\n")
+                                                .trim()
                             }
-                        }
-
-                        private fun clean(message: String) =
-                                message.replace(Regex("(\\([^)]+\\))"), "")
-                                        .replace(Regex("\\n+"), "\n")
-                                        .trim()
-                    }
+                    )
             )
         }
 
@@ -97,14 +102,22 @@ internal class DemoViewModule(
         }
 
         single {
+            VolleyPresenter(
+                    demoActivity,
+                    get(named("ui"))
+            )
+        }
+
+        single {
             CompositePresenter(
                     demoActivity,
+                    get(),
                     get(),
                     get()
             )
         }
 
-        single<Callback1<Method>> {
+        single<(Method) -> Unit> {
             get<CompositePresenter>()
         }
     }

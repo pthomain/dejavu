@@ -24,18 +24,8 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.base
 
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
-import dev.pthomain.android.dejavu.retrofit.annotations.Cache
-import dev.pthomain.android.dejavu.retrofit.annotations.Clear
-import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
-import dev.pthomain.android.dejavu.retrofit.operation.DejaVuHeader
 import io.reactivex.Single
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Header
 
 interface SingleClients {
 

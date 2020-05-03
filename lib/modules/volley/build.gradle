@@ -194,7 +194,7 @@ dependencies {
     implementation appDependencies.multiDex
 
     api appDependencies.glitchyCore
-    implementation appDependencies.volley
+    api appDependencies.volley
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt

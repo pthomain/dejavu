@@ -123,12 +123,14 @@ internal class RetrofitOperationResolver<E, R> private constructor(
             null
         }
 
-        return operation?.also {
+        if(operation == null){
             logger.e(
                     this,
                     "Found a header cache operation on $methodDescription but it could not be deserialised."
             )
         }
+
+        return operation
     }
 
     /**

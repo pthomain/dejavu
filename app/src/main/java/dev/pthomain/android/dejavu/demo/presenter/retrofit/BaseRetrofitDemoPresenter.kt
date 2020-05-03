@@ -32,7 +32,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryTyp
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 
 internal abstract class BaseRetrofitDemoPresenter(

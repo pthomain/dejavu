@@ -21,23 +21,23 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.presenter
+package dev.pthomain.android.dejavu.demo.presenter.base
 
-import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.DemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyPresenter
 import io.reactivex.disposables.CompositeDisposable
 
 internal class CompositePresenter(
         override val mvpView: DemoActivity,
         private val retrofitAnnotationDemoPresenter: RetrofitAnnotationDemoPresenter,
-        private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter
-) : DemoPresenter, Callback1<Method> {
+        private val retrofitHeaderDemoPresenter: RetrofitHeaderDemoPresenter,
+        private val volleyPresenter: VolleyPresenter
+) : DemoPresenter, (Method) -> Unit {
 
     private var presenter: DemoPresenter = retrofitAnnotationDemoPresenter
 
@@ -45,17 +45,19 @@ internal class CompositePresenter(
 
     enum class Method {
         RETROFIT_ANNOTATION,
-        RETROFIT_HEADER
+        RETROFIT_HEADER,
+        VOLLEY
     }
 
     override fun invoke(p1: Method) {
         presenter = when (p1) {
             RETROFIT_ANNOTATION -> retrofitAnnotationDemoPresenter
             RETROFIT_HEADER -> retrofitHeaderDemoPresenter
+            VOLLEY -> volleyPresenter
         }.apply {
-            useHeader = p1 == RETROFIT_HEADER
+            method = p1
         }
-        useHeader = presenter.useHeader
+        method = presenter.method
     }
 
     override var useSingle = presenter.useSingle
@@ -64,10 +66,10 @@ internal class CompositePresenter(
             presenter.useSingle = value
         }
 
-    override var useHeader = presenter.useHeader
+    override var method = presenter.method
         set(value) {
             field = value
-            presenter.useHeader = value
+            presenter.method = value
         }
 
     override var encrypt = presenter.encrypt
@@ -80,12 +82,6 @@ internal class CompositePresenter(
         set(value) {
             field = value
             presenter.compress = value
-        }
-
-    override var connectivityTimeoutOn = presenter.connectivityTimeoutOn
-        set(value) {
-            field = value
-            presenter.connectivityTimeoutOn = value
         }
 
     override var freshness = presenter.freshness

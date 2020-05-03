@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.presenter
+package dev.pthomain.android.dejavu.demo.presenter.base
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
@@ -48,6 +48,8 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.*
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -58,29 +60,25 @@ protected constructor(
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
-    private var instructionType = CACHE
-    private var networkPriority = LOCAL_FIRST
-    protected var errorFactoryType: ErrorFactoryType<*> = Default
-
     protected val dejaVuFactory = DejaVuFactory(uiLogger, demoActivity)
 
-    final override var connectivityTimeoutOn: Boolean = true
-        set(value) {
-            field = value
-            dejaVuClient = newClient()
-        }
+    private var instructionType = CACHE
+    private var networkPriority = LOCAL_FIRST
 
-    private var dejaVuClient: C = newClient()
+    protected var errorFactoryType: ErrorFactoryType<*> = Default
+
+    protected var dejaVuClient: C = newClient()
+        private set
 
     protected abstract fun newClient(): C
 
     protected fun dataClient() = dejaVuClient.dataClient(useSingle)
     protected fun operationClient() = dejaVuClient.operationsClient(useSingle)
 
-    final override var useSingle: Boolean = false
-    final override var useHeader: Boolean = false
-    final override var encrypt: Boolean = false
-    final override var compress: Boolean = false
+    final override var useSingle = false
+    final override var method = RETROFIT_ANNOTATION
+    final override var encrypt = false
+    final override var compress = false
     final override var freshness = ANY
 
     final override fun getCacheOperation() =
