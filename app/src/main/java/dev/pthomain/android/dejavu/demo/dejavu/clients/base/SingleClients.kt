@@ -21,12 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.presenter.retrofit.clients
+package dev.pthomain.android.dejavu.demo.dejavu.clients.base
 
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
@@ -42,90 +42,36 @@ interface SingleClients {
     interface Data {
         // GET
 
-        @GET(ENDPOINT)
-        @Cache
         fun get(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(compress = true)
         fun compressed(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(encrypt = true)
         fun encrypted(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(
-                compress = true,
-                encrypt = true
-        )
         fun compressedEncrypted(): Single<CatFactResponse>
 
         // GET freshOnly
 
-        @GET(ENDPOINT)
-        @Cache(priority = STALE_NOT_ACCEPTED)
         fun freshOnly(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(
-                priority = STALE_NOT_ACCEPTED,
-                compress = true
-        )
         fun freshOnlyCompressed(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(
-                priority = STALE_NOT_ACCEPTED,
-                encrypt = true
-        )
         fun freshOnlyEncrypted(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(
-                priority = STALE_NOT_ACCEPTED,
-                compress = true,
-                encrypt = true
-        )
         fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
 
         // REFRESH
 
-        @GET(ENDPOINT)
-        @Cache(priority = INVALIDATE_STALE_ACCEPTED_FIRST)
         fun refresh(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
         fun refreshFreshOnly(): Single<CatFactResponse>
 
         // OFFLINE
 
-        @GET(ENDPOINT)
-        @Cache(priority = OFFLINE_STALE_ACCEPTED)
         fun offline(): Single<CatFactResponse>
-
-        @GET(ENDPOINT)
-        @Cache(priority = OFFLINE_STALE_NOT_ACCEPTED)
         fun offlineFreshOnly(): Single<CatFactResponse>
     }
 
     interface Operations {
         // CLEAR
 
-        @DELETE(ENDPOINT)
-        @Clear
         fun clearCache(): Single<DejaVuResult<CatFactResponse>>
 
         // INVALIDATE
 
-        @DELETE(ENDPOINT)
-        @Invalidate
         fun invalidate(): Single<DejaVuResult<CatFactResponse>>
-
-        //HEADER
-
-        @GET(ENDPOINT)
-        fun execute(@Header(DejaVuHeader) operation: Operation): Single<DejaVuResult<CatFactResponse>>
     }
 }

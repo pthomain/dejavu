@@ -21,7 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.gson
+package dev.pthomain.android.dejavu.demo.dejavu.gson
 
 
 import com.google.gson.JsonParseException

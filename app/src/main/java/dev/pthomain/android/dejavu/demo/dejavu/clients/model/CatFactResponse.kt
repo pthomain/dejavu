@@ -21,22 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters
+package dev.pthomain.android.dejavu.demo.dejavu.clients.model
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
+import dev.pthomain.android.dejavu.cache.metadata.response.Cacheable
 
-class SingleOperationsClientAdapter(
-        private val singleClient: SingleClients.Operations
-) : ObservableClients.Operations {
+class CatFactResponse : Cacheable<CatFactResponse>() {
 
-    override fun clearCache() =
-            singleClient.clearCache().toObservable()
+    var fact: String? = null
 
-    override fun invalidate() =
-            singleClient.invalidate().toObservable()
-
-    override fun execute(operation: Operation) =
-            singleClient.execute(operation).toObservable()
 }

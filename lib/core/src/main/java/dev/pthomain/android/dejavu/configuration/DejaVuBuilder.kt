@@ -80,7 +80,7 @@ class DejaVuBuilder<E> internal constructor(
     fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
             apply { this.durationPredicate = durationPredicate }
 
-    override fun <B : ExtensionBuilder<B>> extend(extensionBuilder: B) =
+    override fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B) =
             extensionBuilder.accept(modules())
 
     private fun modules() = DejaVuModule(

@@ -33,51 +33,49 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory
-import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory.ErrorFactoryType
-import dev.pthomain.android.dejavu.demo.dejavu.DejaVuFactory.Persistence.FILE
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
+import dev.pthomain.android.dejavu.demo.dejavu.DejaVuClient
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.*
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import io.reactivex.Observable
 import io.reactivex.Single
 
-internal abstract class BaseDemoPresenter protected constructor(
+internal abstract class BaseDemoPresenter<S : SingleClients.Operations, O : ObservableClients.Operations, C : DejaVuClient<S, O>>
+protected constructor(
         demoActivity: DemoActivity,
-        protected val uiLogger: Logger
+        private val uiLogger: Logger
 ) : MvpPresenter<DemoMvpView, DemoPresenter, DemoViewComponent>(demoActivity),
         DemoPresenter {
 
-    private var instructionType: Type = CACHE
-    private var networkPriority: NetworkPriority = LOCAL_FIRST
-    private var persistence = FILE
-    private var errorFactoryType = ErrorFactoryType.Custom
+    private var instructionType = CACHE
+    private var networkPriority = LOCAL_FIRST
+    protected var errorFactoryType: ErrorFactoryType<*> = Default
 
-    private val dejaVuFactory = DejaVuFactory(uiLogger, demoActivity)
-    private fun newDejaVu() = dejaVuFactory.createDejaVuRetrofit(
-            encrypt,
-            compress,
-            errorFactoryType,
-            persistence
-    )
+    protected val dejaVuFactory = DejaVuFactory(uiLogger, demoActivity)
 
     final override var connectivityTimeoutOn: Boolean = true
         set(value) {
             field = value
-            dejaVu = newDejaVu()
+            dejaVuClient = newClient()
         }
 
-    protected var dejaVu: DejaVuRetrofit<*> = newDejaVu()
-        private set
+    private var dejaVuClient: C = newClient()
+
+    protected abstract fun newClient(): C
+
+    protected fun dataClient() = dejaVuClient.dataClient(useSingle)
+    protected fun operationClient() = dejaVuClient.operationsClient(useSingle)
 
     final override var useSingle: Boolean = false
     final override var useHeader: Boolean = false

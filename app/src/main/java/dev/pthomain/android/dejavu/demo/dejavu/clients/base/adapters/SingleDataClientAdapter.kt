@@ -21,12 +21,15 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters
+package dev.pthomain.android.dejavu.demo.dejavu.clients.base.adapters
 
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 
-class SingleDataClientAdapter(private val singleClient: SingleClients.Data) : ObservableClients.Data {
+class SingleDataClientAdapter(
+        private val singleClient: SingleClients.Data
+) : ObservableClients.Data {
+
     override fun get() =
             singleClient.get().toObservable()
 

@@ -37,7 +37,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -78,6 +78,6 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
             executeOperation(Invalidate)
 
     private fun executeOperation(cacheOperation: Operation) =
-            operationsClient().execute(cacheOperation)
+            operationClient().execute(cacheOperation)
 
 }

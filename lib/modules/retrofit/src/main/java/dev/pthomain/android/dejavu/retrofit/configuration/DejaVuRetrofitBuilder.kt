@@ -30,7 +30,8 @@ import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 
-class DejaVuRetrofitBuilder<E> internal constructor() : ExtensionBuilder<DejaVuRetrofitBuilder<E>>
+class DejaVuRetrofitBuilder<E> internal constructor()
+    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -43,7 +44,7 @@ class DejaVuRetrofitBuilder<E> internal constructor() : ExtensionBuilder<DejaVuR
     /**
      * Returns an instance of DejaVu.
      */
-    fun build(): DejaVuRetrofit<E> {
+    override fun build(): DejaVuRetrofit<E> {
         val parentModules = this.parentModules
                 ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 

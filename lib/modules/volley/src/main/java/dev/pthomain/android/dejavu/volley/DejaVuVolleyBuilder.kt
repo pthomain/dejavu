@@ -6,7 +6,8 @@ import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
-class DejaVuVolleyBuilder<E> internal constructor() : ExtensionBuilder<DejaVuVolleyBuilder<E>>
+class DejaVuVolleyBuilder<E> internal constructor()
+    : ExtensionBuilder<DejaVuVolleyBuilder<E>, DejaVuVolley<E>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -23,7 +24,7 @@ class DejaVuVolleyBuilder<E> internal constructor() : ExtensionBuilder<DejaVuVol
     /**
      * Returns an instance of DejaVu.
      */
-    fun build(): DejaVuVolley<E> {
+    override fun build(): DejaVuVolley<E> {
         val parentModules = this.parentModules
                 ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 

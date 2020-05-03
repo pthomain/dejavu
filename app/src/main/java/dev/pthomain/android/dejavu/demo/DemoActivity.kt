@@ -41,7 +41,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
 import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER

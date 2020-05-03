@@ -21,22 +21,19 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.gson
+package dev.pthomain.android.dejavu.demo.dejavu.clients.base.adapters
 
-import com.google.gson.Gson
-import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 
-/**
- * Custom Serialiser implementation wrapping Gson
- */
-class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
+open class SingleOperationsClientAdapter(
+        private val singleClient: SingleClients.Operations
+) : ObservableClients.Operations {
 
-    override fun <O : Any> serialise(target: O) =
-            gson.toJson(target)!!
+    override fun clearCache() =
+            singleClient.clearCache().toObservable()
 
-    override fun <O> deserialise(
-            serialised: String,
-            targetClass: Class<O>
-    ) = gson.fromJson(serialised, targetClass)!!
+    override fun invalidate() =
+            singleClient.invalidate().toObservable()
 
 }

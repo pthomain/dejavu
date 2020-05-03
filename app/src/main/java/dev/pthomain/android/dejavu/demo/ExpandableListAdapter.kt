@@ -41,7 +41,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*

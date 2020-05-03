@@ -21,12 +21,22 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.model
+package dev.pthomain.android.dejavu.demo.dejavu.gson
 
-import dev.pthomain.android.dejavu.cache.metadata.response.Cacheable
+import com.google.gson.Gson
+import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
 
-class CatFactResponse : Cacheable<CatFactResponse>() {
+/**
+ * Custom Serialiser implementation wrapping Gson
+ */
+class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
 
-    var fact: String? = null
+    override fun <O : Any> serialise(target: O) =
+            gson.toJson(target)!!
+
+    override fun <O> deserialise(
+            serialised: String,
+            targetClass: Class<O>
+    ) = gson.fromJson(serialised, targetClass)!!
 
 }
