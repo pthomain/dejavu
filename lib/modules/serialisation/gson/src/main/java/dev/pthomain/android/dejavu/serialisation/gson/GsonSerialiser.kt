@@ -20,15 +20,23 @@
  *  under the License.
  *
  */
-include ':lib:core'
-include ':lib:modules:http:volley'
-include ':lib:modules:http:retrofit'
-include ':lib:modules:serialisation'
-include ':lib:modules:serialisation:gson'
-include ':lib:modules:serialisation:moshi'
-include ':lib:modules:serialisation:decorators:compression'
-include ':lib:modules:serialisation:decorators:encryption'
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':app'
+
+package dev.pthomain.android.dejavu.serialisation.gson
+
+import com.google.gson.Gson
+import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
+
+/**
+ * Custom Serialiser implementation wrapping Gson
+ */
+class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
+
+    override fun <O : Any> serialise(target: O) =
+            gson.toJson(target)!!
+
+    override fun <O> deserialise(
+            serialised: String,
+            targetClass: Class<O>
+    ) = gson.fromJson(serialised, targetClass)!!
+
+}

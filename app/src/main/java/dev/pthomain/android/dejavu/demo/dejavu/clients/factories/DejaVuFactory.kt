@@ -28,16 +28,12 @@ import android.os.Build.VERSION.SDK_INT
 import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
-import dev.pthomain.android.dejavu.demo.dejavu.DejaVuClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Custom
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.FILE
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.SQLITE
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.MEMORY
-import dev.pthomain.android.dejavu.demo.dejavu.gson.GsonSerialiser
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.serialisation.gson.GsonSerialiser
 import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence

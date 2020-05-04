@@ -20,15 +20,23 @@
  *  under the License.
  *
  */
-include ':lib:core'
-include ':lib:modules:http:volley'
-include ':lib:modules:http:retrofit'
-include ':lib:modules:serialisation'
-include ':lib:modules:serialisation:gson'
-include ':lib:modules:serialisation:moshi'
-include ':lib:modules:serialisation:decorators:compression'
-include ':lib:modules:serialisation:decorators:encryption'
-include ':lib:modules:persistence:file'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':app'
+
+package dev.pthomain.android.dejavu.serialisation.moshi
+
+import com.squareup.moshi.Moshi
+import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
+
+/**
+ * Custom Serialiser implementation wrapping Gson
+ */
+class MoshiSerialiser(private val moshi: Moshi) : SimpleSerialiser() {
+
+    override fun <O : Any> serialise(target: O) =
+            moshi.adapter(target.javaClass).toJson(target)!!
+
+    override fun <O> deserialise(
+            serialised: String,
+            targetClass: Class<O>
+    ) = moshi.adapter(targetClass).fromJson(serialised)!!
+
+}

@@ -60,7 +60,6 @@ ext {
     multidexVersion = '2.0.1'
 
     jitPackVersion = '1.0'
-
     koinVersion = '2.1.5'
 
     rxJavaVersion = '2.2.19'
@@ -80,6 +79,7 @@ ext {
     androidCompatVersion = '1.1.0'
 
     gsonVersion = '2.8.6'
+    moshiVersion = '1.9.2'
     volleyVersion = '1.1.1'
     retrofitVersion = '2.8.1'
     okhttpVersion = '4.5.0'
@@ -123,7 +123,7 @@ ext {
             glitchyRetrofit      : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
             fliptables           : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
 
-            volley                : "com.android.volley:volley:$volleyVersion",
+            volley               : "com.android.volley:volley:$volleyVersion",
 
             retrofit             : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson: "com.squareup.retrofit2:converter-gson:$retrofitVersion",
@@ -133,6 +133,7 @@ ext {
             okHttpLogging        : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
 
             gson                 : "com.google.code.gson:gson:$gsonVersion",
+            moshi                : "com.squareup.moshi:moshi:$moshiVersion",
             snappy               : "org.iq80.snappy:snappy:$snappyVersion",
             requery              : "io.requery:sqlite-android:$requeryVersion",
 

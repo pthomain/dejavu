@@ -35,12 +35,11 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import com.uber.rxdogtag.RxDogTag
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
+import dev.pthomain.android.dejavu.demo.di.DemoViewModule
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
