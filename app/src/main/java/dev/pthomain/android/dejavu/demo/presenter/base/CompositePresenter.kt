@@ -66,6 +66,12 @@ internal class CompositePresenter(
             presenter.useSingle = value
         }
 
+    override var serialiserType = presenter.serialiserType
+        set(value) {
+            field = value
+            presenter.serialiserType = value
+        }
+
     override var method = presenter.method
         set(value) {
             field = value

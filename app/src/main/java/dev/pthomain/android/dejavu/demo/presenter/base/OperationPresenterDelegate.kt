@@ -42,7 +42,9 @@ internal class OperationPresenterDelegate(
                 when (it) {
                     is Response<CatFactResponse, *> -> it.response.single()
                     is Empty<*, *, *> -> Single.error(it.exception)
-                    is Result<*, *> -> Single.error(NoSuchElementException("This operation does not emit any response: ${it.cacheToken.instruction.operation.type}"))
+                    is Result<*, *> -> Single.error(NoSuchElementException(
+                            "This operation does not emit any response: ${it.cacheToken.instruction.operation.type}")
+                    )
                 }
             }
 

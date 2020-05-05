@@ -134,6 +134,7 @@ ext {
 
             gson                 : "com.google.code.gson:gson:$gsonVersion",
             moshi                : "com.squareup.moshi:moshi:$moshiVersion",
+            moshiKotlin          : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
             snappy               : "org.iq80.snappy:snappy:$snappyVersion",
             requery              : "io.requery:sqlite-android:$requeryVersion",
 

@@ -43,9 +43,17 @@ internal abstract class BaseRetrofitDemoPresenter(
         uiLogger
 ) {
 
+    @Suppress("UNCHECKED_CAST")
     override fun newClient() = when (errorFactoryType) {
-        Default -> dejaVuFactory.createRetrofit(errorFactoryType as ErrorFactoryType<Glitch>)
-        Custom -> dejaVuFactory.createRetrofit(errorFactoryType as ErrorFactoryType<CustomApiError>)
+        Default -> dejaVuFactory.createRetrofit(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<Glitch>
+        )
+
+        Custom -> dejaVuFactory.createRetrofit(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<CustomApiError>
+        )
     }
 
 }

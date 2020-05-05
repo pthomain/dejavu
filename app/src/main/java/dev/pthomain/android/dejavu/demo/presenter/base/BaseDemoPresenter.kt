@@ -46,10 +46,12 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.*
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_ANNOTATION
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -65,6 +67,7 @@ protected constructor(
     private var instructionType = CACHE
     private var networkPriority = LOCAL_FIRST
 
+    override var serialiserType: SerialiserType = Gson
     protected var errorFactoryType: ErrorFactoryType<*> = Default
 
     protected var dejaVuClient: C = newClient()

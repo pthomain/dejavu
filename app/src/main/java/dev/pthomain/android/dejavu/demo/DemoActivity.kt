@@ -39,6 +39,8 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.*
 import dev.pthomain.android.dejavu.demo.di.DemoViewModule
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
@@ -67,6 +69,9 @@ internal class DemoActivity
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
+
+    private val gsonRadio by lazy { findViewById<View>(R.id.radio_button_gson)!! }
+    private val moshiRadio by lazy { findViewById<View>(R.id.radio_button_moshi)!! }
 
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
@@ -124,6 +129,9 @@ internal class DemoActivity
 
         observableRadio.setOnClickListener { presenter.useSingle = false }
         singleRadio.setOnClickListener { presenter.useSingle = true }
+
+        gsonRadio.setOnClickListener { presenter.serialiserType = Gson }
+        moshiRadio.setOnClickListener { presenter.serialiserType = Moshi }
 
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }

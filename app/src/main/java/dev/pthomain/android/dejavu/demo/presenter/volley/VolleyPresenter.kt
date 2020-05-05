@@ -39,9 +39,17 @@ internal class VolleyPresenter(
 
     private val delegate = OperationPresenterDelegate(::executeOperation)
 
+    @Suppress("UNCHECKED_CAST")
     override fun newClient() = when (errorFactoryType) {
-        Default -> dejaVuFactory.createVolley(errorFactoryType as ErrorFactoryType<Glitch>)
-        Custom -> dejaVuFactory.createVolley(errorFactoryType as ErrorFactoryType<CustomApiError>)
+        Default -> dejaVuFactory.createVolley(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<Glitch>
+        )
+
+        Custom -> dejaVuFactory.createVolley(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<CustomApiError>
+        )
     }
 
     override fun getDataObservable(
