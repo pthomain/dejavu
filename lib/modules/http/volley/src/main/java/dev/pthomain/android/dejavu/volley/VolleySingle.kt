@@ -7,9 +7,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequest
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorInterceptor
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.outcome.OutcomeInterceptor
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import io.reactivex.Single

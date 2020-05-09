@@ -37,11 +37,8 @@ import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.glitchy.core.Glitchy
 import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorInterceptor
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.interceptors.CompositeInterceptor
 import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptors
-import dev.pthomain.android.glitchy.core.interceptor.outcome.OutcomeInterceptor
 import io.reactivex.Observable
 import io.reactivex.Observer
 
@@ -122,13 +119,14 @@ class VolleyObservable<E, R : Any> private constructor(
                                 requestMetadata
                         ).let {
                             if (asResult) {
-                                Glitchy.createCompositeInterceptor(
-                                        errorFactory,
-                                        Interceptors.After(it)
-                                )
+                                Glitchy.builder(errorFactory)
+                                        .withInterceptors(Interceptors.After(it))
+                                        .withInterceptError(true)
+                                        .withInterceptOutcome(asResult)
+                                        .build()
+                                        .interceptor
                             } else it
                         }
                 )
-
     }
 }

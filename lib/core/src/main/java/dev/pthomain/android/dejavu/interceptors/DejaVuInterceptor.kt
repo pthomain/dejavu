@@ -24,9 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.cache.metadata.response.*
-import dev.pthomain.android.dejavu.cache.metadata.response.LocalOperationToken
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NETWORK
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
@@ -37,14 +35,12 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequest
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.glitchy.core.Glitchy
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptor
-import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptors
 import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.*
-import dev.pthomain.android.glitchy.core.interceptor.outcome.OutcomeInterceptor
+import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Error
+import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Success
 import io.reactivex.Observable
 import io.reactivex.Single
 import java.util.*

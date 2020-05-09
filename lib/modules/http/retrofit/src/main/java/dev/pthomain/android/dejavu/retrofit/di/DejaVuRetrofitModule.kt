@@ -33,7 +33,9 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.DejaVuRetrofitIntercept
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
+import dev.pthomain.android.glitchy.core.Glitchy
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
 import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
@@ -68,7 +70,7 @@ class DejaVuRetrofitModule<E>
             )
         }
 
-        single<RetrofitInterceptors<E>?> {
+        single<RetrofitInterceptors<E>> {
             RetrofitInterceptors.After(
                     DejaVuRetrofitInterceptorFactory(
                             get(),
@@ -82,11 +84,12 @@ class DejaVuRetrofitModule<E>
         single { HeaderInterceptor() }
 
         single {
-            GlitchyRetrofit.createCallAdapterFactory<E, OperationReturnType>(
-                    get(),
-                    get(),
-                    get()
-            )
+            Glitchy.builder<E>(get())
+                    .extend(GlitchyRetrofit.extension<E, OperationReturnType>())
+                    .withReturnTypeParser(get())
+                    .withInterceptors(get())
+                    .build()
+                    .callAdapterFactory
         }
     }
 

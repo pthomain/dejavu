@@ -54,7 +54,6 @@ class DejaVuRetrofitInterceptorFactory<E> internal constructor(
             parsedType: ParsedType<M>,
             call: Call<Any>
     ) =
-            //FIXME this should use RetrofitCompositeInterceptor
             (parsedType.metadata as? OperationReturnType)?.run {
                 operationResolverFactory.create(
                         methodDescription,
