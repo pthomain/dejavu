@@ -40,6 +40,10 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_ANNOTATION
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_HEADER
 import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 
 class InstructionView @JvmOverloads constructor(
@@ -55,18 +59,25 @@ class InstructionView @JvmOverloads constructor(
     private val blue = Color.parseColor("#467CDA")
     private val white = Color.parseColor("#A9B7C6")
 
-    fun setOperation(useSingle: Boolean,
-                     useHeader: Boolean,
-                     operation: Operation,
-                     responseClass: Class<*>) {
-        text = getAnnotationName(operation.type, !useHeader).run {
+    internal fun setOperation(
+            method: Method,
+            useSingle: Boolean,
+            operation: Operation,
+            responseClass: Class<*>
+    ) {
+        text = getAnnotationName(operation.type, method).run {
             val restMethod = getRestMethod(operation)
             val directives = getDirectives(length + 1, operation)
 
-            val styledOperation = applyOperationStyle(this, !useHeader)
-            val header = SpannableString("\n@Header(DejaVuHeader) operation: Operation\n")
+            val styledOperation = applyOperationStyle(this)
 
-            if (useHeader) {
+            val header: CharSequence? = ifElse(
+                    method == RETROFIT_HEADER,
+                    SpannableString("\n@Header(DejaVuHeader) operation: Operation\n"),
+                    null
+            )
+
+            if (method != RETROFIT_ANNOTATION) {
                 TextUtils.concat(
                         restMethod,
                         getMethod(useSingle, header, operation, responseClass),
@@ -83,13 +94,13 @@ class InstructionView @JvmOverloads constructor(
         }
     }
 
-    private fun getAnnotationName(type: Type, isAnnotation: Boolean) =
+    private fun getAnnotationName(type: Type, method: Method) =
             when (type) {
                 CACHE -> "Cache"
                 DO_NOT_CACHE -> "DoNotCache"
                 INVALIDATE -> "Invalidate"
                 CLEAR -> "Clear"
-            }.let { ifElse(isAnnotation, "@$it", it) }
+            }.let { ifElse(method == RETROFIT_ANNOTATION, "@$it", it) }
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
             ifElse(
@@ -190,8 +201,7 @@ class InstructionView @JvmOverloads constructor(
         }
     }
 
-    private fun applyOperationStyle(operation: String,
-                                    isAnnotation: Boolean): SpannableString {
+    private fun applyOperationStyle(operation: String): SpannableString {
         return SpannableString("\n$operation").apply {
             setSpan(
                     ForegroundColorSpan(orange),
@@ -226,10 +236,12 @@ class InstructionView @JvmOverloads constructor(
         }
     }
 
-    private fun getMethod(useSingle: Boolean,
-                          callParameter: SpannableString?,
-                          operation: Operation,
-                          responseClass: Class<*>): CharSequence =
+    private fun getMethod(
+            useSingle: Boolean,
+            callParameter: CharSequence?,
+            operation: Operation,
+            responseClass: Class<*>
+    ): CharSequence =
             with(operation) {
                 val wrapped = ifElse(
                         operation is Local, //TODO had support for ad-hoc use of DejaVuResult

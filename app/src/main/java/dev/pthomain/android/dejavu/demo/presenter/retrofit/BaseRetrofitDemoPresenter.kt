@@ -23,59 +23,37 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
-import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.presenter.BaseDemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.ObservableClients
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.SingleClients
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters.SingleDataClientAdapter
-import dev.pthomain.android.dejavu.demo.presenter.retrofit.clients.adapters.SingleOperationsClientAdapter
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Custom
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
+import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitObservableClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleClients
+import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
+import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 
 internal abstract class BaseRetrofitDemoPresenter(
         demoActivity: DemoActivity,
         uiLogger: Logger
-) : BaseDemoPresenter(demoActivity, uiLogger) {
+) : BaseDemoPresenter<RetrofitSingleClients.Operations, RetrofitObservableClients.Operations, DejaVuRetrofitClient>(
+        demoActivity,
+        uiLogger
+) {
 
-    private fun retrofit() =
-            Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .client(getOkHttpClient(uiLogger))
-                    .addConverterFactory(GsonConverterFactory.create(Gson()))
-                    .addCallAdapterFactory(dejaVu.callAdapterFactory)
-                    .build()
+    @Suppress("UNCHECKED_CAST")
+    override fun newClient() = when (errorFactoryType) {
+        Default -> dejaVuFactory.createRetrofit(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<Glitch>
+        )
 
-    private fun getOkHttpClient(logger: Logger) = OkHttpClient.Builder().let {
-        it.addInterceptor(getHttpLoggingInterceptor(logger))
-        it.followRedirects(true)
-        it.build()
-    }
-
-    private fun getHttpLoggingInterceptor(logger: Logger) =
-            HttpLoggingInterceptor(object : HttpLoggingInterceptor.Logger {
-                override fun log(message: String) {
-                    logger.d(this, message)
-                }
-            }).apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            }
-
-    protected fun dataClient() = with(retrofit()) {
-        if (useSingle)
-            SingleDataClientAdapter(create(SingleClients.Data::class.java))
-        else
-            create(ObservableClients.Data::class.java)
-    }
-
-    protected fun operationsClient() = with(retrofit()) {
-        if (useSingle)
-            SingleOperationsClientAdapter(create(SingleClients.Operations::class.java))
-        else
-            create(ObservableClients.Operations::class.java)
+        Custom -> dejaVuFactory.createRetrofit(
+                serialiserType,
+                errorFactoryType as ErrorFactoryType<CustomApiError>
+        )
     }
 
 }

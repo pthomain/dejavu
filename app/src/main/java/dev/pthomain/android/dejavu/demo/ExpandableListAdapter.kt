@@ -41,7 +41,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.*
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -58,9 +60,11 @@ internal class ExpandableListAdapter(context: Context)
 
     private var callStart = 0L
 
-    fun onStart(useSingle: Boolean,
-                useHeader: Boolean,
-                operation: Operation) {
+    fun onStart(
+            method: Method,
+            useSingle: Boolean,
+            operation: Operation
+    ) {
         headers.clear()
         children.clear()
         logs.clear()
@@ -69,7 +73,7 @@ internal class ExpandableListAdapter(context: Context)
 
         val header = "Retrofit Call"
         headers.add(header)
-        children[header] = listOf(Triple(useSingle, useHeader, operation))
+        children[header] = listOf(Triple(method, useSingle, operation))
 
         notifyDataSetChanged()
     }
@@ -215,7 +219,7 @@ internal class ExpandableListAdapter(context: Context)
                             text.visibility = View.GONE
                             instruction.visibility = View.VISIBLE
                             instruction.setOperation(
-                                    child.first as Boolean,
+                                    child.first as Method,
                                     child.second as Boolean,
                                     child.third as Operation,
                                     CatFactResponse::class.java

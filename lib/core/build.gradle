@@ -142,6 +142,7 @@ dependencies {
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
 
+    api appDependencies.boilerplate
     api appDependencies.glitchyCore
 
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'

@@ -35,16 +35,16 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import com.uber.rxdogtag.RxDogTag
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.lambda.Callback1
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.injection.DemoViewModule
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_ANNOTATION
-import dev.pthomain.android.dejavu.demo.presenter.CompositePresenter.Method.RETROFIT_HEADER
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.*
+import dev.pthomain.android.dejavu.demo.di.DemoViewModule
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.dsl.koinApplication
 
@@ -68,8 +68,11 @@ internal class DemoActivity
 
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
+    private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val connectivityTimeoutCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_connectivity_timeout)!! }
+    private val gsonRadio by lazy { findViewById<View>(R.id.radio_button_gson)!! }
+    private val moshiRadio by lazy { findViewById<View>(R.id.radio_button_moshi)!! }
+
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
     private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
@@ -77,7 +80,7 @@ internal class DemoActivity
     private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
 
     private lateinit var presenter: DemoPresenter
-    private lateinit var presenterSwitcher: Callback1<Method>
+    private lateinit var presenterSwitcher: (Method) -> Unit
 
     override fun getPresenter() = presenter
 
@@ -127,11 +130,14 @@ internal class DemoActivity
         observableRadio.setOnClickListener { presenter.useSingle = false }
         singleRadio.setOnClickListener { presenter.useSingle = true }
 
+        gsonRadio.setOnClickListener { presenter.serialiserType = Gson }
+        moshiRadio.setOnClickListener { presenter.serialiserType = Moshi }
+
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
+        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
         gitHubButton.setOnClickListener { openGithub() }
 
-        connectivityTimeoutCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.connectivityTimeoutOn = isChecked }
         freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
@@ -164,8 +170,8 @@ internal class DemoActivity
         listView.post {
             setButtonsEnabled(false)
             listAdapter.onStart(
+                    presenter.method,
                     presenter.useSingle,
-                    presenter.useHeader,
                     presenter.getCacheOperation()
             )
         }

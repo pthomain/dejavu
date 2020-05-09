@@ -67,8 +67,8 @@ internal class RetrofitAnnotationDemoPresenter(
     )
 
     override fun getClearEntriesResult() =
-            operationsClient().clearCache()
+            operationClient().clearCache()
 
     override fun getInvalidateResult() =
-            operationsClient().invalidate()
+            operationClient().invalidate()
 }

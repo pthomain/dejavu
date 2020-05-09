@@ -25,10 +25,11 @@ package dev.pthomain.android.dejavu.configuration
 
 import org.koin.core.module.Module
 
-interface ExtensionBuilder<B : ExtensionBuilder<B>> {
+interface ExtensionBuilder<B : ExtensionBuilder<B, D>, D> {
     fun accept(modules: List<Module>): B
+    fun build(): D
 }
 
 interface Extendable {
-    fun <B : ExtensionBuilder<B>> extend(extensionBuilder: B): B
+    fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B): B
 }

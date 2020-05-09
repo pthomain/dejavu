@@ -86,40 +86,80 @@
 
     </LinearLayout>
 
-    <RadioGroup
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="42dp"
-        android:gravity="center"
         android:orientation="horizontal">
 
-        <RadioButton
-            android:id="@+id/radio_button_observable"
-            android:layout_width="wrap_content"
+        <RadioGroup
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:checked="true" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_retrofit_annotation"
-            android:text="Use Observable" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-        <RadioButton
-            android:id="@+id/radio_button_single"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            <RadioButton
+                android:id="@+id/radio_button_observable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
 
-        <TextView
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:labelFor="@id/radio_button_retrofit_annotation"
+                android:text="Observable" />
+
+            <RadioButton
+                android:id="@+id/radio_button_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:labelFor="@id/radio_button_retrofit_header"
+                android:text="Single" />
+        </RadioGroup>
+
+        <RadioGroup
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_retrofit_header"
-            android:text="Use Single" />
+            android:gravity="center"
+            android:orientation="horizontal">
 
-    </RadioGroup>
+            <RadioButton
+                android:id="@+id/radio_button_gson"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:labelFor="@id/radio_button_gson"
+                android:text="Gson" />
+
+            <RadioButton
+                android:id="@+id/radio_button_moshi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:labelFor="@id/radio_button_moshi"
+                android:text="Moshi" />
+        </RadioGroup>
+
+    </LinearLayout>
 
     <RadioGroup
         android:layout_width="match_parent"
@@ -129,17 +169,17 @@
 
         <RadioButton
             android:id="@+id/radio_button_retrofit_annotation"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
             android:checked="true" />
 
         <TextView
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_annotation"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_retrofit_annotation"
-            android:text="Use Retrofit Annotation" />
+            android:text="Retrofit Annotation" />
 
         <RadioButton
             android:id="@+id/radio_button_retrofit_header"
@@ -147,12 +187,25 @@
             android:layout_height="wrap_content" />
 
         <TextView
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_retrofit_header"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:text="Retrofit Header" />
+
+        <RadioButton
+            android:id="@+id/radio_button_volley"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
             android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_retrofit_header"
-            android:text="Use Retrofit Header" />
+            android:labelFor="@id/radio_button_volley"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Volley" />
 
     </RadioGroup>
 
@@ -200,27 +253,6 @@
             android:layout_weight="1"
             android:labelFor="@id/checkbox_encrypt"
             android:text="Encrypt" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/checkbox_connectivity_timeout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_connectivity_timeout"
-            android:text="Wait for network (30s)" />
 
     </LinearLayout>
 

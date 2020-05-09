@@ -94,18 +94,22 @@ dependencies {
 //    implementation "dev.pthomain.android.dejavu:encryption-mumbo:$dejaVuVersion"
 
     implementation project(':lib:core')
-    implementation project(':lib:modules:retrofit')
-    implementation project(':lib:modules:volley')
+    implementation project(':lib:modules:http:retrofit')
+    implementation project(':lib:modules:http:volley')
     implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
-    implementation project(':lib:modules:serialisation:compression')
-    implementation project(':lib:modules:serialisation:encryption')
+    implementation project(':lib:modules:serialisation:gson')
+    implementation project(':lib:modules:serialisation:moshi')
+    implementation project(':lib:modules:serialisation:decorators:compression')
+    implementation project(':lib:modules:serialisation:decorators:encryption')
 
     implementation appDependencies.multiDex
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt
+
+    implementation appDependencies.volley
 
     implementation appDependencies.boilerplate_ui
     implementation appDependencies.rxDogTag
@@ -114,7 +118,8 @@ dependencies {
     implementation appDependencies.okHttpLogging
 
     implementation appDependencies.retrofitConverterGson
-    implementation appDependencies.gson
+    implementation appDependencies.moshi
+    implementation appDependencies.moshiKotlin
 
     implementation appDependencies.appCompat
     implementation appDependencies.browser

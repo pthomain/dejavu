@@ -21,11 +21,13 @@
  *
  */
 include ':lib:core'
-include ':lib:modules:retrofit'
-include ':lib:modules:volley'
+include ':lib:modules:http:volley'
+include ':lib:modules:http:retrofit'
 include ':lib:modules:serialisation'
-include ':lib:modules:serialisation:compression'
-include ':lib:modules:serialisation:encryption'
+include ':lib:modules:serialisation:gson'
+include ':lib:modules:serialisation:moshi'
+include ':lib:modules:serialisation:decorators:compression'
+include ':lib:modules:serialisation:decorators:encryption'
 include ':lib:modules:persistence:file'
 include ':lib:modules:persistence:memory'
 include ':lib:modules:persistence:sqlite'

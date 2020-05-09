@@ -53,7 +53,7 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val isWrapped: Boolean
+        private val asResult: Boolean
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -89,7 +89,7 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
             }
         }
 
-        return if (isWrapped) wrapper.observable()
+        return if (asResult) wrapper.observable()
         else when (wrapper) {
             is Response<R, *> -> wrapper.response.observable()
             is Empty<R, *, *> -> Observable.error(wrapper.exception)
@@ -112,11 +112,11 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
-        fun <R : Any> create(isWrapped: Boolean) = ResponseInterceptor<R, E>(
+        fun <R : Any> create(asResult: Boolean) = ResponseInterceptor<R, E>(
                 logger,
                 dateFactory,
                 emptyResponseFactory,
-                isWrapped
+                asResult
         )
     }
 }

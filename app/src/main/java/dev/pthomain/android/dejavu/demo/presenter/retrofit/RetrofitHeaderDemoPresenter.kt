@@ -37,7 +37,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.demo.DemoActivity
-import dev.pthomain.android.dejavu.demo.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.presenter.base.OperationPresenterDelegate
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -45,39 +46,22 @@ internal class RetrofitHeaderDemoPresenter(demoActivity: DemoActivity,
                                            uiLogger: Logger)
     : BaseRetrofitDemoPresenter(demoActivity, uiLogger) {
 
-    override fun getDataObservable(cachePriority: CachePriority,
-                                   encrypt: Boolean,
-                                   compress: Boolean) =
-            executeOperation(Cache(
-                    priority = cachePriority,
-                    encrypt = encrypt,
-                    compress = compress
-            )).flatMap {
-                when (it) {
-                    is Response<CatFactResponse, *> -> it.response.observable()
-                    is Empty<*, *, *> -> Observable.error(it.exception)
-                    is Result<*, *> -> Observable.empty()
-                }
-            }
+    private val delegate = OperationPresenterDelegate(operationClient()::execute)
+
+    override fun getDataObservable(
+            cachePriority: CachePriority,
+            encrypt: Boolean,
+            compress: Boolean
+    ) =
+            delegate.getDataObservable(cachePriority, encrypt, compress)
 
     override fun getOfflineSingle(freshness: FreshnessPriority) =
-            executeOperation(
-                    Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
-            ).firstOrError().flatMap {
-                when (it) {
-                    is Response<CatFactResponse, *> -> it.response.single()
-                    is Empty<*, *, *> -> Single.error(it.exception)
-                    is Result<*, *> -> Single.error(NoSuchElementException("This operation does not emit any response: ${it.cacheToken.instruction.operation.type}"))
-                }
-            }
+            delegate.getOfflineSingle(freshness)
 
     override fun getClearEntriesResult() =
-            executeOperation(Clear())
+            delegate.getClearEntriesResult()
 
     override fun getInvalidateResult() =
-            executeOperation(Invalidate)
-
-    private fun executeOperation(cacheOperation: Operation) =
-            operationsClient().execute(cacheOperation)
+            delegate.getInvalidateResult()
 
 }
