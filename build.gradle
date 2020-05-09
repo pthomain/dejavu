@@ -127,7 +127,6 @@ ext {
 
             retrofit             : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson: "com.squareup.retrofit2:converter-gson:$retrofitVersion",
-            retrofitAdapterRxJava: "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion",
 
             okHttp               : "com.squareup.okhttp3:okhttp:$okhttpVersion",
             okHttpLogging        : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",

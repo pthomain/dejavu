@@ -109,6 +109,8 @@ dependencies {
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt
 
+    implementation appDependencies.volley
+
     implementation appDependencies.boilerplate_ui
     implementation appDependencies.rxDogTag
 

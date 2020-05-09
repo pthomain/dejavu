@@ -192,10 +192,9 @@ dependencies {
 
     implementation appDependencies.multiDex
 
-    api appDependencies.glitchyRetrofit
+    implementation appDependencies.glitchyRetrofit
 
-    api appDependencies.retrofit
-    api appDependencies.retrofitAdapterRxJava
+    implementation appDependencies.retrofit
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt

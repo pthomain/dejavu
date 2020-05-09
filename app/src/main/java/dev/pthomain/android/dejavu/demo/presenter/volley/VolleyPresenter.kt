@@ -2,10 +2,9 @@ package dev.pthomain.android.dejavu.demo.presenter.volley
 
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.BasicNetwork
-import com.android.volley.toolbox.DiskBasedCache
 import com.android.volley.toolbox.HurlStack
+import com.android.volley.toolbox.NoCache
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
@@ -22,7 +21,6 @@ import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
 import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.base.OperationPresenterDelegate
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import io.reactivex.Observable
 
 internal class VolleyPresenter(
         demoActivity: DemoActivity,
@@ -33,7 +31,7 @@ internal class VolleyPresenter(
 ) {
 
     private val queue = RequestQueue(
-            DiskBasedCache(context().cacheDir, 1024),
+            NoCache(),
             BasicNetwork(HurlStack())
     ).apply { start() }
 
