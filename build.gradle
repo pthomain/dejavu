@@ -32,7 +32,7 @@ buildscript {
 
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:4.1.0-alpha08'
+        classpath 'com.android.tools.build:gradle:4.1.0-alpha09'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
@@ -51,7 +51,7 @@ task clean(type: Delete) {
 }
 
 ext {
-    dejaVuVersion = '2.1.0-beta2'
+    dejaVuVersion = '2.1.3'
 
     compileSdkVersion = 29
     minSdkVersion = 16
@@ -67,9 +67,9 @@ ext {
     rxAndroidVersion = '2.1.1'
     rxDogTagVersion = '1.0.0'
 
-    boilerplateVersion = '4.0'
-    mumboVersion = '2.0'
-    glitchyVersion = '2.7'
+    boilerplateVersion = '4.2'
+    mumboVersion = '2.8'
+    glitchyVersion = '2.8'
     fliptablesVersion = '1.1.0'
 
     snappyVersion = '0.4'
@@ -116,9 +116,9 @@ ext {
             koinCore             : "org.koin:koin-core:$koinVersion",
             koinCoreExt          : "org.koin:koin-core-ext:$koinVersion",
 
-            boilerplate          : "com.github.pthomain.boilerplate:core:$boilerplateVersion",
-            boilerplate_ui       : "com.github.pthomain.boilerplate:ui:$boilerplateVersion",
-            mumbo                : "com.github.pthomain:mumbo:$mumboVersion",
+            boilerplate          : "dev.pthomain.boilerplate:core:$boilerplateVersion",
+            boilerplate_ui       : "dev.pthomain.boilerplate:ui:$boilerplateVersion",
+            mumbo                : "dev.pthomain:mumbo:$mumboVersion",
             glitchyCore          : "dev.pthomain.glitchy:core:$glitchyVersion",
             glitchyRetrofit      : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
             fliptables           : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",

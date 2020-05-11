@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.demo.presenter.base
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
-import dev.pthomain.android.boilerplate.core.mvp.MvpPresenter
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
+import dev.pthomain.android.boilerplate.ui.mvp.MvpPresenter
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
@@ -49,7 +49,6 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryTyp
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_ANNOTATION
 import io.reactivex.Observable

@@ -25,7 +25,6 @@ package dev.pthomain.android.dejavu.persistence.sqlite
 
 import android.content.ContentValues
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
@@ -41,6 +40,7 @@ import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
+import java.io.Closeable
 import java.util.*
 
 /**
@@ -131,38 +131,34 @@ class DatabasePersistenceManager internal constructor(
             LIMIT 1
             """
 
-        database.query(query)
-                .useAndLogError(
-                        {
-                            with(it) {
-                                val simpleName = requestMetadata.responseClass.simpleName
-                                if (count != 0 && moveToNext()) {
-                                    logger.d(this, "Found a cached $simpleName")
+        return database.query(query).useAndLogError {
+            with(it) {
+                val simpleName = requestMetadata.responseClass.simpleName
+                if (count != 0 && moveToNext()) {
+                    logger.d(this, "Found a cached $simpleName")
 
-                                    val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
-                                    val localData = getBlob(getColumnIndex(DATA.columnName))
-                                    val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
-                                    val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-                                    val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
-                                    val responseClassHash = getString(getColumnIndex(CLASS.columnName))
-                                    //TODO verify the class hash is the same as the one the request metadata
+                    val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
+                    val localData = getBlob(getColumnIndex(DATA.columnName))
+                    val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
+                    val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
+                    val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
+                    val responseClassHash = getString(getColumnIndex(CLASS.columnName))
+                    //TODO verify the class hash is the same as the one the request metadata
 
-                                    return CacheDataHolder.Complete(
-                                            requestMetadata,
-                                            cacheDate.time,
-                                            expiryDate.time,
-                                            localData,
-                                            isCompressed,
-                                            isEncrypted
-                                    )
-                                } else {
-                                    logger.d(this, "Found no cached $simpleName")
-                                    return null
-                                }
-                            }
-                        },
-                        logger
-                )
+                    CacheDataHolder.Complete(
+                            requestMetadata,
+                            cacheDate.time,
+                            expiryDate.time,
+                            localData,
+                            isCompressed,
+                            isEncrypted
+                    )
+                } else {
+                    logger.d(this, "Found no cached $simpleName")
+                    null
+                }
+            }
+        }
     }
 
     /**
@@ -227,5 +223,13 @@ class DatabasePersistenceManager internal constructor(
             }
         }
     }
+
+    private fun <T : Closeable?, R> T.useAndLogError(block: (T) -> R) =
+            try {
+                use(block)
+            } catch (e: Exception) {
+                logger.e(this@DatabasePersistenceManager, e, "Caught an IO exception")
+                throw e
+            }
 
 }
