@@ -25,15 +25,11 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
 import android.os.Build.VERSION.SDK_INT
-import com.google.gson.Gson
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.FILE
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.SQLITE
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.MEMORY
-import dev.pthomain.android.dejavu.serialisation.gson.GsonSerialiser
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
 import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
@@ -52,9 +48,12 @@ class DejaVuFactory(
 
     private val compressionDecorator = Compression(logger).serialisationDecorator
 
-    private val encryptionDecorator = with(Mumbo(context, logger)) {
-        Encryption(if (SDK_INT >= 23) tink() else conceal()) //FIXME handle UnrecoverableKeyException by clearing the cache
-    }.serialisationDecorator
+    private val encryptionDecorator = Mumbo.builder()
+            .withContext(context)
+            .withLogger(logger)
+            .build()
+            .run { Encryption(if (SDK_INT >= 23) tink() else conceal()) }
+            .serialisationDecorator
 
     var persistence = FILE
     var encrypt = false

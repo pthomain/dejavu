@@ -191,9 +191,7 @@ dependencies {
     compileOnly project(':lib:core')
 
     implementation appDependencies.multiDex
-
     implementation appDependencies.glitchyRetrofit
-
     implementation appDependencies.retrofit
 
     implementation appDependencies.koinCore

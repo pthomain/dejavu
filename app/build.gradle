@@ -21,10 +21,6 @@
  *
  */
 
-//plugins {
-//    id 'maven'
-//}
-
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -86,13 +82,6 @@ android {
 }
 
 dependencies {
-//    implementation "dev.pthomain.android.dejavu:glitch:$dejaVuVersion"
-//    implementation "dev.pthomain.android.dejavu:persistence-file:$dejaVuVersion"
-//    implementation "dev.pthomain.android.dejavu:persistence-memory:$dejaVuVersion"
-//    implementation "dev.pthomain.android.dejavu:persistence-sqlite:$dejaVuVersion"
-//    implementation "dev.pthomain.android.dejavu:compression-snappy:$dejaVuVersion"
-//    implementation "dev.pthomain.android.dejavu:encryption-mumbo:$dejaVuVersion"
-
     implementation project(':lib:core')
     implementation project(':lib:modules:http:retrofit')
     implementation project(':lib:modules:http:volley')

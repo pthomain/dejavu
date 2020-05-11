@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.persistence.file
 
-import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
@@ -63,10 +62,8 @@ internal class FileStore private constructor(
      */
     override fun get(key: String) =
             keySerialiser.deserialise(key).copy(
-                    data = fileInputStreamFactory(fileFactory(cacheDirectory, key)).useAndLogError(
-                            fileReader::invoke,
-                            logger
-                    )
+                    data = fileInputStreamFactory(fileFactory(cacheDirectory, key))
+                            .useAndLogError(fileReader::invoke)
             )
 
     /**
@@ -77,13 +74,10 @@ internal class FileStore private constructor(
      */
     override fun save(key: String, value: Incomplete) {
         val file = fileFactory(cacheDirectory, key)
-        fileOutputStreamFactory(file).useAndLogError(
-                {
-                    it.write(value.data)
-                    it.flush()
-                },
-                logger
-        )
+        fileOutputStreamFactory(file).useAndLogError {
+            it.write(value.data)
+            it.flush()
+        }
     }
 
     /**
@@ -131,4 +125,12 @@ internal class FileStore private constructor(
                         cacheDirectory
                 )
     }
+
+    private fun <T : Closeable?, R> T.useAndLogError(block: (T) -> R) =
+            try {
+                use(block)
+            } catch (e: Exception) {
+                logger.e(this@FileStore, e, "Caught an IO exception")
+                throw e
+            }
 }

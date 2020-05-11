@@ -25,13 +25,13 @@ package dev.pthomain.android.dejavu.persistence.sqlite
 
 import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
+import java.io.Closeable
 import java.util.*
 
 /**
@@ -68,8 +68,7 @@ class DatabaseStatisticsCompiler internal constructor(
      * @return the CursorIterator
      */
     override fun loadEntries() =
-            database.query(query) //FIXME no entries shown
-                    .useAndLogError(::CursorIterator, logger)
+            database.query(query).useAndLogError(::CursorIterator)
 
     /**
      * Converts a database Cursor to a CacheEntry.
@@ -95,4 +94,11 @@ class DatabaseStatisticsCompiler internal constructor(
         )
     }
 
+    private fun <T : Closeable?, R> T.useAndLogError(block: (T) -> R) =
+            try {
+                use(block)
+            } catch (e: Exception) {
+                logger.e(this@DatabaseStatisticsCompiler, e, "Caught an IO exception")
+                throw e
+            }
 }

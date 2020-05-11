@@ -39,20 +39,17 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.*
-import dev.pthomain.android.dejavu.demo.di.DemoViewModule
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.di.DemoViewModule
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
 import io.reactivex.plugins.RxJavaPlugins
 import org.koin.dsl.koinApplication
 
 
-internal class DemoActivity
-    : AppCompatActivity(),
-        DemoMvpView,
-        (String) -> Unit {
+internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit {
 
     private lateinit var listAdapter: ExpandableListAdapter
 
