@@ -34,6 +34,6 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
  */
 data class CacheInstruction<O : Operation, R : Any>(
         val operation: O,
-        val requestMetadata: ValidRequestMetadata<R>
+        val requestMetadata: HashedRequestMetadata<R>
 )
 

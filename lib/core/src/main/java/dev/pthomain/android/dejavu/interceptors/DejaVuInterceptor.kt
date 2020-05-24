@@ -32,10 +32,12 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.*
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptor
 import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
@@ -69,6 +71,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val hasher: Hasher,
         private val logger: Logger,
         private val dateFactory: (Long?) -> Date,
+        private val serialisationArgumentValidator: SerialisationArgumentValidator,
         private val hashingErrorObservableFactory: () -> Observable<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
@@ -76,6 +79,11 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
 ) : Interceptor
         where E : Throwable,
               E : NetworkErrorPredicate {
+
+    init {
+        if (operation is Cache && operation.serialisation.isNotBlank())
+            serialisationArgumentValidator.validate(operation.serialisation)
+    }
 
     /**
      * Composes Observables with the wrapped interceptors
@@ -109,7 +117,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         val requestDate = dateFactory(null)
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
-        return if (hashedRequestMetadata is ValidRequestMetadata<R>) {
+        return if (hashedRequestMetadata != null) {
             val instruction = CacheInstruction(
                     operation,
                     hashedRequestMetadata
@@ -155,7 +163,6 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                 0
         )
 
-        //FIXME compose with OutcomeInterceptor or find a way for Glitchy to do it for other methods than Retrofit
         @Suppress("UNCHECKED_CAST") //converted to Outcome by OutcomeInterceptor (set via Glitchy)
         return when (outcome as Outcome<R>) {
             is Success<R> -> Response(
@@ -193,6 +200,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             private val hasher: Hasher,
             private val logger: Logger,
             private val dateFactory: (Long?) -> Date,
+            private val serialisationArgumentValidator: SerialisationArgumentValidator,
             private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
             private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
             private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
@@ -218,6 +226,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         hasher,
                         logger,
                         dateFactory,
+                        serialisationArgumentValidator,
                         { Observable.error(IllegalStateException("The request could not be hashed")) },
                         networkInterceptorFactory,
                         cacheInterceptorFactory,

@@ -69,7 +69,7 @@ ext {
 
     boilerplateVersion = '4.2'
     mumboVersion = '2.8'
-    glitchyVersion = '2.8'
+    glitchyVersion = '2.9'
     fliptablesVersion = '1.1.0'
 
     snappyVersion = '0.4'

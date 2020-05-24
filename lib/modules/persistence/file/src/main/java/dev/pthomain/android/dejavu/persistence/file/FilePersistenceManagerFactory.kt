@@ -37,8 +37,7 @@ class FilePersistenceManagerFactory internal constructor(
         private val logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val storeFactory: FileStore.Factory,
-        private val serialisationManager: SerialisationManager,
-        private val fileSerialisationDecorator: SerialisationDecorator
+        private val serialisationManager: SerialisationManager
 ) {
 
     fun create(cacheDirectory: File): PersistenceManager =
@@ -47,8 +46,7 @@ class FilePersistenceManagerFactory internal constructor(
                     logger,
                     keySerialiser,
                     storeFactory.create(cacheDirectory),
-                    serialisationManager,
-                    fileSerialisationDecorator
+                    serialisationManager
             )
 
 }

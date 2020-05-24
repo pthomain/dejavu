@@ -36,7 +36,7 @@ import java.lang.reflect.Type
 
 internal class OperationReturnTypeParser<E>(
         private val dejaVuTypeParser: DejaVuReturnTypeParser<E>,
-        private val annotationProcessor: AnnotationProcessor<E>,
+        private val annotationProcessor: AnnotationProcessor,
         private val logger: Logger
 ) : ReturnTypeParser<OperationReturnType>
         where E : Throwable,

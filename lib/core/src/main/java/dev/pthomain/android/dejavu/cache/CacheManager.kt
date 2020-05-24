@@ -68,7 +68,7 @@ internal class CacheManager<E>(
     fun <R : Any> clearCache(instructionToken: RequestToken<Clear, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
                 with(instructionToken.instruction) {
-                    persistenceManager.clearCache(operation, requestMetadata)
+                    persistenceManager.clearCache(requestMetadata, operation)
                 }
             }
 
@@ -81,7 +81,7 @@ internal class CacheManager<E>(
      */
     fun <R : Any> invalidate(instructionToken: RequestToken<Invalidate, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
-                    persistenceManager.forceInvalidation(instructionToken.instruction.requestMetadata)
+                    persistenceManager.forceInvalidation(instructionToken)
             }
 
     /**
@@ -105,7 +105,7 @@ internal class CacheManager<E>(
 
                 logger.d(this, "Checking for cached $simpleName")
 
-                val cachedResponse = persistenceManager.find(requestToken)
+                val cachedResponse = persistenceManager.get(requestToken)
                         ?.run {
                             val status = dateFactory.getCacheStatus(
                                     expiryDate,
@@ -118,7 +118,6 @@ internal class CacheManager<E>(
                                             instruction,
                                             status,
                                             requestDate,
-                                            cacheDate,
                                             expiryDate
                                     ),
                                     CallDuration(0, 0, 0) //FIXME
@@ -202,14 +201,12 @@ internal class CacheManager<E>(
                                     ResponseToken(
                                             instruction,
                                             status,
-                                            requestDate
+                                            requestDate,
+                                            dateFactory(requestDate.time + (cacheOperation.durationInSeconds * 1000))
                                     ) //TODO check expiry date etc
                                 }
 
-                                persistenceManager.cache(
-                                        wrapper.response,
-                                        cacheToken
-                                )
+                                persistenceManager.put(wrapper.copy(cacheToken = cacheToken))
                             } catch (e: Exception) {
                                 return@map cacheMetadataManager.setSerialisationFailedMetadata(
                                         wrapper,

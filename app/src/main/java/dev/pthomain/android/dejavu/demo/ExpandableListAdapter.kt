@@ -122,8 +122,8 @@ internal class ExpandableListAdapter(context: Context)
 
         when (internalResult) {
             is InternalResult.Response -> with(internalResult.response.cacheToken) {
-                cacheDate?.also {
-                    info.add("Cache date: " + simpleDateFormat.format(it))
+                if(operation is Remote.Cache) {
+                    info.add("Cache date: " + simpleDateFormat.format(requestDate))
                 }
                 expiryDate?.also {
                     info.add("Expiry date: "

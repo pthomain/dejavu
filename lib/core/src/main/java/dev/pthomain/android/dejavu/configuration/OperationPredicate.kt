@@ -37,7 +37,7 @@ sealed class OperationPredicate(
     override fun invoke(requestMetadata: RequestMetadata<*>) = operation
 
     object Inactive : OperationPredicate(null)
-    object OperationNone : OperationPredicate(DoNotCache)
-    object OperationAll : OperationPredicate(Cache(STALE_ACCEPTED_FIRST, DEFAULT_CACHE_DURATION_IN_SECONDS))
+    object CacheDisabled : OperationPredicate(DoNotCache)
+    object CacheEverything : OperationPredicate(Cache(STALE_ACCEPTED_FIRST, DEFAULT_CACHE_DURATION_IN_SECONDS))
 
 }

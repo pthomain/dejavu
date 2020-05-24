@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.serialisation.compression.decorator
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
@@ -36,10 +37,18 @@ import dev.pthomain.android.dejavu.serialisation.SerialisationException
  * @param uncompresser a function uncompressing an input ByteArray
  */
 internal class CompressionSerialisationDecorator(
+        private val requestMetadataPredicate: (RequestMetadata<*>) -> Boolean,
         private val logger: Logger,
         private val compresser: (ByteArray) -> ByteArray,
         private val uncompresser: (ByteArray, Int, Int) -> ByteArray
 ) : SerialisationDecorator {
+
+    override val uniqueName = "COMPRESS"
+
+    /**
+     * @return true if the decoration should apply to the given RequestMetadata
+     */
+    override fun appliesTo(metadata: RequestMetadata<*>) = requestMetadataPredicate(metadata)
 
     /**
      * Implements optional compression during the serialisation process.
@@ -56,7 +65,6 @@ internal class CompressionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.compress) {
                 compresser(payload).also { compressed ->
                     logCompression(
                             compressed,
@@ -64,7 +72,6 @@ internal class CompressionSerialisationDecorator(
                             payload
                     )
                 }
-            } else payload
 
     /**
      * Implements optional uncompression during the deserialisation process.
@@ -81,7 +88,6 @@ internal class CompressionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.compress) {
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
@@ -89,7 +95,6 @@ internal class CompressionSerialisationDecorator(
                             it
                     )
                 }
-            } else payload
 
     /**
      * Logs the compression level for the given compressed payload

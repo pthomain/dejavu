@@ -47,7 +47,7 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
                 values().joinToString(separator = ", ") { it.columnName + " " + it.type }
         ))
 
-        addIndex(db, TOKEN.columnName)
+        addIndex(db, REQUEST.columnName)
         addIndex(db, EXPIRY_DATE.columnName)
     }
 
@@ -120,13 +120,12 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
 
         enum class COLUMNS(val columnName: String,
                            val type: String) {
-            TOKEN("token", "TEXT UNIQUE"),
-            DATE("cache_date", "INTEGER"),
-            EXPIRY_DATE("expiry_date", "INTEGER"),
-            DATA("data", "NONE"),
+            REQUEST("request", "TEXT"),
             CLASS("class", "TEXT"),
-            IS_ENCRYPTED("is_encrypted", "INTEGER"),
-            IS_COMPRESSED("is_compressed", "INTEGER");
+            CACHE_DATE("cache_date", "INTEGER"),
+            EXPIRY_DATE("expiry_date", "INTEGER"),
+            SERIALISATION("serialisation", "TEXT"),
+            DATA("data", "NONE")
         }
 
     }

@@ -39,12 +39,14 @@ import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.network.model.User
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
 import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
 import dev.pthomain.android.mumbo.Mumbo
@@ -161,7 +163,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                                                                             requestMetadata.responseClass,
                                                                             url
                                                                     )
-                                                            ) as ValidRequestMetadata,
+                                                            ) as HashedRequestMetadata,
                                                             cacheToken.instruction.operation
                                                     )
                                             )
@@ -170,8 +172,8 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 }
             }
 
-    protected fun assertResponse(stubbedResponse: ResponseWrapper<Cache, ResponseToken<Cache>, Glitch>,
-                                 actualResponse: ResponseWrapper<*, *, Glitch>?,
+    protected fun assertResponse(stubbedResponse: MockClient.ResponseWrapper<Cache, ResponseToken<Cache>, Glitch>,
+                                 actualResponse: MockClient.ResponseWrapper<*, *, Glitch>?,
                                  expectedStatus: CacheStatus,
                                  fetchDate: Date = NOW,
                                  cacheDate: Date? = NOW,
@@ -207,7 +209,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
                     CacheInstruction(
                             operation,
                             cacheComponent.hasher().hash(PlainRequestMetadata(responseClass, url)
-                            ) as ValidRequestMetadata
+                            ) as HashedRequestMetadata
                     )
             )
 }

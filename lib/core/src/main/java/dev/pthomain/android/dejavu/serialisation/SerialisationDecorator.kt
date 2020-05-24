@@ -23,6 +23,7 @@
 
 package dev.pthomain.android.dejavu.serialisation
 
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 
 /**
@@ -31,6 +32,18 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
  * (and in reverse during deserialisation).
  */
 interface SerialisationDecorator {
+
+    /**
+     * This name is used to uniquely identify the decorator and is used as a flag for the
+     * Cache operation. It should follow the same convention as an enum name and ideally
+     * be a short verb.
+     */
+    val uniqueName: String
+
+    /**
+     * @return true if the decoration should apply to the given RequestMetadata
+     */
+    fun appliesTo(metadata: RequestMetadata<*>): Boolean = true
 
     /**
      * Implements a single concern during the serialisation process.
@@ -68,3 +81,6 @@ interface SerialisationDecorator {
         val serialisationDecorator: SerialisationDecorator
     }
 }
+
+fun SerialisationDecorator.validate() = uniqueName.matches(Regex("[A-Z_]{3,30}"))
+

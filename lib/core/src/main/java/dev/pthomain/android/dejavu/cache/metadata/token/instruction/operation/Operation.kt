@@ -24,6 +24,7 @@
 package dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
 
@@ -53,11 +54,10 @@ sealed class Operation(val type: Type) {
          */
         class Cache(
                 val priority: CachePriority = STALE_ACCEPTED_FIRST,
-                durationInSeconds: Int? = DEFAULT_CACHE_DURATION_IN_SECONDS,
+                durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
+                val serialisation: String = "",
                 connectivityTimeoutInSeconds: Int? = null,
-                requestTimeOutInSeconds: Int? = null,
-                val encrypt: Boolean = false,
-                val compress: Boolean = false
+                requestTimeOutInSeconds: Int? = null
         ) : Remote(CACHE) {
 
             val durationInSeconds: Int = durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!
@@ -67,37 +67,10 @@ sealed class Operation(val type: Type) {
             override fun toString() = serialise(
                     priority,
                     durationInSeconds,
+                    serialisation,
                     connectivityTimeoutInSeconds,
-                    requestTimeOutInSeconds,
-                    encrypt,
-                    compress
+                    requestTimeOutInSeconds
             )
-
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (javaClass != other?.javaClass) return false
-
-                other as Cache
-
-                if (priority != other.priority) return false
-                if (encrypt != other.encrypt) return false
-                if (compress != other.compress) return false
-                if (durationInSeconds != other.durationInSeconds) return false
-                if (connectivityTimeoutInSeconds != other.connectivityTimeoutInSeconds) return false
-                if (requestTimeOutInSeconds != other.requestTimeOutInSeconds) return false
-
-                return true
-            }
-
-            override fun hashCode(): Int {
-                var result = priority.hashCode()
-                result = 31 * result + encrypt.hashCode()
-                result = 31 * result + compress.hashCode()
-                result = 31 * result + durationInSeconds
-                result = 31 * result + (connectivityTimeoutInSeconds ?: 0)
-                result = 31 * result + (requestTimeOutInSeconds ?: 0)
-                return result
-            }
         }
 
         /**
@@ -132,7 +105,17 @@ sealed class Operation(val type: Type) {
          *
          * @param clearStaleEntriesOnly whether or not to clear the STALE data only. When set to true, only expired data is cleared, otherwise STALE and FRESH data is cleared.
          */
-        data class Clear(val clearStaleEntriesOnly: Boolean = false) : Local(CLEAR) {
+        data class Clear(
+                val scope: Scope = ALL,
+                val clearStaleEntriesOnly: Boolean = false
+        ) : Local(CLEAR) {
+
+            enum class Scope {
+                REQUEST,    //clears the entry associated with the operation's request metadata
+                CLASS,      //clears the entry associated with the operation's target class
+                ALL         //clears all entries in conjunction with clearStaleEntriesOnly
+            }
+
             override fun toString() = serialise(clearStaleEntriesOnly)
         }
     }

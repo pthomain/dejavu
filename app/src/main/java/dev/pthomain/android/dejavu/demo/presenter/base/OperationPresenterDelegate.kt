@@ -25,8 +25,12 @@ internal class OperationPresenterDelegate(
     ) =
             executeOperation(Operation.Remote.Cache(
                     priority = cachePriority,
-                    encrypt = encrypt,
-                    compress = compress
+                    serialisation = when {
+                        encrypt && compress -> "compress,encrypt"
+                        encrypt -> "encrypt"
+                        compress -> "compress"
+                        else -> ""
+                    }
             )).flatMap {
                 when (it) {
                     is Response<CatFactResponse, *> -> it.response.observable()

@@ -48,8 +48,10 @@ internal fun Operation.serialise(vararg arguments: Any?): String {
         when (it) {
             null -> ""
             -1L -> ""
+            is Clear.Scope -> it.name
             is Class<*> -> it.name
             is CachePriority -> it.name
+            is Array<*> -> it.joinToString(separator = ",")
             else -> it.toString()
         }
     }.let {
@@ -87,8 +89,7 @@ private fun toBoolean(params: List<String>,
                       index: Int,
                       defaultValue: Boolean = false) =
         if (params.size > index)
-            toBoolean(params[index])
-                    ?: defaultValue
+            toBoolean(params[index]) ?: defaultValue
         else defaultValue
 
 /**
@@ -103,29 +104,29 @@ private fun toInt(value: String,
  * Returns a Clear operation instance for the given list of parameters
  */
 private fun getClearOperation(params: List<String>) =
-        Clear(
-                toBoolean(params, 1)
+        if (params.size != 3) null
+        else Clear(
+                Clear.Scope.valueOf(params[1]),
+                toBoolean(params, 2)
         )
 
 /**
  * Returns an Expiring operation instance for the given list of parameters
  */
 private fun getCacheOperation(params: List<String>) =
-        if (params.size == 7) {
+        if (params.size == 6) {
             val priority = CachePriority.valueOf(params[1])
             val durationInSeconds = toInt(params[2], DEFAULT_CACHE_DURATION_IN_SECONDS)!!
-            val connectivityTimeoutInSeconds = toInt(params[3])
-            val requestTimeOutInSeconds = toInt(params[4])
-            val encrypt = toBoolean(params, 5)
-            val compress = toBoolean(params, 6)
+            val serialisation = params[3]
+            val connectivityTimeoutInSeconds = toInt(params[4])
+            val requestTimeOutInSeconds = toInt(params[5])
 
             Cache(
                     priority,
                     durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!,
+                    serialisation,
                     connectivityTimeoutInSeconds.swapWhenDefault(null),
-                    requestTimeOutInSeconds.swapWhenDefault(null),
-                    encrypt,
-                    compress
+                    requestTimeOutInSeconds.swapWhenDefault(null)
             )
         } else Cache()
 

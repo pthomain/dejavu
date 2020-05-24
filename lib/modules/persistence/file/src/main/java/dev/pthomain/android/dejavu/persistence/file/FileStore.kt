@@ -24,11 +24,12 @@
 package dev.pthomain.android.dejavu.persistence.file
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
+import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
 import java.io.*
+import java.util.*
 
 internal class FileStore private constructor(
         private val logger: Logger,
@@ -38,7 +39,7 @@ internal class FileStore private constructor(
         private val fileReader: (InputStream) -> ByteArray,
         private val keySerialiser: KeySerialiser,
         private val cacheDirectory: File
-) : KeyValueStore<String, String, Incomplete> {
+) : KeyValueStore<String, String, Serialised> {
 
     init {
         cacheDirectory.mkdirs()
@@ -61,10 +62,17 @@ internal class FileStore private constructor(
      * @return the matching entry if present
      */
     override fun get(key: String) =
-            keySerialiser.deserialise(key).copy(
-                    data = fileInputStreamFactory(fileFactory(cacheDirectory, key))
-                            .useAndLogError(fileReader::invoke)
-            )
+            with(keySerialiser.deserialise(key)) {
+                Serialised(
+                        requestHash,
+                        classHash,
+                        requestDate,
+                        expiryDate,
+                        serialisation,
+                        fileInputStreamFactory(fileFactory(cacheDirectory, key))
+                                .useAndLogError(fileReader::invoke)
+                )
+            }
 
     /**
      * Saves an entry with a given key
@@ -72,8 +80,9 @@ internal class FileStore private constructor(
      * @param key the key to save the entry under
      * @param value the value to associate with the key
      */
-    override fun save(key: String, value: Incomplete) {
+    override fun save(key: String, value: Serialised) {
         val file = fileFactory(cacheDirectory, key)
+
         fileOutputStreamFactory(file).useAndLogError {
             it.write(value.data)
             it.flush()

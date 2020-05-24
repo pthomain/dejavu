@@ -23,7 +23,10 @@
 
 package dev.pthomain.android.dejavu.serialisation
 
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.persistence.Persisted.*
 
 /**
  * Handles the different steps of the serialisation of the response.
@@ -39,7 +42,17 @@ class SerialisationManager(
         private val decoratorList: List<SerialisationDecorator> //TODO order list to put compression before encryption
 ) {
 
+    init {
+        decoratorList.forEach(::validateDecorator)
+    }
+
     private val reversedDecoratorList = decoratorList.reversed()
+
+    private fun validateDecorator(decorator: SerialisationDecorator) {
+        if (!decorator.validate()) throw SerialisationException(
+                "The provided decorator has an invalid unique name: ${decorator::class.java.name}"
+        )
+    }
 
     /**
      * Serialises the given wrapper's response first to a String using the provided Serialiser,
@@ -52,34 +65,39 @@ class SerialisationManager(
      */
     @Throws(SerialisationException::class)
     fun <R : Any> serialise(
-            response: R,
-            operation: Cache,
+            response: Response<R, Cache>,
             optionalDecorator: SerialisationDecorator?
     ): ByteArray {
+        optionalDecorator?.also(::validateDecorator)
         val responseClass = response::class.java
+        val instruction = response.cacheToken.instruction
 
         return when {
-            responseClass == String::class.java -> (response as String)
+            responseClass == String::class.java -> (response.response as String)
 
             !serialiser.canHandleType(response.javaClass) -> throw SerialisationException(
                     "Could not serialise the given response"
             )
 
-            else -> serialiser.serialise(response)
+            else -> serialiser.serialise(response.response)
         }.let {
             var serialised = it.toByteArray()
 
             val decoratorSequence = decoratorList.asSequence()
-            val decorators = optionalDecorator?.let { sequenceOf(it) }?.plus(decoratorSequence)
+            val decorators = optionalDecorator
+                    ?.let { sequenceOf(it) }
+                    ?.plus(decoratorSequence)
                     ?: decoratorSequence
 
-            decorators.forEach {
-                serialised = it.decorateSerialisation(
-                        responseClass,
-                        operation,
-                        serialised
-                )
-            }
+            decorators
+                    .filter { it.appliesTo(instruction.requestMetadata) }
+                    .forEach {
+                        serialised = it.decorateSerialisation(
+                                responseClass,
+                                instruction.operation,
+                                serialised
+                        )
+                    }
 
             serialised
         }
@@ -99,28 +117,32 @@ class SerialisationManager(
      */
     @Throws(SerialisationException::class)
     fun <R : Any> deserialise(
-            responseClass: Class<R>,
-            operation: Cache,
-            data: ByteArray,
+            instruction: CacheInstruction<Cache, R>,
+            serialised: Serialised,
             optionalDecorator: SerialisationDecorator?
     ): R {
-        var deserialised = data
+        optionalDecorator?.also(::validateDecorator)
+        var deserialised = serialised.data
 
         val decoratorSequence = reversedDecoratorList.asSequence()
-        val decorators = optionalDecorator?.let { decoratorSequence.plus(it) }
+        val decorators = optionalDecorator
+                ?.let(decoratorSequence::plus)
                 ?: decoratorSequence
 
-        decorators.forEach {
-            deserialised = it.decorateDeserialisation(
-                    responseClass,
-                    operation,
-                    deserialised
-            )
-        }
+        decorators
+                .filter { it.appliesTo(instruction.requestMetadata) }
+                .forEach {
+                    deserialised = it.decorateDeserialisation(
+                            instruction.requestMetadata.responseClass,
+                            instruction.operation,
+                            deserialised
+                    )
+                }
 
         return serialiser.deserialise(
                 byteToStringConverter(deserialised),
-                responseClass
+                instruction.requestMetadata.responseClass
         )
     }
+
 }

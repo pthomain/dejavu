@@ -38,6 +38,7 @@ import dev.pthomain.android.dejavu.interceptors.NetworkInterceptor
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import org.koin.core.qualifier.named
@@ -55,6 +56,8 @@ internal class DejaVuModule<E>(
         E : NetworkErrorPredicate {
 
     val modules = persistenceModule.modules + module {
+
+        single { persistenceModule.decorators }
 
         single { context.applicationContext }
 
@@ -121,11 +124,14 @@ internal class DejaVuModule<E>(
             EmptyResponseFactory<E>(get())
         }
 
+        single { SerialisationArgumentValidator(get()) }
+
         single {
             DejaVuInterceptor.Factory<E>(
                     get(),
                     get(),
                     get(named("dateFactory")),
+                    get(),
                     get(),
                     get(),
                     get()

@@ -121,8 +121,7 @@ class InstructionView @JvmOverloads constructor(
                         "priority = ${priority.name}",
                         "durationInSeconds = $durationInSeconds",
                         "connectivityTimeoutInSeconds = $connectivityTimeoutInSeconds",
-                        "encrypt = $encrypt",
-                        "compress = $compress"
+                        "serialisation = $serialisation"
                 )
 
                 is Clear -> arrayOf(

@@ -83,12 +83,18 @@ protected constructor(
     final override var compress = false
     final override var freshness = ANY
 
+    private fun getCacheSerialisation() = when {
+        encrypt && compress -> "compress,encrypt"
+        encrypt -> "encrypt"
+        compress -> "compress"
+        else -> ""
+    }
+
     final override fun getCacheOperation() =
             when (instructionType) {
                 CACHE -> Cache(
                         priority = CachePriority.with(networkPriority, freshness),
-                        encrypt = encrypt,
-                        compress = compress
+                        serialisation = getCacheSerialisation()
                 )
                 DO_NOT_CACHE -> DoNotCache
                 INVALIDATE -> Invalidate

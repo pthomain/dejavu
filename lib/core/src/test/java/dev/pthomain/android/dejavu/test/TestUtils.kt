@@ -279,7 +279,7 @@ fun defaultRequestMetadata() = PlainRequestMetadata(
 fun instructionToken(operation: Operation = Cache()) = RequestToken(
         CacheInstruction(
                 operation,
-                ValidRequestMetadata(
+                HashedRequestMetadata(
                         TestResponse::class.java,
                         DEFAULT_URL,
                         null,

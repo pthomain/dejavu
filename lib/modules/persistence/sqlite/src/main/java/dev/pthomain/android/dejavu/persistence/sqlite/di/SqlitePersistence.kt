@@ -37,11 +37,11 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class SqlitePersistence(
-        decoratorList: List<SerialisationDecorator>,
+        override val decorators: List<SerialisationDecorator>,
         serialiser: Serialiser
 ) : PersistenceManager.ModuleProvider {
 
-    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
+    private val persistenceModule = PersistenceModule(decorators, serialiser).module
 
     override val modules = persistenceModule + module {
 

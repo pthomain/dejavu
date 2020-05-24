@@ -48,18 +48,15 @@ interface RetrofitSingleClients : SingleClients {
         override fun get(): Single<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(compress = true)
+        @Cache(serialisation = "compress")
         override fun compressed(): Single<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(encrypt = true)
+        @Cache(serialisation = "encrypt")
         override fun encrypted(): Single<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(
-                compress = true,
-                encrypt = true
-        )
+        @Cache(serialisation = "compress,encrypt")
         override fun compressedEncrypted(): Single<CatFactResponse>
 
         // GET freshOnly
@@ -71,22 +68,21 @@ interface RetrofitSingleClients : SingleClients {
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                compress = true
+                serialisation = "compress"
         )
         override fun freshOnlyCompressed(): Single<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                encrypt = true
+                serialisation = "encrypt"
         )
         override fun freshOnlyEncrypted(): Single<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                compress = true,
-                encrypt = true
+                serialisation = "compress,encrypt"
         )
         override fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
 

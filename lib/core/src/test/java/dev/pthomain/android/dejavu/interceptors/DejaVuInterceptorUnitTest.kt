@@ -29,9 +29,9 @@ import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InvalidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InHashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.*
@@ -54,8 +54,8 @@ class DejaVuInterceptorUnitTest {
     private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
     private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: PlainRequestMetadata
-    private lateinit var mockValidHashedMetadata: ValidRequestMetadata
-    private lateinit var mockInvalidHashedMetadata: InvalidRequestMetadata
+    private lateinit var mockValidHashedMetadata: HashedRequestMetadata
+    private lateinit var mockInvalidHashedMetadata: InHashedRequestMetadata
     private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, Glitch>
     private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
     private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, Glitch>

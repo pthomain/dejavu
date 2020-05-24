@@ -34,16 +34,17 @@ import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 
 /**
  * Processes Retrofit annotations and generates a CacheInstruction if needed.
  *
  * @see CacheInstruction
  */
-internal class AnnotationProcessor<E>(private val logger: Logger)
-        where  E : Throwable,
-               E : NetworkErrorPredicate {
+internal class AnnotationProcessor(
+        private val logger: Logger,
+        private val serialisationArgumentValidator: SerialisationArgumentValidator
+) {
 
     /**
      * Processes the annotations on the Retrofit call and tries to convert them to a CacheInstruction
@@ -115,15 +116,14 @@ internal class AnnotationProcessor<E>(private val logger: Logger)
                 is Cache -> Remote.Cache(
                         priority,
                         durationInSeconds,
+                        serialisation.also(serialisationArgumentValidator::validate),
                         connectivityTimeoutInSeconds,
-                        requestTimeOutInSeconds,
-                        encrypt,
-                        compress
+                        requestTimeOutInSeconds
                 )
 
                 is DoNotCache -> Remote.DoNotCache
                 is Invalidate -> Local.Invalidate
-                is Clear -> Local.Clear(clearStaleEntriesOnly)
+                is Clear -> Local.Clear(scope, clearStaleEntriesOnly)
                 else -> null
             }
         }

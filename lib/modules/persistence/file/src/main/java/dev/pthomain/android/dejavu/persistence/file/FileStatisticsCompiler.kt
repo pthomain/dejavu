@@ -70,15 +70,13 @@ internal class FileStatisticsCompiler(
         val file = fileFactory(cacheDirectory, entry)
         val responseClassName = fileInputStreamFactory(file).reader().buffered().readLine()
 
-        val status = dateFactory.getCacheStatus(dateFactory(dataHolder.expiryDate))
+        val status = dateFactory.getCacheStatus(dateFactory(dataHolder.expiryDate.time))
 
         return CacheEntry(
                 Class.forName(responseClassName),
                 status,
-                dataHolder.isEncrypted,
-                dataHolder.isCompressed,
-                dateFactory(dataHolder.cacheDate),
-                dateFactory(dataHolder.expiryDate)
+                dateFactory(dataHolder.requestDate.time),
+                dateFactory(dataHolder.expiryDate.time)
         )
     }
 

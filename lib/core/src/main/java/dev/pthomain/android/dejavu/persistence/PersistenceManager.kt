@@ -23,14 +23,15 @@
 
 package dev.pthomain.android.dejavu.persistence
 
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.persistence.Persisted.Deserialised
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import org.koin.core.module.Module
-import java.util.*
 
 interface PersistenceManager {
 
@@ -48,9 +49,7 @@ interface PersistenceManager {
      * @throws SerialisationException in case the deserialisation failed
      */
     @Throws(SerialisationException::class)
-    fun <R : Any> find(
-            instructionToken: CacheToken<Cache, R>
-    ): CacheData<R>?
+    fun <R : Any> get(cacheToken: RequestToken<Cache, R>): Deserialised<R>?
 
     /**
      * Caches a given response.
@@ -59,10 +58,7 @@ interface PersistenceManager {
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    fun <R : Any> cache(
-            response: R,
-            instructionToken: CacheToken<Cache, R>
-    )
+    fun <R : Any> put(response: Response<R, Cache>)
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE).
@@ -71,7 +67,7 @@ interface PersistenceManager {
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun <R : Any> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean
+    fun <R : Any> forceInvalidation(token: RequestToken<*, R>): Boolean
 
     /**
      * Invalidates the cached data (by setting the expiry date in the past, making the data STALE)
@@ -82,7 +78,7 @@ interface PersistenceManager {
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    fun <R : Any> invalidateIfNeeded(instructionToken: CacheToken<*, R>): Boolean
+    fun <R : Any> invalidateIfNeeded(cacheToken: RequestToken<Cache, R>): Boolean
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -91,17 +87,14 @@ interface PersistenceManager {
      * @param operation the Clear operation
      * @param requestMetadata the request's metadata
      */
-    fun <R : Any> clearCache(operation: Clear,
-                             requestMetadata: ValidRequestMetadata<R>)
-
-    data class CacheData<R : Any>(
-            val data: R,
-            val requestDate: Date,
-            val cacheDate: Date,
-            val expiryDate: Date
+    fun <R : Any> clearCache(
+            requestMetadata: HashedRequestMetadata<R>,
+            operation: Clear = Clear()
     )
 
     interface ModuleProvider {
         val modules: List<Module>
+        val decorators: List<SerialisationDecorator>
     }
+
 }

@@ -50,9 +50,7 @@ class DatabaseStatisticsCompiler internal constructor(
 
     private val projection = arrayOf(
             CLASS.columnName,
-            IS_ENCRYPTED.columnName,
-            IS_COMPRESSED.columnName,
-            DATE.columnName,
+            CACHE_DATE.columnName,
             EXPIRY_DATE.columnName
     )
 
@@ -78,17 +76,13 @@ class DatabaseStatisticsCompiler internal constructor(
      */
     override fun convert(entry: Cursor) = with(entry) {
         val responseClassName = getString(getColumnIndex(CLASS.columnName))
-        val isEncrypted = getInt(getColumnIndex(IS_ENCRYPTED.columnName)) != 0
-        val isCompressed = getInt(getColumnIndex(IS_COMPRESSED.columnName)) != 0
-        val cacheDate = dateFactory(getLong(getColumnIndex(DATE.columnName)))
+        val cacheDate = dateFactory(getLong(getColumnIndex(CACHE_DATE.columnName)))
         val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
         val status = dateFactory.getCacheStatus(expiryDate)
 
         CacheEntry(
                 Class.forName(responseClassName),
                 status,
-                isEncrypted,
-                isCompressed,
                 cacheDate,
                 expiryDate
         )

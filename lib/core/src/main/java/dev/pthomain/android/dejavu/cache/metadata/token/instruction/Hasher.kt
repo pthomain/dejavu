@@ -85,7 +85,7 @@ class Hasher(
      * @param requestMetadata the plain metadata
      * @return the hashed metadata or null if the hashing of the URL or class name failed.
      */
-    fun <R : Any> hash(requestMetadata: PlainRequestMetadata<R>): HashedRequestMetadata<R> {
+    fun <R : Any> hash(requestMetadata: PlainRequestMetadata<R>): HashedRequestMetadata<R>? {
         val uri = uriParser(requestMetadata.url)
         val sortedParameters = getSortedParameters(uri)
 
@@ -104,9 +104,9 @@ class Hasher(
         }
 
         return if (urlHash == null || classHash == null)
-            InvalidRequestMetadata(requestMetadata.responseClass)
+            null
         else
-            ValidRequestMetadata(
+            HashedRequestMetadata(
                     requestMetadata.responseClass,
                     requestMetadata.url,
                     requestMetadata.requestBody,

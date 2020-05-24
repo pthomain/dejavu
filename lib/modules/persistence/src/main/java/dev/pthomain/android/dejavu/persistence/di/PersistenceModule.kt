@@ -27,6 +27,7 @@ import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.Serialiser
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class PersistenceModule(
@@ -46,7 +47,7 @@ class PersistenceModule(
             )
         }
 
-        single { KeySerialiser() }
+        single { KeySerialiser(get(named("dateFactory"))) }
 
     }
 }

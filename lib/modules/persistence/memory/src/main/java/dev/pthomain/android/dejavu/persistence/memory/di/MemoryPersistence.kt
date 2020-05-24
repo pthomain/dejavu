@@ -35,12 +35,12 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class MemoryPersistence(
-        decoratorList: List<SerialisationDecorator>,
+        override val decorators: List<SerialisationDecorator>,
         serialiser: Serialiser,
         private val maxEntries: Int = 20
 ) : PersistenceManager.ModuleProvider {
 
-    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
+    private val persistenceModule = PersistenceModule(decorators, serialiser).module
 
     override val modules = persistenceModule + module {
 
@@ -55,7 +55,10 @@ class MemoryPersistence(
         }
 
         single {
-            MemoryStore.Factory(::LruCache)
+            MemoryStore.Factory(
+                    ::LruCache,
+                    get(named("dateFactory"))
+            )
         }
 
         single<PersistenceManager> {
