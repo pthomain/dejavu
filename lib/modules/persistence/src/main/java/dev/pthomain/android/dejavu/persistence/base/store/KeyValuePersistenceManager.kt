@@ -29,11 +29,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
@@ -122,7 +120,7 @@ class KeyValuePersistenceManager(
                     with(it.second) {
                         val isRightExpiry = !operation.clearStaleEntriesOnly || expiryDate.before(dateFactory(null))
 
-                        if (operation.scope == Clear.Scope.ALL) isRightExpiry
+                        if (operation.scope == ALL) isRightExpiry
                         else isRightExpiry && requestHash == requestMetadata.requestHash
                     }
                 }
@@ -140,15 +138,15 @@ class KeyValuePersistenceManager(
         get(token.instruction.requestMetadata)?.also { serialised ->
             if (serialised.expiryDate.time != 0L) {
 
-                val newResponseToken = ResponseToken(
+                val oldResponseToken = ResponseToken(
                         CacheInstruction(Cache(), token.instruction.requestMetadata),
                         token.status,
-                        token.requestDate,
-                        dateFactory(0L)
+                        serialised.requestDate,
+                        serialised.expiryDate
                 )
 
-                val oldResponseToken = newResponseToken.copy(
-                        expiryDate = serialised.expiryDate
+                val newResponseToken = oldResponseToken.copy(
+                        expiryDate = dateFactory(0L)
                 )
 
                 store.rename(
