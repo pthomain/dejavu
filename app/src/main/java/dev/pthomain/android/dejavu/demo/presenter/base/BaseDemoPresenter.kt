@@ -79,9 +79,9 @@ protected constructor(
 
     final override var useSingle = false
     final override var method = RETROFIT_ANNOTATION
+    final override var freshness = ANY
     final override var encrypt = false
     final override var compress = false
-    final override var freshness = ANY
 
     private fun getCacheSerialisation() = when {
         encrypt && compress -> "compress,encrypt"

@@ -82,7 +82,7 @@ internal class AnnotationProcessor(
 
     @Throws(CacheException::class)
     private fun CacheException.logAndThrow() {
-        logger.e(this, this)
+        logger.e(this@AnnotationProcessor, this)
         throw this
     }
 

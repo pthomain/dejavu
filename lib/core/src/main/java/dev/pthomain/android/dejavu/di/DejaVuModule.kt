@@ -57,8 +57,6 @@ internal class DejaVuModule<E>(
 
     val modules = persistenceModule.modules + module {
 
-        single { persistenceModule.decorators }
-
         single { context.applicationContext }
 
         single { logger }
@@ -124,7 +122,7 @@ internal class DejaVuModule<E>(
             EmptyResponseFactory<E>(get())
         }
 
-        single { SerialisationArgumentValidator(get()) }
+        single { SerialisationArgumentValidator(persistenceModule.decorators) }
 
         single {
             DejaVuInterceptor.Factory<E>(

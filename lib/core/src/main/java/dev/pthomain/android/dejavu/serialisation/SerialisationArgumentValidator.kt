@@ -13,10 +13,9 @@ class SerialisationArgumentValidator(
                 .map { it.trim().toUpperCase(Locale.UK) }
                 .filter { !it.isBlank() && !decoratorNames.contains(it) }
                 .also {
-                    if (it.isNotEmpty())
-                        throw SerialisationException(
-                                "Invalid serialisation argument(s): [${it.joinToString(separator = ", ")}]"
-                        )
+                    if (it.isNotEmpty()) throw SerialisationException(
+                            "Invalid serialisation argument(s): ${it.joinToString(separator = ", ")}"
+                    )
                 }
     }
 }

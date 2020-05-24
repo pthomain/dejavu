@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.STALE_ACCEPTED_FIRST
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
 
@@ -116,7 +116,10 @@ sealed class Operation(val type: Type) {
                 ALL         //clears all entries in conjunction with clearStaleEntriesOnly
             }
 
-            override fun toString() = serialise(clearStaleEntriesOnly)
+            override fun toString() = serialise(
+                    scope,
+                    clearStaleEntriesOnly
+            )
         }
     }
 
