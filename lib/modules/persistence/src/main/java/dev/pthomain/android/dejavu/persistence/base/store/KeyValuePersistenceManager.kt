@@ -139,7 +139,10 @@ class KeyValuePersistenceManager(
             if (serialised.expiryDate.time != 0L) {
 
                 val oldResponseToken = ResponseToken(
-                        CacheInstruction(Cache(), token.instruction.requestMetadata),
+                        CacheInstruction(
+                                Cache(serialisation = serialised.serialisation),
+                                token.instruction.requestMetadata
+                        ),
                         token.status,
                         serialised.requestDate,
                         serialised.expiryDate

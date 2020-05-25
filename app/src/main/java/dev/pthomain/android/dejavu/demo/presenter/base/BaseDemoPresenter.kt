@@ -31,9 +31,11 @@ import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
 import dev.pthomain.android.boilerplate.ui.mvp.MvpPresenter
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.OFFLINE
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.ONLINE
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
@@ -64,7 +66,7 @@ protected constructor(
     protected val dejaVuFactory = DejaVuFactory(uiLogger, demoActivity)
 
     private var instructionType = CACHE
-    private var networkPriority = LOCAL_FIRST
+    private var behaviour = ONLINE
 
     override var serialiserType: SerialiserType = Gson
     protected var errorFactoryType: ErrorFactoryType<*> = Default
@@ -93,7 +95,7 @@ protected constructor(
     final override fun getCacheOperation() =
             when (instructionType) {
                 CACHE -> Cache(
-                        priority = CachePriority.with(networkPriority, freshness),
+                        priority = CachePriority.with(behaviour, freshness),
                         serialisation = getCacheSerialisation()
                 )
                 DO_NOT_CACHE -> DoNotCache
@@ -103,11 +105,11 @@ protected constructor(
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = CACHE
-        networkPriority = ifElse(isRefresh, NETWORK_FIRST, LOCAL_FIRST)
+        behaviour = ifElse(isRefresh, Behaviour.INVALIDATE, ONLINE)
 
         subscribeData(
                 getDataObservable(
-                        CachePriority.with(networkPriority, freshness),
+                        CachePriority.with(behaviour, freshness),
                         encrypt,
                         compress
                 )
@@ -116,7 +118,7 @@ protected constructor(
 
     final override fun offline() {
         instructionType = CACHE
-        networkPriority = LOCAL_ONLY
+        behaviour = OFFLINE
         subscribeData(getOfflineSingle(freshness).toObservable())
     }
 

@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.serialisation
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.persistence.Persisted.*
+import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 
 /**
  * Handles the different steps of the serialisation of the response.
@@ -90,7 +90,7 @@ class SerialisationManager(
                     ?: decoratorSequence
 
             decorators
-                    .filter { it.appliesTo(instruction.requestMetadata) }
+                    .filter { decoratorPredicate(it, instruction.operation.serialisation) }
                     .forEach {
                         serialised = it.decorateSerialisation(
                                 responseClass,
@@ -102,7 +102,6 @@ class SerialisationManager(
             serialised
         }
     }
-
 
     /**
      * Deserialises the given payload first to a ByteArray using the provided Serialiser,
@@ -130,7 +129,7 @@ class SerialisationManager(
                 ?: decoratorSequence
 
         decorators
-                .filter { it.appliesTo(instruction.requestMetadata) }
+                .filter { decoratorPredicate(it, serialised.serialisation) }
                 .forEach {
                     deserialised = it.decorateDeserialisation(
                             instruction.requestMetadata.responseClass,
@@ -144,5 +143,15 @@ class SerialisationManager(
                 instruction.requestMetadata.responseClass
         )
     }
+
+    private fun decoratorPredicate(
+            decorator: SerialisationDecorator,
+            serialisation: String
+    ) = serialisation
+            .split(",")
+            .filter { it == decorator.uniqueName }
+            .map { true }
+            .firstOrNull()
+            ?: false
 
 }

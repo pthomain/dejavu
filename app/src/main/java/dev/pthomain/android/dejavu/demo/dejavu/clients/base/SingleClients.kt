@@ -47,7 +47,14 @@ interface SingleClients {
         // REFRESH
 
         fun refresh(): Single<CatFactResponse>
+        fun refreshCompressed(): Single<CatFactResponse>
+        fun refreshEncrypted(): Single<CatFactResponse>
+        fun refreshCompressedEncrypted(): Single<CatFactResponse>
+
         fun refreshFreshOnly(): Single<CatFactResponse>
+        fun refreshCompressedFreshOnly(): Single<CatFactResponse>
+        fun refreshEncryptedFreshOnly(): Single<CatFactResponse>
+        fun refreshCompressedEncryptedFreshOnly(): Single<CatFactResponse>
 
         // OFFLINE
 

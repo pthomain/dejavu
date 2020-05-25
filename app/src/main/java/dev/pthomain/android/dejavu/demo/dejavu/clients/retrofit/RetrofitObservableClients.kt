@@ -94,8 +94,50 @@ interface RetrofitObservableClients : ObservableClients {
         override fun refresh(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "compress"
+        )
+        override fun refreshCompressed(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "encrypt"
+        )
+        override fun refreshEncrypted(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "compress,encrypt"
+        )
+        override fun refreshCompressedEncrypted(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
         override fun refreshFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "compress"
+        )
+        override fun refreshCompressedFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "encrypt"
+        )
+        override fun refreshEncryptedFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "compress,encrypt"
+        )
+        override fun refreshCompressedEncryptedFreshOnly(): Observable<CatFactResponse>
 
         // OFFLINE
 

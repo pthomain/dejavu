@@ -23,20 +23,13 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.serialisation.encryption.decorator.EncryptionSerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
+import dev.pthomain.android.dejavu.serialisation.encryption.decorator.EncryptionSerialisationDecorator
 import dev.pthomain.android.mumbo.base.EncryptionManager
 
-class Encryption(
-        encryptionManager: EncryptionManager,
-        requestMetadataPredicate: (RequestMetadata<*>) -> Boolean = { true }
-) : SerialisationDecorator.Provider {
+class Encryption(encryptionManager: EncryptionManager) : SerialisationDecorator.Provider {
 
     override val serialisationDecorator: SerialisationDecorator =
-            EncryptionSerialisationDecorator(
-                    requestMetadataPredicate,
-                    encryptionManager
-            )
+            EncryptionSerialisationDecorator(encryptionManager)
 
 }

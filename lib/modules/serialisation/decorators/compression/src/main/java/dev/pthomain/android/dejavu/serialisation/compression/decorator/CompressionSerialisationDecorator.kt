@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.serialisation.compression.decorator
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
@@ -37,18 +36,12 @@ import dev.pthomain.android.dejavu.serialisation.SerialisationException
  * @param uncompresser a function uncompressing an input ByteArray
  */
 internal class CompressionSerialisationDecorator(
-        private val requestMetadataPredicate: (RequestMetadata<*>) -> Boolean,
         private val logger: Logger,
         private val compresser: (ByteArray) -> ByteArray,
         private val uncompresser: (ByteArray, Int, Int) -> ByteArray
 ) : SerialisationDecorator {
 
     override val uniqueName = "COMPRESS"
-
-    /**
-     * @return true if the decoration should apply to the given RequestMetadata
-     */
-    override fun appliesTo(metadata: RequestMetadata<*>) = requestMetadataPredicate(metadata)
 
     /**
      * Implements optional compression during the serialisation process.
@@ -108,10 +101,10 @@ internal class CompressionSerialisationDecorator(
             simpleName: String,
             uncompressed: ByteArray
     ) {
+        val percent = String.format("%.2f", 100f * (1f - (uncompressed.size.toFloat() / compressedData.size)))
         logger.d(
                 this,
-                "Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B "
-                        + "(${100 * compressedData.size / uncompressed.size}%)"
+                "Compression of $simpleName: ${compressedData.size}B/${uncompressed.size}B ($percent%)"
         )
     }
 }

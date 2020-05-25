@@ -10,7 +10,6 @@ class SerialisationArgumentValidator(
     fun validate(serialisation: String) {
         serialisation
                 .split(",")
-                .map { it.trim().toUpperCase(Locale.UK) }
                 .filter { !it.isBlank() && !decoratorNames.contains(it) }
                 .also {
                     if (it.isNotEmpty()) throw SerialisationException(

@@ -116,10 +116,10 @@ internal class AnnotationProcessor(
                 is Cache -> Remote.Cache(
                         priority,
                         durationInSeconds,
-                        serialisation.also(serialisationArgumentValidator::validate),
+                        serialisation,
                         connectivityTimeoutInSeconds,
                         requestTimeOutInSeconds
-                )
+                ).apply { serialisationArgumentValidator.validate(serialisation) }
 
                 is DoNotCache -> Remote.DoNotCache
                 is Invalidate -> Local.Invalidate

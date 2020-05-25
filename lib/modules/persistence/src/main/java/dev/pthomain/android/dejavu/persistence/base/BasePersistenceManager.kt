@@ -29,9 +29,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.REQUEST
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.persistence.Persisted.Deserialised
@@ -120,15 +118,6 @@ abstract class BasePersistenceManager(
         val instruction = cacheToken.instruction
         val requestMetadata = instruction.requestMetadata
         val simpleName = requestMetadata.responseClass.simpleName
-        val operation = with(instruction.operation) {
-            Cache(
-                    priority,
-                    durationInSeconds,
-                    serialisation,
-                    connectivityTimeoutInSeconds,
-                    requestTimeOutInSeconds
-            )
-        }
 
         return try {
             with(persisted) {
@@ -137,22 +126,23 @@ abstract class BasePersistenceManager(
                         this,
                         decorator
                 ).let { response ->
+                    val cacheStatus = dateFactory.getCacheStatus(expiryDate)
+                    val formattedExpiry = dateFormat.format(expiryDate)
                     logger.d(
                             this,
-                            "Found cached $simpleName, status: ${dateFactory.getCacheStatus(
-                                    expiryDate,
-                                    operation
-                            )} cached until ${dateFormat.format(expiryDate)}"
+                            "Found cached $simpleName, status: $cacheStatus cached until $formattedExpiry"
                     )
 
-                    Deserialised(
-                            requestHash,
-                            classHash,
-                            requestDate,
-                            expiryDate,
-                            serialisation,
-                            response
-                    )
+                    with(persisted) {
+                        Deserialised(
+                                requestHash,
+                                classHash,
+                                requestDate,
+                                expiryDate,
+                                serialisation,
+                                response
+                        )
+                    }
                 }
             }
         } catch (e: SerialisationException) {
@@ -173,7 +163,7 @@ abstract class BasePersistenceManager(
      */
     final override fun <R : Any> invalidateIfNeeded(cacheToken: RequestToken<Cache, R>) =
             with(cacheToken.instruction) {
-                if (operation.priority.network.invalidatesLocalData) {
+                if (operation.priority.behaviour.isInvalidate()) {
                     forceInvalidation(cacheToken)
                 } else false
             }

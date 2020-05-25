@@ -27,6 +27,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.*
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
+import java.util.Locale.UK
 
 /**
  * Represent a cache operation.
@@ -55,7 +56,7 @@ sealed class Operation(val type: Type) {
         class Cache(
                 val priority: CachePriority = STALE_ACCEPTED_FIRST,
                 durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
-                val serialisation: String = "",
+                serialisation: String = "",
                 connectivityTimeoutInSeconds: Int? = null,
                 requestTimeOutInSeconds: Int? = null
         ) : Remote(CACHE) {
@@ -63,6 +64,9 @@ sealed class Operation(val type: Type) {
             val durationInSeconds: Int = durationInSeconds.swapWhenDefault(DEFAULT_CACHE_DURATION_IN_SECONDS)!!
             val connectivityTimeoutInSeconds: Int? = connectivityTimeoutInSeconds.swapWhenDefault(null)
             val requestTimeOutInSeconds: Int? = requestTimeOutInSeconds.swapWhenDefault(null)
+            val serialisation = serialisation
+                    .replace(Regex("\\s+"), "")
+                    .toUpperCase(UK)
 
             override fun toString() = serialise(
                     priority,

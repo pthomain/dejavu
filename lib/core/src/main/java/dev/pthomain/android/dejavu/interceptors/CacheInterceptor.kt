@@ -66,7 +66,7 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
     override fun apply(upstream: Observable<ResultWrapper<R>>): Observable<DejaVuResult<R>> {
         return when (requestToken.instruction.operation) {
             is Cache -> cacheManager.getCachedResponse(
-                    upstream.map { it as Response<R, Cache> }, //TODO check this
+                    upstream.map { it as DejaVuResult<R> }, //This is enforced by Glitchy
                     requestToken as RequestToken<Cache, R>
             )
 

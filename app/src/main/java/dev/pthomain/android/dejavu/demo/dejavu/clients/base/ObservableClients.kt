@@ -48,7 +48,14 @@ interface ObservableClients {
         // REFRESH
 
         fun refresh(): Observable<CatFactResponse>
+        fun refreshCompressed(): Observable<CatFactResponse>
+        fun refreshEncrypted(): Observable<CatFactResponse>
+        fun refreshCompressedEncrypted(): Observable<CatFactResponse>
+
         fun refreshFreshOnly(): Observable<CatFactResponse>
+        fun refreshCompressedFreshOnly(): Observable<CatFactResponse>
+        fun refreshEncryptedFreshOnly(): Observable<CatFactResponse>
+        fun refreshCompressedEncryptedFreshOnly(): Observable<CatFactResponse>
 
         // OFFLINE
 

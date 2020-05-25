@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption.decorator
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
@@ -36,16 +35,10 @@ import dev.pthomain.android.mumbo.base.EncryptionManager
  * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.Builder.withEncryption
  */
 internal class EncryptionSerialisationDecorator(
-        private val requestMetadataPredicate: (RequestMetadata<*>) -> Boolean,
         private val encryptionManager: EncryptionManager
 ) : SerialisationDecorator {
 
     override val uniqueName = "ENCRYPT"
-
-    /**
-     * @return true if the decoration should apply to the given RequestMetadata
-     */
-    override fun appliesTo(metadata: RequestMetadata<*>) = requestMetadataPredicate(metadata)
 
     /**
      * Implements optional encryption during the serialisation process.

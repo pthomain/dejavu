@@ -26,9 +26,9 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.INVALIDATE
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.NETWORK_FIRST
 import dev.pthomain.android.dejavu.demo.DemoActivity
 
 internal class RetrofitAnnotationDemoPresenter(
@@ -41,9 +41,15 @@ internal class RetrofitAnnotationDemoPresenter(
                                    compress: Boolean) =
             with(cachePriority) {
                 val client = dataClient()
-                if (network == NETWORK_FIRST) {
-                    when (freshness) {
-                        FRESH_ONLY -> client.refreshFreshOnly()
+                if (behaviour == INVALIDATE) {
+                    when {
+                        freshness.isFreshOnly() && compress && encrypt -> client.refreshCompressedEncryptedFreshOnly()
+                        freshness.isFreshOnly() && compress -> client.refreshCompressedFreshOnly()
+                        freshness.isFreshOnly() && encrypt -> client.refreshEncryptedFreshOnly()
+                        freshness.isFreshOnly() -> client.refreshFreshOnly()
+                        compress && encrypt -> client.refreshCompressedEncrypted()
+                        compress -> client.refreshCompressed()
+                        encrypt -> client.refreshEncrypted()
                         else -> client.refresh()
                     }
                 } else {

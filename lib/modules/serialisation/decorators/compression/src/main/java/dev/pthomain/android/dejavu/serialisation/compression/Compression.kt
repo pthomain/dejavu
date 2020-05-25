@@ -24,20 +24,15 @@
 package dev.pthomain.android.dejavu.serialisation.compression
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.compression.decorator.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.utils.SilentLogger
 import org.iq80.snappy.Snappy
 
-class Compression(
-        logger: Logger = SilentLogger,
-        requestMetadataPredicate: (RequestMetadata<*>) -> Boolean = { true }
-) : SerialisationDecorator.Provider {
+class Compression(logger: Logger = SilentLogger) : SerialisationDecorator.Provider {
 
     override val serialisationDecorator: SerialisationDecorator =
             CompressionSerialisationDecorator(
-                    requestMetadataPredicate,
                     logger,
                     Snappy::compress,
                     Snappy::uncompress
