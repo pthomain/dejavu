@@ -33,6 +33,7 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.DejaVuRetrofitIntercept
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
+import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.glitchy.core.Glitchy
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
@@ -48,7 +49,7 @@ class DejaVuRetrofitModule<E>
 
     val module = module {
 
-        single { AnnotationProcessor<E>(get()) }
+        single { AnnotationProcessor(get(), get()) }
 
         single { DejaVuReturnTypeParser<E>() }
 

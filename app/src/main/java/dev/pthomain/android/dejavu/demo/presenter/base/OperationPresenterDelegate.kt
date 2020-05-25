@@ -7,8 +7,8 @@ import dev.pthomain.android.dejavu.cache.metadata.response.Empty
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.Result
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.OFFLINE
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import io.reactivex.Observable
@@ -25,8 +25,12 @@ internal class OperationPresenterDelegate(
     ) =
             executeOperation(Operation.Remote.Cache(
                     priority = cachePriority,
-                    encrypt = encrypt,
-                    compress = compress
+                    serialisation = when {
+                        encrypt && compress -> "compress,encrypt"
+                        encrypt -> "encrypt"
+                        compress -> "compress"
+                        else -> ""
+                    }
             )).flatMap {
                 when (it) {
                     is Response<CatFactResponse, *> -> it.response.observable()
@@ -37,7 +41,7 @@ internal class OperationPresenterDelegate(
 
     fun getOfflineSingle(freshness: FreshnessPriority) =
             executeOperation(
-                    Operation.Remote.Cache(priority = CachePriority.with(LOCAL_ONLY, freshness))
+                    Operation.Remote.Cache(priority = CachePriority.with(OFFLINE, freshness))
             ).firstOrError().flatMap {
                 when (it) {
                     is Response<CatFactResponse, *> -> it.response.single()

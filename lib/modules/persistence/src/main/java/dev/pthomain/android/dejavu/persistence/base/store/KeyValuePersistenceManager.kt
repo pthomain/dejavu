@@ -24,15 +24,18 @@
 package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
-import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.ValidRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import java.util.*
 
@@ -52,14 +55,14 @@ class KeyValuePersistenceManager(
         dateFactory: (Long?) -> Date,
         logger: Logger,
         private val keySerialiser: KeySerialiser,
-        private val store: KeyValueStore<String, String, CacheDataHolder.Incomplete>,
+        private val store: KeyValueStore<String, String, Serialised>,
         serialisationManager: SerialisationManager,
         override val decorator: SerialisationDecorator? = null
 ) : BasePersistenceManager(
         logger,
         serialisationManager,
         dateFactory
-), KeyValueStore<String, String, CacheDataHolder.Incomplete> by store {
+) {
 
     /**
      * Caches a given response.
@@ -68,18 +71,24 @@ class KeyValuePersistenceManager(
      * @throws SerialisationException in case the serialisation failed
      */
     @Throws(SerialisationException::class)
-    override fun <R : Any> cache(
-            response: R,
-            instructionToken: CacheToken<Cache, R>
-    ) {
-        serialise(response, instructionToken).let { holder ->
+    override fun <R : Any> put(response: Response<R, Cache>) {
+        val cacheToken = response.cacheToken
 
-            findPartialKey(holder.requestMetadata.requestHash)?.let {
-                delete(it)
-            }
+        store.findPartialKey(cacheToken.instruction.requestMetadata.requestHash)
+                ?.let(store::delete)
 
-            val name = keySerialiser.serialise(holder)
-            save(name, holder.incomplete)
+        with(cacheToken.instruction.requestMetadata) {
+            store.save(
+                    keySerialiser.serialise(cacheToken),
+                    Serialised(
+                            requestHash,
+                            classHash,
+                            cacheToken.requestDate,
+                            cacheToken.expiryDate!!,
+                            cacheToken.instruction.operation.serialisation,
+                            serialise(response)
+                    )
+            )
         }
     }
 
@@ -90,8 +99,8 @@ class KeyValuePersistenceManager(
      *
      * @return the cached data as a CacheDataHolder
      */
-    override fun <R : Any> getCacheDataHolder(requestMetadata: HashedRequestMetadata<R>) =
-            findPartialKey(requestMetadata.requestHash)?.let(::get)
+    override fun <R : Any> get(requestMetadata: HashedRequestMetadata<R>): Serialised? =
+            store.findPartialKey(requestMetadata.requestHash)?.let(store::get)
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).
@@ -102,22 +111,20 @@ class KeyValuePersistenceManager(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> clearCache(
-            operation: Clear,
-            requestMetadata: ValidRequestMetadata<R>
+            requestMetadata: HashedRequestMetadata<R>,
+            operation: Clear
     ) {
-        val now = dateFactory(null).time
-        values().map { it.key to keySerialiser.deserialise(it.key) }
+        store.values()
+                .map { it.key to keySerialiser.deserialise(it.key) }
                 .filter {
-                    val holder = it.second
+                    with(it.second) {
+                        val isRightExpiry = !operation.clearStaleEntriesOnly || expiryDate.before(dateFactory(null))
 
-                    val isClearAll = requestMetadata.responseClass == Any::class.java
-                    val isRightType = isClearAll || holder.responseClassHash == requestMetadata.classHash
-                    val isRightRequest = holder.requestHash == requestMetadata.requestHash
-                    val isRightExpiry = !operation.clearStaleEntriesOnly || holder.expiryDate <= now
-
-                    isRightType && isRightRequest && isRightExpiry
+                        if (operation.scope == ALL) isRightExpiry
+                        else isRightExpiry && requestHash == requestMetadata.requestHash
+                    }
                 }
-                .forEach { delete(it.first) }
+                .forEach { store.delete(it.first) }
     }
 
     /**
@@ -127,17 +134,32 @@ class KeyValuePersistenceManager(
      *
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
-    override fun <R : Any> forceInvalidation(requestMetadata: ValidRequestMetadata<R>): Boolean {
-        findPartialKey(requestMetadata.requestHash)?.also { oldName ->
-            keySerialiser.deserialise(requestMetadata, oldName).let {
-                if (it.expiryDate != 0L) {
-                    val newName = keySerialiser.serialise(it.copy(expiryDate = 0L))
-                    rename(oldName, newName)
-                    return true
-                }
+    override fun <R : Any> forceInvalidation(token: RequestToken<*, R>): Boolean {
+        get(token.instruction.requestMetadata)?.also { serialised ->
+            if (serialised.expiryDate.time != 0L) {
+
+                val oldResponseToken = ResponseToken(
+                        CacheInstruction(
+                                Cache(serialisation = serialised.serialisation),
+                                token.instruction.requestMetadata
+                        ),
+                        token.status,
+                        serialised.requestDate,
+                        serialised.expiryDate
+                )
+
+                val newResponseToken = oldResponseToken.copy(
+                        expiryDate = dateFactory(0L)
+                )
+
+                store.rename(
+                        keySerialiser.serialise(oldResponseToken),
+                        keySerialiser.serialise(newResponseToken)
+                )
+
+                return true
             }
         }
         return false
     }
-
 }

@@ -57,8 +57,26 @@ class SingleDataClientAdapter(
     override fun refresh() =
             singleClient.refresh().toObservable()
 
+    override fun refreshCompressed() =
+            singleClient.refreshCompressed().toObservable()
+
+    override fun refreshEncrypted() =
+            singleClient.refreshEncrypted().toObservable()
+
+    override fun refreshCompressedEncrypted() =
+            singleClient.refreshCompressedEncrypted().toObservable()
+
     override fun refreshFreshOnly() =
             singleClient.refreshFreshOnly().toObservable()
+
+    override fun refreshCompressedFreshOnly() =
+            singleClient.refreshCompressedFreshOnly().toObservable()
+
+    override fun refreshEncryptedFreshOnly() =
+            singleClient.refreshEncryptedFreshOnly().toObservable()
+
+    override fun refreshCompressedEncryptedFreshOnly() =
+            singleClient.refreshCompressedEncryptedFreshOnly().toObservable()
 
     override fun offline() =
             singleClient.offline()

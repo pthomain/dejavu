@@ -25,10 +25,8 @@ package dev.pthomain.android.dejavu.cache
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
@@ -36,6 +34,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import java.util.*
@@ -68,7 +68,7 @@ internal class CacheManager<E>(
     fun <R : Any> clearCache(instructionToken: RequestToken<Clear, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
                 with(instructionToken.instruction) {
-                    persistenceManager.clearCache(operation, requestMetadata)
+                    persistenceManager.clearCache(requestMetadata, operation)
                 }
             }
 
@@ -81,7 +81,7 @@ internal class CacheManager<E>(
      */
     fun <R : Any> invalidate(instructionToken: RequestToken<Invalidate, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
-                    persistenceManager.forceInvalidation(instructionToken.instruction.requestMetadata)
+                    persistenceManager.forceInvalidation(instructionToken)
             }
 
     /**
@@ -93,19 +93,19 @@ internal class CacheManager<E>(
      * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
      */
     fun <R : Any> getCachedResponse(
-            upstream: Observable<Response<R, Cache>>,
+            upstream: Observable<DejaVuResult<R>>,
             requestToken: RequestToken<Cache, R>
     ): Observable<DejaVuResult<R>> =
             Observable.defer {
                 val cacheOperation = requestToken.instruction.operation
 
                 val instruction = requestToken.instruction
-                val networkPriority = cacheOperation.priority.network
+                val behaviour = cacheOperation.priority.behaviour
                 val simpleName = instruction.requestMetadata.responseClass.simpleName
 
                 logger.d(this, "Checking for cached $simpleName")
 
-                val cachedResponse = persistenceManager.find(requestToken)
+                val cachedResponse = persistenceManager.get(requestToken)
                         ?.run {
                             val status = dateFactory.getCacheStatus(
                                     expiryDate,
@@ -118,7 +118,6 @@ internal class CacheManager<E>(
                                             instruction,
                                             status,
                                             requestDate,
-                                            cacheDate,
                                             expiryDate
                                     ),
                                     CallDuration(0, 0, 0) //FIXME
@@ -127,7 +126,7 @@ internal class CacheManager<E>(
 
                 val diskDuration = (dateFactory(null).time - requestToken.requestDate.time).toInt()
 
-                if (networkPriority.isLocalOnly()) {
+                if (behaviour.isOffline()) {
                     if (cachedResponse == null)
                         emptyResponseFactory.createEmptyResponseObservable(requestToken)
                     else Observable.just(cachedResponse)
@@ -144,7 +143,7 @@ internal class CacheManager<E>(
     //TODO JavaDoc
     private fun <R : Any> getOnlineObservable(
             cachedResponse: Response<R, Cache>?,
-            upstream: Observable<Response<R, Cache>>,
+            upstream: Observable<DejaVuResult<R>>,
             cacheOperation: Cache,
             instructionToken: RequestToken<Cache, R>,
             diskDuration: Int
@@ -176,7 +175,7 @@ internal class CacheManager<E>(
 
     private fun <R : Any> fetchAndCache(
             previousCachedResponse: Response<R, Cache>?,
-            upstream: Observable<Response<R, Cache>>,
+            upstream: Observable<DejaVuResult<R>>,
             cacheOperation: Cache,
             instructionToken: RequestToken<Cache, R>,
             diskDuration: Int
@@ -185,40 +184,43 @@ internal class CacheManager<E>(
                 val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
                 logger.d(this, "$simpleName is STALE, attempting to refresh")
 
-                upstream
-                        .map {
-                            cacheMetadataManager.setNetworkCallMetadata(
-                                    it,
-                                    cacheOperation,
-                                    previousCachedResponse,
-                                    instructionToken,
-                                    diskDuration
-                            )
-                        }
-                        .map { wrapper ->
-                            logger.d(this, "Finished fetching $simpleName, now caching")
-                            try {
-                                val cacheToken = with(wrapper.cacheToken) {
-                                    ResponseToken(
-                                            instruction,
-                                            status,
-                                            requestDate
-                                    ) //TODO check expiry date etc
+                upstream.flatMap {
+                    if (it is Response<*, *>) {
+                        @Suppress("UNCHECKED_CAST")
+                        Observable.just(it as Response<R, Cache>)
+                                .map {
+                                    cacheMetadataManager.setNetworkCallMetadata(
+                                            it,
+                                            cacheOperation,
+                                            previousCachedResponse,
+                                            instructionToken,
+                                            diskDuration
+                                    )
                                 }
+                                .map { wrapper ->
+                                    logger.d(this, "Finished fetching $simpleName, now caching")
+                                    try {
+                                        val cacheToken = with(wrapper.cacheToken) {
+                                            ResponseToken(
+                                                    instruction,
+                                                    status,
+                                                    requestDate,
+                                                    dateFactory(requestDate.time + (cacheOperation.durationInSeconds * 1000))
+                                            ) //TODO check expiry date etc
+                                        }
 
-                                persistenceManager.cache(
-                                        wrapper.response,
-                                        cacheToken
-                                )
-                            } catch (e: Exception) {
-                                return@map cacheMetadataManager.setSerialisationFailedMetadata(
-                                        wrapper,
-                                        e
-                                )
-                            }
+                                        persistenceManager.put(wrapper.copy(cacheToken = cacheToken))
+                                    } catch (e: Exception) {
+                                        return@map cacheMetadataManager.setSerialisationFailedMetadata(
+                                                wrapper,
+                                                e
+                                        )
+                                    }
 
-                            logger.d(this, "Finished caching $simpleName, now delivering")
-                            wrapper
-                        }
+                                    logger.d(this, "Finished caching $simpleName, now delivering")
+                                    wrapper
+                                }
+                    } else Observable.just(it)
+                }
             }
 }

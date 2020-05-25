@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.persistence.base.store
 
 
-interface KeyValueStore<K, P, V> {
+interface KeyValueStore<K, PK, V> {
 
     /**
      * Returns an existing entry key matching the given partial key
@@ -32,7 +32,7 @@ interface KeyValueStore<K, P, V> {
      * @param partialKey the partial key used to retrieve the full key
      * @return the matching full key if present
      */
-    fun findPartialKey(partialKey: P): K?
+    fun findPartialKey(partialKey: PK): K?
 
     /**
      * Returns an entry for the given key, if present

@@ -41,6 +41,8 @@ internal class CompressionSerialisationDecorator(
         private val uncompresser: (ByteArray, Int, Int) -> ByteArray
 ) : SerialisationDecorator {
 
+    override val uniqueName = "COMPRESS"
+
     /**
      * Implements optional compression during the serialisation process.
      *
@@ -56,7 +58,6 @@ internal class CompressionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.compress) {
                 compresser(payload).also { compressed ->
                     logCompression(
                             compressed,
@@ -64,7 +65,6 @@ internal class CompressionSerialisationDecorator(
                             payload
                     )
                 }
-            } else payload
 
     /**
      * Implements optional uncompression during the deserialisation process.
@@ -81,7 +81,6 @@ internal class CompressionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.compress) {
                 uncompresser(payload, 0, payload.size).also {
                     logCompression(
                             payload,
@@ -89,7 +88,6 @@ internal class CompressionSerialisationDecorator(
                             it
                     )
                 }
-            } else payload
 
     /**
      * Logs the compression level for the given compressed payload
@@ -103,10 +101,10 @@ internal class CompressionSerialisationDecorator(
             simpleName: String,
             uncompressed: ByteArray
     ) {
+        val percent = String.format("%.2f", 100f * (1f - (uncompressed.size.toFloat() / compressedData.size)))
         logger.d(
                 this,
-                "Compressed/uncompressed $simpleName: ${compressedData.size}B/${uncompressed.size}B "
-                        + "(${100 * compressedData.size / uncompressed.size}%)"
+                "Compression of $simpleName: ${compressedData.size}B/${uncompressed.size}B ($percent%)"
         )
     }
 }

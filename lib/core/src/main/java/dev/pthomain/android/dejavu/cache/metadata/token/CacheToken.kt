@@ -69,6 +69,5 @@ data class ResponseToken<O : Remote, R : Any>(
         override val instruction: CacheInstruction<O, R>,
         override val status: CacheStatus,
         override val requestDate: Date,
-        val cacheDate: Date? = null,
         val expiryDate: Date? = null
 ) : CacheToken<O, R>(instruction, status, requestDate)

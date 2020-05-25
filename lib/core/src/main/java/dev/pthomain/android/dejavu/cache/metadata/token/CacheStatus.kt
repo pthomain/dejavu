@@ -192,6 +192,6 @@ fun ((Long?) -> Date).getCacheStatus(
         operation: Cache = Cache()
 ) = ifElse(
         this(null).time >= expiryDate.time,
-        ifElse(operation.priority.network.isLocalOnly(), OFFLINE_STALE, STALE),
+        ifElse(operation.priority.behaviour.isOffline(), OFFLINE_STALE, STALE),
         FRESH
 )

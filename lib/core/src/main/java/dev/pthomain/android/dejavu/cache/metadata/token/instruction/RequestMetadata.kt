@@ -31,9 +31,9 @@ package dev.pthomain.android.dejavu.cache.metadata.token.instruction
  * @param requestBody the optional body of the request
  */
 sealed class RequestMetadata<R>(
-        open val responseClass: Class<R>,
-        open val url: String,
-        open val requestBody: String? = null
+        val responseClass: Class<R>,
+        val url: String,
+        val requestBody: String? = null
 )
 
 /**
@@ -44,10 +44,10 @@ sealed class RequestMetadata<R>(
  * @param url the full URL of the request including query parameters
  * @param requestBody the optional body of the request
  */
-data class PlainRequestMetadata<R>(
-        override val responseClass: Class<R>,
-        override val url: String,
-        override val requestBody: String? = null
+class PlainRequestMetadata<R>(
+        responseClass: Class<R>,
+        url: String,
+        requestBody: String? = null
 ) : RequestMetadata<R>(
         responseClass,
         url,
@@ -64,41 +64,14 @@ data class PlainRequestMetadata<R>(
  * @param requestHash the hash of the URL and its alphabetically sorted query parameters
  * @param classHash the response class' hash
  */
-sealed class HashedRequestMetadata<R : Any>(
+class HashedRequestMetadata<R : Any>(
         responseClass: Class<R>,
         url: String,
         requestBody: String?,
-        open val requestHash: String,
-        open val classHash: String
+        val requestHash: String,
+        val classHash: String
 ) : RequestMetadata<R>(
         responseClass,
         url,
         requestBody
 )
-
-data class ValidRequestMetadata<R : Any>(
-        override val responseClass: Class<R>,
-        override val url: String,
-        override val requestBody: String?,
-        override val requestHash: String,
-        override val classHash: String
-) : HashedRequestMetadata<R>(
-        responseClass,
-        url,
-        requestBody,
-        requestHash,
-        classHash
-)
-
-data class InvalidRequestMetadata<R : Any>(
-        override val responseClass: Class<R>
-) : HashedRequestMetadata<R>(
-        responseClass,
-        DEFAULT_URL,
-        null,
-        INVALID_HASH,
-        INVALID_HASH
-)
-
-internal const val DEFAULT_URL = "http://127.0.0.1"
-internal const val INVALID_HASH = "no_hash"

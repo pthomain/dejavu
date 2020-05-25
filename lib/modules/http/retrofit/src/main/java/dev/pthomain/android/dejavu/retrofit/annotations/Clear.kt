@@ -23,6 +23,8 @@
 
 package dev.pthomain.android.dejavu.retrofit.annotations
 
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.*
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
 
@@ -34,5 +36,8 @@ import kotlin.annotation.AnnotationTarget.FUNCTION
  */
 @Target(FUNCTION)
 @Retention(RUNTIME)
-annotation class Clear(val clearStaleEntriesOnly: Boolean = false)
+annotation class Clear(
+        val scope: Scope = ALL,
+        val clearStaleEntriesOnly: Boolean = false
+)
 

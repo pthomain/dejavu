@@ -49,18 +49,15 @@ interface RetrofitObservableClients : ObservableClients {
         override fun get(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(compress = true)
+        @Cache(serialisation = "compress")
         override fun compressed(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(encrypt = true)
+        @Cache(serialisation = "encrypt")
         override fun encrypted(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
-        @Cache(
-                compress = true,
-                encrypt = true
-        )
+        @Cache(serialisation = "compress,encrypt")
         override fun compressedEncrypted(): Observable<CatFactResponse>
 
         // GET freshOnly
@@ -72,22 +69,21 @@ interface RetrofitObservableClients : ObservableClients {
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                compress = true
+                serialisation = "compress"
         )
         override fun freshOnlyCompressed(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                encrypt = true
+                serialisation = "encrypt"
         )
         override fun freshOnlyEncrypted(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
-                compress = true,
-                encrypt = true
+                serialisation = "compress,encrypt"
         )
         override fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>
 
@@ -98,8 +94,50 @@ interface RetrofitObservableClients : ObservableClients {
         override fun refresh(): Observable<CatFactResponse>
 
         @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "compress"
+        )
+        override fun refreshCompressed(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "encrypt"
+        )
+        override fun refreshEncrypted(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_ACCEPTED_FIRST,
+                serialisation = "compress,encrypt"
+        )
+        override fun refreshCompressedEncrypted(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
         override fun refreshFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "compress"
+        )
+        override fun refreshCompressedFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "encrypt"
+        )
+        override fun refreshEncryptedFreshOnly(): Observable<CatFactResponse>
+
+        @GET(ENDPOINT)
+        @Cache(
+                priority = INVALIDATE_STALE_NOT_ACCEPTED,
+                serialisation = "compress,encrypt"
+        )
+        override fun refreshCompressedEncryptedFreshOnly(): Observable<CatFactResponse>
 
         // OFFLINE
 

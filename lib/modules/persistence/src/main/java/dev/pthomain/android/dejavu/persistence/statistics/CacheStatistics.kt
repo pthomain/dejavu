@@ -149,8 +149,6 @@ private fun getCacheEntrySummaryColumnNames(showClass: Boolean = false) =
 data class CacheEntry(
         val responseClass: Class<*>,
         val status: CacheStatus,
-        val encrypted: Boolean,
-        val compressed: Boolean,
         val cacheDate: Date,
         val expiryDate: Date
 ) {
@@ -164,8 +162,6 @@ data class CacheEntry(
             arrayOf(
                     ifElse(showClass, responseClass.format(), null),
                     status.name,
-                    ifElse(encrypted, "TRUE", "FALSE"),
-                    ifElse(compressed, "TRUE", "FALSE"),
                     dateFormat.format(cacheDate),
                     dateFormat.format(expiryDate)
             ).filterNotNull().toTypedArray()

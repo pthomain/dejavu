@@ -92,7 +92,6 @@ internal class CacheMetadataManager<E>(
                 instructionToken.instruction,
                 status,
                 fetchDate,
-                fetchDate,
                 expiryDate
         )
 

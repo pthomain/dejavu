@@ -46,5 +46,4 @@ annotation class Cache(val priority: CachePriority = STALE_ACCEPTED_FIRST,
                        val durationInSeconds: Int = DEFAULT_CACHE_DURATION_IN_SECONDS,
                        val connectivityTimeoutInSeconds: Int = -1,
                        val requestTimeOutInSeconds: Int = -1,
-                       val encrypt: Boolean = false,
-                       val compress: Boolean = false)
+                       val serialisation: String = "")

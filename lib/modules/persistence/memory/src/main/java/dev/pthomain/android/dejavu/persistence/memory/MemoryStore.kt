@@ -24,12 +24,14 @@
 package dev.pthomain.android.dejavu.persistence.memory
 
 import androidx.collection.LruCache
-import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
+import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
+import java.util.*
 
 class MemoryStore internal constructor(
-        private val lruCache: LruCache<String, Incomplete>
-) : KeyValueStore<String, String, Incomplete> {
+        private val lruCache: LruCache<String, Serialised>,
+        private val dateFactory: (Long?) -> Date
+) : KeyValueStore<String, String, Serialised> {
 
     /**
      * Returns an existing entry key matching the given partial key
@@ -58,7 +60,7 @@ class MemoryStore internal constructor(
      * @param key the key to save the entry under
      * @param value the value to associate with the key
      */
-    override fun save(key: String, value: Incomplete) {
+    override fun save(key: String, value: Serialised) {
         lruCache.put(key, value)
     }
 
@@ -89,16 +91,17 @@ class MemoryStore internal constructor(
         val oldEntry = lruCache.get(oldKey)
         if (oldEntry != null) {
             delete(oldKey)
-            //FIXME only use the serialised key for file persistence and use the request hash as a key for memory
-            lruCache.put(newKey, oldEntry.copy(expiryDate = 0))
+            lruCache.put(newKey, oldEntry.copy(expiryDate = dateFactory(0L)))
         }
     }
 
     class Factory internal constructor(
-            private val lruCacheFactory: (Int) -> LruCache<String, Incomplete>
+            private val lruCacheFactory: (Int) -> LruCache<String, Serialised>,
+            private val dateFactory: (Long?) -> Date
     ) {
         fun create(maxEntries: Int = 20) = MemoryStore(
-                lruCacheFactory(maxEntries)
+                lruCacheFactory(maxEntries),
+                dateFactory
         )
     }
 

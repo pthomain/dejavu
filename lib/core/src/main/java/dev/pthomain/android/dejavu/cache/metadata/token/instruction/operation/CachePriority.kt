@@ -25,14 +25,14 @@ package dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation
 
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.NetworkPriority.*
 
 
 /**
  * This class dictates the way the cache should behave in handling a request returning data.
  *
- * For the values with the NetworkPriority CACHE or REFRESH, there are 3 different ways to deal with
+ * For the values with the Behaviour CACHE or REFRESH, there are 3 different ways to deal with
  * STALE cache data:
  *
  * - the default way (preference = DEFAULT) is to always emit STALE data from the cache
@@ -65,7 +65,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
  * @param possibleStatuses the possible statuses of the response(s) emitted by the cache as a result of this priority
  */
 enum class CachePriority(
-        val network: NetworkPriority,
+        val behaviour: Behaviour,
         val freshness: FreshnessPriority,
         vararg val possibleStatuses: CacheStatus
 ) {
@@ -95,7 +95,7 @@ enum class CachePriority(
      * during a loading UI state for instance.
      */
     STALE_ACCEPTED_FIRST(
-            LOCAL_FIRST,
+            ONLINE,
             ANY,
             FRESH,
             STALE,
@@ -125,7 +125,7 @@ enum class CachePriority(
      * This priority ignores cached data if it is STALE *but* will return it if the network call fails.
      */
     STALE_ACCEPTED_LAST(
-            LOCAL_FIRST,
+            ONLINE,
             FRESH_PREFERRED,
             FRESH,
             NETWORK,
@@ -154,7 +154,7 @@ enum class CachePriority(
      * as a result of a failed network call.
      */
     STALE_NOT_ACCEPTED(
-            LOCAL_FIRST,
+            ONLINE,
             FRESH_ONLY,
             FRESH,
             NETWORK,
@@ -185,7 +185,7 @@ enum class CachePriority(
      * be displayed on a loading UI state for instance.
      */
     INVALIDATE_STALE_ACCEPTED_FIRST(
-            NETWORK_FIRST,
+            INVALIDATE,
             ANY,
             STALE,
             NETWORK,
@@ -216,7 +216,7 @@ enum class CachePriority(
      * be displayed on a loading UI state for instance.
      */
     INVALIDATE_STALE_ACCEPTED_LAST(
-            NETWORK_FIRST,
+            INVALIDATE,
             FRESH_PREFERRED,
             NETWORK,
             REFRESHED,
@@ -244,7 +244,7 @@ enum class CachePriority(
      * from the cache or as the result of a failed network call.
      */
     INVALIDATE_STALE_NOT_ACCEPTED(
-            NETWORK_FIRST,
+            INVALIDATE,
             FRESH_ONLY,
             NETWORK,
             REFRESHED,
@@ -265,7 +265,7 @@ enum class CachePriority(
      * This priority returns cached data as is without ever using the network.
      */
     OFFLINE_STALE_ACCEPTED(
-            LOCAL_ONLY,
+            OFFLINE,
             ANY,
             FRESH,
             STALE,
@@ -285,7 +285,7 @@ enum class CachePriority(
      * This priority returns only FRESH cached data without ever using the network.
      */
     OFFLINE_STALE_NOT_ACCEPTED(
-            LOCAL_ONLY,
+            OFFLINE,
             FRESH_ONLY,
             FRESH,
             EMPTY
@@ -300,7 +300,7 @@ enum class CachePriority(
      * whether it should be automatically refreshed or not. If the data is still FRESH, it is returned
      * and no call to the network is made. Otherwise, a network is made to refresh it.
      *
-     * - NETWORK_FIRST permanently invalidates the local data (if present) and goes straight to network.
+     * - INVALIDATE permanently invalidates the local data (if present) and goes straight to network.
      * If the call succeeds, then the network data updates the local one and restores the default
      * expiry behaviour for subsequent calls. This mode is the only one that has a side effect, that
      * is to permanently set the local data to STALE (until successfully refreshed).
@@ -314,17 +314,14 @@ enum class CachePriority(
      * @param usesNetwork whether or not the cache should attempt to fetch data from the network
      * @param invalidatesLocalData whether or not cached data should be permanently marked as STALE, regardless of its presence or existing status
      */
-    enum class NetworkPriority(
-            val usesNetwork: Boolean,
-            val invalidatesLocalData: Boolean
-    ) {
-        LOCAL_FIRST(true, false),
-        NETWORK_FIRST(true, true),
-        LOCAL_ONLY(false, false);
+    enum class Behaviour(val usesNetwork: Boolean) {
+        ONLINE(true),
+        INVALIDATE(true),
+        OFFLINE(false);
 
-        fun isLocalFirst() = this == LOCAL_FIRST
-        fun isNetworkFirst() = this == NETWORK_FIRST
-        fun isLocalOnly() = this == LOCAL_ONLY
+        fun isOnline() = this == ONLINE
+        fun isInvalidate() = this == INVALIDATE
+        fun isOffline() = this == OFFLINE
     }
 
     /**
@@ -358,8 +355,8 @@ enum class CachePriority(
         FRESH_ONLY(false, false, true);
 
         fun isAny() = this == ANY
-        fun isFreshOnly() = this == FRESH_ONLY
         fun isFreshPreferred() = this == FRESH_PREFERRED
+        fun isFreshOnly() = this == FRESH_ONLY
     }
 
     companion object {
@@ -367,28 +364,28 @@ enum class CachePriority(
         /**
          * Commodity factory
          *
-         * @param networkPriority the desired network priority
+         * @param behaviour the desired network priority
          * @param freshness the desired freshness priority
          * @return the corresponding cache priority
          */
         fun with(
-                networkPriority: NetworkPriority,
+                behaviour: Behaviour,
                 freshness: FreshnessPriority
         ) =
-                when (networkPriority) {
-                    LOCAL_FIRST -> when (freshness) {
+                when (behaviour) {
+                    ONLINE -> when (freshness) {
                         ANY -> STALE_ACCEPTED_FIRST
                         FRESH_PREFERRED -> STALE_ACCEPTED_LAST
                         FRESH_ONLY -> STALE_NOT_ACCEPTED
                     }
 
-                    NETWORK_FIRST -> when (freshness) {
+                    INVALIDATE -> when (freshness) {
                         ANY -> INVALIDATE_STALE_ACCEPTED_FIRST
                         FRESH_PREFERRED -> INVALIDATE_STALE_ACCEPTED_LAST
                         FRESH_ONLY -> INVALIDATE_STALE_NOT_ACCEPTED
                     }
 
-                    LOCAL_ONLY -> when (freshness) {
+                    OFFLINE -> when (freshness) {
                         FRESH_ONLY -> OFFLINE_STALE_NOT_ACCEPTED
                         else -> OFFLINE_STALE_ACCEPTED
                     }

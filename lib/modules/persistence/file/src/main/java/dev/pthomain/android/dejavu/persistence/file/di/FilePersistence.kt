@@ -27,7 +27,6 @@ import android.content.Context
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
-import dev.pthomain.android.dejavu.persistence.file.FileSerialisationDecorator
 import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
@@ -35,11 +34,11 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class FilePersistence(
-        decoratorList: List<SerialisationDecorator>,
+        override val decorators: List<SerialisationDecorator>,
         serialiser: Serialiser
 ) : PersistenceManager.ModuleProvider {
 
-    private val persistenceModule = PersistenceModule(decoratorList, serialiser).module
+    private val persistenceModule = PersistenceModule(decorators, serialiser).module
 
     override val modules = persistenceModule + module {
 
@@ -50,14 +49,9 @@ class FilePersistence(
             )
         }
 
-        single<SerialisationDecorator> {
-            FileSerialisationDecorator(::String)
-        }
-
         single {
             FilePersistenceManagerFactory(
                     get(named("dateFactory")),
-                    get(),
                     get(),
                     get(),
                     get(),

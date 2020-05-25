@@ -107,26 +107,22 @@ class VolleyObservable<E, R : Any> private constructor(
                 operation: Operation,
                 asResult: Boolean,
                 requestMetadata: PlainRequestMetadata<R>
-        ): Observable<Any> =
-                VolleyObservable<E, R>(
-                        requestQueue,
-                        serialiser,
-                        requestMetadata
-                ).compose(
-                        dejaVuInterceptorFactory.create(
-                                asResult,
-                                operation,
-                                requestMetadata
-                        ).let {
-                            if (asResult) {
-                                Glitchy.builder(errorFactory)
-                                        .withInterceptors(Interceptors.After(it))
-                                        .withInterceptError(true)
-                                        .withInterceptOutcome(asResult)
-                                        .build()
-                                        .interceptor
-                            } else it
-                        }
-                )
+        ) = VolleyObservable<E, R>(
+                requestQueue,
+                serialiser,
+                requestMetadata
+        ).compose(
+                Glitchy.builder(errorFactory)
+                        .withInterceptors(Interceptors.After(
+                                dejaVuInterceptorFactory.create(
+                                        asResult,
+                                        operation,
+                                        requestMetadata
+                                )
+                        ))
+                        .emitOutcome(asResult)
+                        .build()
+                        .interceptor
+        )
     }
 }

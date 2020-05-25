@@ -38,6 +38,8 @@ internal class EncryptionSerialisationDecorator(
         private val encryptionManager: EncryptionManager
 ) : SerialisationDecorator {
 
+    override val uniqueName = "ENCRYPT"
+
     /**
      * Implements optional encryption during the serialisation process.
      *
@@ -53,10 +55,12 @@ internal class EncryptionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.encrypt && encryptionManager.isEncryptionAvailable) {
-                encryptionManager.encryptBytes(payload, DATA_TAG)
-                        ?: throw SerialisationException("Could not encrypt data")
-            } else payload
+            with(encryptionManager) {
+                when {
+                    isEncryptionAvailable -> encryptBytes(payload, DATA_TAG)
+                    else -> null
+                } ?: throw SerialisationException("Could not encrypt data")
+            }
 
     /**
      * Implements optional decryption during the deserialisation process.
@@ -73,10 +77,12 @@ internal class EncryptionSerialisationDecorator(
             operation: Cache,
             payload: ByteArray
     ) =
-            if (operation.encrypt && encryptionManager.isEncryptionAvailable) {
-                encryptionManager.decryptBytes(payload, DATA_TAG)
-                        ?: throw SerialisationException("Could not decrypt data")
-            } else payload
+            with(encryptionManager) {
+                when {
+                    isEncryptionAvailable -> decryptBytes(payload, DATA_TAG)
+                    else -> null
+                } ?: throw SerialisationException("Could not decrypt data")
+            }
 
     companion object {
         internal const val DATA_TAG = "DATA_TAG"

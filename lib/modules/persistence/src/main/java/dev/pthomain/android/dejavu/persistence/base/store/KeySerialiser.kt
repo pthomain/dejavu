@@ -23,33 +23,35 @@
 
 package dev.pthomain.android.dejavu.persistence.base.store
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.persistence.Persisted
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import java.util.*
 
 /**
  * Provides methods handling the serialisation and deserialisation of the required cache metadata
  * to be used as a File name for the purpose of filtering and querying of the cached responses.
  */
-class KeySerialiser {
+class KeySerialiser(private val dateFactory: (Long?) -> Date) {
 
     /**
      * Serialises the required cache metadata to be used as a File name for the purpose of
      * filtering and querying of the cached responses.
      *
-     * @param cacheDataHolder the model containing the metadata required for the name serialisation
+     * @param persistedData the model containing the metadata required for the name serialisation
      * @return the file name to use to save the response associated to the given metadata
      */
-    fun <R : Any> serialise(cacheDataHolder: CacheDataHolder.Complete<R>) =
-            with(cacheDataHolder) {
+    fun <R : Any> serialise(token: ResponseToken<Cache, R>) =
+            with(token.instruction.requestMetadata) {
                 listOf(
-                        cacheDate.toString(),
-                        expiryDate.toString(),
-                        requestMetadata.classHash,
-                        requestMetadata.requestHash,
-                        ifElse(isCompressed, "1", "0"),
-                        ifElse(isEncrypted, "1", "0")
+                        requestHash,
+                        classHash,
+                        token.requestDate.time,
+                        token.expiryDate!!.time,
+                        with(token.instruction.operation.serialisation) {
+                            if (isBlank()) "0" else this
+                        }
                 ).joinToString(SEPARATOR)
             }
 
@@ -69,46 +71,22 @@ class KeySerialiser {
     fun deserialise(fileName: String) =
             if (isValidFormat(fileName)) {
                 with(fileName.split(SEPARATOR)) {
-                    CacheDataHolder.Incomplete(
-                            get(0).toLong(),
-                            get(1).toLong(),
-                            ByteArray(0),
-                            get(2),
-                            get(3),
-                            get(4) == "1",
-                            get(5) == "1"
+                    Persisted.Key(
+                            get(0),
+                            get(1),
+                            dateFactory(get(2).toLong()),
+                            dateFactory(get(3).toLong()),
+                            with(get(4)) {
+                                if (this == "0") "" else this
+                            }
                     )
                 }
             } else throw SerialisationException("This file name is invalid: $fileName")
 
-    /**
-     * Fully deserialises the given file name and request metadata to the associated cache metadata.
-     * The returned holder can be used to populate the metadata of the associated deserialised response.
-     *
-     * @param requestMetadata the optional request metadata needed to fully deserialise the file name.
-     * @param fileName the local file name
-     *
-     * @return the complete holder to be used for the deserialised response metadata
-     * @throws SerialisationException if the given file name is invalid
-     */
-    @Throws(SerialisationException::class)
-    fun <R : Any> deserialise(requestMetadata: HashedRequestMetadata<R>,
-                              fileName: String) =
-            with(deserialise(fileName)) {
-                CacheDataHolder.Complete(
-                        requestMetadata, //TODO verify that responseClassHash matches the hash on the metadata
-                        cacheDate,
-                        expiryDate,
-                        data,
-                        isCompressed,
-                        isEncrypted
-                )
-            }
-
     companion object {
         const val SEPARATOR = "_"
 
-        private val validFileRegex = Regex("^([^_]+_){5}[^_]+\$")
+        private val validFileRegex = Regex("^([^_]+_){4}[^_]+\$")
 
         /**
          * @return whether or not the given file name has the format of a serialised cache entry.

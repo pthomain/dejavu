@@ -59,15 +59,7 @@ class DejaVuFactory(
     var encrypt = false
     var compress = false
 
-    private fun getDecorators(
-            encrypt: Boolean,
-            compress: Boolean
-    ) = when {
-        encrypt && compress -> listOf(compressionDecorator, encryptionDecorator)
-        encrypt -> listOf(encryptionDecorator)
-        compress -> listOf(compressionDecorator)
-        else -> emptyList()
-    }
+    private val decorators = listOf(compressionDecorator, encryptionDecorator)
 
     private fun persistenceModuleProvider(serialiser: Serialiser) =
             when (persistence) {
@@ -77,17 +69,17 @@ class DejaVuFactory(
             }
 
     private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
-            getDecorators(encrypt, compress),
+            decorators,
             serialiser
     )
 
     private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
-            getDecorators(encrypt, compress),
+            decorators,
             serialiser
     )
 
     private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
-            getDecorators(encrypt, compress),
+            decorators,
             serialiser
     )
 
