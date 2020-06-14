@@ -141,12 +141,14 @@ dependencies {
 
     api appDependencies.kotlinJdk8
     api appDependencies.kotlinReflect
+    api appDependencies.kotlinCoroutines
+    api appDependencies.kotlinCoroutinesAndroid
 
     api appDependencies.boilerplate
     api appDependencies.glitchyCore
 
+    //https://stackoverflow.com/questions/56639529
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
-//https://stackoverflow.com/questions/56639529/duplicate-class-com-google-common-util-concurrent-listenablefuture-found-in-modu
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt

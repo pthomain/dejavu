@@ -78,6 +78,12 @@ internal class CompositePresenter(
             presenter.method = value
         }
 
+    override var persistence = presenter.persistence
+        set(value) {
+            field = value
+            presenter.persistence = value
+        }
+
     override var encrypt = presenter.encrypt
         set(value) {
             field = value

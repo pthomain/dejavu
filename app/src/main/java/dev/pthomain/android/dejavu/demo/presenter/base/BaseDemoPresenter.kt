@@ -47,6 +47,8 @@ import dev.pthomain.android.dejavu.demo.dejavu.DejaVuClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.FILE
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
@@ -71,10 +73,16 @@ protected constructor(
     override var serialiserType: SerialiserType = Gson
     protected var errorFactoryType: ErrorFactoryType<*> = Default
 
-    protected var dejaVuClient: C = newClient()
-        private set
+    final override var persistence = FILE
+        set(value) {
+            field = value
+            dejaVuClient = newClient(persistence)
+        }
 
-    protected abstract fun newClient(): C
+    protected abstract fun newClient(persistence: PersistenceType): C
+
+    protected var dejaVuClient: C = newClient(persistence)
+        private set
 
     protected fun dataClient() = dejaVuClient.dataClient(useSingle)
     protected fun operationClient() = dejaVuClient.operationsClient(useSingle)

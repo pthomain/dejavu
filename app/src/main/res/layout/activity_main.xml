@@ -209,6 +209,54 @@
 
     </RadioGroup>
 
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_button_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_file"
+            android:text="File storage" />
+
+        <RadioButton
+            android:id="@+id/radio_button_database"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_database"
+            android:text="SQLite" />
+
+        <RadioButton
+            android:id="@+id/radio_button_memory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:gravity="center_vertical"
+            android:labelFor="@id/radio_button_memory"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="In-memory" />
+
+    </RadioGroup>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

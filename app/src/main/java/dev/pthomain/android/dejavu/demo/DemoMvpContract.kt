@@ -30,6 +30,7 @@ import dev.pthomain.android.boilerplate.ui.mvp.base.MvpContract.*
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
@@ -52,6 +53,7 @@ internal class DemoMvpContract {
         var useSingle: Boolean
         var serialiserType: SerialiserType
         var method: Method
+        var persistence: PersistenceType
         var encrypt: Boolean
         var compress: Boolean
         var freshness: FreshnessPriority

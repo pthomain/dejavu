@@ -91,6 +91,7 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
 
                 Response(
                         it.response,
+                        @Suppress("UNCHECKED_CAST") //bad compiler inference
                         ResponseToken(
                                 instruction as CacheInstruction<DoNotCache, R>,
                                 NOT_CACHED,

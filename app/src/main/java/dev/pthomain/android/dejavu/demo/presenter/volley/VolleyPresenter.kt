@@ -13,6 +13,7 @@ import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Custom
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
@@ -38,13 +39,15 @@ internal class VolleyPresenter(
     private val delegate = OperationPresenterDelegate(::executeOperation)
 
     @Suppress("UNCHECKED_CAST")
-    override fun newClient() = when (errorFactoryType) {
+    override fun newClient(persistence: PersistenceType) = when (errorFactoryType) {
         Default -> dejaVuFactory.createVolley(
+                persistence,
                 serialiserType,
                 errorFactoryType as ErrorFactoryType<Glitch>
         )
 
         Custom -> dejaVuFactory.createVolley(
+                persistence,
                 serialiserType,
                 errorFactoryType as ErrorFactoryType<CustomApiError>
         )

@@ -50,8 +50,6 @@ sealed class Operation(val type: Type) {
          * @param durationInSeconds duration of the cache for this specific call in seconds, during which the data is considered FRESH
          * @param connectivityTimeoutInSeconds maximum time to wait for the network connectivity to become available to return an online response (does not apply to cached responses)
          * @param requestTimeOutInSeconds maximum time to wait for the request to finish (does not apply to cached responses)
-         * @param encrypt whether the cached data should be encrypted, useful for use on external storage //TODO abstract
-         * @param compress whether the cached data should be compressed, useful for large responses //TODO abstract
          */
         class Cache(
                 val priority: CachePriority = STALE_ACCEPTED_FIRST,
