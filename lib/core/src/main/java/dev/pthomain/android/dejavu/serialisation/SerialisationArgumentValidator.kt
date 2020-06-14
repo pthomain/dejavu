@@ -1,11 +1,11 @@
 package dev.pthomain.android.dejavu.serialisation
 
-import java.util.*
+import java.util.Locale.UK
 
 class SerialisationArgumentValidator(
         decorators: List<SerialisationDecorator>
 ) {
-    private val decoratorNames = decorators.map { it.uniqueName.toUpperCase(Locale.UK) }
+    private val decoratorNames = decorators.map { it.uniqueName.toUpperCase(UK) }
 
     fun validate(serialisation: String) {
         serialisation

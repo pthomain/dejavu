@@ -94,6 +94,7 @@ internal class EmptyResponseFactory<E>(
     ) =
             Observable.defer {
                 Observable.just(
+                        @Suppress("UNCHECKED_CAST") //This is enforced by CacheInterceptor
                         when (instructionToken.instruction.operation) {
                             is Cache -> createEmptyResponse(instructionToken as RequestToken<Cache, R>)
                             else -> createDoneResponse(instructionToken as RequestToken<out Local, R>)

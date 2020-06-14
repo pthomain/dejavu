@@ -55,13 +55,15 @@ class DejaVuFactory(
             .run { Encryption(if (SDK_INT >= 23) tink() else conceal()) }
             .serialisationDecorator
 
-    var persistence = FILE
     var encrypt = false
     var compress = false
 
     private val decorators = listOf(compressionDecorator, encryptionDecorator)
 
-    private fun persistenceModuleProvider(serialiser: Serialiser) =
+    private fun persistenceModuleProvider(
+            persistence: PersistenceType,
+            serialiser: Serialiser
+    ) =
             when (persistence) {
                 FILE -> filePersistenceModule(serialiser)
                 MEMORY -> memoryPersistenceModule(serialiser)
@@ -90,6 +92,7 @@ class DejaVuFactory(
     }
 
     private fun <E> dejaVuBuilder(
+            persistence: PersistenceType,
             serialiserType: SerialiserType,
             errorFactoryType: ErrorFactoryType<E>
     ) where E : Throwable,
@@ -97,43 +100,64 @@ class DejaVuFactory(
             DejaVu.builder(
                     context,
                     errorFactoryType.errorFactory,
-                    persistenceModuleProvider(serialiserType.serialiser),
+                    persistenceModuleProvider(
+                            persistence,
+                            serialiserType.serialiser
+                    ),
                     logger
             )
 
     private fun <E> dejaVuRetrofit(
+            persistence: PersistenceType,
             serialiserType: SerialiserType,
             errorFactoryType: ErrorFactoryType<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate =
-            dejaVuBuilder(serialiserType, errorFactoryType)
-                    .extend(DejaVuRetrofit.extension<E>()).build()
+            dejaVuBuilder(
+                    persistence,
+                    serialiserType,
+                    errorFactoryType
+            ).extend(DejaVuRetrofit.extension<E>()).build()
 
     private fun <E> dejaVuVolley(
+            persistence: PersistenceType,
             serialiserType: SerialiserType,
             errorFactoryType: ErrorFactoryType<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate =
-            dejaVuBuilder(serialiserType, errorFactoryType)
-                    .extend(DejaVuVolley.extension<E>()).build()
+            dejaVuBuilder(
+                    persistence,
+                    serialiserType,
+                    errorFactoryType
+            ).extend(DejaVuVolley.extension<E>()).build()
 
     fun <E> createRetrofit(
+            persistence: PersistenceType,
             serialiserType: SerialiserType,
             errorFactoryType: ErrorFactoryType<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate =
             DejaVuRetrofitClient(
-                    dejaVuRetrofit(serialiserType, errorFactoryType),
+                    dejaVuRetrofit(
+                            persistence,
+                            serialiserType,
+                            errorFactoryType
+                    ),
                     logger
             )
 
     fun <E> createVolley(
+            persistence: PersistenceType,
             serialiserType: SerialiserType,
             errorFactoryType: ErrorFactoryType<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate =
             DejaVuVolleyClient(
-                    dejaVuVolley(serialiserType, errorFactoryType),
+                    dejaVuVolley(
+                            persistence,
+                            serialiserType,
+                            errorFactoryType
+                    ),
                     logger
             )
 }

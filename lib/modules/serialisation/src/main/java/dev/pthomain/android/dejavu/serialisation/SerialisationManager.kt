@@ -39,7 +39,7 @@ import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 class SerialisationManager(
         private val serialiser: Serialiser,
         private val byteToStringConverter: (ByteArray) -> String,
-        private val decoratorList: List<SerialisationDecorator> //TODO order list to put compression before encryption
+        private val decoratorList: List<SerialisationDecorator>
 ) {
 
     init {

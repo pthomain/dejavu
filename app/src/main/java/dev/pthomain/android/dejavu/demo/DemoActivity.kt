@@ -39,6 +39,7 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
@@ -66,6 +67,10 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
+
+    private val fileRadio by lazy { findViewById<View>(R.id.radio_button_file)!! }
+    private val databaseRadio by lazy { findViewById<View>(R.id.radio_button_database)!! }
+    private val memoryRadio by lazy { findViewById<View>(R.id.radio_button_memory)!! }
 
     private val gsonRadio by lazy { findViewById<View>(R.id.radio_button_gson)!! }
     private val moshiRadio by lazy { findViewById<View>(R.id.radio_button_moshi)!! }
@@ -133,6 +138,11 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
+
+        fileRadio.setOnClickListener { presenter.persistence = FILE }
+        databaseRadio.setOnClickListener { presenter.persistence = SQLITE }
+        memoryRadio.setOnClickListener { presenter.persistence = MEMORY }
+
         gitHubButton.setOnClickListener { openGithub() }
 
         freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED

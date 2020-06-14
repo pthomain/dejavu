@@ -53,7 +53,7 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
         val parsedType = parsedRxType.parsedType
         val isDejaVuResult = rawType(parsedType) == DejaVuResult::class.java
 
-        val upperBoundType: Class<*> = if (isDejaVuResult) //TODO check if this is a class and throw exception otherwise
+        val upperBoundType: Class<*> = if (isDejaVuResult)
             getFirstParameterUpperBound(parsedType)!! as Class<*>
         else parsedType as Class<*>
 
