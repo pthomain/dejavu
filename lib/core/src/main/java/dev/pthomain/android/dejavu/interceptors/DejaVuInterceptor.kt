@@ -32,10 +32,10 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
@@ -45,7 +45,6 @@ import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Error
 import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Success
 import io.reactivex.Observable
 import io.reactivex.Single
-import java.util.*
 
 /**
  * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
@@ -70,12 +69,12 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val requestMetadata: PlainRequestMetadata<R>,
         private val hasher: Hasher,
         private val logger: Logger,
-        private val dateFactory: (Long?) -> Date,
-        private val serialisationArgumentValidator: SerialisationArgumentValidator,
+        private val dateFactory: DateFactory,
+        serialisationArgumentValidator: SerialisationArgumentValidator,
         private val hashingErrorObservableFactory: () -> Observable<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
+        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
 ) : Interceptor
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -132,8 +131,8 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             val cacheInterceptor = cacheInterceptorFactory.create(instructionToken)
             val responseInterceptor = responseInterceptorFactory.create<R>(asResult)
 
-            @Suppress("UNCHECKED_CAST")
             if (operation is Remote) {
+                @Suppress("UNCHECKED_CAST")
                 instructionToken as RequestToken<out Remote, R>
                 upstream.map { checkOutcome(it, instructionToken) }
                         .compose(networkInterceptorFactory.create(instructionToken))
@@ -157,11 +156,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             outcome: Any,
             instructionToken: RequestToken<O, R>
     ): DejaVuResult<R> {
-        val callDuration = CallDuration(
-                0,
-                (dateFactory(null).time - instructionToken.requestDate.time).toInt(),
-                0
-        )
+        val callDuration = CallDuration(network = instructionToken.ellapsed(dateFactory))
 
         @Suppress("UNCHECKED_CAST") //converted to Outcome by OutcomeInterceptor (set via Glitchy)
         return when (outcome as Outcome<R>) {
@@ -199,11 +194,11 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
     class Factory<E> internal constructor(
             private val hasher: Hasher,
             private val logger: Logger,
-            private val dateFactory: (Long?) -> Date,
+            private val dateFactory: DateFactory,
             private val serialisationArgumentValidator: SerialisationArgumentValidator,
             private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
             private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
+            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 

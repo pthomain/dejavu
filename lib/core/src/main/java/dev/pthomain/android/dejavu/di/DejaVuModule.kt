@@ -45,13 +45,18 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
 
+typealias DateFactory = (Long?) -> Date
+
+internal fun Date.ellapsed(dateFactory: DateFactory) =
+        (dateFactory(null).time - this.time).toInt()
+
 internal class DejaVuModule<E>(
         context: Context,
         logger: Logger,
         private val errorFactory: ErrorFactory<E>,
         persistenceModule: PersistenceManager.ModuleProvider,
         private val operationPredicate: (RequestMetadata<*>) -> Remote?,
-        private val durationPredicate: (TransientResponse<*>) -> Int?
+        private val durationPredicate: (TransientResponse<*>) -> Int?,
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
@@ -63,7 +68,7 @@ internal class DejaVuModule<E>(
 
         single(named("operationPredicate")) { operationPredicate }
 
-        single<(Long?) -> Date>(named("dateFactory")) {
+        single<DateFactory>(named("dateFactory")) {
             { if (it == null) Date() else Date(it) }
         }
 
@@ -119,7 +124,10 @@ internal class DejaVuModule<E>(
         }
 
         single {
-            EmptyResponseFactory<E>(get())
+            EmptyResponseFactory<E>(
+                    get(),
+                    get(named("dateFactory"))
+            )
         }
 
         single { SerialisationArgumentValidator(persistenceModule.decorators) }

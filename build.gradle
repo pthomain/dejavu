@@ -32,7 +32,7 @@ buildscript {
 
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:4.2.0-alpha01'
+        classpath 'com.android.tools.build:gradle:4.2.0-alpha04'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
@@ -81,7 +81,7 @@ ext {
     androidCompatVersion = '1.1.0'
 
     gsonVersion = '2.8.6'
-    moshiVersion = '1.9.2'
+    moshiVersion = '1.9.3'
     volleyVersion = '1.1.1'
     retrofitVersion = '2.9.0'
     okhttpVersion = '4.7.2'

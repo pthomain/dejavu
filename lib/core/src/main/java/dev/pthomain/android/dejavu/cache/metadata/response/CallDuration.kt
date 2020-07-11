@@ -23,6 +23,9 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.response
 
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.di.DateFactory
+
 /**
  * Contains information about how long the call took to execute at different stages of the caching process.
  *
@@ -30,8 +33,11 @@ package dev.pthomain.android.dejavu.cache.metadata.response
  * @param network time taken to retrieve the data from the network
  * @param total total time for this call, including disk, network and processing time.
  */
-data class CallDuration(
-        val disk: Int,
-        val network: Int,
-        val total: Int
+data class CallDuration internal constructor(
+        val disk: Int = 0,
+        val network: Int = 0,
+        val total: Int = 0,
 )
+
+internal fun RequestToken<*, *>.ellapsed(dateFactory: DateFactory) =
+        (dateFactory(null).time - requestDate.time).toInt()

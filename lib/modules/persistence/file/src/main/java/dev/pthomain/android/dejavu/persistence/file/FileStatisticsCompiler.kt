@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.persistence.file
 
 import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser.Companion.isValidFormat
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
 import java.io.File
 import java.io.InputStream
-import java.util.*
 
 /**
  * Provides a concrete StatisticsCompiler implementation for File entries.
@@ -46,7 +46,7 @@ internal class FileStatisticsCompiler(
         private val cacheDirectory: File,
         private val fileFactory: (File, String) -> File,
         private val fileInputStreamFactory: (File) -> InputStream,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val keySerialiser: KeySerialiser
 ) : BaseStatisticsCompiler<String, List<String>>() { //TODO use KeyValueStore
 

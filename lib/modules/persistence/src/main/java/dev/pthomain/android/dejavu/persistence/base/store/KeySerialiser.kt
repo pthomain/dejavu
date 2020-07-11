@@ -25,15 +25,15 @@ package dev.pthomain.android.dejavu.persistence.base.store
 
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
-import java.util.*
 
 /**
  * Provides methods handling the serialisation and deserialisation of the required cache metadata
  * to be used as a File name for the purpose of filtering and querying of the cached responses.
  */
-class KeySerialiser(private val dateFactory: (Long?) -> Date) {
+class KeySerialiser(private val dateFactory: DateFactory) {
 
     /**
      * Serialises the required cache metadata to be used as a File name for the purpose of

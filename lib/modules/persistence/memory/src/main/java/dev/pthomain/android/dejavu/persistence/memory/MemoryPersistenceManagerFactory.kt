@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.persistence.memory
 
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import java.util.*
 
 class MemoryPersistenceManagerFactory internal constructor(
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val storeFactory: MemoryStore.Factory,

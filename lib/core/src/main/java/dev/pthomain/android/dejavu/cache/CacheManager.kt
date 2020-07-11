@@ -27,6 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.response.ellapsed
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
@@ -34,11 +35,11 @@ import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
-import java.util.*
 
 /**
  * Handles the Observable composition according to the each cache operation.
@@ -53,7 +54,7 @@ internal class CacheManager<E>(
         private val persistenceManager: PersistenceManager,
         private val cacheMetadataManager: CacheMetadataManager<E>,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val logger: Logger
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -120,7 +121,7 @@ internal class CacheManager<E>(
                                             requestDate,
                                             expiryDate
                                     ),
-                                    CallDuration(0, 0, 0) //FIXME
+                                    CallDuration(disk = requestToken.ellapsed(dateFactory))
                             )
                         }
 

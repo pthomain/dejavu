@@ -30,11 +30,11 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.di.DateFactory
+import dev.pthomain.android.dejavu.di.ellapsed
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import java.util.*
-import kotlin.NoSuchElementException
 
 /**
  * Intercepts the response wrapper returned from the error and cache interceptors and returns the actual
@@ -51,9 +51,9 @@ import kotlin.NoSuchElementException
  */
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val asResult: Boolean
+        private val asResult: Boolean,
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -89,12 +89,20 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
             }
         }
 
+        fun <R> addDuration(response: R) = response.apply {
+            if (this is HasMetadata<*, *, *>) {
+                callDuration = callDuration.copy(
+                        total = wrapper.hasMetadata.cacheToken.requestDate.ellapsed(dateFactory)
+                )
+            }
+        } as Any
+
         return if (asResult) wrapper.observable()
         else when (wrapper) {
             is Response<R, *> -> wrapper.response.observable()
             is Empty<R, *, *> -> Observable.error(wrapper.exception)
             is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
-        } as Observable<Any>
+        }.map(::addDuration) as Observable<Any>
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -107,8 +115,8 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
 
     internal class Factory<E>(
             private val logger: Logger,
-            private val dateFactory: (Long?) -> Date,
-            private val emptyResponseFactory: EmptyResponseFactory<E>
+            private val dateFactory: DateFactory,
+            private val emptyResponseFactory: EmptyResponseFactory<E>,
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 

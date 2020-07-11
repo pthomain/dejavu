@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.retrofit.interceptors
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
@@ -33,7 +34,6 @@ import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptor
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
 import io.reactivex.Observable
 import retrofit2.Call
-import java.util.*
 
 /**
  * Factory providing instances of DejaVuInterceptor
@@ -43,7 +43,7 @@ import java.util.*
  */
 class DejaVuRetrofitInterceptorFactory<E> internal constructor(
         private val hasher: Hasher,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
         private val operationResolverFactory: RetrofitOperationResolver.Factory<E>
 ) : RetrofitInterceptor.Factory<E>

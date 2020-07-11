@@ -26,16 +26,16 @@ package dev.pthomain.android.dejavu.persistence
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
-import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.INVALIDATE
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.shared.utils.Utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -45,7 +45,7 @@ import java.util.*
 internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>> {
 
     protected lateinit var mockSerialisationManager: dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>
-    protected lateinit var mockDateFactory: (Long?) -> Date
+    protected lateinit var mockDateFactory: DateFactory
     protected lateinit var mockCacheToken: InstructionToken
     protected lateinit var mockResponseWrapper: ResponseWrapper<*, *, Glitch>
     protected lateinit var mockMetadata: ResponseMetadata<Glitch>

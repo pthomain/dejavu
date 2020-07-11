@@ -25,15 +25,15 @@ package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InHashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
+import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.test.*
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -45,7 +45,7 @@ import java.util.*
 class DejaVuInterceptorUnitTest {
 
     private val start = 1234L
-    private val mockDateFactory: (Long?) -> Date = { Date(start) }
+    private val mockDateFactory: DateFactory = { Date(start) }
 
     private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<Glitch>
     private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>

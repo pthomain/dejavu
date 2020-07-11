@@ -27,12 +27,12 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
 import dev.pthomain.android.dejavu.persistence.statistics.BaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.statistics.CacheEntry
 import java.io.Closeable
-import java.util.*
 
 /**
  * Provides a concrete StatisticsCompiler implementation for SQLite database entries.
@@ -44,7 +44,7 @@ import java.util.*
  */
 class DatabaseStatisticsCompiler internal constructor(
         private val logger: Logger,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val database: SupportSQLiteDatabase
 ) : BaseStatisticsCompiler<Cursor, CursorIterator>() {
 

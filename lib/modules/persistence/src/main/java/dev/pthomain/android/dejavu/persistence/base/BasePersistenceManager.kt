@@ -32,6 +32,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedReques
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.REQUEST
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Deserialised
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
@@ -49,7 +50,7 @@ import java.util.*
 abstract class BasePersistenceManager(
         protected val logger: Logger,
         private val serialisationManager: SerialisationManager,
-        protected val dateFactory: (Long?) -> Date
+        protected val dateFactory: DateFactory
 ) : PersistenceManager {
 
     private val dateFormat = SimpleDateFormat("dd MMM HH:mm:s", Locale.UK)
