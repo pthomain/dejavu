@@ -24,7 +24,6 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import dev.pthomain.android.dejavu.cache.CacheManager
-import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper
@@ -70,9 +69,9 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
                     requestToken as RequestToken<Cache, R>
             )
 
-            is Clear -> cacheManager.clearCache(requestToken as RequestToken<Clear, R>) //TODO update request metadata with type defined in operation
+            is Clear -> cacheManager.clearCache(requestToken as RequestToken<Clear, R>)
 
-            is Invalidate -> cacheManager.invalidate(requestToken as RequestToken<Invalidate, R>) //TODO update request metadata with type defined in operation
+            is Invalidate -> cacheManager.invalidate(requestToken as RequestToken<Invalidate, R>)
 
             else -> doNotCache(upstream as Observable<Response<R, DoNotCache>>)
         }
@@ -87,17 +86,13 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
      */
     private fun doNotCache(upstream: Observable<Response<R, DoNotCache>>): Observable<DejaVuResult<R>> =
             upstream.map {
-                val instruction = requestToken.instruction
-
-                Response(
-                        it.response,
-                        @Suppress("UNCHECKED_CAST") //bad compiler inference
-                        ResponseToken(
-                                instruction as CacheInstruction<DoNotCache, R>,
-                                NOT_CACHED,
-                                requestToken.requestDate
-                        ),
-                        CallDuration(0, 0, 0) //FIXME
+                @Suppress("UNCHECKED_CAST") //bad compiler inference
+                it.copy(
+                    cacheToken = ResponseToken(
+                            requestToken.instruction as CacheInstruction<DoNotCache, R>,
+                            NOT_CACHED,
+                            requestToken.requestDate
+                    )
                 )
             }
 
@@ -106,7 +101,9 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
-        fun <R : Any, O : Operation> create(requestToken: RequestToken<O, R>) =
-                CacheInterceptor(cacheManager, requestToken)
+        fun <R : Any, O : Operation> create(requestToken: RequestToken<O, R>) = CacheInterceptor(
+                cacheManager,
+                requestToken
+        )
     }
 }

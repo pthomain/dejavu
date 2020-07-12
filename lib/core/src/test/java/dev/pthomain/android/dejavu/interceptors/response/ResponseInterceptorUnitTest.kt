@@ -29,15 +29,17 @@ import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.DejaVu
+import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
-import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.di.DateFactory
+import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
+import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
+import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
@@ -56,7 +58,7 @@ class ResponseInterceptorUnitTest {
     private lateinit var mockEmptyException: Glitch
 
     private val start = 1234L
-    private val mockDateFactory: (Long?) -> Date = { Date(4321L) }
+    private val mockDateFactory: DateFactory = { Date(4321L) }
     private var num = 0
 
     @Before

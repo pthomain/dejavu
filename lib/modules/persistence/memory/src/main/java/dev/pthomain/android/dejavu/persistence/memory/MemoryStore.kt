@@ -24,13 +24,13 @@
 package dev.pthomain.android.dejavu.persistence.memory
 
 import androidx.collection.LruCache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValueStore
-import java.util.*
 
 class MemoryStore internal constructor(
         private val lruCache: LruCache<String, Serialised>,
-        private val dateFactory: (Long?) -> Date
+        private val dateFactory: DateFactory
 ) : KeyValueStore<String, String, Serialised> {
 
     /**
@@ -97,7 +97,7 @@ class MemoryStore internal constructor(
 
     class Factory internal constructor(
             private val lruCacheFactory: (Int) -> LruCache<String, Serialised>,
-            private val dateFactory: (Long?) -> Date
+            private val dateFactory: DateFactory
     ) {
         fun create(maxEntries: Int = 20) = MemoryStore(
                 lruCacheFactory(maxEntries),

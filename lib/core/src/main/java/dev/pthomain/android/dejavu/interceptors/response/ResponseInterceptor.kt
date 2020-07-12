@@ -30,11 +30,11 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
+import dev.pthomain.android.dejavu.di.DateFactory
+import dev.pthomain.android.dejavu.di.ellapsed
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import java.util.*
-import kotlin.NoSuchElementException
 
 /**
  * Intercepts the response wrapper returned from the error and cache interceptors and returns the actual
@@ -46,14 +46,12 @@ import kotlin.NoSuchElementException
  *
  * @param logger the logger
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
- * @param emptyResponseFactory factory providing empty response wrappers
  * @param configuration the cache configuration
  */
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
-        private val dateFactory: (Long?) -> Date,
-        private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val asResult: Boolean
+        private val dateFactory: DateFactory,
+        private val asResult: Boolean,
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -75,47 +73,39 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
      * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun intercept(wrapper: DejaVuResult<R>): Observable<Any> {
-        with(wrapper.hasMetadata) {
-            callDuration = callDuration.copy(
-                    total = (dateFactory(null).time - cacheToken.requestDate.time).toInt()
-            )
-        }
+    private fun intercept(wrapper: DejaVuResult<R>): Observable<out Any> {
 
-        if (wrapper is Response<*, *> && wrapper.response is HasMetadata<*, *, *>) {
-            when (wrapper.cacheToken.instruction.operation) {
-                is Cache -> setMetadata(wrapper)
-                DoNotCache -> setMetadata(wrapper)
+        fun <O : Remote> Response<R, O>.updateResponseMetadata() = response.apply {
+            if(this is HasMetadata<*, *, *>) {
+                this as HasMetadata<R, O, ResponseToken<O, R>>
+                cacheToken = wrapper.hasMetadata.cacheToken as ResponseToken<O, R>
+                callDuration = wrapper.hasMetadata.callDuration.copy(
+                        total = wrapper.hasMetadata.cacheToken.requestDate.ellapsed(dateFactory)
+                )
             }
         }
 
         return if (asResult) wrapper.observable()
         else when (wrapper) {
-            is Response<R, *> -> wrapper.response.observable()
-            is Empty<R, *, *> -> Observable.error(wrapper.exception)
-            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
-        } as Observable<Any>
-    }
+            is Response<R, *> -> when (wrapper.cacheToken.instruction.operation) {
+                is Cache -> wrapper.updateResponseMetadata()
+                DoNotCache -> wrapper.updateResponseMetadata()
+            }.observable()
 
-    @Suppress("UNCHECKED_CAST")
-    private fun <R : Any, O : Remote> setMetadata(wrapper: Response<R, O>) {
-        (wrapper.response as HasMetadata<R, O, ResponseToken<O, R>>).apply {
-            cacheToken = wrapper.cacheToken
-            callDuration = wrapper.callDuration
-        }
+            is Empty<R, *, *> -> Observable.error(wrapper.exception)
+            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response"))
+        } as Observable<Any>
     }
 
     internal class Factory<E>(
             private val logger: Logger,
-            private val dateFactory: (Long?) -> Date,
-            private val emptyResponseFactory: EmptyResponseFactory<E>
+            private val dateFactory: DateFactory
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
         fun <R : Any> create(asResult: Boolean) = ResponseInterceptor<R, E>(
                 logger,
                 dateFactory,
-                emptyResponseFactory,
                 asResult
         )
     }

@@ -28,13 +28,13 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
-import dev.pthomain.android.dejavu.persistence.PersistenceManager
+import dev.pthomain.android.dejavu.cache.metadata.response.responseClass
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import java.util.*
-import dev.pthomain.android.dejavu.cache.metadata.response.responseClass
+import dev.pthomain.android.dejavu.di.DateFactory
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 
@@ -50,7 +50,7 @@ import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val durationPredicate: (TransientResponse<*>) -> Int?,
         private val logger: Logger
 ) where E : Throwable,
@@ -75,7 +75,6 @@ internal class CacheMetadataManager<E>(
             diskDuration: Int
     ): Response<R, Cache> {
         val hasCachedResponse = previousCachedResponse != null
-        val fetchDate = dateFactory(null)
         val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
 
         val predicateDuration = if (status.isFresh) {
@@ -85,13 +84,13 @@ internal class CacheMetadataManager<E>(
             ))
         } else null
 
-        val timeToLiveInSeconds = predicateDuration ?: cacheOperation.durationInSeconds
-        val expiryDate = dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
+        val timeToLiveInMs = (predicateDuration ?: cacheOperation.durationInSeconds) * 1000L
+        val expiryDate = dateFactory(instructionToken.requestDate.time + timeToLiveInMs)
 
         val cacheToken = ResponseToken(
                 instructionToken.instruction,
                 status,
-                fetchDate,
+                instructionToken.requestDate,
                 expiryDate
         )
 

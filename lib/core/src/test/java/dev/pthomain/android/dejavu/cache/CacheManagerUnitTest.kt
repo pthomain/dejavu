@@ -26,11 +26,11 @@ package dev.pthomain.android.dejavu.cache
 import com.google.common.net.HttpHeaders.REFRESH
 import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import io.reactivex.Observable
@@ -47,7 +47,7 @@ class CacheManagerUnitTest {
     private lateinit var mockCacheMetadataManager: CacheMetadataManager<Glitch>
     private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>
     private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
-    private lateinit var mockDateFactory: (Long?) -> Date
+    private lateinit var mockDateFactory: DateFactory
     private lateinit var mockNetworkGlitch: Glitch
     private lateinit var mockNetworkResponseWrapper: ResponseWrapper<*, *, Glitch>
     private var mockCachedResponseWrapper: ResponseWrapper<*, *, Glitch>? = null

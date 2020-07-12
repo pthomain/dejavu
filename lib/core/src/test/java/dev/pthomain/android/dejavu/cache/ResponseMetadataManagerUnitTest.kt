@@ -29,17 +29,18 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException.Type.SERIALISATION
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
 import org.junit.Test
 import java.io.IOException
 import java.io.NotSerializableException
@@ -49,7 +50,7 @@ class ResponseMetadataManagerUnitTest {
 
     private lateinit var mockErrorFactory: ErrorFactory<Glitch>
     private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>
-    private lateinit var mockDateFactory: (Long?) -> Date
+    private lateinit var mockDateFactory: DateFactory
 
     private val now = 321L
     private val diskDuration = 5

@@ -23,15 +23,13 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.response.Empty
-import dev.pthomain.android.dejavu.cache.metadata.response.Result
+import dev.pthomain.android.dejavu.cache.metadata.response.*
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.DONE
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
@@ -44,7 +42,8 @@ import java.util.*
  * @param errorFactory the custom error factory used to wrap the exception
  */
 internal class EmptyResponseFactory<E>(
-        private val errorFactory: ErrorFactory<E>
+        private val errorFactory: ErrorFactory<E>,
+        private val dateFactory: DateFactory
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
@@ -60,7 +59,7 @@ internal class EmptyResponseFactory<E>(
             Empty(
                     errorFactory(EmptyResponseException(NullPointerException())),
                     networkToken,
-                    CallDuration(0, 0, 0) //FIXME
+                    CallDuration(disk = networkToken.ellapsed(dateFactory))
             )
 
     /**
@@ -77,7 +76,7 @@ internal class EmptyResponseFactory<E>(
                             DONE,
                             networkToken.requestDate
                     ),
-                    CallDuration(0, 0, 0) //FIXME
+                    CallDuration(disk = networkToken.ellapsed(dateFactory))
             )
 
     /**
@@ -103,5 +102,4 @@ internal class EmptyResponseFactory<E>(
             }
 
     class EmptyResponseException(override val cause: Exception) : NoSuchElementException("The response was empty")
-    class DoneException(val operation: Operation) : NoSuchElementException("This operation does not return any data: $operation")
 }

@@ -33,6 +33,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedReques
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
@@ -42,7 +43,6 @@ import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 import java.io.Closeable
-import java.lang.IllegalStateException
 import java.util.*
 
 /**
@@ -57,7 +57,7 @@ class DatabasePersistenceManager internal constructor(
         private val database: SupportSQLiteDatabase,
         logger: Logger,
         serialisationManager: SerialisationManager,
-        dateFactory: (Long?) -> Date,
+        dateFactory: DateFactory,
         private val contentValuesFactory: (Map<String, *>) -> ContentValues
 ) : BasePersistenceManager(
         logger,
@@ -136,6 +136,7 @@ class DatabasePersistenceManager internal constructor(
         val projection = arrayOf(
                 CACHE_DATE.columnName,
                 EXPIRY_DATE.columnName,
+                REQUEST.columnName,
                 CLASS.columnName,
                 SERIALISATION.columnName,
                 DATA.columnName

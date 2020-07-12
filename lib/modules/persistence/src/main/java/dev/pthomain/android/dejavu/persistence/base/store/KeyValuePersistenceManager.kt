@@ -32,12 +32,12 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedReques
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear.Scope.ALL
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import java.util.*
 
 /**
  * Provides a PersistenceManager implementation saving the responses to the given directory.
@@ -52,7 +52,7 @@ import java.util.*
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  */
 class KeyValuePersistenceManager(
-        dateFactory: (Long?) -> Date,
+        dateFactory: DateFactory,
         logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val store: KeyValueStore<String, String, Serialised>,

@@ -27,6 +27,7 @@ import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.response.ellapsed
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
@@ -34,11 +35,11 @@ import dev.pthomain.android.dejavu.cache.metadata.token.getCacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
-import java.util.*
 
 /**
  * Handles the Observable composition according to the each cache operation.
@@ -53,7 +54,7 @@ internal class CacheManager<E>(
         private val persistenceManager: PersistenceManager,
         private val cacheMetadataManager: CacheMetadataManager<E>,
         private val emptyResponseFactory: EmptyResponseFactory<E>,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val logger: Logger
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -81,7 +82,7 @@ internal class CacheManager<E>(
      */
     fun <R : Any> invalidate(instructionToken: RequestToken<Invalidate, R>) =
             emptyResponseFactory.createEmptyResponseObservable(instructionToken) {
-                    persistenceManager.forceInvalidation(instructionToken)
+                persistenceManager.forceInvalidation(instructionToken)
             }
 
     /**
@@ -98,33 +99,29 @@ internal class CacheManager<E>(
     ): Observable<DejaVuResult<R>> =
             Observable.defer {
                 val cacheOperation = requestToken.instruction.operation
-
                 val instruction = requestToken.instruction
                 val behaviour = cacheOperation.priority.behaviour
                 val simpleName = instruction.requestMetadata.responseClass.simpleName
 
                 logger.d(this, "Checking for cached $simpleName")
 
-                val cachedResponse = persistenceManager.get(requestToken)
-                        ?.run {
-                            val status = dateFactory.getCacheStatus(
-                                    expiryDate,
-                                    instruction.operation
-                            )
-                            if (cacheOperation.priority.freshness.isFreshOnly() && !status.isFresh) null
-                            else Response(
-                                    data,
-                                    ResponseToken(
-                                            instruction,
-                                            status,
-                                            requestDate,
-                                            expiryDate
-                                    ),
-                                    CallDuration(0, 0, 0) //FIXME
-                            )
-                        }
-
-                val diskDuration = (dateFactory(null).time - requestToken.requestDate.time).toInt()
+                val cachedResponse = persistenceManager.get(requestToken)?.run {
+                    val status = dateFactory.getCacheStatus(
+                            expiryDate,
+                            instruction.operation
+                    )
+                    if (cacheOperation.priority.freshness.isFreshOnly() && !status.isFresh) null
+                    else Response(
+                            data,
+                            ResponseToken(
+                                    instruction,
+                                    status,
+                                    requestToken.requestDate,
+                                    expiryDate
+                            ),
+                            CallDuration(disk = requestToken.ellapsed(dateFactory))
+                    )
+                }
 
                 if (behaviour.isOffline()) {
                     if (cachedResponse == null)
@@ -135,8 +132,7 @@ internal class CacheManager<E>(
                             cachedResponse,
                             upstream,
                             cacheOperation,
-                            requestToken,
-                            diskDuration
+                            requestToken
                     )
             }
 
@@ -146,7 +142,6 @@ internal class CacheManager<E>(
             upstream: Observable<DejaVuResult<R>>,
             cacheOperation: Cache,
             instructionToken: RequestToken<Cache, R>,
-            diskDuration: Int
     ) =
             Observable.defer {
                 val cachedResponseToken = cachedResponse?.cacheToken
@@ -158,8 +153,7 @@ internal class CacheManager<E>(
                             cachedResponse,
                             upstream,
                             cacheOperation,
-                            instructionToken,
-                            diskDuration
+                            instructionToken
                     )
 
                     if (status == STALE && cacheOperation.priority.freshness.emitsCachedStale) {
@@ -178,11 +172,11 @@ internal class CacheManager<E>(
             upstream: Observable<DejaVuResult<R>>,
             cacheOperation: Cache,
             instructionToken: RequestToken<Cache, R>,
-            diskDuration: Int
     ) =
             Observable.defer {
                 val simpleName = instructionToken.instruction.requestMetadata.responseClass.simpleName
                 logger.d(this, "$simpleName is STALE, attempting to refresh")
+                val diskDuration = instructionToken.ellapsed(dateFactory)
 
                 upstream.flatMap {
                     if (it is Response<*, *>) {

@@ -120,7 +120,7 @@ internal class SqlOpenHelperCallback(databaseVersion: Int)
 
         enum class COLUMNS(val columnName: String,
                            val type: String) {
-            REQUEST("request", "TEXT"),
+            REQUEST("request", "TEXT UNIQUE"),
             CLASS("class", "TEXT"),
             CACHE_DATE("cache_date", "INTEGER"),
             EXPIRY_DATE("expiry_date", "INTEGER"),

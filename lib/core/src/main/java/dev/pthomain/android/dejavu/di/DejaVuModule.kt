@@ -45,6 +45,11 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
 
+typealias DateFactory = (Long?) -> Date
+
+internal fun Date.ellapsed(dateFactory: DateFactory) =
+        (dateFactory(null).time - time).toInt()
+
 internal class DejaVuModule<E>(
         context: Context,
         logger: Logger,
@@ -63,7 +68,7 @@ internal class DejaVuModule<E>(
 
         single(named("operationPredicate")) { operationPredicate }
 
-        single<(Long?) -> Date>(named("dateFactory")) {
+        single<DateFactory>(named("dateFactory")) {
             { if (it == null) Date() else Date(it) }
         }
 
@@ -113,13 +118,15 @@ internal class DejaVuModule<E>(
         single {
             ResponseInterceptor.Factory<E>(
                     get(),
-                    get(named("dateFactory")),
-                    get()
+                    get(named("dateFactory"))
             )
         }
 
         single {
-            EmptyResponseFactory<E>(get())
+            EmptyResponseFactory<E>(
+                    get(),
+                    get(named("dateFactory"))
+            )
         }
 
         single { SerialisationArgumentValidator(persistenceModule.decorators) }

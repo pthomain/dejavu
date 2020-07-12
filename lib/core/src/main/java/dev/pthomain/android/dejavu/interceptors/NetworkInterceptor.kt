@@ -30,12 +30,12 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
-import java.util.*
 import java.util.concurrent.TimeUnit.SECONDS
 
 /**
@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R>, E> private constructor(
         private val context: Context,
         private val logger: Logger,
-        private val dateFactory: (Long?) -> Date,
+        private val dateFactory: DateFactory,
         private val requestToken: T
 ) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
         where E : Throwable,
@@ -88,7 +88,7 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R
     class Factory<E>(
             private val context: Context,
             private val logger: Logger,
-            private val dateFactory: (Long?) -> Date
+            private val dateFactory: DateFactory
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
