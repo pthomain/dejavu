@@ -51,7 +51,7 @@ internal class CacheMetadataManager<E>(
         private val errorFactory: ErrorFactory<E>,
         private val persistenceManager: PersistenceManager,
         private val dateFactory: DateFactory,
-        private val durationPredicate: (TransientResponse<*>) -> Int?,
+        private val durationMapper: (TransientResponse<*>) -> Int?,
         private val logger: Logger
 ) where E : Throwable,
         E : NetworkErrorPredicate {
@@ -78,7 +78,7 @@ internal class CacheMetadataManager<E>(
         val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
 
         val predicateDuration = if (status.isFresh) {
-            durationPredicate(TransientResponse(
+            durationMapper(TransientResponse(
                     responseWrapper.response,
                     instructionToken
             ))

@@ -16,7 +16,7 @@ It is fully customisable and supports compression / encryption.
 What sets it apart is that it is designed to work with as little setup as possible and does not require any refactoring of your existing code.
 You can start caching your Retrofit calls simply by adding an annotation to the existing client's methods without needing to change their signature or any call handling code. 
 
-Alternatively, you can leave your clients' code entirely untouched and decide which call to cache be implementing a cache predicate which will intercept any request and let you decide ad hoc caching rules before the network call is made.
+Alternatively, you can leave your clients' code entirely untouched and decide which call to cache be implementing a operation mapper which will intercept any request and let you decide ad hoc caching rules before the network call is made.
 All requests are cached uniquely based on the query parameters and response model class. The cache can also be invalidated or cleared on a per request basis (taking the original parameters into account for request uniqueness).
 
 This library's goal is to introduce no side effect to the existing code and it was designed to be added or removed completely transparently.

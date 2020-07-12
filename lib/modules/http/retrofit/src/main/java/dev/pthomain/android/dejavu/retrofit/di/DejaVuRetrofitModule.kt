@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.retrofit.di
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
@@ -33,10 +33,8 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.DejaVuRetrofitIntercept
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.glitchy.core.Glitchy
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
 import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
@@ -65,7 +63,7 @@ class DejaVuRetrofitModule<E>
 
         single {
             RetrofitOperationResolver.Factory<E>(
-                    get<(RequestMetadata<*>) -> Operation.Remote?>(named("operationPredicate"))::invoke,
+                    get<(RequestMetadata<*>) -> Remote?>(named("operationMapper"))::invoke,
                     get<RequestBodyConverter>(),
                     get()
             )

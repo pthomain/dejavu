@@ -45,11 +45,11 @@ class DejaVuBuilder<E> internal constructor(
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    private var operationPredicate: (RequestMetadata<*>) -> Remote? = Inactive
-    private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
+    private var operationMapper: (RequestMetadata<*>) -> Remote? = Inactive
+    private var durationMapper: (TransientResponse<*>) -> Int? = { null }
 
     /**
-     * Sets a predicate for ad-hoc response caching. This predicate will be called for every
+     * Sets a mapper for ad-hoc response caching. This mapper will be called for every
      * request and will always take precedence on the provided request operation.
      *
      * It will be called with the target response class and associated request metadata before
@@ -62,23 +62,23 @@ class DejaVuBuilder<E> internal constructor(
      * To cache all response with default CACHE operation and expiration period, use CachePredicate.CacheAll.
      * To disable any caching, use CachePredicate.CacheNone.
      *
-     * Otherwise, you can implement your own predicate to return the appropriate operation base on
+     * Otherwise, you can implement your own mapper to return the appropriate operation base on
      * the given RequestMetadata for the request being made.
-     *///TODO rename to Provider
-    fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata<*>) -> Remote?) =
-            apply { this.operationPredicate = operationPredicate }
+     */
+    fun operationMapper(operationMapper: (metadata: RequestMetadata<*>) -> Remote?) =
+            apply { this.operationMapper = operationMapper }
 
     /**
-     * Sets a predicate for ad-hoc response duration caching.
+     * Sets a mapper for ad-hoc response duration caching.
      *
-     * If not null, the value returned by this predicate will take precedence on the
+     * If not null, the value returned by this mapper will take precedence on the
      * cache duration provided in the request's operation.
      *
      * This is useful for responses containing cache duration information, enabling server-side
      * cache control.
-     *///TODO rename to Provider
-    fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
-            apply { this.durationPredicate = durationPredicate }
+     */
+    fun durationMapper(durationMapper: (TransientResponse<*>) -> Int?) =
+            apply { this.durationMapper = durationMapper }
 
     override fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B) =
             extensionBuilder.accept(modules())
@@ -88,8 +88,8 @@ class DejaVuBuilder<E> internal constructor(
             logger,
             errorFactory,
             persistenceManagerModule,
-            operationPredicate,
-            durationPredicate
+            operationMapper,
+            durationMapper
     ).modules
 
     /**

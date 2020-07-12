@@ -62,28 +62,12 @@ class DejaVuFactory(
 
     private fun persistenceModuleProvider(
             persistence: PersistenceType,
-            serialiser: Serialiser
-    ) =
-            when (persistence) {
-                FILE -> filePersistenceModule(serialiser)
-                MEMORY -> memoryPersistenceModule(serialiser)
-                SQLITE -> sqlitePersistenceModule(serialiser)
-            }
-
-    private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
-            decorators,
-            serialiser
-    )
-
-    private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
-            decorators,
-            serialiser
-    )
-
-    private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
-            decorators,
-            serialiser
-    )
+            serialiser: Serialiser,
+    ) = when (persistence) {
+        FILE -> FilePersistence(decorators, serialiser)
+        MEMORY -> MemoryPersistence(decorators, serialiser)
+        SQLITE -> SqlitePersistence(decorators, serialiser)
+    }
 
     enum class PersistenceType {
         FILE,

@@ -41,23 +41,23 @@ const val DejaVuHeader = "DejaVuHeader"
 internal class RetrofitOperationResolver<E, R> private constructor(
         private val responseClass: Class<R>,
         private val requestBodyConverter: (Request) -> String?,
-        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+        private val operationMapper: (RequestMetadata<*>) -> Operation.Remote?,
         private val annotationOperation: Operation?,
         private val methodDescription: String,
-        private val logger: Logger
+        private val logger: Logger,
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
     /**
      * Resolves the cache operation if present.
      * The priority for cache operations is, in decreasing order:
-     * - operations returned by the cache predicate for the given RequestMetadata
+     * - operations returned by the operation mapper for the given RequestMetadata
      * - operations defined in the request's DejaVu header
      * - operations annotated on the request's call
      *
      * N.B: if a call operation is defined using more than one method, only the operation
      * provided via the method with the highest priority is used. The other operations are ignored.
-     * For instance, if a call is annotated with a @Cache annotation but the cache predicate
+     * For instance, if a call is annotated with a @Cache annotation but the operation mapper
      * returns a DoNotCache operation for its associated request metadata, then the DoNotCache
      * operation takes precedence.
      * @see DejaVu.Configuration.Builder.withOperationPredicate()
@@ -70,16 +70,15 @@ internal class RetrofitOperationResolver<E, R> private constructor(
         )
 
         val operationToMethod: Pair<Operation, Method>? =
-                getPredicateOperation(requestMetadata)?.let { it to PREDICATE }
+                getPredicateOperation(requestMetadata)?.let { it to MAPPER }
                         ?: getHeaderOperation(call)?.let { it to HEADER }
                         ?: getAnnotationOperation()?.let { it to ANNOTATION }
-                        ?: null as Pair<Operation, Method>?
 
         return if (operationToMethod != null) {
             val (operation, method) = operationToMethod
 
             when (method) {
-                PREDICATE -> "the cache predicate"
+                MAPPER -> "the operation mapper"
                 HEADER -> "the request's DejaVuHeader"
                 ANNOTATION -> "the call's cache annotation"
             }.let {
@@ -102,11 +101,11 @@ internal class RetrofitOperationResolver<E, R> private constructor(
 
     /**
      * @param requestMetadata the RequestMetadata for the current call
-     * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
+     * @return the operation returned by the operation mapper for the given RequestMetadata, if any.
      */
     private fun getPredicateOperation(requestMetadata: RequestMetadata<R>): Operation.Remote? {
-        logger.d(this, "Checking cache predicate on $methodDescription")
-        return operationPredicate(requestMetadata)
+        logger.d(this, "Checking operation mapper on $methodDescription")
+        return operationMapper(requestMetadata)
     }
 
     /**
@@ -142,7 +141,7 @@ internal class RetrofitOperationResolver<E, R> private constructor(
     }
 
     internal enum class Method {
-        PREDICATE,
+        MAPPER,
         HEADER,
         ANNOTATION
     }
@@ -154,9 +153,9 @@ internal class RetrofitOperationResolver<E, R> private constructor(
     )
 
     internal class Factory<E>(
-            private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+            private val operationMapper: (RequestMetadata<*>) -> Operation.Remote?,
             private val requestBodyConverter: (Request) -> String?,
-            private val logger: Logger
+            private val logger: Logger,
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
@@ -167,7 +166,7 @@ internal class RetrofitOperationResolver<E, R> private constructor(
         ) = RetrofitOperationResolver<E, R>(
                 responseClass,
                 requestBodyConverter,
-                operationPredicate,
+                operationMapper,
                 annotationOperation,
                 methodDescription,
                 logger
