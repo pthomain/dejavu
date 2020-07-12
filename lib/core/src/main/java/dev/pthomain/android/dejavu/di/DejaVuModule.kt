@@ -56,7 +56,7 @@ internal class DejaVuModule<E>(
         private val errorFactory: ErrorFactory<E>,
         persistenceModule: PersistenceManager.ModuleProvider,
         private val operationPredicate: (RequestMetadata<*>) -> Remote?,
-        private val durationPredicate: (TransientResponse<*>) -> Int?,
+        private val durationPredicate: (TransientResponse<*>) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 

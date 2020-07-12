@@ -93,13 +93,13 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
             }.observable()
 
             is Empty<R, *, *> -> Observable.error(wrapper.exception)
-            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
+            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response"))
         } as Observable<Any>
     }
 
     internal class Factory<E>(
             private val logger: Logger,
-            private val dateFactory: DateFactory,
+            private val dateFactory: DateFactory
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 

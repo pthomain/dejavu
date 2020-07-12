@@ -41,7 +41,7 @@ interface HasMetadata<R : Any, O : Operation, T : CacheToken<O, R>>
 
 internal data class MetadataHolder<R : Any, O : Operation, T : CacheToken<O, R>>(
         override var cacheToken: T,
-        override var callDuration: CallDuration,
+        override var callDuration: CallDuration
 ) : HasMetadata<R, O, T>
 
 internal typealias HasRequestMetadata<R, O> = HasMetadata<R, O, RequestToken<O, R>>

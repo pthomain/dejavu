@@ -74,7 +74,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val hashingErrorObservableFactory: () -> Observable<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
+        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
 ) : Interceptor
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -198,7 +198,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             private val serialisationArgumentValidator: SerialisationArgumentValidator,
             private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
             private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
+            private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
