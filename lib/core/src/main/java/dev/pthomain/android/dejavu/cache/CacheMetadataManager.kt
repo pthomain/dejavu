@@ -75,7 +75,6 @@ internal class CacheMetadataManager<E>(
             diskDuration: Int
     ): Response<R, Cache> {
         val hasCachedResponse = previousCachedResponse != null
-        val fetchDate = dateFactory(null)
         val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
 
         val predicateDuration = if (status.isFresh) {
@@ -85,13 +84,13 @@ internal class CacheMetadataManager<E>(
             ))
         } else null
 
-        val timeToLiveInSeconds = predicateDuration ?: cacheOperation.durationInSeconds
-        val expiryDate = dateFactory(fetchDate.time + timeToLiveInSeconds * 1000L)
+        val timeToLiveInMs = (predicateDuration ?: cacheOperation.durationInSeconds) * 1000L
+        val expiryDate = dateFactory(instructionToken.requestDate.time + timeToLiveInMs)
 
         val cacheToken = ResponseToken(
                 instructionToken.instruction,
                 status,
-                fetchDate,
+                instructionToken.requestDate,
                 expiryDate
         )
 

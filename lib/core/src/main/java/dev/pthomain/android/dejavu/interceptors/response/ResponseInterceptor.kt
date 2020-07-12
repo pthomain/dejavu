@@ -46,13 +46,11 @@ import io.reactivex.ObservableTransformer
  *
  * @param logger the logger
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
- * @param emptyResponseFactory factory providing empty response wrappers
  * @param configuration the cache configuration
  */
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: DateFactory,
-        private val emptyResponseFactory: EmptyResponseFactory<E>,
         private val asResult: Boolean,
 ) : ObservableTransformer<DejaVuResult<R>, Any>
         where E : Throwable,
@@ -75,55 +73,39 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
      * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun intercept(wrapper: DejaVuResult<R>): Observable<Any> {
-        with(wrapper.hasMetadata) {
-            callDuration = callDuration.copy(
-                    total = (dateFactory(null).time - cacheToken.requestDate.time).toInt()
-            )
-        }
+    private fun intercept(wrapper: DejaVuResult<R>): Observable<out Any> {
 
-        if (wrapper is Response<*, *> && wrapper.response is HasMetadata<*, *, *>) {
-            when (wrapper.cacheToken.instruction.operation) {
-                is Cache -> setMetadata(wrapper)
-                DoNotCache -> setMetadata(wrapper)
-            }
-        }
-
-        fun <R> addDuration(response: R) = response.apply {
-            if (this is HasMetadata<*, *, *>) {
-                callDuration = callDuration.copy(
+        fun <O : Remote> Response<R, O>.updateResponseMetadata() = response.apply {
+            if(this is HasMetadata<*, *, *>) {
+                this as HasMetadata<R, O, ResponseToken<O, R>>
+                cacheToken = wrapper.hasMetadata.cacheToken as ResponseToken<O, R>
+                callDuration = wrapper.hasMetadata.callDuration.copy(
                         total = wrapper.hasMetadata.cacheToken.requestDate.ellapsed(dateFactory)
                 )
             }
-        } as Any
+        }
 
         return if (asResult) wrapper.observable()
         else when (wrapper) {
-            is Response<R, *> -> wrapper.response.observable()
+            is Response<R, *> -> when (wrapper.cacheToken.instruction.operation) {
+                is Cache -> wrapper.updateResponseMetadata()
+                DoNotCache -> wrapper.updateResponseMetadata()
+            }.observable()
+
             is Empty<R, *, *> -> Observable.error(wrapper.exception)
             is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response")) //TODO check this
-        }.map(::addDuration) as Observable<Any>
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <R : Any, O : Remote> setMetadata(wrapper: Response<R, O>) {
-        (wrapper.response as HasMetadata<R, O, ResponseToken<O, R>>).apply {
-            cacheToken = wrapper.cacheToken
-            callDuration = wrapper.callDuration
-        }
+        } as Observable<Any>
     }
 
     internal class Factory<E>(
             private val logger: Logger,
             private val dateFactory: DateFactory,
-            private val emptyResponseFactory: EmptyResponseFactory<E>,
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
         fun <R : Any> create(asResult: Boolean) = ResponseInterceptor<R, E>(
                 logger,
                 dateFactory,
-                emptyResponseFactory,
                 asResult
         )
     }

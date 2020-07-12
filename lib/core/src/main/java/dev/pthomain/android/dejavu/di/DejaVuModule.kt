@@ -48,7 +48,7 @@ import java.util.*
 typealias DateFactory = (Long?) -> Date
 
 internal fun Date.ellapsed(dateFactory: DateFactory) =
-        (dateFactory(null).time - this.time).toInt()
+        (dateFactory(null).time - time).toInt()
 
 internal class DejaVuModule<E>(
         context: Context,
@@ -118,8 +118,7 @@ internal class DejaVuModule<E>(
         single {
             ResponseInterceptor.Factory<E>(
                     get(),
-                    get(named("dateFactory")),
-                    get()
+                    get(named("dateFactory"))
             )
         }
 
