@@ -136,6 +136,7 @@ class DatabasePersistenceManager internal constructor(
         val projection = arrayOf(
                 CACHE_DATE.columnName,
                 EXPIRY_DATE.columnName,
+                REQUEST.columnName,
                 CLASS.columnName,
                 SERIALISATION.columnName,
                 DATA.columnName
