@@ -42,9 +42,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.*
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
 

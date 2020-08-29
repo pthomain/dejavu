@@ -29,7 +29,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetad
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.toOperation
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver.Method.*
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import okhttp3.Request
 import retrofit2.Call
 

@@ -35,10 +35,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
 
-
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 /**
  * Handles the update of the ResponseWrapper's metadata.
  *
@@ -67,12 +66,12 @@ internal class CacheMetadataManager<E>(
      *
      * @return the ResponseWrapper updated with the new metadata
      */
-    fun <R : Any> setNetworkCallMetadata(
+    suspend fun <R : Any> setNetworkCallMetadata(
             responseWrapper: Response<R, Cache>,
             cacheOperation: Cache,
             previousCachedResponse: Response<R, Cache>?,
             instructionToken: RequestToken<Cache, R>,
-            diskDuration: Int
+            diskDuration: Int,
     ): Response<R, Cache> {
         val hasCachedResponse = previousCachedResponse != null
         val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
@@ -109,7 +108,7 @@ internal class CacheMetadataManager<E>(
      */
     fun <R : Any> setSerialisationFailedMetadata(
             wrapper: Response<R, Cache>,
-            exception: Exception
+            exception: Exception,
     ): Response<R, Cache> {
         logger.e(
                 this,
@@ -137,7 +136,7 @@ internal class CacheMetadataManager<E>(
      */
     private fun getRefreshCallDuration(
             callDuration: CallDuration,
-            diskDuration: Int
+            diskDuration: Int,
     ) =
             callDuration.copy(
                     disk = diskDuration,

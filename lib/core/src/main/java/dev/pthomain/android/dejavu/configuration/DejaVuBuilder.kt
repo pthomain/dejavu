@@ -24,6 +24,8 @@
 package dev.pthomain.android.dejavu.configuration
 
 import android.content.Context
+import dev.pthomain.android.boilerplate.core.builder.Extendable
+import dev.pthomain.android.boilerplate.core.builder.ExtensionBuilder
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
@@ -32,16 +34,18 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.configuration.OperationPredicate.Inactive
 import dev.pthomain.android.dejavu.di.DejaVuModule
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 
 class DejaVuBuilder<E> internal constructor(
         private val context: Context,
         private val logger: Logger,
         private val errorFactory: ErrorFactory<E>,
-        private val persistenceManagerModule: PersistenceManager.ModuleProvider
-) : Extendable
+        private val persistenceManagerModule: PersistenceManager.ModuleProvider,
+) : Extendable<Module>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -80,7 +84,7 @@ class DejaVuBuilder<E> internal constructor(
     fun durationMapper(durationMapper: (TransientResponse<*>) -> Int?) =
             apply { this.durationMapper = durationMapper }
 
-    override fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B) =
+    override fun <B, EB : ExtensionBuilder<B, Module, EB>> extend(extensionBuilder: EB) =
             extensionBuilder.accept(modules())
 
     private fun modules() = DejaVuModule(

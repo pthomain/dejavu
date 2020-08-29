@@ -1,13 +1,13 @@
 package dev.pthomain.android.dejavu.volley
 
-import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.boilerplate.core.builder.ExtensionBuilder
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 
 class DejaVuVolleyBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuVolleyBuilder<E>, DejaVuVolley<E>>
+    : ExtensionBuilder<DejaVuVolley<E>, Module, DejaVuVolleyBuilder<E>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 

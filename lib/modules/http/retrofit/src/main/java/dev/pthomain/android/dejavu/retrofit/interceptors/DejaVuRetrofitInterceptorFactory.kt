@@ -23,17 +23,17 @@
 
 package dev.pthomain.android.dejavu.retrofit.interceptors
 
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
+import dev.pthomain.android.dejavu.retrofit.glitchy.OperationMetadata
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptor
-import dev.pthomain.android.glitchy.retrofit.type.ParsedType
-import io.reactivex.Observable
-import retrofit2.Call
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.base.Interceptor
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptorFactory
+import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitMetadata
 
 /**
  * Factory providing instances of DejaVuInterceptor
@@ -41,36 +41,36 @@ import retrofit2.Call
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
  */
-class DejaVuRetrofitInterceptorFactory<E> internal constructor(
+internal class DejaVuRetrofitInterceptorFactory<E>(
         private val hasher: Hasher,
         private val dateFactory: DateFactory,
         private val dejaVuInterceptorFactory: DejaVuInterceptor.Factory<E>,
-        private val operationResolverFactory: RetrofitOperationResolver.Factory<E>
-) : RetrofitInterceptor.Factory<E>
+        private val operationResolverFactory: RetrofitOperationResolver.Factory<E>,
+) : RetrofitInterceptorFactory<OperationMetadata>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    override fun <M> create(
-            parsedType: ParsedType<M>,
-            call: Call<Any>
-    ) =
-            (parsedType.metadata as? OperationReturnType)?.run {
-                operationResolverFactory.create(
-                        methodDescription,
-                        dejaVuReturnType.responseClass,
-                        annotationOperation
-                ).getResolvedOperation(call)?.run {
-                    dejaVuInterceptorFactory.create(
-                            dejaVuReturnType.isDejaVuResult,
-                            operation,
-                            requestMetadata as PlainRequestMetadata<out Any>
-                    )
-                }?.let { dejaVuInterceptor ->
-                    object : RetrofitInterceptor.SimpleInterceptor() {
-                        override fun apply(upstream: Observable<Any>) =
-                                dejaVuInterceptor.apply(upstream)
-                    }
-                }
-            }
+    override fun invoke(p1: RetrofitMetadata<OperationMetadata>?): Interceptor? {
+        if (p1 == null) return null
+        val operationReturnType = p1.parsedType.typeToken
+        val typeToken = operationReturnType.parsedType.typeToken
+        val responseClass = p1.parsedType.wrappedType as Class<*>
 
+        val operationResolver = with(operationReturnType) {
+            operationResolverFactory.create(
+                    methodDescription,
+                    responseClass,
+                    annotationOperation
+            )
+        }
+
+        val operation = operationResolver.getResolvedOperation(p1.call)
+
+        return if (operation == null) null
+        else dejaVuInterceptorFactory.create(
+                typeToken == DejaVuResult::class.java,
+                operation.operation,
+                operation.requestMetadata as PlainRequestMetadata<out Any>
+        )
+    }
 }
