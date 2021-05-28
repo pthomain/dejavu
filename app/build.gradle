@@ -69,6 +69,7 @@ android {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/app_release.kotlin_module'
+        exclude 'META-INF/core_release.kotlin_module'
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/license.txt'
         exclude 'META-INF/dependencies.txt'

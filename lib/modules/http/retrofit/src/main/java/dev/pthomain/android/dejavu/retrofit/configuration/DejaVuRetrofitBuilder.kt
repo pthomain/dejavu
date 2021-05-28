@@ -23,15 +23,15 @@
 
 package dev.pthomain.android.dejavu.retrofit.configuration
 
-import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
+import dev.pthomain.android.boilerplate.core.builder.ExtensionBuilder
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.retrofit.di.DejaVuRetrofitModule
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 
 class DejaVuRetrofitBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>>
+    : ExtensionBuilder<DejaVuRetrofit<E>, Module, DejaVuRetrofitBuilder<E>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -51,7 +51,7 @@ class DejaVuRetrofitBuilder<E> internal constructor()
         return koinApplication {
             modules(parentModules + DejaVuRetrofitModule<E>().module)
         }.koin.run {
-            DejaVuRetrofit(get(), get())
+            DejaVuRetrofit(get())
         }
     }
 }

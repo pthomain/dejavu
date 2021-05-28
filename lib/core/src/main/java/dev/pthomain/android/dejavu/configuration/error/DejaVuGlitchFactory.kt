@@ -24,11 +24,10 @@
 package dev.pthomain.android.dejavu.configuration.error
 
 import dev.pthomain.android.dejavu.cache.CacheException
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.ErrorCode.CONFIG
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.ErrorCode
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.GlitchFactory
 
 /**
  * Default implementation of ErrorFactory handling some usual base exceptions.
@@ -57,12 +56,11 @@ class DejaVuGlitchFactory(private val glitchFactory: GlitchFactory)
      * @param throwable the original exception
      * @return the converted Glitch
      */
-    private fun getConfigError(throwable: CacheException) =
-            Glitch(
-                    throwable,
-                    NON_HTTP_STATUS,
-                    CONFIG,
-                    "Configuration error"
-            )
+    private fun getConfigError(throwable: CacheException) = Glitch(
+            throwable,
+            Glitch.NON_HTTP_STATUS,
+            ErrorCode.CONFIG,
+            "Configuration error"
+    )
 
 }

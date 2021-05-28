@@ -23,16 +23,17 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import dev.pthomain.android.dejavu.cache.metadata.response.*
+import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
+import dev.pthomain.android.dejavu.cache.metadata.response.Empty
+import dev.pthomain.android.dejavu.cache.metadata.response.Result
+import dev.pthomain.android.dejavu.cache.metadata.response.ellapsed
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.DONE
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.di.DateFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import io.reactivex.Observable
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import java.util.*
 
 /**
@@ -41,6 +42,7 @@ import java.util.*
  *
  * @param errorFactory the custom error factory used to wrap the exception
  */
+//FIXME is this deprecated?
 internal class EmptyResponseFactory<E>(
         private val errorFactory: ErrorFactory<E>,
         private val dateFactory: DateFactory
@@ -78,28 +80,6 @@ internal class EmptyResponseFactory<E>(
                     ),
                     CallDuration(disk = networkToken.ellapsed(dateFactory))
             )
-
-    /**
-     * Wraps a callable action into an Observable that only emits an empty ResponseWrapper (with a DONE status).
-     *
-     * @param instructionToken the original request's instruction token
-     * @param action the callable action to execute as an Observable
-     *
-     * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
-     */
-    fun <R : Any, O : Operation> createEmptyResponseObservable(
-            instructionToken: RequestToken<O, R>,
-            action: () -> Unit = {}
-    ) =
-            Observable.defer {
-                Observable.just(
-                        @Suppress("UNCHECKED_CAST") //This is enforced by CacheInterceptor
-                        when (instructionToken.instruction.operation) {
-                            is Cache -> createEmptyResponse(instructionToken as RequestToken<Cache, R>)
-                            else -> createDoneResponse(instructionToken as RequestToken<out Local, R>)
-                        } as DejaVuResult<R>
-                ).doOnSubscribe { action() }
-            }
 
     class EmptyResponseException(override val cause: Exception) : NoSuchElementException("The response was empty")
 }

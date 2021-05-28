@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.demo.dejavu.error
 
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.outcome.Outcome
 
 class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
 

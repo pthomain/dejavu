@@ -25,18 +25,11 @@ package dev.pthomain.android.dejavu.interceptors
 
 import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.di.DateFactory
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
-import dev.pthomain.android.dejavu.utils.swapWhenDefault
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
-import java.util.concurrent.TimeUnit.SECONDS
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.flow.interceptors.base.FlowInterceptor
 
 /**
  * This interceptor adds a connectivity timeout to the network call, which defines a maximum
@@ -54,8 +47,8 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R
         private val context: Context,
         private val logger: Logger,
         private val dateFactory: DateFactory,
-        private val requestToken: T
-) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
+        private val requestToken: T,
+) : FlowInterceptor()// ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -66,24 +59,26 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R
      * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
      * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
      */
-    override fun apply(upstream: Observable<DejaVuResult<R>>) =
-            with(requestToken.instruction) {
-                if (operation is Cache) {
-                    upstream.compose {
-                        with((operation as Cache).requestTimeOutInSeconds) {
-                            if (this != null && this > 0) it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
-                            else it
-                        }
-                    }.compose {
-                        (operation as Cache).connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
-                            upstream.swapLambdaWhen(timeOut > 0L) {
-                                upstream.waitForNetwork(context, logger)
-                                        .timeout(timeOut.toLong(), SECONDS)
-                            }
-                        } ?: it
-                    }
-                } else upstream
-            }
+    //FIXME move to RxJava module
+    override suspend fun map(value: Any): Any {
+        return value
+//        val upstream = value as DejaVuResult<R>
+//        return with(requestToken.instruction) {
+//            if (operation is Cache) {
+//                with((operation as Cache).requestTimeOutInSeconds) {
+//                    if (this != null && this > 0) it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
+//                    else it
+//                }.compose {
+//                    (operation as Cache).connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
+//                        upstream.swapLambdaWhen(timeOut > 0L) {
+//                            upstream.waitForNetwork(context, logger)
+//                                    .timeout(timeOut.toLong(), SECONDS)
+//                        }
+//                    } ?: it
+//                }
+//            } else upstream
+//        }
+    }
 
     class Factory<E>(
             private val context: Context,

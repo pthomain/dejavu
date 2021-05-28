@@ -38,13 +38,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptor
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Error
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Success
-import io.reactivex.Observable
-import io.reactivex.Single
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.outcome.Outcome
+import dev.pthomain.android.glitchy.flow.interceptors.base.FlowInterceptor
 
 /**
  * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
@@ -54,7 +50,6 @@ import io.reactivex.Single
  * @param requestMetadata the associated request metadata
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
- * @param hashingErrorObservableFactory the factory used to create a hashing error observable
  * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
  * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
  * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
@@ -63,7 +58,7 @@ import io.reactivex.Single
  * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
-class DejaVuInterceptor<E, R : Any> internal constructor(
+class DejaVuInterceptor<E, R : Any> private constructor(
         private val asResult: Boolean,
         private val operation: Operation,
         private val requestMetadata: PlainRequestMetadata<R>,
@@ -71,11 +66,10 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val logger: Logger,
         private val dateFactory: DateFactory,
         serialisationArgumentValidator: SerialisationArgumentValidator,
-        private val hashingErrorObservableFactory: () -> Observable<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
-        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
-) : Interceptor
+        private val responseInterceptorFactory: ResponseInterceptor.Factory<E>,
+) : FlowInterceptor()
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -84,27 +78,19 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             serialisationArgumentValidator.validate(operation.serialisation)
     }
 
-    /**
-     * Composes Observables with the wrapped interceptors
-     *
-     * @param upstream the call to intercept
-     * @return the call intercepted with the inner interceptors
-     */
-    override fun apply(upstream: Observable<Any>) =
-            composeInternal(upstream)
-
-    /**
-     * Composes Observables with the wrapped interceptors and only emits the
-     * final response (if intercepted).
-     *
-     * @param upstream the call to intercept
-     * @return the call intercepted with the inner interceptors
-     */
-    override fun apply(upstream: Single<Any>) =
-            upstream.toObservable()
-                    .compose(this)
-                    .filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
-                    .firstOrError()
+    //TODO move to the Rx adapter
+//    /**
+//     * Composes Observables with the wrapped interceptors and only emits the
+//     * final response (if intercepted).
+//     *
+//     * @param upstream the call to intercept
+//     * @return the call intercepted with the inner interceptors
+//     */
+//    override suspend fun  map(value: Any): Any {
+//        upstream.toObservable()
+//                .compose(this)
+//                .filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
+//                .firstOrError()
 
     /**
      * Deals with the internal composition.
@@ -112,7 +98,8 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      * @param upstream the call to intercept
      * @return the call intercepted with the inner interceptors
      */
-    private fun composeInternal(upstream: Observable<Any>): Observable<Any> {
+    @Throws(IllegalStateException::class)
+    override suspend fun map(value: Any): Any {
         val requestDate = dateFactory(null)
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
@@ -134,34 +121,35 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             if (operation is Remote) {
                 @Suppress("UNCHECKED_CAST")
                 instructionToken as RequestToken<out Remote, R>
-                upstream.map { checkOutcome(it, instructionToken) }
-                        .compose(networkInterceptorFactory.create(instructionToken))
-                        .compose(cacheInterceptor)
-                        .compose(responseInterceptor)
+                val networkInterceptor = networkInterceptorFactory.create(instructionToken)
+                checkOutcome(value, instructionToken)
+                        .apply(networkInterceptor::intercept)
+                        .apply(cacheInterceptor::intercept)
+                        .apply(responseInterceptor::intercept)
             } else {
-                Observable.just(LocalOperationToken<R>())
-                        .compose(cacheInterceptor)
-                        .compose(responseInterceptor)
+                LocalOperationToken<R>()
+                        .apply(cacheInterceptor::intercept)
+                        .apply(responseInterceptor::intercept)
             }
         } else {
             logger.e(
                     this,
                     "The request metadata could not be hashed, this request won't be cached: $requestMetadata"
             )
-            hashingErrorObservableFactory()
+            throw IllegalStateException("The request could not be hashed")
         }
     }
 
-    private fun <O : Remote> checkOutcome(
+    private suspend fun <O : Remote> checkOutcome(
             outcome: Any,
-            instructionToken: RequestToken<O, R>
+            instructionToken: RequestToken<O, R>,
     ): DejaVuResult<R> {
         val callDuration = CallDuration(network = instructionToken.ellapsed(dateFactory))
 
         @Suppress("UNCHECKED_CAST") //converted to Outcome by OutcomeInterceptor (set via Glitchy)
         return when (outcome as Outcome<R>) {
-            is Success<R> -> Response(
-                    (outcome as Success<R>).response,
+            is Outcome.Success<R> -> Response(
+                    (outcome as Outcome.Success<R>).response,
                     ResponseToken(
                             instructionToken.instruction,
                             NETWORK,
@@ -169,8 +157,8 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                     ),
                     callDuration
             )
-            is Error<*> -> Empty(
-                    (outcome as Error<E>).exception,
+            is Outcome.Error<*> -> Empty(
+                    (outcome as Outcome.Error<E>).exception,
                     instructionToken,
                     callDuration
             )
@@ -222,7 +210,6 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         logger,
                         dateFactory,
                         serialisationArgumentValidator,
-                        { Observable.error(IllegalStateException("The request could not be hashed")) },
                         networkInterceptorFactory,
                         cacheInterceptorFactory,
                         responseInterceptorFactory

@@ -40,7 +40,8 @@ import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+
 import org.junit.Test
 import java.io.IOException
 import java.io.NotSerializableException

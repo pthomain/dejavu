@@ -24,14 +24,14 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertNotNullWithContext
 import dev.pthomain.android.dejavu.test.assertNullWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
 import org.junit.Before
 import org.junit.Test
 
