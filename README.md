@@ -1,9 +1,4 @@
-<img src="https://github.com/pthomain/dejavu/blob/master/github/dejavu-header.png" style="height: 256px; width: auto;"/>
-
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/21c1e62561044bf49195b21e8ce3aa02)](https://app.codacy.com/manual/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Dashboard)[![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu) [![Known Vulnerabilities](https://snyk.io/test/github/pthomain/dejavu/badge.svg)](https://snyk.io/test/github/pthomain/dejavu)
-
-Haven't I seen this somewhere?
-------------------------------
 
 DejaVu provides a locally controlled cache for API responses. It is used to:
 
@@ -24,7 +19,7 @@ This is achieved by swapping the default RxJava call adapter factory on Retrofit
 
 There is support for customisable encryption (choice of JetPack Security on 23+, Facebook Conceal on 16+ or any preferred custom implementation) and Snappy compression (https://github.com/google/snappy).
 
-Show me the code!
+Code example
 -----------------
 
 Set the library up, here with encryption:
@@ -60,27 +55,11 @@ interface UserClient {
 }
 ```
 
-That's all Folks! 🥕
-
-(Actually there's a lot more you can do, doc coming soon...)
-
 Demo
 ----
 
 You can see the lib in action (v1) on the Play Store:
 <a href="https://play.google.com/store/apps/details?id=uk.co.glass_software.android.cache_interceptor.demo"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="150"/></a>
-
-⚠️ Disclaimer
-------------
-
-This library is a pre-release and is not recommended for use in production. It's under active development and its public API is likely to change with no particular care taken for backwards compatibility. No documentation is provided and the code coverage is suboptimal. Also PRs are not considered at this point. These concerns will be addressed before it comes out of beta. 
-
-About v2.0
-----------
-
-Version 2.0 is a major departure from the original implementation and is using annotations to provide the call cache directives. It also contains more cache operations and controls. 
-New documentation covering the new features will be available once the library is out of beta.
-The library was renamed DejaVu to avoid confusion with pre-existing similar libraries named RxCache.
 
 Retrofit support
 ----------------
