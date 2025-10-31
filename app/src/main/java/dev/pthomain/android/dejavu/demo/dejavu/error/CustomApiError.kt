@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.demo.dejavu.error
 
 import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import java.io.IOException
 
 class CustomApiError(override val cause: Throwable) : Throwable(), NetworkErrorPredicate {

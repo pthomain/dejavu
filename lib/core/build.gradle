@@ -146,16 +146,13 @@ dependencies {
 
     api appDependencies.boilerplate
     api appDependencies.glitchyCore
+    api appDependencies.glitchyFlow
 
     //https://stackoverflow.com/questions/56639529
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
     implementation appDependencies.koinCore
     implementation appDependencies.koinCoreExt
-
-    api appDependencies.rxJava
-    api appDependencies.rxKotlin
-    api appDependencies.rxAndroid
 
     testImplementation appDependencies.retrofitConverterGson
     testImplementation appDependencies.gson
@@ -170,6 +167,6 @@ dependencies {
     testImplementation appDependencies.okHttpMock
     testImplementation appDependencies.mockitoKotlin
 
-    testImplementation appDependencies.reactiveNetwork
+//    testImplementation appDependencies.reactiveNetwork
 }
 

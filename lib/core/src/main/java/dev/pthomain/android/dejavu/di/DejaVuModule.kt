@@ -39,8 +39,8 @@ import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*
@@ -55,8 +55,8 @@ internal class DejaVuModule<E>(
         logger: Logger,
         private val errorFactory: ErrorFactory<E>,
         persistenceModule: PersistenceManager.ModuleProvider,
-        private val operationPredicate: (RequestMetadata<*>) -> Remote?,
-        private val durationPredicate: (TransientResponse<*>) -> Int?
+        private val operationMapper: (RequestMetadata<*>) -> Remote?,
+        private val durationMapper: (TransientResponse<*>) -> Int?
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 
@@ -66,7 +66,7 @@ internal class DejaVuModule<E>(
 
         single { logger }
 
-        single(named("operationPredicate")) { operationPredicate }
+        single(named("operationMapper")) { operationMapper }
 
         single<DateFactory>(named("dateFactory")) {
             { if (it == null) Date() else Date(it) }
@@ -100,14 +100,13 @@ internal class DejaVuModule<E>(
                     get(),
                     get(),
                     get(named("dateFactory")),
-                    durationPredicate::invoke,
+                    durationMapper::invoke,
                     get()
             )
         }
 
         single {
             CacheManager<E>(
-                    get(),
                     get(),
                     get(),
                     get(named("dateFactory")),

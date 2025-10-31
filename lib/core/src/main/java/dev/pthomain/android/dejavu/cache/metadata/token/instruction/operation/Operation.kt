@@ -43,7 +43,7 @@ sealed class Operation(val type: Type) {
          * Expiring instructions contain a durationInMillis indicating the duration of the cached value
          * in milliseconds.
          *
-         * This instruction is overridden by the cachePredicate. TODO check this, cache predicate should take precedence
+         * This instruction is overridden by the operation mapper.
          * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.cachePredicate
          *
          * @param priority the priority instructing how the cache should behave

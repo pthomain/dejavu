@@ -24,9 +24,9 @@
 package dev.pthomain.android.dejavu.cache.metadata.response
 
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 
 data class TransientResponse<R : Any>(
         val response: R,
-        var cacheToken: RequestToken<Operation.Remote.Cache, R>
+        var cacheToken: RequestToken<Cache, R>,
 )

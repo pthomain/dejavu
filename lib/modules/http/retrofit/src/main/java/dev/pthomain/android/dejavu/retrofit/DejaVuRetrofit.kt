@@ -27,12 +27,12 @@ import android.content.Context
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.DejaVuBuilder
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitBuilder
 import dev.pthomain.android.dejavu.utils.SilentLogger
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import retrofit2.CallAdapter
 
 /**
@@ -40,7 +40,6 @@ import retrofit2.CallAdapter
  */
 class DejaVuRetrofit<E> internal constructor(
         val callAdapterFactory: CallAdapter.Factory,
-        val interceptorFactory : DejaVuInterceptor.Factory<E>
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 

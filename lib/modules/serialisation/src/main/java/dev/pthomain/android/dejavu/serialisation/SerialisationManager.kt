@@ -64,11 +64,7 @@ class SerialisationManager(
      * @throws SerialisationException in case the serialisation fails
      */
     @Throws(SerialisationException::class)
-    fun <R : Any> serialise(
-            response: Response<R, Cache>,
-            optionalDecorator: SerialisationDecorator?
-    ): ByteArray {
-        optionalDecorator?.also(::validateDecorator)
+    fun <R : Any> serialise(response: Response<R, Cache>): ByteArray {
         val responseClass = response::class.java
         val instruction = response.cacheToken.instruction
 
@@ -83,14 +79,7 @@ class SerialisationManager(
         }.let {
             var serialised = it.toByteArray()
 
-            val decoratorSequence = decoratorList.asSequence()
-            val decorators = optionalDecorator
-                    ?.let { sequenceOf(it) }
-                    ?.plus(decoratorSequence)
-                    ?: decoratorSequence
-
-            decorators
-                    .filter { decoratorPredicate(it, instruction.operation.serialisation) }
+            decoratorList.filter { decoratorPredicate(it, instruction.operation.serialisation) }
                     .forEach {
                         serialised = it.decorateSerialisation(
                                 responseClass,
@@ -117,18 +106,11 @@ class SerialisationManager(
     @Throws(SerialisationException::class)
     fun <R : Any> deserialise(
             instruction: CacheInstruction<Cache, R>,
-            serialised: Serialised,
-            optionalDecorator: SerialisationDecorator?
+            serialised: Serialised
     ): R {
-        optionalDecorator?.also(::validateDecorator)
         var deserialised = serialised.data
 
-        val decoratorSequence = reversedDecoratorList.asSequence()
-        val decorators = optionalDecorator
-                ?.let(decoratorSequence::plus)
-                ?: decoratorSequence
-
-        decorators
+        reversedDecoratorList.asSequence()
                 .filter { decoratorPredicate(it, serialised.serialisation) }
                 .forEach {
                     deserialised = it.decorateDeserialisation(

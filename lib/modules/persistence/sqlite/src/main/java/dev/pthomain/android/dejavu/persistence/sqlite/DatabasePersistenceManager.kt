@@ -38,7 +38,6 @@ import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
-import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
@@ -64,8 +63,6 @@ class DatabasePersistenceManager internal constructor(
         serialisationManager,
         dateFactory
 ) {
-
-    override val decorator: SerialisationDecorator? = null
 
     /**
      * Clears the entries of a certain type as passed by the typeToClear argument (or all entries otherwise).

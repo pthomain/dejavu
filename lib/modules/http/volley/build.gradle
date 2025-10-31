@@ -192,8 +192,8 @@ dependencies {
     compileOnly project(':lib:modules:serialisation')
 
     implementation appDependencies.multiDex
+    implementation appDependencies.glitchyRetrofitRxJava
 
-    implementation appDependencies.glitchyCore
     implementation appDependencies.volley
 
     implementation appDependencies.koinCore

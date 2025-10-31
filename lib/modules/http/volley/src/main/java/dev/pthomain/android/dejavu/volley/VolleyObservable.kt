@@ -29,16 +29,11 @@ import com.android.volley.Response.ErrorListener
 import com.android.volley.Response.Listener
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import dev.pthomain.android.glitchy.core.Glitchy
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptors
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.Observer
 
@@ -71,6 +66,7 @@ class VolleyObservable<E, R : Any> private constructor(
         observer.onError(volleyError)
     }
 
+    //FIXME
     class Factory<E> internal constructor(
             private val errorFactory: ErrorFactory<E>,
             private val serialiser: Serialiser,
@@ -78,51 +74,51 @@ class VolleyObservable<E, R : Any> private constructor(
     ) where E : Throwable,
             E : NetworkErrorPredicate {
 
-        @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
-        fun <R : Any> createResult(
-                requestQueue: RequestQueue,
-                operation: Operation,
-                requestMetadata: PlainRequestMetadata<R>
-        ) = create(
-                requestQueue,
-                operation,
-                true,
-                requestMetadata
-        ) as Observable<DejaVuResult<R>>
+//        @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
+//        fun <R : Any> createResult(
+//                requestQueue: RequestQueue,
+//                operation: Operation,
+//                requestMetadata: PlainRequestMetadata<R>
+//        ) = create(
+//                requestQueue,
+//                operation,
+//                true,
+//                requestMetadata
+//        ) as Observable<DejaVuResult<R>>
+//
+//        @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
+//        fun <R : Any> create(
+//                requestQueue: RequestQueue,
+//                operation: Operation,
+//                requestMetadata: PlainRequestMetadata<R>
+//        ) = create(
+//                requestQueue,
+//                operation,
+//                false,
+//                requestMetadata
+//        ) as Observable<R>
 
-        @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
-        fun <R : Any> create(
-                requestQueue: RequestQueue,
-                operation: Operation,
-                requestMetadata: PlainRequestMetadata<R>
-        ) = create(
-                requestQueue,
-                operation,
-                false,
-                requestMetadata
-        ) as Observable<R>
-
-        private fun <R : Any> create(
-                requestQueue: RequestQueue,
-                operation: Operation,
-                asResult: Boolean,
-                requestMetadata: PlainRequestMetadata<R>
-        ) = VolleyObservable<E, R>(
-                requestQueue,
-                serialiser,
-                requestMetadata
-        ).compose(
-                Glitchy.builder(errorFactory)
-                        .withInterceptors(Interceptors.After(
-                                dejaVuInterceptorFactory.create(
-                                        asResult,
-                                        operation,
-                                        requestMetadata
-                                )
-                        ))
-                        .emitOutcome(asResult)
-                        .build()
-                        .interceptor
-        )
+//        private fun <R : Any> create(
+//                requestQueue: RequestQueue,
+//                operation: Operation,
+//                asResult: Boolean,
+//                requestMetadata: PlainRequestMetadata<R>
+//        ) = VolleyObservable<E, R>(
+//                requestQueue,
+//                serialiser,
+//                requestMetadata
+//        ).compose(
+//                Glitchy.builder(errorFactory)
+//                        .withInterceptors(FlowInterceptors.After(
+//                                dejaVuInterceptorFactory.create(
+//                                        asResult,
+//                                        operation,
+//                                        requestMetadata
+//                                )
+//                        ))
+//                        .emitOutcome(asResult)
+//                        .build()
+//                        .interceptor
+//        )
     }
 }

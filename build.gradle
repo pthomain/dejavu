@@ -22,7 +22,7 @@
  */
 
 buildscript {
-    ext.kotlinVersion = '1.4-M2'
+    ext.kotlinVersion = '1.4.0'
 
     repositories {
         google()
@@ -32,7 +32,7 @@ buildscript {
 
     dependencies {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.android.tools.build:gradle:4.2.0-alpha04'
+        classpath 'com.android.tools.build:gradle:4.2.0-alpha07'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
 }
@@ -63,15 +63,11 @@ ext {
 
     jitPackVersion = '1.0'
     koinVersion = '2.1.5'
-
-    rxJavaVersion = '2.2.19'
-    rxKotlinVersion = '2.4.0'
-    rxAndroidVersion = '2.1.1'
     rxDogTagVersion = '1.0.0'
 
     boilerplateVersion = '4.3'
     mumboVersion = '2.8'
-    glitchyVersion = '2.9'
+    glitchyVersion = '3.3'
     fliptablesVersion = '1.1.0'
 
     snappyVersion = '0.4'
@@ -111,10 +107,6 @@ ext {
             kotlinReflect          : "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion",
             kotlinCoroutines       : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
             kotlinCoroutinesAndroid: "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion",
-
-            rxJava                 : "io.reactivex.rxjava2:rxjava:$rxJavaVersion",
-            rxKotlin               : "io.reactivex.rxjava2:rxkotlin:$rxKotlinVersion",
-            rxAndroid              : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
             rxDogTag               : "com.uber.rxdogtag:rxdogtag:$rxDogTagVersion",
 
             koinCore               : "org.koin:koin-core:$koinVersion",
@@ -123,33 +115,37 @@ ext {
             boilerplate            : "dev.pthomain.boilerplate:core:$boilerplateVersion",
             boilerplate_ui         : "dev.pthomain.boilerplate:ui:$boilerplateVersion",
             mumbo                  : "dev.pthomain:mumbo:$mumboVersion",
-            glitchyCore            : "dev.pthomain.glitchy:core:$glitchyVersion",
-            glitchyRetrofit        : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
             fliptables             : "com.jakewharton.fliptables:fliptables:$fliptablesVersion",
+
+            glitchyCore            : "dev.pthomain.glitchy:core:$glitchyVersion",
+            glitchyFlow            : "dev.pthomain.glitchy:flow:$glitchyVersion",
+            glitchyRetrofit        : "dev.pthomain.glitchy:retrofit:$glitchyVersion",
+            glitchyRetrofitRxJava  : "dev.pthomain.glitchy:retrofit-rxjava:$glitchyVersion",
+            glitchyRetrofitFlow    : "dev.pthomain.glitchy:retrofit-flow:$glitchyVersion",
 
             volley                 : "com.android.volley:volley:$volleyVersion",
 
             retrofit               : "com.squareup.retrofit2:retrofit:$retrofitVersion",
             retrofitConverterGson  : "com.squareup.retrofit2:converter-gson:$retrofitVersion",
 
-            okHttp               : "com.squareup.okhttp3:okhttp:$okhttpVersion",
-            okHttpLogging        : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
+            okHttp                 : "com.squareup.okhttp3:okhttp:$okhttpVersion",
+            okHttpLogging          : "com.squareup.okhttp3:logging-interceptor:$okhttpVersion",
 
-            gson                 : "com.google.code.gson:gson:$gsonVersion",
-            moshi                : "com.squareup.moshi:moshi:$moshiVersion",
-            moshiKotlin          : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
-            snappy               : "org.iq80.snappy:snappy:$snappyVersion",
-            requery              : "io.requery:sqlite-android:$requeryVersion",
+            gson                   : "com.google.code.gson:gson:$gsonVersion",
+            moshi                  : "com.squareup.moshi:moshi:$moshiVersion",
+            moshiKotlin            : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
+            snappy                 : "org.iq80.snappy:snappy:$snappyVersion",
+            requery                : "io.requery:sqlite-android:$requeryVersion",
 
-            androidXtestCore     : "androidx.test:core:$androidXtestVersion",
-            androidXtestRunner   : "androidx.test:runner:$androidXtestVersion",
-            androidXtestRules    : "androidx.test:rules:$androidXtestVersion",
-            androidXjUnit        : "androidx.test.ext:junit:$androidXtestVersion",
+            androidXtestCore       : "androidx.test:core:$androidXtestVersion",
+            androidXtestRunner     : "androidx.test:runner:$androidXtestVersion",
+            androidXtestRules      : "androidx.test:rules:$androidXtestVersion",
+            androidXjUnit          : "androidx.test.ext:junit:$androidXtestVersion",
 
-            mockitoCore          : "org.mockito:mockito-core:$mockitoVersion",
-            robolectric          : "org.robolectric:robolectric:$robolectricVersion",
-            okHttpMock           : "com.squareup.okhttp3:mockwebserver:$okhttpVersion",
-            mockitoKotlin        : "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
+            mockitoCore            : "org.mockito:mockito-core:$mockitoVersion",
+            robolectric            : "org.robolectric:robolectric:$robolectricVersion",
+            okHttpMock             : "com.squareup.okhttp3:mockwebserver:$okhttpVersion",
+            mockitoKotlin          : "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion"
     ]
 }
 

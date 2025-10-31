@@ -26,6 +26,7 @@ package dev.pthomain.android.dejavu.demo.presenter.retrofit
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.DejaVuDependencies
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Custom
@@ -34,7 +35,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitObservab
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
 import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.Glitch
 
 internal abstract class BaseRetrofitDemoPresenter(
         demoActivity: DemoActivity,
@@ -47,15 +48,19 @@ internal abstract class BaseRetrofitDemoPresenter(
     @Suppress("UNCHECKED_CAST")
     override fun newClient(persistence: PersistenceType) = when (errorFactoryType) {
         Default -> dejaVuFactory.createRetrofit(
-                persistence,
-                serialiserType,
-                errorFactoryType as ErrorFactoryType<Glitch>
+                DejaVuDependencies(
+                        persistence,
+                        serialiserType,
+                        errorFactoryType as ErrorFactoryType<Glitch>
+                )
         )
 
         Custom -> dejaVuFactory.createRetrofit(
-                persistence,
-                serialiserType,
-                errorFactoryType as ErrorFactoryType<CustomApiError>
+                DejaVuDependencies(
+                        persistence,
+                        serialiserType,
+                        errorFactoryType as ErrorFactoryType<CustomApiError>
+                )
         )
     }
 

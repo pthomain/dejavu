@@ -24,6 +24,8 @@
 package dev.pthomain.android.dejavu.configuration
 
 import android.content.Context
+import dev.pthomain.android.boilerplate.core.builder.Extendable
+import dev.pthomain.android.boilerplate.core.builder.ExtensionBuilder
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
@@ -32,24 +34,26 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.configuration.OperationPredicate.Inactive
 import dev.pthomain.android.dejavu.di.DejaVuModule
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 
 class DejaVuBuilder<E> internal constructor(
         private val context: Context,
         private val logger: Logger,
         private val errorFactory: ErrorFactory<E>,
-        private val persistenceManagerModule: PersistenceManager.ModuleProvider
-) : Extendable
+        private val persistenceManagerModule: PersistenceManager.ModuleProvider,
+) : Extendable<Module>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    private var operationPredicate: (RequestMetadata<*>) -> Remote? = Inactive
-    private var durationPredicate: (TransientResponse<*>) -> Int? = { null }
+    private var operationMapper: (RequestMetadata<*>) -> Remote? = Inactive
+    private var durationMapper: (TransientResponse<*>) -> Int? = { null }
 
     /**
-     * Sets a predicate for ad-hoc response caching. This predicate will be called for every
+     * Sets a mapper for ad-hoc response caching. This mapper will be called for every
      * request and will always take precedence on the provided request operation.
      *
      * It will be called with the target response class and associated request metadata before
@@ -62,25 +66,25 @@ class DejaVuBuilder<E> internal constructor(
      * To cache all response with default CACHE operation and expiration period, use CachePredicate.CacheAll.
      * To disable any caching, use CachePredicate.CacheNone.
      *
-     * Otherwise, you can implement your own predicate to return the appropriate operation base on
+     * Otherwise, you can implement your own mapper to return the appropriate operation base on
      * the given RequestMetadata for the request being made.
-     *///TODO rename to Provider
-    fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata<*>) -> Remote?) =
-            apply { this.operationPredicate = operationPredicate }
+     */
+    fun operationMapper(operationMapper: (metadata: RequestMetadata<*>) -> Remote?) =
+            apply { this.operationMapper = operationMapper }
 
     /**
-     * Sets a predicate for ad-hoc response duration caching.
+     * Sets a mapper for ad-hoc response duration caching.
      *
-     * If not null, the value returned by this predicate will take precedence on the
+     * If not null, the value returned by this mapper will take precedence on the
      * cache duration provided in the request's operation.
      *
      * This is useful for responses containing cache duration information, enabling server-side
      * cache control.
-     *///TODO rename to Provider
-    fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
-            apply { this.durationPredicate = durationPredicate }
+     */
+    fun durationMapper(durationMapper: (TransientResponse<*>) -> Int?) =
+            apply { this.durationMapper = durationMapper }
 
-    override fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B) =
+    override fun <B, EB : ExtensionBuilder<B, Module, EB>> extend(extensionBuilder: EB) =
             extensionBuilder.accept(modules())
 
     private fun modules() = DejaVuModule(
@@ -88,8 +92,8 @@ class DejaVuBuilder<E> internal constructor(
             logger,
             errorFactory,
             persistenceManagerModule,
-            operationPredicate,
-            durationPredicate
+            operationMapper,
+            durationMapper
     ).modules
 
     /**

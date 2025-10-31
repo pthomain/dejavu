@@ -23,22 +23,25 @@
 
 package dev.pthomain.android.dejavu.retrofit.di
 
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
-import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
+import dev.pthomain.android.dejavu.retrofit.glitchy.OperationMetadata
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnTypeParser
 import dev.pthomain.android.dejavu.retrofit.interceptors.DejaVuRetrofitInterceptorFactory
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.Glitchy
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
-import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.base.Interceptors
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.flow.interceptors.base.FlowInterceptors
+import dev.pthomain.android.glitchy.retrofit.flow.GlitchyRetrofitFlow
+import dev.pthomain.android.glitchy.retrofit.flow.adapter.RetrofitFlowCallAdapterFactory
+import dev.pthomain.android.glitchy.retrofit.flow.type.FlowReturnTypeParser
+import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptorFactory
+import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitMetadata
+import dev.pthomain.android.glitchy.retrofit.type.DefaultOutcomeReturnTypeParser
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -51,9 +54,13 @@ class DejaVuRetrofitModule<E>
 
         single { AnnotationProcessor(get(), get()) }
 
-        single { DejaVuReturnTypeParser<E>() }
+        single {
+            DefaultOutcomeReturnTypeParser.getDefaultInstance(FlowReturnTypeParser) {
+                it == DejaVuResult::class.java
+            }
+        }
 
-        single<ReturnTypeParser<OperationReturnType>> {
+        single<ReturnTypeParser<OperationMetadata>> {
             OperationReturnTypeParser<E>(
                     get(),
                     get(),
@@ -65,15 +72,15 @@ class DejaVuRetrofitModule<E>
 
         single {
             RetrofitOperationResolver.Factory<E>(
-                    get<(RequestMetadata<*>) -> Operation.Remote?>(named("operationPredicate"))::invoke,
+                    get<(RequestMetadata<*>) -> Remote?>(named("operationMapper"))::invoke,
                     get<RequestBodyConverter>(),
                     get()
             )
         }
 
-        single<RetrofitInterceptors<E>> {
-            RetrofitInterceptors.After(
-                    DejaVuRetrofitInterceptorFactory(
+        single<Interceptors<RetrofitMetadata<OperationMetadata>, RetrofitInterceptorFactory<OperationMetadata>>> {
+            FlowInterceptors.After(
+                    DejaVuRetrofitInterceptorFactory<E>(
                             get(),
                             get(named("dateFactory")),
                             get(),
@@ -85,12 +92,12 @@ class DejaVuRetrofitModule<E>
         single { HeaderInterceptor() }
 
         single {
-            Glitchy.builder<E>(get())
-                    .extend(GlitchyRetrofit.extension<E, OperationReturnType>())
-                    .withReturnTypeParser(get())
-                    .withInterceptors(get())
-                    .build()
-                    .callAdapterFactory
+            GlitchyRetrofitFlow.Custom.builder<E, OperationMetadata>(
+                    get(),
+                    RetrofitFlowCallAdapterFactory(),
+                    get(),
+                    get()
+            ).build().callAdapterFactory
         }
     }
 

@@ -6,8 +6,9 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.configuration.DejaVuBuilder
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.utils.SilentLogger
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
 
 class DejaVuVolley<E> internal constructor(
         val observableFactory : VolleyObservable.Factory<E>

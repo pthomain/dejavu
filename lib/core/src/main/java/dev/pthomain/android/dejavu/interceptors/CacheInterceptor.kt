@@ -26,7 +26,6 @@ package dev.pthomain.android.dejavu.interceptors
 import dev.pthomain.android.dejavu.cache.CacheManager
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
-import dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
@@ -36,9 +35,11 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.flow.interceptors.base.FlowInterceptor
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 /**
  * Class handling the interception of the network request observable with the purpose of decorating
@@ -51,29 +52,28 @@ import io.reactivex.ObservableTransformer
  */
 internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
         private val cacheManager: CacheManager<E>,
-        private val requestToken: RequestToken<O, R>
-) : ObservableTransformer<ResultWrapper<R>, DejaVuResult<R>>
+        private val requestToken: RequestToken<O, R>,
+) : FlowInterceptor()// ObservableTransformer<ResultWrapper<R>, DejaVuResult<R>>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    /**
-     * Composes the given input observable and returns a decorated instance of the same type.
-     * @param upstream the upstream Observable instance
-     * @return the transformed ObservableSource instance
-     */
     @Suppress("UNCHECKED_CAST")
-    override fun apply(upstream: Observable<ResultWrapper<R>>): Observable<DejaVuResult<R>> {
-        return when (requestToken.instruction.operation) {
-            is Cache -> cacheManager.getCachedResponse(
-                    upstream.map { it as DejaVuResult<R> }, //This is enforced by Glitchy
-                    requestToken as RequestToken<Cache, R>
+    override fun flatMap(upstream: Flow<Any>): Flow<Any> = flow {
+        when (requestToken.instruction.operation) {
+            is Cache -> emitAll(
+                    cacheManager.getCachedResponse(
+                            upstream as Flow<DejaVuResult<R>>, //This is enforced by Glitchy
+                            requestToken as RequestToken<Cache, R>
+                    )
             )
 
             is Clear -> cacheManager.clearCache(requestToken as RequestToken<Clear, R>)
 
-            is Invalidate -> cacheManager.invalidate(requestToken as RequestToken<Invalidate, R>)
+            is Invalidate -> emit(
+                    cacheManager.invalidate(requestToken as RequestToken<Invalidate, R>)
+            )
 
-            else -> doNotCache(upstream as Observable<Response<R, DoNotCache>>)
+            else -> emit(doNotCache(upstream as Response<R, DoNotCache>))
         }
     }
 
@@ -84,17 +84,15 @@ internal class CacheInterceptor<R : Any, O : Operation, E> private constructor(
      * @param upstream the upstream Observable instance
      * @return the upstream Observable updating the response with the NOT_CACHED status
      */
-    private fun doNotCache(upstream: Observable<Response<R, DoNotCache>>): Observable<DejaVuResult<R>> =
-            upstream.map {
-                @Suppress("UNCHECKED_CAST") //bad compiler inference
-                it.copy(
+    private fun doNotCache(upstream: Response<R, DoNotCache>): DejaVuResult<R> =
+            @Suppress("UNCHECKED_CAST") //bad compiler inference
+            upstream.copy(
                     cacheToken = ResponseToken(
                             requestToken.instruction as CacheInstruction<DoNotCache, R>,
                             NOT_CACHED,
                             requestToken.requestDate
                     )
-                )
-            }
+            )
 
     internal class Factory<E>(
             private val cacheManager: CacheManager<E>

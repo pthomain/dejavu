@@ -63,10 +63,9 @@ abstract class BasePersistenceManager(
      * @return a model containing the serialised data along with the calculated metadata to use for caching it
      */
     protected fun <R : Any> serialise(response: Response<R, Cache>) =
-            serialisationManager.serialise(
-                    response,
-                    decorator
-            ).also { logger.d(this, "Caching ${response::class.java.simpleName}") }
+            serialisationManager.serialise(response).also {
+                logger.d(this, "Caching ${response::class.java.simpleName}")
+            }
 
     /**
      * Returns a cached entry if available
@@ -82,14 +81,12 @@ abstract class BasePersistenceManager(
 
         invalidateIfNeeded(cacheToken)
 
-        val persisted = get(requestMetadata)
-
-        return persisted?.run {
+        return get(requestMetadata)?.run {
             if (requestMetadata.classHash != classHash) {
                 logger.e(this, "The class hash for the given request did not match, clearing entry.")
                 clearCache(requestMetadata)
                 null
-            } else deserialise(cacheToken, persisted)
+            } else deserialise(cacheToken, this)
         }
     }
 
@@ -124,8 +121,7 @@ abstract class BasePersistenceManager(
             with(persisted) {
                 serialisationManager.deserialise(
                         cacheToken.instruction,
-                        this,
-                        decorator
+                        this
                 ).let { response ->
                     val cacheStatus = dateFactory.getCacheStatus(expiryDate)
                     val formattedExpiry = dateFormat.format(expiryDate)

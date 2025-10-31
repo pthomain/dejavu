@@ -36,11 +36,6 @@ import org.koin.core.module.Module
 interface PersistenceManager {
 
     /**
-     * An optional serialisation decorators, if require as an extra step for persistence.
-     */
-    val decorator: SerialisationDecorator?
-
-    /**
      * Returns a cached entry if available
      *
      * @param instructionToken the request's instruction token

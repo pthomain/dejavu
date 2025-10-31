@@ -23,38 +23,38 @@
 
 package dev.pthomain.android.dejavu.retrofit.glitchy
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser
 import dev.pthomain.android.glitchy.retrofit.type.ParsedType
 import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
 import java.lang.reflect.Type
 
 internal class OperationReturnTypeParser<E>(
-        private val dejaVuTypeParser: DejaVuReturnTypeParser<E>,
+        private val outcomeReturnTypeParser: OutcomeReturnTypeParser<Class<*>>,
         private val annotationProcessor: AnnotationProcessor,
-        private val logger: Logger
-) : ReturnTypeParser<OperationReturnType>
+        private val logger: Logger,
+) : ReturnTypeParser<OperationMetadata>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    override fun parseReturnType(returnType: Type,
-                                 annotations: Array<Annotation>): ParsedType<OperationReturnType> {
-        val parsedDejaVuType = dejaVuTypeParser.parseReturnType(
+    override fun parseReturnType(
+            returnType: Type,
+            annotations: Array<Annotation>,
+    ): ParsedType<OperationMetadata> {
+        val parsedType = outcomeReturnTypeParser.parseReturnType(
                 returnType,
                 annotations
         )
 
-        val responseClass = parsedDejaVuType.metadata.responseClass
+        val responseClass = parsedType.wrappedType as Class<*>
 
         val methodDescription = "call returning " + getTypedName(
                 responseClass,
-                parsedDejaVuType.metadata.isDejaVuResult,
-                parsedDejaVuType.metadata.isSingle
+                parsedType
         )
 
         val annotationOperation = try {
@@ -87,31 +87,30 @@ internal class OperationReturnTypeParser<E>(
             )
         }
 
-        return ParsedType(
-                OperationReturnType(
-                        annotationOperation,
-                        methodDescription,
-                        parsedDejaVuType.metadata
-                ),
-                parsedDejaVuType.returnType,
-                parsedDejaVuType.parsedType
-        )
+        return with(parsedType) {
+            ParsedType(
+                    OperationMetadata(annotationOperation, methodDescription, this),
+                    originalType,
+                    rawType,
+                    wrappedType,
+                    adaptedType
+            )
+        }
     }
 
-    private fun getTypedName(responseClass: Class<*>,
-                             asResult: Boolean,
-                             isSingle: Boolean) =
-            String.format(
-                    ifElse(isSingle, "Single<%s>", "Observable<%s>"),
-                    String.format(
-                            ifElse(asResult, "DejaVuResult<%s>", "%s"),
-                            responseClass.simpleName
-                    )
-            )
+    private fun getTypedName(
+            responseClass: Class<*>,
+            parsedType: ParsedType<Class<*>>,
+    ): String {
+        val rawType = (parsedType.rawType as Class<*>).simpleName
+        val typeToken = parsedType.typeToken.simpleName
+
+        return "$rawType<$typeToken<${responseClass.simpleName}>>"
+    }
 }
 
-internal data class OperationReturnType(
+internal data class OperationMetadata(
         val annotationOperation: Operation?,
         val methodDescription: String,
-        val dejaVuReturnType: DejaVuReturnType
-) : IsOutcome
+        val parsedType: ParsedType<Class<*>>,
+)

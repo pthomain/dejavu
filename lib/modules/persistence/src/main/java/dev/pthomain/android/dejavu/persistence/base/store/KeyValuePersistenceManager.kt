@@ -35,7 +35,6 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
-import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 
@@ -56,8 +55,7 @@ class KeyValuePersistenceManager(
         logger: Logger,
         private val keySerialiser: KeySerialiser,
         private val store: KeyValueStore<String, String, Serialised>,
-        serialisationManager: SerialisationManager,
-        override val decorator: SerialisationDecorator? = null
+        serialisationManager: SerialisationManager
 ) : BasePersistenceManager(
         logger,
         serialisationManager,

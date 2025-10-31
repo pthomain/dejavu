@@ -28,17 +28,20 @@ import dev.pthomain.android.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate.CacheAll
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate.Inactive
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata.Companion.DEFAULT_URL
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.shared.metadata.token.instruction.operation.OperationSerialiser
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertTrueWithContext
+import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.verifyWithContext
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -86,7 +89,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun getTarget(hasOperation: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (metadata: RequestMetadata) -> Operation?,
+                          operation mapper: (metadata: RequestMetadata) -> Operation?,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean): RetrofitCallAdapter<Glitch> {
         whenever(mockCall.request()).thenReturn(mockRequest)
@@ -127,7 +130,7 @@ class RetrofitCallAdapterUnitTest {
 
     private fun testAdapt(hasOperation: Boolean,
                           hasHeader: Boolean,
-                          cachePredicate: (metadata: RequestMetadata) -> Operation?,
+                          operation mapper: (metadata: RequestMetadata) -> Operation?,
                           isHeaderDeserialisationSuccess: Boolean,
                           isHeaderDeserialisationException: Boolean) {
         sequenceOf(
@@ -146,7 +149,7 @@ class RetrofitCallAdapterUnitTest {
                     isHeaderDeserialisationException
             )
 
-            val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
+            val mockResponseWrapper = mock<MockClient.ResponseWrapper<*, *, Glitch>>()
 
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)
@@ -214,13 +217,13 @@ class RetrofitCallAdapterUnitTest {
                 val argumentCaptor = argumentCaptor<Operation>()
                 verifyWithContext(
                         mockDejaVuFactory,
-                        "$context: DejaVuFactory should have been called with the default CacheInstruction, using the cache predicate"
+                        "$context: DejaVuFactory should have been called with the default CacheInstruction, using the operation mapper"
                 ).create(
                         argumentCaptor.capture(),
                         eq(requestMetadata)
                 )
 
-                val subContext = "$context: Returned cache predicate CacheInstruction was incorrect"
+                val subContext = "$context: Returned operation mapper CacheInstruction was incorrect"
                 val capturedOperation = argumentCaptor.firstValue as Cache
 
                 if (usesDefaultAdaptation) {

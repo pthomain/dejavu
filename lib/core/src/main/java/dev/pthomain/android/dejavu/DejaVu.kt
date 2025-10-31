@@ -30,9 +30,9 @@ import dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.utils.SilentLogger
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.interceptors.error.glitch.GlitchFactory
 
 /**
  * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
