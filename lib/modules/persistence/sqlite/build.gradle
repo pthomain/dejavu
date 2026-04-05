@@ -1,7 +1,7 @@
 /*
- *  
+ *
  *  Copyright (C) 2017-2020 Pierre Thomain
- *  
+ *
  *  Licensed to the Apache Software Foundation (ASF) under one
  *  or more contributor license agreements.  See the NOTICE file
  *  distributed with this work for additional information
@@ -9,36 +9,31 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
  *  under the License.
- *  
+ *
  */
-
-//plugins {
-//    id 'maven-publish'
-//}
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-//apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'dev.pthomain.dejavu'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    namespace 'dev.pthomain.android.dejavu.persistence.sqlite'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdk 24
+        targetSdk 35
         versionCode 1
         versionName "1.0"
         consumerProguardFiles 'proguard-rules-lib.pro'
@@ -58,28 +53,32 @@ android {
         }
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
-    packagingOptions {
-        exclude 'META-INF/services/javax.annotation.processing.Processor'
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/eclipse.inf'
-        exclude 'META-INF/index.list'
-        exclude 'META-INF/INDEX.LIST'
-        exclude 'about_files/LICENSE-2.0.txt'
-        exclude 'plugin.xml'
-        exclude 'plugin.properties'
+    packaging {
+        resources {
+            excludes += [
+                'META-INF/services/javax.annotation.processing.Processor',
+                'META-INF/DEPENDENCIES.txt',
+                'META-INF/LICENSE.txt',
+                'META-INF/NOTICE.txt',
+                'META-INF/NOTICE',
+                'META-INF/LICENSE',
+                'META-INF/DEPENDENCIES',
+                'META-INF/notice.txt',
+                'META-INF/license.txt',
+                'META-INF/dependencies.txt',
+                'META-INF/LGPL2.1',
+                'META-INF/eclipse.inf',
+                'META-INF/index.list',
+                'META-INF/INDEX.LIST',
+                'about_files/LICENSE-2.0.txt',
+                'plugin.xml',
+                'plugin.properties'
+            ]
+        }
     }
 
     configurations.all {
@@ -88,15 +87,16 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
     }
 
     testOptions {
         unitTests.returnDefaultValues = true
-    }
-
-    testOptions {
         unitTests {
             includeAndroidResources = true
         }
@@ -119,7 +119,7 @@ sourceSets {
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from android.sourceSets.main.java.srcDirs
 }
 
@@ -129,7 +129,7 @@ task javadoc(type: Javadoc) {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
@@ -143,72 +143,22 @@ artifacts {
     archives sourcesJar
 }
 
-//afterEvaluate {
-//    publishing {
-//        repositories {
-//            maven {
-//                name = "GitHubPackages"
-//                url = uri("https://maven.pkg.github.com/pthomain/dejavu")
-//                credentials {
-//                    Properties properties = new Properties()
-//                    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-//                    username = properties.getProperty("gpr.user")
-//                    password = properties.getProperty("gpr.key")
-//                }
-//            }
-//        }
-//        publications {
-//            sqlite(MavenPublication) {
-//                groupId = 'dev.pthomain.dejavu'
-//                artifactId = 'persistence-sqlite'
-//                version = dejaVuVersion
-//                artifact("$buildDir/outputs/aar/sqlite-release.aar")
-//            }
-//            mavenJava(MavenPublication) {
-//                pom {
-//                    name = 'DejaVu'
-//                    description = 'Dead simple Retrofit / RxJava cache'
-//                    url = 'https://github.com/pthomain/dejavu'
-//                    licenses {
-//                        license {
-//                            name = 'The Apache License, Version 2.0'
-//                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-//                        }
-//                    }
-//                    developers {
-//                        developer {
-//                            id = 'pthomain'
-//                            name = 'Pierre Thomain'
-//                        }
-//                    }
-//                    scm {
-//                        connection = 'scm:git:git://github.com/pthomain/dejavu.git'
-//                        developerConnection = 'scm:git:ssh://github.com/pthomain/dejavu.git'
-//                        url = 'https://github.com/pthomain/dejavu'
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
 dependencies {
     compileOnly project(':lib:core')
     api project(':lib:modules:persistence')
 
-//    implementation appDependencies.jitPack
-    implementation appDependencies.multiDex
+    implementation libs.androidx.multidex
 
-    implementation appDependencies.androidXcore
-    implementation appDependencies.androidXsqlite
+    implementation libs.androidx.core
+    implementation libs.androidx.sqlite
 
-    implementation appDependencies.koinCore
-    implementation appDependencies.koinCoreExt
+    implementation libs.koin.core
+    implementation libs.koin.android
 
-    implementation appDependencies.requery
+    implementation libs.requery
 
-    testImplementation appDependencies.requery
-    testImplementation appDependencies.androidXsqlite
+    testImplementation libs.requery
+    testImplementation libs.androidx.sqlite
 
-    testImplementation appDependencies.androidXroom
+    testImplementation libs.androidx.room.runtime
 }
