@@ -45,19 +45,19 @@ class DejaVu<E> internal constructor(
 
         fun defaultBuilder(
                 context: Context,
-                persistenceManagerModule: PersistenceManager.ModuleProvider,
+                persistenceManagerProvider: PersistenceManager.ComponentProvider,
                 logger: Logger = SilentLogger
         ) = builder(
                 context,
                 DejaVuErrorFactory(),
-                persistenceManagerModule,
+                persistenceManagerProvider,
                 logger
         )
 
         fun <E> builder(
                 context: Context,
                 errorFactory: ErrorFactory<E>,
-                persistenceManagerModule: PersistenceManager.ModuleProvider,
+                persistenceManagerProvider: PersistenceManager.ComponentProvider,
                 logger: Logger = SilentLogger
         ) where E : Throwable,
                 E : NetworkErrorPredicate =
@@ -65,7 +65,7 @@ class DejaVu<E> internal constructor(
                         context.applicationContext,
                         logger,
                         errorFactory,
-                        persistenceManagerModule
+                        persistenceManagerProvider
                 )
     }
 

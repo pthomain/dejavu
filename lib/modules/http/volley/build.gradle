@@ -151,6 +151,4 @@ dependencies {
 
     implementation libs.volley
 
-    implementation libs.koin.core
-    implementation libs.koin.android
 }

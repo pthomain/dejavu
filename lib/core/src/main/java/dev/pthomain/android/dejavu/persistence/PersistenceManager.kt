@@ -23,15 +23,17 @@
 
 package dev.pthomain.android.dejavu.persistence
 
+import android.content.Context
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.persistence.Persisted.Deserialised
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
-import org.koin.core.module.Module
 
 interface PersistenceManager {
 
@@ -92,9 +94,13 @@ interface PersistenceManager {
             operation: Clear = Clear()
     )
 
-    interface ModuleProvider {
-        val modules: List<Module>
+    /**
+     * Provides a PersistenceManager and its associated decorators.
+     * Replaces the previous Koin-based ModuleProvider.
+     */
+    interface ComponentProvider {
         val decorators: List<SerialisationDecorator>
+        fun create(context: Context, dateFactory: DateFactory, logger: Logger): PersistenceManager
     }
 
 }

@@ -24,34 +24,34 @@
 package dev.pthomain.android.dejavu.retrofit.configuration
 
 import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
+import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
-import dev.pthomain.android.dejavu.retrofit.di.DejaVuRetrofitModule
+import dev.pthomain.android.dejavu.retrofit.di.DejaVuRetrofitComponent
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import org.koin.core.module.Module
-import org.koin.dsl.koinApplication
 
 class DejaVuRetrofitBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>>
+    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>, E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    private var parentModules: List<Module>? = null
+    private var parentComponent: DejaVuComponent<E>? = null
 
-    override fun accept(modules: List<Module>) = apply {
-        parentModules = modules
+    override fun accept(component: DejaVuComponent<E>) = apply {
+        parentComponent = component
     }
 
     /**
-     * Returns an instance of DejaVu.
+     * Returns an instance of DejaVuRetrofit.
      */
     override fun build(): DejaVuRetrofit<E> {
-        val parentModules = this.parentModules
+        val component = this.parentComponent
                 ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 
-        return koinApplication {
-            modules(parentModules + DejaVuRetrofitModule<E>().module)
-        }.koin.run {
-            DejaVuRetrofit(get(), get())
-        }
+        val retrofitComponent = DejaVuRetrofitComponent(component)
+
+        return DejaVuRetrofit(
+                retrofitComponent.callAdapterFactory,
+                component.interceptorFactory
+        )
     }
 }

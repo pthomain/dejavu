@@ -152,8 +152,6 @@ dependencies {
     //https://stackoverflow.com/questions/56639529
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
-    implementation libs.koin.core
-    implementation libs.koin.android
 
     api libs.rxjava
     api libs.rxkotlin

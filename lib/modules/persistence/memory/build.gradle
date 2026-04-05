@@ -149,6 +149,4 @@ dependencies {
 
     implementation libs.androidx.multidex
 
-    implementation libs.koin.core
-    implementation libs.koin.android
 }

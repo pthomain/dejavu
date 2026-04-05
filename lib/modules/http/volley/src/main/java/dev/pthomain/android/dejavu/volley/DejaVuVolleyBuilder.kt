@@ -1,37 +1,45 @@
 package dev.pthomain.android.dejavu.volley
 
 import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
+import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import org.koin.core.module.Module
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
+import dev.pthomain.android.dejavu.serialisation.Serialiser
 
-class DejaVuVolleyBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuVolleyBuilder<E>, DejaVuVolley<E>>
+class DejaVuVolleyBuilder<E> internal constructor(
+        private val serialiser: Serialiser? = null
+) : ExtensionBuilder<DejaVuVolleyBuilder<E>, DejaVuVolley<E>, E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
-    private var parentModules: List<Module>? = null
+    private var parentComponent: DejaVuComponent<E>? = null
 
-    private val module = module {
-        single { VolleyObservable.Factory<E>(get(), get(), get()) }
-    }
-
-    override fun accept(modules: List<Module>) = apply {
-        parentModules = modules
+    override fun accept(component: DejaVuComponent<E>) = apply {
+        parentComponent = component
     }
 
     /**
-     * Returns an instance of DejaVu.
+     * Provides the serialiser needed for Volley response deserialisation.
+     */
+    fun withSerialiser(serialiser: Serialiser) = DejaVuVolleyBuilder<E>(serialiser).also {
+        it.parentComponent = this.parentComponent
+    }
+
+    /**
+     * Returns an instance of DejaVuVolley.
      */
     override fun build(): DejaVuVolley<E> {
-        val parentModules = this.parentModules
+        val component = this.parentComponent
                 ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 
-        return koinApplication {
-            modules(parentModules + module)
-        }.koin.run {
-            DejaVuVolley(get())
-        }
+        val resolvedSerialiser = this.serialiser
+                ?: throw IllegalStateException("A Serialiser must be provided via withSerialiser()")
+
+        val volleyObservableFactory = VolleyObservable.Factory<E>(
+                component.errorFactory,
+                resolvedSerialiser,
+                component.interceptorFactory
+        )
+
+        return DejaVuVolley(volleyObservableFactory)
     }
 }

@@ -42,11 +42,9 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.P
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.di.DemoViewModule
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
 import io.reactivex.plugins.RxJavaPlugins
-import org.koin.dsl.koinApplication
 
 
 internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit {
@@ -85,15 +83,9 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
 
     override fun getPresenter() = presenter
 
-    override fun initialiseComponent() = DemoViewComponent(
-            koinApplication {
-                modules(
-                        DemoViewModule(
-                                this@DemoActivity,
-                                this@DemoActivity
-                        ).module
-                )
-            }.koin
+    override fun initialiseComponent() = DemoViewComponent.create(
+            this@DemoActivity,
+            this@DemoActivity
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

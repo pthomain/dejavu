@@ -59,7 +59,7 @@ class DejaVuRetrofit<E> internal constructor(
         fun <E> builder(
                 context: Context,
                 errorFactory: ErrorFactory<E>,
-                persistenceManagerModule: PersistenceManager.ModuleProvider,
+                persistenceManagerProvider: PersistenceManager.ComponentProvider,
                 logger: Logger = SilentLogger
         ) where E : Throwable,
                 E : NetworkErrorPredicate =
@@ -67,7 +67,7 @@ class DejaVuRetrofit<E> internal constructor(
                         DejaVu.builder(
                                 context,
                                 errorFactory,
-                                persistenceManagerModule,
+                                persistenceManagerProvider,
                                 logger
                         )
                 )

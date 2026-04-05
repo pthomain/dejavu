@@ -24,58 +24,49 @@
 package dev.pthomain.android.dejavu.persistence.sqlite.di
 
 import android.content.ContentValues
+import android.content.Context
 import androidx.sqlite.db.SupportSQLiteOpenHelper
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 
 class SqlitePersistence(
         override val decorators: List<SerialisationDecorator>,
-        serialiser: Serialiser
-) : PersistenceManager.ModuleProvider {
+        private val serialiser: Serialiser
+) : PersistenceManager.ComponentProvider {
 
-    private val persistenceModule = PersistenceModule(decorators, serialiser).module
+    override fun create(
+            context: Context,
+            dateFactory: DateFactory,
+            logger: Logger
+    ): PersistenceManager {
+        val persistenceModule = PersistenceModule(decorators, serialiser)
+        val serialisationManager = persistenceModule.createSerialisationManager()
 
-    override val modules = persistenceModule + module {
+        val callback = SqlOpenHelperCallback(DATABASE_VERSION)
 
-        single<PersistenceManager> {
-            DatabasePersistenceManager(
-                    get(),
-                    get(),
-                    get(),
-                    get(named("dateFactory")),
-                    ::mapToContentValues
-            )
-        }
+        val openHelper = RequerySQLiteOpenHelperFactory().create(
+                SupportSQLiteOpenHelper.Configuration.builder(context)
+                        .name(DATABASE_NAME)
+                        .callback(callback)
+                        .build()
+        )
 
-        single<SupportSQLiteOpenHelper.Callback> { SqlOpenHelperCallback(DATABASE_VERSION) }
+        val database = openHelper.writableDatabase
 
-        single { get<SupportSQLiteOpenHelper>().writableDatabase }
-
-        single {
-            RequerySQLiteOpenHelperFactory().create(
-                    SupportSQLiteOpenHelper.Configuration.builder(get())
-                            .name(DATABASE_NAME)
-                            .callback(get())
-                            .build()
-            )
-        }
-
-        single {
-            DatabaseStatisticsCompiler(
-                    get(),
-                    get(named("dateFactory")),
-                    get()
-            )
-        }
-
+        return DatabasePersistenceManager(
+                database,
+                logger,
+                serialisationManager,
+                dateFactory,
+                ::mapToContentValues
+        )
     }
 }
 

@@ -23,13 +23,18 @@
 
 package dev.pthomain.android.dejavu.configuration
 
-import org.koin.core.module.Module
+import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
-interface ExtensionBuilder<B : ExtensionBuilder<B, D>, D> {
-    fun accept(modules: List<Module>): B
+interface ExtensionBuilder<B : ExtensionBuilder<B, D, E>, D, E>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+    fun accept(component: DejaVuComponent<E>): B
     fun build(): D
 }
 
-interface Extendable {
-    fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B): B
+interface Extendable<E>
+        where E : Throwable,
+              E : NetworkErrorPredicate {
+    fun <B : ExtensionBuilder<B, D, E>, D> extend(extensionBuilder: B): B
 }

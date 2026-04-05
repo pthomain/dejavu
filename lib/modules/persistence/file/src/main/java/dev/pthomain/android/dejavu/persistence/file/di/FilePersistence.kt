@@ -24,44 +24,38 @@
 package dev.pthomain.android.dejavu.persistence.file.di
 
 import android.content.Context
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.file.FilePersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.file.FileStore
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 
 class FilePersistence(
         override val decorators: List<SerialisationDecorator>,
-        serialiser: Serialiser
-) : PersistenceManager.ModuleProvider {
+        private val serialiser: Serialiser
+) : PersistenceManager.ComponentProvider {
 
-    private val persistenceModule = PersistenceModule(decorators, serialiser).module
+    override fun create(
+            context: Context,
+            dateFactory: DateFactory,
+            logger: Logger
+    ): PersistenceManager {
+        val persistenceModule = PersistenceModule(decorators, serialiser)
+        val serialisationManager = persistenceModule.createSerialisationManager()
+        val keySerialiser = persistenceModule.createKeySerialiser(dateFactory)
 
-    override val modules = persistenceModule + module {
+        val storeFactory = FileStore.Factory(logger, keySerialiser)
+        val filePersistenceManagerFactory = FilePersistenceManagerFactory(
+                dateFactory,
+                logger,
+                keySerialiser,
+                storeFactory,
+                serialisationManager
+        )
 
-        single {
-            FileStore.Factory(
-                    get(),
-                    get()
-            )
-        }
-
-        single {
-            FilePersistenceManagerFactory(
-                    get(named("dateFactory")),
-                    get(),
-                    get(),
-                    get(),
-                    get()
-            )
-        }
-
-        single {
-            get<FilePersistenceManagerFactory>().create(get<Context>().cacheDir)
-        }
-
+        return filePersistenceManagerFactory.create(context.cacheDir)
     }
 }

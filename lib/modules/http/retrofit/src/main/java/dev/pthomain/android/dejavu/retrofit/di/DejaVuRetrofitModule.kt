@@ -23,8 +23,7 @@
 
 package dev.pthomain.android.dejavu.retrofit.di
 
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.glitchy.DejaVuReturnTypeParser
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
@@ -33,60 +32,57 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.DejaVuRetrofitIntercept
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
+import dev.pthomain.android.glitchy.core.Glitchy
+import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
+import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
+import retrofit2.CallAdapter
 
-class DejaVuRetrofitModule<E>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+/**
+ * Manual dependency injection component for the Retrofit module.
+ * Replaces the previous Koin-based DejaVuRetrofitModule.
+ */
+internal class DejaVuRetrofitComponent<E>(
+        private val parentComponent: DejaVuComponent<E>
+) where E : Throwable,
+        E : NetworkErrorPredicate {
 
-    val module = module {
+    val annotationProcessor = AnnotationProcessor(
+            parentComponent.logger,
+            parentComponent.serialisationArgumentValidator
+    )
 
-        single { AnnotationProcessor(get(), get()) }
+    val dejaVuReturnTypeParser = DejaVuReturnTypeParser<E>()
 
-        single { DejaVuReturnTypeParser<E>() }
+    val operationReturnTypeParser = OperationReturnTypeParser<E>(
+            dejaVuReturnTypeParser,
+            annotationProcessor,
+            parentComponent.logger
+    )
 
-        single<ReturnTypeParser<OperationReturnType>> {
-            OperationReturnTypeParser<E>(
-                    get(),
-                    get(),
-                    get()
+    val requestBodyConverter = RequestBodyConverter()
+
+    val operationResolverFactory = RetrofitOperationResolver.Factory<E>(
+            parentComponent.operationPredicate::invoke,
+            requestBodyConverter,
+            parentComponent.logger
+    )
+
+    val retrofitInterceptors: RetrofitInterceptors<E> = RetrofitInterceptors.After(
+            DejaVuRetrofitInterceptorFactory(
+                    parentComponent.hasher,
+                    parentComponent.dateFactory,
+                    parentComponent.interceptorFactory,
+                    operationResolverFactory
             )
-        }
+    )
 
-        single { RequestBodyConverter() }
+    val headerInterceptor = HeaderInterceptor()
 
-        single {
-            RetrofitOperationResolver.Factory<E>(
-                    get<(RequestMetadata<*>) -> Operation.Remote?>(named("operationPredicate"))::invoke,
-                    get<RequestBodyConverter>(),
-                    get()
-            )
-        }
-
-        single<RetrofitInterceptors<E>> {
-            RetrofitInterceptors.After(
-                    DejaVuRetrofitInterceptorFactory(
-                            get(),
-                            get(named("dateFactory")),
-                            get(),
-                            get()
-                    )
-            )
-        }
-
-        single { HeaderInterceptor() }
-
-        single {
-            Glitchy.builder<E>(get())
-                    .extend(GlitchyRetrofit.extension<E, OperationReturnType>())
-                    .withReturnTypeParser(get())
-                    .withInterceptors(get())
-                    .build()
-                    .callAdapterFactory
-        }
-    }
-
+    val callAdapterFactory: CallAdapter.Factory = Glitchy.builder<E>(parentComponent.errorFactory)
+            .extend(GlitchyRetrofit.extension<E, OperationReturnType>())
+            .withReturnTypeParser(operationReturnTypeParser)
+            .withInterceptors(retrofitInterceptors)
+            .build()
+            .callAdapterFactory
 }

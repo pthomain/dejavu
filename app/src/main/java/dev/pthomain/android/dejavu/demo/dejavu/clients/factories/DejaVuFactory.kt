@@ -60,30 +60,15 @@ class DejaVuFactory(
 
     private val decorators = listOf(compressionDecorator, encryptionDecorator)
 
-    private fun persistenceModuleProvider(
+    private fun persistenceComponentProvider(
             persistence: PersistenceType,
             serialiser: Serialiser
     ) =
             when (persistence) {
-                FILE -> filePersistenceModule(serialiser)
-                MEMORY -> memoryPersistenceModule(serialiser)
-                SQLITE -> sqlitePersistenceModule(serialiser)
+                FILE -> FilePersistence(decorators, serialiser)
+                MEMORY -> MemoryPersistence(decorators, serialiser)
+                SQLITE -> SqlitePersistence(decorators, serialiser)
             }
-
-    private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
-            decorators,
-            serialiser
-    )
-
-    private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
-            decorators,
-            serialiser
-    )
-
-    private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
-            decorators,
-            serialiser
-    )
 
     enum class PersistenceType {
         FILE,
@@ -100,7 +85,7 @@ class DejaVuFactory(
             DejaVu.builder(
                     context,
                     errorFactoryType.errorFactory,
-                    persistenceModuleProvider(
+                    persistenceComponentProvider(
                             persistence,
                             serialiserType.serialiser
                     ),

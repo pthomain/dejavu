@@ -23,52 +23,41 @@
 
 package dev.pthomain.android.dejavu.persistence.memory.di
 
+import android.content.Context
 import androidx.collection.LruCache
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
-import dev.pthomain.android.dejavu.persistence.memory.MemoryPersistenceManagerFactory
 import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 
 class MemoryPersistence(
         override val decorators: List<SerialisationDecorator>,
-        serialiser: Serialiser,
+        private val serialiser: Serialiser,
         private val maxEntries: Int = 20
-) : PersistenceManager.ModuleProvider {
+) : PersistenceManager.ComponentProvider {
 
-    private val persistenceModule = PersistenceModule(decorators, serialiser).module
+    override fun create(
+            context: Context,
+            dateFactory: DateFactory,
+            logger: Logger
+    ): PersistenceManager {
+        val persistenceModule = PersistenceModule(decorators, serialiser)
+        val serialisationManager = persistenceModule.createSerialisationManager()
+        val keySerialiser = persistenceModule.createKeySerialiser(dateFactory)
 
-    override val modules = persistenceModule + module {
+        val storeFactory = MemoryStore.Factory(::LruCache, dateFactory)
+        val store = storeFactory.create(maxEntries)
 
-        single {
-            MemoryPersistenceManagerFactory(
-                    get(named("dateFactory")),
-                    get(),
-                    get(),
-                    get(),
-                    get()
-            )
-        }
-
-        single {
-            MemoryStore.Factory(
-                    ::LruCache,
-                    get(named("dateFactory"))
-            )
-        }
-
-        single<PersistenceManager> {
-            KeyValuePersistenceManager(
-                    get(named("dateFactory")),
-                    get(),
-                    get(),
-                    get<MemoryStore.Factory>().create(maxEntries),
-                    get()
-            )
-        }
+        return KeyValuePersistenceManager(
+                dateFactory,
+                logger,
+                keySerialiser,
+                store,
+                serialisationManager
+        )
     }
 }
