@@ -62,7 +62,6 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
     private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
 
-    private val fileRadio by lazy { findViewById<View>(R.id.radio_button_file)!! }
     private val databaseRadio by lazy { findViewById<View>(R.id.radio_button_database)!! }
     private val memoryRadio by lazy { findViewById<View>(R.id.radio_button_memory)!! }
 
@@ -121,7 +120,6 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
         volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
 
-        fileRadio.setOnClickListener { presenter.persistence = FILE }
         databaseRadio.setOnClickListener { presenter.persistence = SQLITE }
         memoryRadio.setOnClickListener { presenter.persistence = MEMORY }
 

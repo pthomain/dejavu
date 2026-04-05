@@ -29,7 +29,6 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
-import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
@@ -55,15 +54,9 @@ class DejaVuFactory(
             serialiser: Serialiser
     ) =
             when (persistence) {
-                FILE -> filePersistenceModule(serialiser)
                 MEMORY -> memoryPersistenceModule(serialiser)
                 SQLITE -> sqlitePersistenceModule(serialiser)
             }
-
-    private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
-            decorators,
-            serialiser
-    )
 
     private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
             decorators,
@@ -71,12 +64,14 @@ class DejaVuFactory(
     )
 
     private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
+            context,
             decorators,
-            serialiser
+            serialiser,
+            logger,
+            TODO("dateFactory needed")
     )
 
     enum class PersistenceType {
-        FILE,
         MEMORY,
         SQLITE
     }

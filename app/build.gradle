@@ -90,7 +90,6 @@ dependencies {
     implementation project(':lib:core')
     implementation project(':lib:modules:http:retrofit')
     implementation project(':lib:modules:http:volley')
-    implementation project(':lib:modules:persistence:file')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
     implementation project(':lib:modules:serialisation:gson')

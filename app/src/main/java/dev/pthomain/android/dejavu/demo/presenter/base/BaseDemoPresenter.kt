@@ -45,7 +45,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.FILE
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.SQLITE
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
@@ -69,7 +69,7 @@ protected constructor(
     override var serialiserType: SerialiserType = Kotlinx
     protected var errorFactoryType: ErrorFactoryType<*> = Default
 
-    final override var persistence = FILE
+    final override var persistence = SQLITE
         set(value) {
             field = value
             dejaVuClient = newClient(persistence)

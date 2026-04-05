@@ -23,68 +23,44 @@
 
 package dev.pthomain.android.dejavu.persistence.sqlite.di
 
-import android.content.ContentValues
-import android.content.Context
-import androidx.sqlite.db.SupportSQLiteOpenHelper
-import dev.pthomain.android.dejavu.utils.Logger
-import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback
+import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
+import dev.pthomain.android.dejavu.persistence.sqlite.database.DejaVuDatabase
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
 class SqlitePersistence(
         override val decorators: List<SerialisationDecorator>,
-        private val serialiser: Serialiser
-) : PersistenceManager.ComponentProvider {
+        serialiser: Serialiser
+) : PersistenceManager.ModuleProvider {
 
-    override fun create(
-            context: Context,
-            dateFactory: DateFactory,
-            logger: Logger
-    ): PersistenceManager {
-        val persistenceModule = PersistenceModule(decorators, serialiser)
-        val serialisationManager = persistenceModule.createSerialisationManager()
+    private val persistenceModule = PersistenceModule(decorators, serialiser).module
 
-        val callback = SqlOpenHelperCallback(DATABASE_VERSION)
+    override val modules = persistenceModule + module {
 
-        val openHelper = RequerySQLiteOpenHelperFactory().create(
-                SupportSQLiteOpenHelper.Configuration.builder(context)
-                        .name(DATABASE_NAME)
-                        .callback(callback)
-                        .build()
-        )
+        single { DejaVuDatabase.getInstance(get()) }
 
-        val database = openHelper.writableDatabase
+        single { get<DejaVuDatabase>().cacheDao() }
 
-        return DatabasePersistenceManager(
-                database,
-                logger,
-                serialisationManager,
-                dateFactory,
-                ::mapToContentValues
-        )
-    }
-}
+        single<PersistenceManager> {
+            DatabasePersistenceManager(
+                    get(),
+                    get(),
+                    get(),
+                    get(named("dateFactory"))
+            )
+        }
 
-internal const val DATABASE_NAME = "dejavu.db"
-internal const val DATABASE_VERSION = 1
-
-internal fun mapToContentValues(map: Map<String, *>) = ContentValues().apply {
-    for ((key, value) in map) {
-        when (value) {
-            is Boolean -> put(key, value)
-            is Float -> put(key, value)
-            is Double -> put(key, value)
-            is Long -> put(key, value)
-            is Int -> put(key, value)
-            is Byte -> put(key, value)
-            is ByteArray -> put(key, value)
-            is Short -> put(key, value)
-            is String -> put(key, value)
+        single {
+            DatabaseStatisticsCompiler(
+                    get(),
+                    get(named("dateFactory")),
+                    get()
+            )
         }
     }
 }

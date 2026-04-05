@@ -21,13 +21,26 @@
  *
  */
 
-package dev.pthomain.android.dejavu.persistence.database
+package dev.pthomain.android.dejavu.persistence.sqlite.entity
 
-// TODO: This test needs to be rewritten after Phase 3 (DI migration).
-// The test previously relied on RxJava Observable types and types from the old
-// Glitchy library (ResponseWrapper, InstructionToken, MockClient) which have been
-// refactored in Phase 2. The persistence layer is synchronous and does not use
-// reactive types directly.
-class DatabasePersistenceManagerUnitTest {
-    // Placeholder - tests need rewriting after DI migration
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "dejavu_cache")
+data class CacheEntry(
+    @PrimaryKey
+    val requestHash: String,
+    val classHash: String,
+    val cacheDate: Long,
+    val expiryDate: Long,
+    val serialisation: String = "",
+    val data: ByteArray
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CacheEntry) return false
+        return requestHash == other.requestHash
+    }
+
+    override fun hashCode() = requestHash.hashCode()
 }
