@@ -21,13 +21,12 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.dejavu.error
+package dev.pthomain.android.dejavu.error
 
-import dev.pthomain.android.dejavu.error.ErrorFactory
-
-class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
-
-    override fun invoke(p1: Throwable) = CustomApiError(p1)
+/**
+ * Interface used as a type constraint for error types that can indicate
+ * whether the underlying error was caused by a network issue.
+ */
+interface NetworkErrorPredicate {
+    val isNetworkError: Boolean
 }
-
-

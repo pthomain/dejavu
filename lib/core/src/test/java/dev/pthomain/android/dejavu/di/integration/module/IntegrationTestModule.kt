@@ -27,11 +27,11 @@ import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dev.pthomain.android.DejaVu
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import okhttp3.OkHttpClient
 import org.mockito.Mockito.mock
 import retrofit2.CallAdapter
@@ -40,11 +40,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
-internal class IntegrationTestModule(private val dejaVu: dev.pthomain.android.DejaVu<Glitch>) {
+internal class IntegrationTestModule(private val dejaVu: dev.pthomain.android.DejaVu<DejaVuError>) {
 
     @Provides
     @Singleton
-    fun provideDejaVu(): dev.pthomain.android.DejaVu<Glitch> = dejaVu
+    fun provideDejaVu(): dev.pthomain.android.DejaVu<DejaVuError> = dejaVu
 
     @Provides
     @Singleton
@@ -53,7 +53,7 @@ internal class IntegrationTestModule(private val dejaVu: dev.pthomain.android.De
 
     @Provides
     @Singleton
-    fun provideRetrofitCacheAdapterFactory(dejaVu: dev.pthomain.android.DejaVu<Glitch>) =
+    fun provideRetrofitCacheAdapterFactory(dejaVu: dev.pthomain.android.DejaVu<DejaVuError>) =
             dejaVu.retrofitCallAdapterFactory
 
     @Provides

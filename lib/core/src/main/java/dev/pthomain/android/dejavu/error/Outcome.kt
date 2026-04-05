@@ -21,13 +21,13 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.dejavu.error
+package dev.pthomain.android.dejavu.error
 
-import dev.pthomain.android.dejavu.error.ErrorFactory
-
-class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
-
-    override fun invoke(p1: Throwable) = CustomApiError(p1)
+/**
+ * Sealed class representing the outcome of an operation that can either
+ * succeed with a value or fail with an exception.
+ */
+sealed class Outcome<out T> {
+    data class Success<T>(val response: T) : Outcome<T>()
+    data class Error<E : Throwable>(val exception: E) : Outcome<Nothing>()
 }
-
-

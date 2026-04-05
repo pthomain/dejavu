@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.base
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheToken
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken

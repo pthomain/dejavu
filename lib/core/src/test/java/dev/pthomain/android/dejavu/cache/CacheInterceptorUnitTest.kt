@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.cache
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NOT_CACHED
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
@@ -32,7 +32,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
@@ -45,22 +45,22 @@ import java.util.*
 class CacheInterceptorUnitTest {
 
     private lateinit var mockInstructionToken: RequestToken<Cache>
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
-    private lateinit var mockMetadata: ResponseMetadata<*, *, Glitch>
-    private lateinit var mockUpstream: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockReturnedResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockReturnedObservable: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockCacheManager: CacheManager<Glitch>
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, DejaVuError>
+    private lateinit var mockMetadata: ResponseMetadata<*, *, DejaVuError>
+    private lateinit var mockUpstream: Observable<ResponseWrapper<*, *, DejaVuError>>
+    private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var mockReturnedResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var mockReturnedObservable: Observable<ResponseWrapper<*, *, DejaVuError>>
+    private lateinit var mockCacheManager: CacheManager<DejaVuError>
 
     private val mockStart = 1234L
     private val mockDateFactory: DateFactory = { Date(1234L) }
 
-    private fun getTarget(operation: Cache): CacheInterceptor<*, *, Glitch> {
+    private fun getTarget(operation: Cache): CacheInterceptor<*, *, DejaVuError> {
         mockCacheManager = mock()
 
         mockInstructionToken = instructionToken(operation)
-        mockMetadata = ResponseMetadata(mockInstructionToken, Glitch::class.java)
+        mockMetadata = ResponseMetadata(mockInstructionToken, DejaVuError::class.java)
         mockErrorInterceptor = mock()
 
         mockUpstreamResponseWrapper = ResponseWrapper(
@@ -113,7 +113,7 @@ class CacheInterceptorUnitTest {
             val responseCaptor = argumentCaptor<Observable<Any>>()
             verify(mockErrorInterceptor).apply(responseCaptor.capture())
 
-            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<*, *, Glitch>
+            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<*, *, DejaVuError>
 
             if (isCacheEnabled) {
                 when (operation) {
@@ -164,7 +164,7 @@ class CacheInterceptorUnitTest {
 
     private fun verifyDoNotCache(operation: Operation,
                                  isCacheEnabled: Boolean,
-                                 responseWrapper: ResponseWrapper<*, *, Glitch>) {
+                                 responseWrapper: ResponseWrapper<*, *, DejaVuError>) {
         assertEqualsWithContext(
                 mockMetadata.copy(cacheToken = mockInstructionToken.copy(
                         status = NOT_CACHED,

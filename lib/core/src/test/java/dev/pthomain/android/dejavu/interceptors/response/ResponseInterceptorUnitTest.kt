@@ -27,7 +27,7 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
@@ -35,7 +35,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
 import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
@@ -43,8 +43,8 @@ import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuError
 import io.reactivex.Observable
 import io.reactivex.observers.TestObserver
 import org.junit.Before
@@ -53,9 +53,9 @@ import java.util.*
 
 class ResponseInterceptorUnitTest {
 
-    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
-    private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
-    private lateinit var mockEmptyException: Glitch
+    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<DejaVuError>
+    private lateinit var mockConfiguration: DejaVu.Configuration<DejaVuError>
+    private lateinit var mockEmptyException: DejaVuError
 
     private val start = 1234L
     private val mockDateFactory: DateFactory = { Date(4321L) }
@@ -125,7 +125,7 @@ class ResponseInterceptorUnitTest {
         setUp() //reset mocks
 
         val mockInstructionToken = instructionToken(operation)
-        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException)
+        mockEmptyException = DejaVuError(EmptyResponseFactory.EmptyResponseException)
 
         val isValid = if (operation is Cache) {
             val filterFresh = cacheStatus.isFresh || !operation.isFreshOnly()
@@ -143,7 +143,7 @@ class ResponseInterceptorUnitTest {
 
         val mockUpstreamMetadata = ResponseMetadata(
                 mockInstructionToken.copy(status = if (isEmptyUpstream) EMPTY else cacheStatus),
-                Glitch::class.java,
+                DejaVuError::class.java,
                 if (isEmptyUpstream) mockEmptyException else null
         )
 
@@ -156,7 +156,7 @@ class ResponseInterceptorUnitTest {
         )
 
         val mockUpstreamObservable = if (isEmptyUpstreamObservable)
-            Observable.empty<MockClient.ResponseWrapper<*, *, Glitch>>()
+            Observable.empty<MockClient.ResponseWrapper<*, *, DejaVuError>>()
         else
             Observable.just(mockUpstreamWrapper)
 
@@ -204,7 +204,7 @@ class ResponseInterceptorUnitTest {
                 eq(mockInstructionToken)
         )).thenReturn(mockEmptyResponseWrapper)
 
-        val mockEmptyResponse = MockClient.ResponseWrapper<*, *, Glitch>(
+        val mockEmptyResponse = MockClient.ResponseWrapper<*, *, DejaVuError>(
                 String::class.java,
                 ifElse(
                         responseClass == String::class.java,
@@ -277,7 +277,7 @@ class ResponseInterceptorUnitTest {
     }
 
     private fun verifyExpectedException(isCompletable: Boolean,
-                                        metadata: ResponseMetadata<Glitch>?,
+                                        metadata: ResponseMetadata<DejaVuError>?,
                                         expectedException: Exception,
                                         testObserver: TestObserver<Any>,
                                         context: String) {
@@ -308,7 +308,7 @@ class ResponseInterceptorUnitTest {
 
     private fun verifyAddMetadataIfPossible(responseClass: Class<*>,
                                             isCompletable: Boolean,
-                                            expectedMetadata: ResponseMetadata<Glitch>,
+                                            expectedMetadata: ResponseMetadata<DejaVuError>,
                                             testObserver: TestObserver<Any>,
                                             context: String) {
         if (!isCompletable) {

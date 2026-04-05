@@ -34,12 +34,7 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.Glitchy
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
-import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
-import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

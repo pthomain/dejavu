@@ -21,13 +21,14 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.dejavu.error
+package dev.pthomain.android.dejavu.error
 
-import dev.pthomain.android.dejavu.error.ErrorFactory
-
-class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
-
-    override fun invoke(p1: Throwable) = CustomApiError(p1)
-}
-
-
+/**
+ * Factory interface for converting arbitrary throwables into a custom error type E
+ * that is both a Throwable and a NetworkErrorPredicate.
+ *
+ * Implementations allow users to define custom error parsing and categorisation.
+ */
+interface ErrorFactory<E> : (Throwable) -> E
+        where E : Throwable,
+              E : NetworkErrorPredicate

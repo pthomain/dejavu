@@ -27,11 +27,11 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.isNull
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException.Type.SERIALISATION
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
@@ -40,7 +40,7 @@ import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.operationSequence
 import dev.pthomain.android.dejavu.test.trueFalseSequence
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.ErrorFactory
 import org.junit.Test
 import java.io.IOException
 import java.io.NotSerializableException
@@ -48,8 +48,8 @@ import java.util.*
 
 class ResponseMetadataManagerUnitTest {
 
-    private lateinit var mockErrorFactory: ErrorFactory<Glitch>
-    private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>
+    private lateinit var mockErrorFactory: ErrorFactory<DejaVuError>
+    private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<DejaVuError>
     private lateinit var mockDateFactory: DateFactory
 
     private val now = 321L
@@ -59,7 +59,7 @@ class ResponseMetadataManagerUnitTest {
     private val previousCacheDate = Date(456L)
     private val previousExpiryDate = Date(567L)
 
-    private lateinit var target: CacheMetadataManager<Glitch>
+    private lateinit var target: CacheMetadataManager<DejaVuError>
 
     private fun setUp() {
         mockErrorFactory = mock()
@@ -115,11 +115,11 @@ class ResponseMetadataManagerUnitTest {
 
         val instructionToken = instructionToken()
 
-        val networkGlitch = Glitch(IOException("Network"))
+        val networkGlitch = DejaVuError(IOException("Network"))
 
         val metadata = ResponseMetadata(
                 instructionToken,
-                Glitch::class.java,
+                DejaVuError::class.java,
                 ifElse(networkCallFails, networkGlitch, null),
                 CallDuration(diskDuration, networkDuration, 0)
         )
@@ -139,7 +139,7 @@ class ResponseMetadataManagerUnitTest {
         val previousWrapper = ResponseWrapper(
                 TestResponse::class.java,
                 mock<TestResponse>(),
-                ResponseMetadata(previousToken, Glitch::class.java)
+                ResponseMetadata(previousToken, DejaVuError::class.java)
         )
 
         val previousCachedResponse = ifElse(
@@ -305,11 +305,11 @@ class ResponseMetadataManagerUnitTest {
         )
 
         val cause = NotSerializableException()
-        val mockGlitch = Glitch(cause)
+        val mockGlitch = DejaVuError(cause)
 
         val metadata = ResponseMetadata(
                 instructionToken,
-                Glitch::class.java
+                DejaVuError::class.java
         )
 
         val responseWrapper = ResponseWrapper(

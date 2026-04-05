@@ -147,7 +147,6 @@ dependencies {
     compileOnly project(':lib:core')
 
     implementation libs.androidx.multidex
-    implementation libs.glitchy.retrofit
     implementation libs.retrofit
 
     implementation libs.koin.core

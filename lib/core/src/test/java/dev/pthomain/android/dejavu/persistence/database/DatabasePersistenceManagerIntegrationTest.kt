@@ -23,10 +23,10 @@
 
 package dev.pthomain.android.dejavu.persistence.database
 
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerIntegrationTest
 
 internal class DatabasePersistenceManagerIntegrationTest
-    : BasePersistenceManagerIntegrationTest<dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch>>(
-        { it.databasePersistenceManagerFactory!!.create() as dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch> }
+    : BasePersistenceManagerIntegrationTest<dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<DejaVuError>>(
+        { it.databasePersistenceManagerFactory!!.create() as dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<DejaVuError> }
 )

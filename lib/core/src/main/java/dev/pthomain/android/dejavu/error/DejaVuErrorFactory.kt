@@ -21,42 +21,42 @@
  *
  */
 
-package dev.pthomain.android.dejavu.serialisation.gson
+package dev.pthomain.android.dejavu.error
 
-
-import com.google.gson.JsonParseException
-import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.error.DejaVuError.ErrorCode
 import dev.pthomain.android.dejavu.error.DejaVuError.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
-import dev.pthomain.android.dejavu.error.ErrorFactory
+import java.io.IOException
 
 /**
- * Custom ErrorFactory implementation handling extra Gson specific exceptions.
+ * Default implementation of ErrorFactory for DejaVu, replacing DejaVuGlitchFactory.
+ * Converts throwables into DejaVuError instances with appropriate error codes.
  */
-class GsonErrorFactory private constructor(private val parentFactory: DejaVuErrorFactory)
-    : ErrorFactory<DejaVuError> by parentFactory {
+class DejaVuErrorFactory : ErrorFactory<DejaVuError> {
 
-    constructor() : this(DejaVuErrorFactory())
+    override fun invoke(throwable: Throwable): DejaVuError =
+            when {
+                throwable is DejaVuError -> throwable
 
-    override fun invoke(throwable: Throwable) =
-            when (throwable) {
-                is JsonParseException -> DejaVuError(
+                throwable is CacheException -> DejaVuError(
                         throwable,
                         NON_HTTP_STATUS,
-                        ErrorCode.UNEXPECTED_RESPONSE,
+                        ErrorCode.CONFIG,
+                        "Configuration error"
+                )
+
+                throwable is IOException -> DejaVuError(
+                        throwable,
+                        NON_HTTP_STATUS,
+                        ErrorCode.NETWORK,
                         throwable.message
                 )
-                else -> parentFactory.invoke(throwable)
+
+                else -> DejaVuError(
+                        throwable,
+                        NON_HTTP_STATUS,
+                        ErrorCode.UNKNOWN,
+                        throwable.message
+                )
             }
-
 }
-
-/**
- * @deprecated Use [GsonErrorFactory] instead.
- */
-@Deprecated(
-    "Use GsonErrorFactory instead",
-    replaceWith = ReplaceWith("GsonErrorFactory")
-)
-typealias GsonGlitchFactory = GsonErrorFactory

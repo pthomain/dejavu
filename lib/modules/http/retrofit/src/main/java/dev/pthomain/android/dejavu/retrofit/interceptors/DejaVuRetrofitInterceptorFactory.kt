@@ -29,9 +29,7 @@ import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptor
-import dev.pthomain.android.glitchy.retrofit.type.ParsedType
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import retrofit2.Call
 

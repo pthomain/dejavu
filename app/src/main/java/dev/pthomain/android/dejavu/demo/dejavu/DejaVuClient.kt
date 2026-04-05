@@ -1,7 +1,7 @@
 package dev.pthomain.android.dejavu.demo.dejavu
 
 import com.google.gson.Gson
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.ObservableClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.SingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.clients.base.adapters.SingleDataClientAdapter

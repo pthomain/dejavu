@@ -21,13 +21,14 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo.dejavu.error
+package dev.pthomain.android.dejavu.utils
 
-import dev.pthomain.android.dejavu.error.ErrorFactory
-
-class CustomApiErrorFactory : ErrorFactory<CustomApiError> {
-
-    override fun invoke(p1: Throwable) = CustomApiError(p1)
+/**
+ * Simple logging abstraction. The tagOrCaller parameter accepts any object;
+ * implementations should derive a tag string from it (e.g. via its class name).
+ */
+interface Logger {
+    fun e(tagOrCaller: Any, message: String)
+    fun e(tagOrCaller: Any, t: Throwable, message: String? = null)
+    fun d(tagOrCaller: Any, message: String)
 }
-
-

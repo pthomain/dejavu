@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.cache.metadata.token.instruction
 
 import android.net.Uri
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import java.io.UnsupportedEncodingException
 import java.security.MessageDigest
 

@@ -23,8 +23,6 @@
 
 package dev.pthomain.android.dejavu.utils
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-
 object SilentLogger : Logger {
     override fun d(tagOrCaller: Any, message: String) = Unit
     override fun e(tagOrCaller: Any, message: String) = Unit

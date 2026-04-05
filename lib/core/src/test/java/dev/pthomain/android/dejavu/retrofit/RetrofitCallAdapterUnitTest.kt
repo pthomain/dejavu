@@ -27,8 +27,8 @@ import com.nhaarman.mockitokotlin2.*
 import dev.pthomain.android.DejaVu.Companion.DejaVuHeader
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate.CacheAll
 import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate.Inactive
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata.Companion.DEFAULT_URL
@@ -54,17 +54,17 @@ import java.lang.reflect.Type
 
 class RetrofitCallAdapterUnitTest {
 
-    private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<Glitch>
+    private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<DejaVuError>
     private lateinit var mockLogger: Logger
     private lateinit var mockRxCallAdapter: CallAdapter<Any, Any>
     private lateinit var mockCall: Call<Any>
     private lateinit var mockOperationSerialiser: OperationSerialiser
     private lateinit var mockRequest: Request
-    private lateinit var mockDejaVuTransformer: DejaVuInterceptor<Glitch>
+    private lateinit var mockDejaVuTransformer: DejaVuInterceptor<DejaVuError>
     private lateinit var mockTestResponse: TestResponse
     private lateinit var requestMetadata: RequestMetadata.Plain
     private lateinit var mockRequestBodyConverter: (Request) -> String?
-    private lateinit var configuration: DejaVu.Configuration<Glitch>
+    private lateinit var configuration: DejaVu.Configuration<DejaVuError>
 
     private val responseClass = TestResponse::class.java
     private val mockMethodDescription = "mockMethodDescription"
@@ -88,7 +88,7 @@ class RetrofitCallAdapterUnitTest {
                           hasHeader: Boolean,
                           cachePredicate: (metadata: RequestMetadata) -> Operation?,
                           isHeaderDeserialisationSuccess: Boolean,
-                          isHeaderDeserialisationException: Boolean): RetrofitCallAdapter<Glitch> {
+                          isHeaderDeserialisationException: Boolean): RetrofitCallAdapter<DejaVuError> {
         whenever(mockCall.request()).thenReturn(mockRequest)
 
         if (hasHeader) {
@@ -146,12 +146,12 @@ class RetrofitCallAdapterUnitTest {
                     isHeaderDeserialisationException
             )
 
-            val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
+            val mockResponseWrapper = mock<ResponseWrapper<*, *, DejaVuError>>()
 
             val rxCall = when (rxType) {
                 OBSERVABLE -> Observable.just(mockTestResponse)
                 SINGLE -> Single.just(mockTestResponse)
-                WRAPPABLE -> DejaVuCall.create<TestResponse, Glitch>(mockResponseWrapper.observable(), Glitch::class.java)
+                WRAPPABLE -> DejaVuCall.create<TestResponse, DejaVuError>(mockResponseWrapper.observable(), DejaVuError::class.java)
                 else -> mockTestResponse
             }
 

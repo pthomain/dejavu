@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.serialisation.compression
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.compression.decorator.CompressionSerialisationDecorator
 import dev.pthomain.android.dejavu.utils.SilentLogger

@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType
@@ -34,7 +34,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitObservab
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.RetrofitSingleClients
 import dev.pthomain.android.dejavu.demo.dejavu.error.CustomApiError
 import dev.pthomain.android.dejavu.demo.presenter.base.BaseDemoPresenter
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 
 internal abstract class BaseRetrofitDemoPresenter(
         demoActivity: DemoActivity,
@@ -49,7 +49,7 @@ internal abstract class BaseRetrofitDemoPresenter(
         Default -> dejaVuFactory.createRetrofit(
                 persistence,
                 serialiserType,
-                errorFactoryType as ErrorFactoryType<Glitch>
+                errorFactoryType as ErrorFactoryType<DejaVuError>
         )
 
         Custom -> dejaVuFactory.createRetrofit(

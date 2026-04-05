@@ -31,7 +31,7 @@ import dagger.Provides
 import dev.pthomain.android.dejavu.di.DejaVuModule
 import dev.pthomain.android.dejavu.persistence.PersistenceModule.Companion.DATABASE_NAME
 import dev.pthomain.android.dejavu.shared.utils.Function1
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import java.util.*
 import javax.inject.Singleton
 
@@ -42,8 +42,8 @@ import javax.inject.Singleton
     dev.pthomain.android.glitch.GlitchCacheModule::class,
     dev.pthomain.android.glitch.GlitchRetrofitModule::class
 ])
-internal class IntegrationModule(configuration: DejaVu.Configuration<Glitch>)
-    : DejaVuModule<Glitch>(configuration) {
+internal class IntegrationModule(configuration: DejaVu.Configuration<DejaVuError>)
+    : DejaVuModule<DejaVuError>(configuration) {
 
     @Provides
     @Singleton

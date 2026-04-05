@@ -25,8 +25,8 @@ package dev.pthomain.android.dejavu.serialisation.decoration
 
 import androidx.annotation.CallSuper
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.trueFalseSequence
 import org.junit.Before
@@ -34,7 +34,7 @@ import org.junit.Test
 
 abstract class BaseSerialisationDecoratorUnitTest {
 
-    private lateinit var mockWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockWrapper: ResponseWrapper<*, *, DejaVuError>
 
     protected val mockStringResponse = "mockStringResponse"
     protected lateinit var mockResponse: TestResponse
@@ -80,7 +80,7 @@ abstract class BaseSerialisationDecoratorUnitTest {
     abstract fun testDecorateSerialisation(context: String,
                                            useString: Boolean,
                                            metadata: SerialisationDecorationMetadata,
-                                           mockWrapper: ResponseWrapper<*, *, Glitch>)
+                                           mockWrapper: ResponseWrapper<*, *, DejaVuError>)
 
     @Test
     fun testDecorateDeserialisation() {

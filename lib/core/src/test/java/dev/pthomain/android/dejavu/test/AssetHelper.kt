@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.test
 
 import com.google.gson.Gson
-import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
+
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.retrofit.response.DejaVuResult
 import dev.pthomain.android.dejavu.retrofit.response.Response

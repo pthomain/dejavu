@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata.Companion.DEFAULT_URL
@@ -37,8 +37,8 @@ import dev.pthomain.android.dejavu.test.assertFalseWithContext
 import dev.pthomain.android.dejavu.test.callAdapterFactory
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuError
 import org.junit.Before
 import org.junit.Test
 import retrofit2.CallAdapter
@@ -50,20 +50,20 @@ import java.util.*
 class RetrofitCallAdapterFactoryUnitTest {
 
     private lateinit var mockRxJava2CallAdapterFactory: RxJava2CallAdapterFactory
-    private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<Glitch>
-    private lateinit var mockAnnotationProcessor: AnnotationProcessor<Glitch>
+    private lateinit var mockDejaVuFactory: DejaVuInterceptor.Factory<DejaVuError>
+    private lateinit var mockAnnotationProcessor: AnnotationProcessor<DejaVuError>
     private lateinit var mockDefaultCallAdapter: CallAdapter<Any, Any>
     private lateinit var mockAnnotations: Array<Annotation>
     private lateinit var mockRetrofit: Retrofit
     private lateinit var mockReturnType: Type
     private lateinit var mockOperation: Operation
     private lateinit var mockException: CacheException
-    private lateinit var mockInnerFactory: (DejaVuInterceptor.Factory<Glitch>, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>
+    private lateinit var mockInnerFactory: (DejaVuInterceptor.Factory<DejaVuError>, String, Class<*>, Operation?, CallAdapter<Any, Any>) -> CallAdapter<*, *>
     private lateinit var mockReturnedAdapter: CallAdapter<*, *>
 
     private val mockDateFactory: DateFactory = { Date(1234L) }
 
-    private lateinit var targetFactory: RetrofitCallAdapterFactory<Glitch>
+    private lateinit var targetFactory: RetrofitCallAdapterFactory<DejaVuError>
 
     @Before
     fun setUp() {

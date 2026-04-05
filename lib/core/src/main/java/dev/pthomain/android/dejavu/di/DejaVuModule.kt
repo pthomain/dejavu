@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.di
 
 import android.content.Context
 import android.net.Uri
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.CacheManager
 import dev.pthomain.android.dejavu.cache.CacheMetadataManager
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
@@ -39,8 +39,8 @@ import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.*

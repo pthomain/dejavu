@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
 import android.os.Build.VERSION.SDK_INT
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
@@ -38,7 +38,7 @@ import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.dejavu.serialisation.compression.Compression
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
 import dev.pthomain.android.dejavu.volley.DejaVuVolley
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import dev.pthomain.android.mumbo.Mumbo
 
 class DejaVuFactory(

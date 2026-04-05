@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.demo.DemoActivity

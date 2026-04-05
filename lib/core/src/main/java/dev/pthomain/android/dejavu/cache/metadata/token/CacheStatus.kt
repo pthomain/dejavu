@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.token
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import java.util.*
@@ -190,8 +189,6 @@ enum class CacheStatus(
 fun ((Long?) -> Date).getCacheStatus(
         expiryDate: Date,
         operation: Cache = Cache()
-) = ifElse(
-        this(null).time >= expiryDate.time,
-        ifElse(operation.priority.behaviour.isOffline(), OFFLINE_STALE, STALE),
-        FRESH
-)
+) = if (this(null).time >= expiryDate.time)
+        if (operation.priority.behaviour.isOffline()) OFFLINE_STALE else STALE
+    else FRESH

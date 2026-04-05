@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.configuration
 
 import android.content.Context
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
@@ -32,8 +32,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.configuration.OperationPredicate.Inactive
 import dev.pthomain.android.dejavu.di.DejaVuModule
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import org.koin.dsl.koinApplication
 
 class DejaVuBuilder<E> internal constructor(

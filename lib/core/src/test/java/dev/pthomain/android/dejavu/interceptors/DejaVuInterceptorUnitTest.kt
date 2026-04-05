@@ -24,14 +24,14 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InHashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.test.*
@@ -47,23 +47,23 @@ class DejaVuInterceptorUnitTest {
     private val start = 1234L
     private val mockDateFactory: DateFactory = { Date(start) }
 
-    private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<Glitch>
-    private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>
-    private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
-    private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
-    private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
+    private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<DejaVuError>
+    private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<DejaVuError>
+    private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<DejaVuError>
+    private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<DejaVuError>
+    private lateinit var mockConfiguration: DejaVu.Configuration<DejaVuError>
     private lateinit var mockHasher: Hasher
     private lateinit var mockRequestMetadata: PlainRequestMetadata
     private lateinit var mockValidHashedMetadata: HashedRequestMetadata
     private lateinit var mockInvalidHashedMetadata: InHashedRequestMetadata
-    private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, Glitch>
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
-    private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, Glitch>
-    private lateinit var mockResponseInterceptor: ResponseInterceptor<*, *, Glitch>
+    private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, DejaVuError>
+    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, DejaVuError>
+    private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, DejaVuError>
+    private lateinit var mockResponseInterceptor: ResponseInterceptor<*, *, DejaVuError>
     private lateinit var mockCacheToken: InstructionToken<*>
     private lateinit var mockUpstreamObservable: Observable<Any>
-    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<*, *, Glitch>>
+    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<*, *, DejaVuError>>
+    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<*, *, DejaVuError>>
     private lateinit var mockResponseObservable: Observable<Any>
     private lateinit var mockHashingErrorObservable: Observable<Any>
     private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken<*>>
@@ -75,7 +75,7 @@ class DejaVuInterceptorUnitTest {
 
     private fun setUp(operation: Operation,
                       rxType: RxType,
-                      isHashingSuccess: Boolean): DejaVuInterceptor<Glitch> {
+                      isHashingSuccess: Boolean): DejaVuInterceptor<DejaVuError> {
         mockErrorInterceptorFactory = mock()
         mockCacheInterceptorFactory = mock()
         mockResponseInterceptorFactory = mock()

@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.persistence.base
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Complete
 import dev.pthomain.android.dejavu.persistence.base.CacheDataHolder.Incomplete
@@ -44,7 +44,7 @@ import dev.pthomain.android.dejavu.test.verifyWithContext
 
 //FIXME
 internal class KeyValuePersistenceManagerUnitTest
-    : BasePersistenceManagerUnitTest<KeyValuePersistenceManager<Glitch>>() {
+    : BasePersistenceManagerUnitTest<KeyValuePersistenceManager<DejaVuError>>() {
 
     private lateinit var mockRightCacheDataHolder: Incomplete
     private lateinit var mockWrongCacheDataHolder2: Incomplete
@@ -52,7 +52,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private lateinit var mockIncompleteCacheDataHolder: Incomplete
     private lateinit var mockCompleteCacheDataHolder: Complete
     private lateinit var mockKeySerialiser: dev.pthomain.android.dejavu.serialisation.KeySerialiser
-    private lateinit var mockDejaVu.Configuration: DejaVu.Configuration<Glitch>
+    private lateinit var mockDejaVu.Configuration: DejaVu.Configuration<DejaVuError>
     private lateinit var mockKeyValueStore: KeyValueStore<String, String, Incomplete>
 
     private val mockEntryWithValidHash = mockHash + SEPARATOR + "abcd"
@@ -62,7 +62,7 @@ internal class KeyValuePersistenceManagerUnitTest
     private val entryOfWrongType2 = "EntryOfWrongType2"
     private val invalidatedEntryName = "invalidatedEntryName"
 
-    override fun setUp(instructionToken: InstructionToken): KeyValuePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: InstructionToken): KeyValuePersistenceManager<DejaVuError> {
         mockKeySerialiser = mock()
 
         mockIncompleteCacheDataHolder = Incomplete(
@@ -316,7 +316,7 @@ internal class KeyValuePersistenceManagerUnitTest
                                          instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
-                                         cachedResponse: ResponseWrapper<*, *, Glitch>?) {
+                                         cachedResponse: ResponseWrapper<*, *, DejaVuError>?) {
         assertEqualsWithContext(
                 mockBlob,
                 mockIncompleteCacheDataHolder.data,

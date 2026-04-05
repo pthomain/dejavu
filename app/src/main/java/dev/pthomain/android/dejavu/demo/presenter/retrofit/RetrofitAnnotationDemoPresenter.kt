@@ -23,8 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.presenter.retrofit
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour.INVALIDATE
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
@@ -66,10 +65,9 @@ internal class RetrofitAnnotationDemoPresenter(
                 }
             }
 
-    override fun getOfflineSingle(freshness: FreshnessPriority) = ifElse(
-            freshness == FRESH_ONLY,
-            dataClient().offlineFreshOnly(),
-            dataClient().offline()
+    override fun getOfflineSingle(freshness: FreshnessPriority) = if (freshness == FRESH_ONLY)
+            dataClient().offlineFreshOnly()
+        else dataClient().offline(
     )
 
     override fun getClearEntriesResult() =

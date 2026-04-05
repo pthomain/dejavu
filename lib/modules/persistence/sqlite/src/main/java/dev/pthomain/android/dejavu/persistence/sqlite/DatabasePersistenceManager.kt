@@ -25,8 +25,7 @@ package dev.pthomain.android.dejavu.persistence.sqlite
 
 import android.content.ContentValues
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
@@ -80,11 +79,9 @@ class DatabasePersistenceManager internal constructor(
             requestMetadata: HashedRequestMetadata<R>,
             operation: Clear
     ) {
-        val olderEntriesClause = ifElse(
-                operation.clearStaleEntriesOnly,
-                "${EXPIRY_DATE.columnName} < ?",
-                null
-        )
+        val olderEntriesClause = if (operation.clearStaleEntriesOnly)
+                "${EXPIRY_DATE.columnName} < ?"
+            else null
 
         val requestClause = when (operation.scope) {
             Scope.REQUEST -> "${REQUEST.columnName} = ?"

@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.serialisation.decoration.compression
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.serialisation.decoration.BaseSerialisationDecoratorUnitTest
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
@@ -38,7 +38,7 @@ class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnit
     private lateinit var mockCompresser: Function1<ByteArray, ByteArray>
     private lateinit var mockUncompresser: Function3<ByteArray, Int, Int, ByteArray>
 
-    private lateinit var target: dev.pthomain.android.dejavu.serialisation.compression.CompressionSerialisationDecorator<Glitch>
+    private lateinit var target: dev.pthomain.android.dejavu.serialisation.compression.CompressionSerialisationDecorator<DejaVuError>
 
     @Before
     override fun setUp() {
@@ -56,7 +56,7 @@ class CompressionSerialisationDecoratorUnitTest : BaseSerialisationDecoratorUnit
     override fun testDecorateSerialisation(context: String,
                                            useString: Boolean,
                                            metadata: SerialisationDecorationMetadata,
-                                           mockWrapper: ResponseWrapper<*, *, Glitch>) {
+                                           mockWrapper: ResponseWrapper<*, *, DejaVuError>) {
         val expectedResult = if (metadata.isCompressed) {
             whenever(mockCompresser.invoke(eq(mockPayload))).thenReturn(mockSerialisedPayloadArray)
             mockSerialisedPayloadArray

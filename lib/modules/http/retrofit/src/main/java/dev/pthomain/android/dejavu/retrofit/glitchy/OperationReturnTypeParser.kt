@@ -23,15 +23,11 @@
 
 package dev.pthomain.android.dejavu.retrofit.glitchy
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
-import dev.pthomain.android.glitchy.retrofit.type.ParsedType
-import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import java.lang.reflect.Type
 
 internal class OperationReturnTypeParser<E>(
@@ -102,9 +98,9 @@ internal class OperationReturnTypeParser<E>(
                              asResult: Boolean,
                              isSingle: Boolean) =
             String.format(
-                    ifElse(isSingle, "Single<%s>", "Observable<%s>"),
+                    if (isSingle) "Single<%s>" else "Observable<%s>",
                     String.format(
-                            ifElse(asResult, "DejaVuResult<%s>", "%s"),
+                            if (asResult) "DejaVuResult<%s>" else "%s",
                             responseClass.simpleName
                     )
             )

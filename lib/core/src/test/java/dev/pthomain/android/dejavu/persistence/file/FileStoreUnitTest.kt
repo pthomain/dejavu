@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.persistence.file
 
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.persistence.base.BaseKeyValueStoreUnitTest
 import dev.pthomain.android.dejavu.serialisation.KeySerialiser
 import java.io.File
@@ -46,7 +46,7 @@ internal class FileStoreUnitTest : BaseKeyValueStoreUnitTest<dev.pthomain.androi
     private lateinit var mockFileReader: (InputStream) -> ByteArray
     private lateinit var mockOutputStream: OutputStream
     private lateinit var mockInputStream: InputStream
-    private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
+    private lateinit var mockConfiguration: DejaVu.Configuration<DejaVuError>
     private lateinit var mockKeySerialiser: dev.pthomain.android.dejavu.serialisation.KeySerialiser
 
     override fun setUpTarget(): dev.pthomain.android.dejavu.persistence.file.FileStore {

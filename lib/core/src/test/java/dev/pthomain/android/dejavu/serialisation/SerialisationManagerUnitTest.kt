@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.serialisation
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorator
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
@@ -36,9 +36,9 @@ import dev.pthomain.android.dejavu.test.expectException
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.trueFalseSequence
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuError
 import org.junit.Before
 import org.junit.Test
 
@@ -46,20 +46,20 @@ class SerialisationManagerUnitTest {
 
     private lateinit var mockByteToStringConverter: (ByteArray) -> String
     private lateinit var mockSerialiser: dev.pthomain.android.dejavu.serialisation.Serialiser
-    private lateinit var mockSerialisationDecorator1: SerialisationDecorator<Glitch>
-    private lateinit var mockSerialisationDecorator2: SerialisationDecorator<Glitch>
+    private lateinit var mockSerialisationDecorator1: SerialisationDecorator<DejaVuError>
+    private lateinit var mockSerialisationDecorator2: SerialisationDecorator<DejaVuError>
     private lateinit var mockMetadata: SerialisationDecorationMetadata
-    private lateinit var mockErrorFactory: ErrorFactory<Glitch>
+    private lateinit var mockErrorFactory: ErrorFactory<DejaVuError>
     private lateinit var mockInstruction: CacheInstruction
-    private lateinit var mockWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var decoratorList: List<SerialisationDecorator<Glitch>>
+    private lateinit var mockWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var decoratorList: List<SerialisationDecorator<DejaVuError>>
 
     private val mockByteArrayString = "mockByteArrayString"
     private val mockByteArray = "mockByteArrayString".toByteArray()
     private val mockSerialisedByteArray1 = "mockSerialisedByteArray1".toByteArray()
     private val mockSerialisedByteArray2 = "mockSerialisedByteArray2".toByteArray()
 
-    private lateinit var target: SerialisationManager<Glitch>
+    private lateinit var target: SerialisationManager<DejaVuError>
 
     @Before
     fun setUp() {
@@ -189,7 +189,7 @@ class SerialisationManagerUnitTest {
             )).thenReturn(mockResponse)
 
             val instructionToken = instructionToken()
-            val mockCacheMetadata = mock<ResponseMetadata<Glitch>>()
+            val mockCacheMetadata = mock<ResponseMetadata<DejaVuError>>()
 
             whenever(mockErrorFactory.newMetadata(eq(instructionToken)))
                     .thenReturn(mockCacheMetadata)

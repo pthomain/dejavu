@@ -31,7 +31,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.TextView
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.*
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
@@ -44,7 +43,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.*
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -84,7 +83,7 @@ internal class ExpandableListAdapter(context: Context)
             is Response<CatFactResponse, *> -> showResponse(result.response)
 
             is Empty<CatFactResponse, *, *> -> showHeaderAndBody(
-                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, Glitch>),
+                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, DejaVuError>),
                     "No response due to filtering or exception"
             )
 
@@ -135,9 +134,9 @@ internal class ExpandableListAdapter(context: Context)
                 }
 
                 val catFactHeader = "Here's a" +
-                        " ${ifElse(status.isFresh, "FRESH", "STALE")}" +
+                        " ${if (status.isFresh) "FRESH" else "STALE"}" +
                         " cat fact \uD83D\uDE3A" +
-                        " (from ${ifElse(status.isFromCache, "cache", "network")})"
+                        " (from ${if (status.isFromCache) "cache" else "network"})"
                 headers.add(catFactHeader)
                 children[catFactHeader] = listOf(internalResult.response.fact)
             }
@@ -253,7 +252,7 @@ internal class ExpandableListAdapter(context: Context)
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(result)
 
         class Empty<O : Remote>(
-                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, Glitch>
+                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, DejaVuError>
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(empty)
     }
 

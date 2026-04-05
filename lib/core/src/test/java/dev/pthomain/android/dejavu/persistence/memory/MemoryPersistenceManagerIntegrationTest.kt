@@ -23,11 +23,11 @@
 
 package dev.pthomain.android.dejavu.persistence.memory
 
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerIntegrationTest
 import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
 
 internal class MemoryPersistenceManagerIntegrationTest
-    : BasePersistenceManagerIntegrationTest<KeyValuePersistenceManager<Glitch>>(
-        { it.memoryPersistenceManagerFactory.create() as KeyValuePersistenceManager<Glitch> }
+    : BasePersistenceManagerIntegrationTest<KeyValuePersistenceManager<DejaVuError>>(
+        { it.memoryPersistenceManagerFactory.create() as KeyValuePersistenceManager<DejaVuError> }
 )

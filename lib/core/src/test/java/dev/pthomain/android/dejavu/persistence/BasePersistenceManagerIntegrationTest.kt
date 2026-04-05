@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.persistence
 
 import com.google.common.net.HttpHeaders.REFRESH
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
@@ -41,9 +41,9 @@ import org.junit.Test
 import java.util.*
 
 //TODO memory
-internal abstract class BasePersistenceManagerIntegrationTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>>(
-        targetExtractor: (PersistenceManagerFactory<Glitch>) -> T
-) : BaseIntegrationTest<dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>>({ targetExtractor(it.persistenceManagerFactory()) }) {
+internal abstract class BasePersistenceManagerIntegrationTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<DejaVuError>>(
+        targetExtractor: (PersistenceManagerFactory<DejaVuError>) -> T
+) : BaseIntegrationTest<dev.pthomain.android.dejavu.persistence.PersistenceManager<DejaVuError>>({ targetExtractor(it.persistenceManagerFactory()) }) {
 
     @Test
     fun `GIVEN that a response is not cached THEN it should not be returned`() {
@@ -242,8 +242,8 @@ internal abstract class BasePersistenceManagerIntegrationTest<T : dev.pthomain.a
     }
 
     private fun cacheTwoResponses(
-            firstResponse: ResponseWrapper<*, *, Glitch>,
-            secondResponse: ResponseWrapper<*, *, Glitch>,
+            firstResponse: ResponseWrapper<*, *, DejaVuError>,
+            secondResponse: ResponseWrapper<*, *, DejaVuError>,
             firstResponseExpectedStatus: CacheStatus = FRESH,
             secondResponseExpectedStatus: CacheStatus = FRESH
     ): Pair<InstructionToken, InstructionToken> {

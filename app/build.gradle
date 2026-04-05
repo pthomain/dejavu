@@ -105,7 +105,6 @@ dependencies {
 
     implementation libs.volley
 
-    implementation libs.boilerplate.ui
     implementation libs.rxdogtag
 
     implementation libs.okhttp

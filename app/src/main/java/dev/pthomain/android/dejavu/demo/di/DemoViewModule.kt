@@ -23,10 +23,7 @@
 
 package dev.pthomain.android.dejavu.demo.di
 
-import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.log.Printer
-import dev.pthomain.android.boilerplate.core.utils.log.SimpleLogger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method

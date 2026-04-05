@@ -23,18 +23,14 @@
 
 package dev.pthomain.android.dejavu.demo.dejavu.error
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import java.io.IOException
 
 class CustomApiError(override val cause: Throwable) : Throwable(), NetworkErrorPredicate {
 
-    override fun isNetworkError() = cause is IOException
+    override val isNetworkError: Boolean
+        get() = cause is IOException
 
-    override val message = "This is a custom ${ifElse(
-            isNetworkError(),
-            "handled",
-            "unhandled"
-    )} ApiError:\n$cause"
+    override val message = "This is a custom ${if (isNetworkError) "handled" else "unhandled"} ApiError:\n$cause"
 
 }

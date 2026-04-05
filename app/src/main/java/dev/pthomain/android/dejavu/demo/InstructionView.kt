@@ -33,7 +33,6 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
@@ -71,11 +70,9 @@ class InstructionView @JvmOverloads constructor(
 
             val styledOperation = applyOperationStyle(this)
 
-            val header: CharSequence? = ifElse(
-                    method == RETROFIT_HEADER,
-                    SpannableString("\n@Header(DejaVuHeader) operation: Operation\n"),
-                    null
-            )
+            val header: CharSequence? = if (method == RETROFIT_HEADER)
+                    SpannableString("\n@Header(DejaVuHeader) operation: Operation\n")
+                else null
 
             if (method != RETROFIT_ANNOTATION) {
                 TextUtils.concat(
@@ -100,14 +97,10 @@ class InstructionView @JvmOverloads constructor(
                 DO_NOT_CACHE -> "DoNotCache"
                 INVALIDATE -> "Invalidate"
                 CLEAR -> "Clear"
-            }.let { ifElse(method == RETROFIT_ANNOTATION, "@$it", it) }
+            }.let { if (method == RETROFIT_ANNOTATION) "@$it" else it }
 
     private fun getRestMethod(operation: Operation) = applyAnnotationStyle(
-            ifElse(
-                    operation is Remote,
-                    "@GET(\"fact\")",
-                    "@OPTIONS(\"fact\")"
-            ),
+            if (operation is Remote) "@GET(\"fact\")" else "@OPTIONS(\"fact\")",
             true
     )
 
@@ -142,10 +135,9 @@ class InstructionView @JvmOverloads constructor(
             )
         }
 
-        val bracketedDirectives = ifElse(
-                styledDirectives.isEmpty(),
-                "" as CharSequence,
-                styledDirectives
+        val bracketedDirectives = (if (styledDirectives.isEmpty())
+                "" as CharSequence
+            else styledDirectives
         ).let {
             val array = arrayOfNulls<CharSequence>(styledDirectives.size)
             styledDirectives.forEachIndexed { index, charSequence ->
@@ -242,17 +234,11 @@ class InstructionView @JvmOverloads constructor(
             responseClass: Class<*>
     ): CharSequence =
             with(operation) {
-                val wrapped = ifElse(
-                        operation is Local, //TODO had support for ad-hoc use of DejaVuResult
-                        "DejaVuResult<%s>",
-                        "%s"
-                ).format(responseClass.simpleName)
+                val wrapped = (if (operation is Local) "DejaVuResult<%s>" else "%s") //TODO had support for ad-hoc use of DejaVuResult
+                        .format(responseClass.simpleName)
 
-                val rxType = ifElse(
-                        useSingle,
-                        "Single<%s>",
-                        "Observable<%s>"
-                ).format(wrapped)
+                val rxType = (if (useSingle) "Single<%s>" else "Observable<%s>")
+                        .format(wrapped)
 
                 SpannableString("\nfun call(${callParameter ?: ""}): $rxType").apply {
                     val leftBracket = indexOf('(')

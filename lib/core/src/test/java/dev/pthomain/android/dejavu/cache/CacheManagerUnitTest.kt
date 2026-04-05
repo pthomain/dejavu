@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.cache
 
 import com.google.common.net.HttpHeaders.REFRESH
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.test.*
@@ -43,33 +43,33 @@ import java.util.*
 
 class CacheManagerUnitTest {
 
-    private lateinit var mockErrorFactory: ErrorFactory<Glitch>
-    private lateinit var mockCacheMetadataManager: CacheMetadataManager<Glitch>
-    private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>
-    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
+    private lateinit var mockErrorFactory: ErrorFactory<DejaVuError>
+    private lateinit var mockCacheMetadataManager: CacheMetadataManager<DejaVuError>
+    private lateinit var mockPersistenceManager: dev.pthomain.android.dejavu.persistence.PersistenceManager<DejaVuError>
+    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<DejaVuError>
     private lateinit var mockDateFactory: DateFactory
-    private lateinit var mockNetworkGlitch: Glitch
-    private lateinit var mockNetworkResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private var mockCachedResponseWrapper: ResponseWrapper<*, *, Glitch>? = null
-    private lateinit var mockSerialisationGlitch: Glitch
-    private lateinit var mockSerialisationErrorResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockEmptyResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockPersistedResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockUpdatedMetatadataNetworkResponseWrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var mockNetworkGlitch: DejaVuError
+    private lateinit var mockNetworkResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private var mockCachedResponseWrapper: ResponseWrapper<*, *, DejaVuError>? = null
+    private lateinit var mockSerialisationGlitch: DejaVuError
+    private lateinit var mockSerialisationErrorResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var mockEmptyResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var mockPersistedResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    private lateinit var mockUpdatedMetatadataNetworkResponseWrapper: ResponseWrapper<*, *, DejaVuError>
 
     private val now = Date(1000L)
     private val start = 100L
     private val illegalStateException = IllegalStateException("Error")
 
-    private lateinit var target: CacheManager<Glitch>
+    private lateinit var target: CacheManager<DejaVuError>
 
     private fun setUp() {
         mockErrorFactory = mock()
         mockPersistenceManager = mock()
         mockEmptyResponseFactory = mock()
         mockDateFactory = mock()
-        mockNetworkGlitch = Glitch(IOException("Network error"))
-        mockSerialisationGlitch = Glitch(NotSerializableException("Serialisation"))
+        mockNetworkGlitch = DejaVuError(IOException("Network error"))
+        mockSerialisationGlitch = DejaVuError(NotSerializableException("Serialisation"))
         mockCacheMetadataManager = mock()
         mockEmptyResponseWrapper = mock()
         mockPersistedResponseWrapper = mock()
@@ -106,7 +106,7 @@ class CacheManagerUnitTest {
                 "clearStaleEntriesOnly = $clearStaleEntriesOnly"
 
         val instructionToken = instructionToken()
-        val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
+        val mockResponseWrapper = mock<ResponseWrapper<*, *, DejaVuError>>()
 
         whenever(mockEmptyResponseFactory.create(
                 eq(instructionToken)
@@ -130,7 +130,7 @@ class CacheManagerUnitTest {
     fun testInvalidate() {
         setUp()
         val instructionToken = instructionToken()
-        val mockResponseWrapper = mock<ResponseWrapper<*, *, Glitch>>()
+        val mockResponseWrapper = mock<ResponseWrapper<*, *, DejaVuError>>()
 
         whenever(mockEmptyResponseFactory.create(
                 eq(instructionToken)
@@ -192,13 +192,13 @@ class CacheManagerUnitTest {
 
         val mockPreviousCacheMetadata = ResponseMetadata(
                 instructionToken.copy(status = ifElse(isResponseStaleOverall, STALE, FRESH)),
-                Glitch::class.java
+                DejaVuError::class.java
         )
 
         val mockNetworkSuccessResponseWrapper = defaultResponseWrapper(
                 ResponseMetadata(
                         instructionToken.copy(status = NETWORK),
-                        Glitch::class.java
+                        DejaVuError::class.java
                 ),
                 mock()
         )
@@ -243,7 +243,7 @@ class CacheManagerUnitTest {
             )
         }
 
-        val testObserver = TestObserver<ResponseWrapper<*, *, Glitch>>()
+        val testObserver = TestObserver<ResponseWrapper<*, *, DejaVuError>>()
 
         target.getCachedResponse(
                 Observable.just(mockNetworkResponseWrapper),
@@ -281,7 +281,7 @@ class CacheManagerUnitTest {
     }
 
     private fun getSingleActualResponse(context: String,
-                                        testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>): ResponseWrapper<*, *, Glitch> {
+                                        testObserver: TestObserver<ResponseWrapper<*, *, DejaVuError>>): ResponseWrapper<*, *, DejaVuError> {
         assertTrueWithContext(
                 testObserver.errorCount() == 0,
                 "Expected no error",
@@ -297,9 +297,9 @@ class CacheManagerUnitTest {
     }
 
     private fun getResponsePair(context: String,
-                                testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>,
+                                testObserver: TestObserver<ResponseWrapper<*, *, DejaVuError>>,
                                 serialisationFails: Boolean,
-                                networkCallFails: Boolean): Pair<ResponseWrapper<*, *, Glitch>, ResponseWrapper<*, *, Glitch>?> {
+                                networkCallFails: Boolean): Pair<ResponseWrapper<*, *, DejaVuError>, ResponseWrapper<*, *, DejaVuError>?> {
         assertEqualsWithContext(
                 null,
                 testObserver.errors().firstOrNull(),
@@ -368,7 +368,7 @@ class CacheManagerUnitTest {
         }
     }
 
-    private fun verifyFetchAndCache(testObserver: TestObserver<ResponseWrapper<*, *, Glitch>>,
+    private fun verifyFetchAndCache(testObserver: TestObserver<ResponseWrapper<*, *, DejaVuError>>,
                                     context: String,
                                     operation: Cache,
                                     hasCachedResponse: Boolean,

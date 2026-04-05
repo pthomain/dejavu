@@ -149,7 +149,6 @@ dependencies {
 
     implementation libs.androidx.multidex
 
-    implementation libs.glitchy.core
     implementation libs.volley
 
     implementation libs.koin.core

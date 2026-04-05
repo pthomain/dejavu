@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.retrofit.configuration
 import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.retrofit.di.DejaVuRetrofitModule
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import org.koin.core.module.Module
 import org.koin.dsl.koinApplication
 

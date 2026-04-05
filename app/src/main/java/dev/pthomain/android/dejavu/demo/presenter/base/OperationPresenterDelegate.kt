@@ -1,7 +1,5 @@
 package dev.pthomain.android.dejavu.demo.presenter.base
 
-import dev.pthomain.android.boilerplate.core.utils.rx.observable
-import dev.pthomain.android.boilerplate.core.utils.rx.single
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Empty
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
@@ -33,7 +31,7 @@ internal class OperationPresenterDelegate(
                     }
             )).flatMap {
                 when (it) {
-                    is Response<CatFactResponse, *> -> it.response.observable()
+                    is Response<CatFactResponse, *> -> Observable.just(it.response)
                     is Empty<*, *, *> -> Observable.error(it.exception)
                     is Result<*, *> -> Observable.empty()
                 }
@@ -44,7 +42,7 @@ internal class OperationPresenterDelegate(
                     Operation.Remote.Cache(priority = CachePriority.with(OFFLINE, freshness))
             ).firstOrError().flatMap {
                 when (it) {
-                    is Response<CatFactResponse, *> -> it.response.single()
+                    is Response<CatFactResponse, *> -> Single.just(it.response)
                     is Empty<*, *, *> -> Single.error(it.exception)
                     is Result<*, *> -> Single.error(NoSuchElementException(
                             "This operation does not emit any response: ${it.cacheToken.instruction.operation.type}")

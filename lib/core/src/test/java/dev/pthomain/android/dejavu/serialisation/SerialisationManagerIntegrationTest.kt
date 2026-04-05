@@ -26,25 +26,25 @@ package dev.pthomain.android.dejavu.serialisation
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import dev.pthomain.android.boilerplate.core.utils.lambda.Action
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory.Type.FILE
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.test.BaseIntegrationTest
 import dev.pthomain.android.dejavu.test.assertResponseWrapperWithContext
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
 internal class SerialisationManagerIntegrationTest
-    : BaseIntegrationTest<dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>>({
+    : BaseIntegrationTest<dev.pthomain.android.dejavu.serialisation.SerialisationManager<DejaVuError>>({
     it.serialisationManagerFactory().create(FILE) //TODO test the factory
 }) {
 
-    private lateinit var wrapper: ResponseWrapper<*, *, Glitch>
+    private lateinit var wrapper: ResponseWrapper<*, *, DejaVuError>
     private lateinit var instructionToken: InstructionToken
     private lateinit var mockErrorCallback: Action
 

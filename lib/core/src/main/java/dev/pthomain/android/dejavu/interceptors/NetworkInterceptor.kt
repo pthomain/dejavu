@@ -24,8 +24,7 @@
 package dev.pthomain.android.dejavu.interceptors
 
 import android.content.Context
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.rx.waitForNetwork
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
@@ -33,7 +32,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.utils.swapLambdaWhen
 import dev.pthomain.android.dejavu.utils.swapWhenDefault
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.ObservableTransformer
 import java.util.concurrent.TimeUnit.SECONDS

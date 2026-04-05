@@ -56,12 +56,6 @@ gson = "2.8.6"
 # TODO: Remove in Phase 4 - Snappy compression being removed
 snappy = "0.4"
 
-# TODO: Remove in Phase 3 - Boilerplate being inlined
-boilerplate = "4.3"
-
-# TODO: Remove in Phase 3 - Glitchy being inlined
-glitchy = "2.9"
-
 # TODO: Remove in Phase 3 - Mumbo being replaced with Tink
 mumbo = "2.8"
 
@@ -145,14 +139,6 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 # TODO: Remove in Phase 4 - Snappy compression being removed
 snappy = { module = "org.iq80.snappy:snappy", version.ref = "snappy" }
-
-# TODO: Remove in Phase 3 - Boilerplate being inlined
-boilerplate-core = { module = "dev.pthomain.boilerplate:core", version.ref = "boilerplate" }
-boilerplate-ui = { module = "dev.pthomain.boilerplate:ui", version.ref = "boilerplate" }
-
-# TODO: Remove in Phase 3 - Glitchy being inlined
-glitchy-core = { module = "dev.pthomain.glitchy:core", version.ref = "glitchy" }
-glitchy-retrofit = { module = "dev.pthomain.glitchy:retrofit", version.ref = "glitchy" }
 
 # TODO: Remove in Phase 3 - Mumbo being replaced with Tink
 mumbo = { module = "dev.pthomain:mumbo", version.ref = "mumbo" }

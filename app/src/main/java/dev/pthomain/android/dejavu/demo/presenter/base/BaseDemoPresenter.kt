@@ -25,10 +25,7 @@ package dev.pthomain.android.dejavu.demo.presenter.base
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.OnLifecycleEvent
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.rx.ioUi
-import dev.pthomain.android.boilerplate.ui.mvp.MvpPresenter
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.Behaviour
@@ -113,7 +110,7 @@ protected constructor(
 
     final override fun loadCatFact(isRefresh: Boolean) {
         instructionType = CACHE
-        behaviour = ifElse(isRefresh, Behaviour.INVALIDATE, ONLINE)
+        behaviour = if (isRefresh) Behaviour.INVALIDATE else ONLINE
 
         subscribeData(
                 getDataObservable(

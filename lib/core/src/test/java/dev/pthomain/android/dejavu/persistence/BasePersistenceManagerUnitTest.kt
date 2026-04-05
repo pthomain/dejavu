@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.persistence
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.STALE
@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Type.INVALIDATE
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.serialisation.decoration.SerialisationDecorationMetadata
 import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
 import dev.pthomain.android.dejavu.shared.utils.Utils.swapLambdaWhen
@@ -42,13 +42,13 @@ import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import org.junit.Test
 import java.util.*
 
-internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<Glitch>> {
+internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.dejavu.persistence.PersistenceManager<DejaVuError>> {
 
-    protected lateinit var mockSerialisationManager: dev.pthomain.android.dejavu.serialisation.SerialisationManager<Glitch>
+    protected lateinit var mockSerialisationManager: dev.pthomain.android.dejavu.serialisation.SerialisationManager<DejaVuError>
     protected lateinit var mockDateFactory: DateFactory
     protected lateinit var mockCacheToken: InstructionToken
-    protected lateinit var mockResponseWrapper: ResponseWrapper<*, *, Glitch>
-    protected lateinit var mockMetadata: ResponseMetadata<Glitch>
+    protected lateinit var mockResponseWrapper: ResponseWrapper<*, *, DejaVuError>
+    protected lateinit var mockMetadata: ResponseMetadata<DejaVuError>
 
     protected val mockHash = "mockHash"
     protected val mockBlob = byteArrayOf(1, 2, 3, 4, 5, 6, 8, 9)
@@ -62,7 +62,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.
     protected val mockCacheDate = Date(mockCacheDateTime)
     protected val mockExpiryDate = Date(mockExpiryDateTime)
 
-    protected fun setUpConfiguration(cacheInstruction: CacheInstruction?): DejaVu.Configuration<Glitch> {
+    protected fun setUpConfiguration(cacheInstruction: CacheInstruction?): DejaVu.Configuration<DejaVuError> {
         mockSerialisationManager = mock()
         mockDateFactory = mock()
         mockCacheToken = mock()
@@ -84,7 +84,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.
             whenever(mockCacheToken.instruction).thenReturn(cacheInstruction)
         }
 
-        val mockConfiguration = mock<DejaVu.Configuration<Glitch>>()
+        val mockConfiguration = mock<DejaVu.Configuration<DejaVuError>>()
         whenever(mockConfiguration.logger).thenReturn(mock())
 
         return mockConfiguration
@@ -203,12 +203,12 @@ internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.
                 isSerialisationSuccess
         )
 
-        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<*, *, Glitch>>() else null
+        val mockPreviousResponse = if (hasPreviousResponse) mock<ResponseWrapper<*, *, DejaVuError>>() else null
 
         if (mockPreviousResponse != null) {
             val previousMetadata = ResponseMetadata(
                     instructionToken(),
-                    Glitch::class.java,
+                    DejaVuError::class.java,
                     null,
                     CallDuration(0, 0, 0)
             )
@@ -398,7 +398,7 @@ internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.
         whenever(mockDateFactory.invoke(eq(cacheDateTimeStamp))).thenReturn(mockCacheDate)
         whenever(mockDateFactory.invoke(eq(expiryDateTime))).thenReturn(mockExpiryDate)
 
-        val mockResponseWrapper = ResponseWrapper<*, *, Glitch>(
+        val mockResponseWrapper = ResponseWrapper<*, *, DejaVuError>(
                 TestResponse::class.java,
                 null,
                 mock()
@@ -497,5 +497,5 @@ internal abstract class BasePersistenceManagerUnitTest<T : dev.pthomain.android.
                                                    instructionToken: InstructionToken,
                                                    hasResponse: Boolean,
                                                    isStale: Boolean,
-                                                   cachedResponse: ResponseWrapper<*, *, Glitch>?)
+                                                   cachedResponse: ResponseWrapper<*, *, DejaVuError>?)
 }

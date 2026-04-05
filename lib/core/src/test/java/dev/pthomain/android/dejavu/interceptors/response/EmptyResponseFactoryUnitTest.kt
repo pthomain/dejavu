@@ -24,22 +24,22 @@
 package dev.pthomain.android.dejavu.interceptors.response
 
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
 import dev.pthomain.android.dejavu.test.assertEqualsWithContext
 import dev.pthomain.android.dejavu.test.assertNotNullWithContext
 import dev.pthomain.android.dejavu.test.assertNullWithContext
 import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.ErrorFactory
 import org.junit.Before
 import org.junit.Test
 
 class EmptyResponseFactoryUnitTest {
 
-    private lateinit var mockErrorFactory: ErrorFactory<Glitch>
+    private lateinit var mockErrorFactory: ErrorFactory<DejaVuError>
 
-    private lateinit var target: EmptyResponseFactory<Glitch>
+    private lateinit var target: EmptyResponseFactory<DejaVuError>
 
     //TODO update test for DONE and EMPTY
 
@@ -52,7 +52,7 @@ class EmptyResponseFactoryUnitTest {
     @Test
     fun testEmptyResponseWrapperObservable() {
         val instructionToken = instructionToken()
-        val mockError = mock<Glitch>()
+        val mockError = mock<DejaVuError>()
 
         whenever(mockErrorFactory(any())).thenReturn(mockError)
 

@@ -34,7 +34,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
 import com.uber.rxdogtag.RxDogTag
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
@@ -145,7 +144,7 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
 
         gitHubButton.setOnClickListener { openGithub() }
 
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = if (isChecked) FRESH_ONLY else ANY } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 

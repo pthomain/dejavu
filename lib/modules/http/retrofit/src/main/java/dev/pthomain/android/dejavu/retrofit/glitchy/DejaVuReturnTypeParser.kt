@@ -23,15 +23,8 @@
 
 package dev.pthomain.android.dejavu.retrofit.glitchy
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.retrofit.adapter.RetrofitCallAdapterFactory.Companion.getFirstParameterUpperBound
-import dev.pthomain.android.glitchy.retrofit.adapter.RetrofitCallAdapterFactory.Companion.rawType
-import dev.pthomain.android.glitchy.retrofit.type.OutcomeReturnTypeParser.Companion.IsOutcome
-import dev.pthomain.android.glitchy.retrofit.type.ParsedType
-import dev.pthomain.android.glitchy.retrofit.type.ReturnTypeParser
-import dev.pthomain.android.glitchy.retrofit.type.RxReturnTypeParser
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import io.reactivex.Single
 import java.lang.reflect.ParameterizedType
@@ -71,7 +64,7 @@ internal class DejaVuReturnTypeParser<E> : ReturnTypeParser<DejaVuReturnType>
     private fun wrapToRx(outcomeType: Type,
                          isSingle: Boolean) =
             wrapToParameterizedType(
-                    ifElse(isSingle, Single::class.java, Observable::class.java),
+                    if (isSingle) Single::class.java else Observable::class.java,
                     outcomeType
             )
 

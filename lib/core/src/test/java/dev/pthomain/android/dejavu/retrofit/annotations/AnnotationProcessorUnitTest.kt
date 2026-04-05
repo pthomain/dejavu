@@ -25,14 +25,14 @@ package dev.pthomain.android.dejavu.retrofit.annotations
 
 import com.nhaarman.mockitokotlin2.mock
 import dev.pthomain.android.DejaVu.Configuration.Companion.DEFAULT_CACHE_DURATION_IN_SECONDS
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.test.*
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import org.junit.Before
 import org.junit.Test
 
@@ -41,7 +41,7 @@ class AnnotationProcessorUnitTest {
     private val responseKClass = TestResponse::class
     private val responseClass = responseKClass.java
 
-    private lateinit var target: AnnotationProcessor<Glitch>
+    private lateinit var target: AnnotationProcessor<DejaVuError>
 
     @Before
     fun setUp() {

@@ -28,8 +28,8 @@ import android.database.Cursor
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.common.net.HttpHeaders.REFRESH
 import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.persistence.BasePersistenceManagerUnitTest
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
 import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
@@ -42,11 +42,11 @@ import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.verifyNeverWithContext
 import dev.pthomain.android.dejavu.test.verifyWithContext
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import io.reactivex.Observable
 import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
 
-internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch>>() {
+internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTest<dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<DejaVuError>>() {
 
     private lateinit var mockDatabase: SupportSQLiteDatabase
     private lateinit var mockObservable: Observable<TestResponse>
@@ -54,7 +54,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
     private lateinit var mockContentValuesFactory: (Map<String, *>) -> ContentValues
     private lateinit var mockContentValues: ContentValues
 
-    override fun setUp(instructionToken: InstructionToken): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<Glitch> {
+    override fun setUp(instructionToken: InstructionToken): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager<DejaVuError> {
         mockDatabase = mock()
         mockObservable = mock()
         mockContentValuesFactory = mock()
@@ -326,7 +326,7 @@ internal class DatabasePersistenceManagerUnitTest : BasePersistenceManagerUnitTe
                                          instructionToken: InstructionToken,
                                          hasResponse: Boolean,
                                          isStale: Boolean,
-                                         cachedResponse: MockClient.ResponseWrapper<*, *, Glitch>?) {
+                                         cachedResponse: MockClient.ResponseWrapper<*, *, DejaVuError>?) {
         val queryCaptor = argumentCaptor<String>()
         verifyWithContext(mockDatabase, context).query(queryCaptor.capture())
 

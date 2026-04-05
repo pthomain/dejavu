@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.*
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NETWORK
@@ -38,12 +38,12 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
 import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.interceptors.Interceptor
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Error
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome.Success
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.Outcome
+import dev.pthomain.android.dejavu.error.Outcome.Error
+import dev.pthomain.android.dejavu.error.Outcome.Success
 import io.reactivex.Observable
+import io.reactivex.ObservableTransformer
 import io.reactivex.Single
 
 /**
@@ -75,7 +75,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
         private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
-) : Interceptor
+) : ObservableTransformer<Any, Any>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -100,7 +100,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      * @param upstream the call to intercept
      * @return the call intercepted with the inner interceptors
      */
-    override fun apply(upstream: Single<Any>) =
+    fun apply(upstream: Single<Any>) =
             upstream.toObservable()
                     .compose(this)
                     .filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }

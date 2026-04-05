@@ -149,9 +149,6 @@ dependencies {
     api libs.kotlinx.coroutines.core
     api libs.kotlinx.coroutines.android
 
-    api libs.boilerplate.core
-    api libs.glitchy.core
-
     //https://stackoverflow.com/questions/56639529
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
