@@ -153,10 +153,6 @@ dependencies {
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
 
-    api libs.rxjava
-    api libs.rxkotlin
-    api libs.rxandroid
-
     testImplementation libs.retrofit.converter.gson
     testImplementation libs.gson
 
@@ -170,5 +166,6 @@ dependencies {
     testImplementation libs.okhttp.mockwebserver
     testImplementation libs.mockito.kotlin
 
-    testImplementation libs.reactiveNetwork
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.turbine
 }

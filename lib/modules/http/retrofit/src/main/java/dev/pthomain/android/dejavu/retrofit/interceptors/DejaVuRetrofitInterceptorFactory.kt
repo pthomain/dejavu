@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.glitchy.OperationReturnType
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
 
 /**
@@ -65,8 +65,8 @@ class DejaVuRetrofitInterceptorFactory<E> internal constructor(
                     )
                 }?.let { dejaVuInterceptor ->
                     object : RetrofitInterceptor.SimpleInterceptor() {
-                        override fun apply(upstream: Observable<Any>) =
-                                dejaVuInterceptor.apply(upstream)
+                        override fun intercept(upstream: Flow<Any>) =
+                                dejaVuInterceptor.intercept(upstream)
                     }
                 }
             }

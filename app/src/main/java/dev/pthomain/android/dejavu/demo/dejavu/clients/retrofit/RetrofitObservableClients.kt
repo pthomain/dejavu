@@ -33,8 +33,7 @@ import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import dev.pthomain.android.dejavu.retrofit.operation.DejaVuHeader
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -46,108 +45,108 @@ interface RetrofitObservableClients : ObservableClients {
 
         @GET(ENDPOINT)
         @Cache
-        override fun get(): Observable<CatFactResponse>
+        override fun get(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "compress")
-        override fun compressed(): Observable<CatFactResponse>
+        override fun compressed(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "encrypt")
-        override fun encrypted(): Observable<CatFactResponse>
+        override fun encrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "compress,encrypt")
-        override fun compressedEncrypted(): Observable<CatFactResponse>
+        override fun compressedEncrypted(): Flow<CatFactResponse>
 
         // GET freshOnly
 
         @GET(ENDPOINT)
         @Cache(priority = STALE_NOT_ACCEPTED)
-        override fun freshOnly(): Observable<CatFactResponse>
+        override fun freshOnly(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "compress"
         )
-        override fun freshOnlyCompressed(): Observable<CatFactResponse>
+        override fun freshOnlyCompressed(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "encrypt"
         )
-        override fun freshOnlyEncrypted(): Observable<CatFactResponse>
+        override fun freshOnlyEncrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "compress,encrypt"
         )
-        override fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>
+        override fun freshOnlyCompressedEncrypted(): Flow<CatFactResponse>
 
         // REFRESH
 
         @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_ACCEPTED_FIRST)
-        override fun refresh(): Observable<CatFactResponse>
+        override fun refresh(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_ACCEPTED_FIRST,
                 serialisation = "compress"
         )
-        override fun refreshCompressed(): Observable<CatFactResponse>
+        override fun refreshCompressed(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_ACCEPTED_FIRST,
                 serialisation = "encrypt"
         )
-        override fun refreshEncrypted(): Observable<CatFactResponse>
+        override fun refreshEncrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_ACCEPTED_FIRST,
                 serialisation = "compress,encrypt"
         )
-        override fun refreshCompressedEncrypted(): Observable<CatFactResponse>
+        override fun refreshCompressedEncrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
-        override fun refreshFreshOnly(): Observable<CatFactResponse>
+        override fun refreshFreshOnly(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_NOT_ACCEPTED,
                 serialisation = "compress"
         )
-        override fun refreshCompressedFreshOnly(): Observable<CatFactResponse>
+        override fun refreshCompressedFreshOnly(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_NOT_ACCEPTED,
                 serialisation = "encrypt"
         )
-        override fun refreshEncryptedFreshOnly(): Observable<CatFactResponse>
+        override fun refreshEncryptedFreshOnly(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = INVALIDATE_STALE_NOT_ACCEPTED,
                 serialisation = "compress,encrypt"
         )
-        override fun refreshCompressedEncryptedFreshOnly(): Observable<CatFactResponse>
+        override fun refreshCompressedEncryptedFreshOnly(): Flow<CatFactResponse>
 
         // OFFLINE
 
         @GET(ENDPOINT)
         @Cache(priority = OFFLINE_STALE_ACCEPTED)
-        override fun offline(): Single<CatFactResponse>
+        override fun offline(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(priority = OFFLINE_STALE_NOT_ACCEPTED)
-        override fun offlineFreshOnly(): Single<CatFactResponse>
+        override fun offlineFreshOnly(): Flow<CatFactResponse>
     }
 
     interface Operations : ObservableClients.Operations {
@@ -155,17 +154,17 @@ interface RetrofitObservableClients : ObservableClients {
 
         @DELETE(ENDPOINT)
         @Clear
-        override fun clearCache(): Observable<DejaVuResult<CatFactResponse>>
+        override fun clearCache(): Flow<DejaVuResult<CatFactResponse>>
 
         // INVALIDATE
 
         @DELETE(ENDPOINT)
         @Invalidate
-        override fun invalidate(): Observable<DejaVuResult<CatFactResponse>>
+        override fun invalidate(): Flow<DejaVuResult<CatFactResponse>>
 
         //HEADER
 
         @GET(ENDPOINT)
-        fun execute(@Header(DejaVuHeader) operation: Operation): Observable<DejaVuResult<CatFactResponse>>
+        fun execute(@Header(DejaVuHeader) operation: Operation): Flow<DejaVuResult<CatFactResponse>>
     }
 }

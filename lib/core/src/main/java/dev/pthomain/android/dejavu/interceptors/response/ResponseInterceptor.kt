@@ -32,8 +32,10 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.di.ellapsed
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Intercepts the response wrapper returned from the error and cache interceptors and returns the actual
@@ -45,34 +47,32 @@ import io.reactivex.ObservableTransformer
  *
  * @param logger the logger
  * @param dateFactory provides a date for a given timestamp or the current date with no argument
- * @param configuration the cache configuration
  */
 internal class ResponseInterceptor<R : Any, E> private constructor(
         private val logger: Logger,
         private val dateFactory: DateFactory,
         private val asResult: Boolean,
-) : ObservableTransformer<DejaVuResult<R>, Any>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) where E : Throwable,
+      E : NetworkErrorPredicate {
 
     /**
-     * Composes an Observable call.
+     * Intercepts the upstream Flow.
      *
-     * @param upstream the Observable to compose
-     * @return the composed Observable
+     * @param upstream the Flow to intercept
+     * @return the intercepted Flow
      */
-    override fun apply(upstream: Observable<DejaVuResult<R>>) =
-            upstream.flatMap(::intercept)!!
+    fun intercept(upstream: Flow<DejaVuResult<R>>): Flow<Any> =
+            upstream.flatMapConcat { interceptItem(it) }
 
     /**
-     * Converts the ResponseWrapper into the expected response with added cache metadata if possible.
+     * Converts the DejaVuResult into the expected response with added cache metadata if possible.
      *
      * @param wrapper the response wrapper returned by the error and cache interceptors
      *
-     * @return an Observable emitting the expected response with associated metadata or an error if the empty response could not be created.
+     * @return a Flow emitting the expected response with associated metadata or an error if the empty response could not be created.
      */
     @Suppress("UNCHECKED_CAST")
-    private fun intercept(wrapper: DejaVuResult<R>): Observable<out Any> {
+    private fun interceptItem(wrapper: DejaVuResult<R>): Flow<Any> {
 
         fun <O : Remote> Response<R, O>.updateResponseMetadata() = response.apply {
             if(this is HasMetadata<*, *, *>) {
@@ -84,16 +84,16 @@ internal class ResponseInterceptor<R : Any, E> private constructor(
             }
         }
 
-        return if (asResult) Observable.just(wrapper)
+        return if (asResult) flowOf(wrapper)
         else when (wrapper) {
             is Response<R, *> -> when (wrapper.cacheToken.instruction.operation) {
                 is Cache -> wrapper.updateResponseMetadata()
                 DoNotCache -> wrapper.updateResponseMetadata()
-            }.let { Observable.just(it) }
+            }.let { flowOf(it) }
 
-            is Empty<R, *, *> -> Observable.error(wrapper.exception)
-            is Result<R, *> -> Observable.error(NoSuchElementException("This operation does not return any response"))
-        } as Observable<Any>
+            is Empty<R, *, *> -> flow { throw wrapper.exception }
+            is Result<R, *> -> flow { throw NoSuchElementException("This operation does not return any response") }
+        } as Flow<Any>
     }
 
     internal class Factory<E>(

@@ -33,7 +33,6 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
-import com.uber.rxdogtag.RxDogTag
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
@@ -44,7 +43,6 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
-import io.reactivex.plugins.RxJavaPlugins
 
 
 internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit {
@@ -90,16 +88,12 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        RxDogTag.install()
         onCreateComponent(savedInstanceState)
     }
 
     override fun onComponentReady(component: DemoViewComponent) {
         this.presenter = component.presenter()
         this.presenterSwitcher = component.presenterSwitcher()
-        RxJavaPlugins.setErrorHandler { error ->
-            component.logger().e(this, error)
-        }
     }
 
     override fun attachBaseContext(base: Context) {

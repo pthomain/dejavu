@@ -5,53 +5,47 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.HasMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
-import io.reactivex.Single
-import io.reactivex.SingleSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 
-class VolleySingle<E> private constructor(delegate: Single<Any>)
-    : SingleSource<Any> by delegate
+/**
+ * Provides convenience methods for getting a single result from a Volley Flow.
+ * With coroutines, "single" semantics are achieved using Flow.first().
+ */
+class VolleySingle<E> private constructor()
         where E : Throwable,
               E : NetworkErrorPredicate {
 
     class Factory<E> internal constructor(
-            private val observableFactory: VolleyObservable.Factory<E>
-    ) : ObservableTransformer<Any, Any>
-            where E : Throwable,
-                  E : NetworkErrorPredicate {
-
-        override fun apply(upstream: Observable<Any>) = upstream.filter {
-            (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true
-        }
+            private val flowFactory: VolleyFlowFactory.Factory<E>
+    ) where E : Throwable,
+            E : NetworkErrorPredicate {
 
         @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
-        fun <R : Any> createResult(
+        suspend fun <R : Any> createResult(
                 requestQueue: RequestQueue,
                 operation: Operation,
                 requestMetadata: PlainRequestMetadata<R>
-        ) = observableFactory.createResult(
-                        requestQueue,
-                        operation,
-                        requestMetadata
-                )
-                .compose(this)
-                .firstOrError() as Single<DejaVuResult<R>>
+        ): DejaVuResult<R> = flowFactory.createResult(
+                requestQueue,
+                operation,
+                requestMetadata
+        ).filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
+                .first()
 
         @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
-        fun <R : Any> create(
+        suspend fun <R : Any> create(
                 requestQueue: RequestQueue,
                 operation: Operation,
                 requestMetadata: PlainRequestMetadata<R>
-        ) = observableFactory.create(
-                        requestQueue,
-                        operation,
-                        requestMetadata
-                ).compose(this)
-                .firstOrError() as Single<R>
+        ): R = flowFactory.create(
+                requestQueue,
+                operation,
+                requestMetadata
+        ).filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
+                .first()
 
     }
 

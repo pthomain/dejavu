@@ -25,50 +25,50 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.base
 
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 interface SingleClients {
 
     interface Data {
         // GET
 
-        fun get(): Single<CatFactResponse>
-        fun compressed(): Single<CatFactResponse>
-        fun encrypted(): Single<CatFactResponse>
-        fun compressedEncrypted(): Single<CatFactResponse>
+        fun get(): Flow<CatFactResponse>
+        fun compressed(): Flow<CatFactResponse>
+        fun encrypted(): Flow<CatFactResponse>
+        fun compressedEncrypted(): Flow<CatFactResponse>
 
         // GET freshOnly
 
-        fun freshOnly(): Single<CatFactResponse>
-        fun freshOnlyCompressed(): Single<CatFactResponse>
-        fun freshOnlyEncrypted(): Single<CatFactResponse>
-        fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
+        fun freshOnly(): Flow<CatFactResponse>
+        fun freshOnlyCompressed(): Flow<CatFactResponse>
+        fun freshOnlyEncrypted(): Flow<CatFactResponse>
+        fun freshOnlyCompressedEncrypted(): Flow<CatFactResponse>
 
         // REFRESH
 
-        fun refresh(): Single<CatFactResponse>
-        fun refreshCompressed(): Single<CatFactResponse>
-        fun refreshEncrypted(): Single<CatFactResponse>
-        fun refreshCompressedEncrypted(): Single<CatFactResponse>
+        fun refresh(): Flow<CatFactResponse>
+        fun refreshCompressed(): Flow<CatFactResponse>
+        fun refreshEncrypted(): Flow<CatFactResponse>
+        fun refreshCompressedEncrypted(): Flow<CatFactResponse>
 
-        fun refreshFreshOnly(): Single<CatFactResponse>
-        fun refreshCompressedFreshOnly(): Single<CatFactResponse>
-        fun refreshEncryptedFreshOnly(): Single<CatFactResponse>
-        fun refreshCompressedEncryptedFreshOnly(): Single<CatFactResponse>
+        fun refreshFreshOnly(): Flow<CatFactResponse>
+        fun refreshCompressedFreshOnly(): Flow<CatFactResponse>
+        fun refreshEncryptedFreshOnly(): Flow<CatFactResponse>
+        fun refreshCompressedEncryptedFreshOnly(): Flow<CatFactResponse>
 
         // OFFLINE
 
-        fun offline(): Single<CatFactResponse>
-        fun offlineFreshOnly(): Single<CatFactResponse>
+        fun offline(): Flow<CatFactResponse>
+        fun offlineFreshOnly(): Flow<CatFactResponse>
     }
 
     interface Operations {
         // CLEAR
 
-        fun clearCache(): Single<DejaVuResult<CatFactResponse>>
+        fun clearCache(): Flow<DejaVuResult<CatFactResponse>>
 
         // INVALIDATE
 
-        fun invalidate(): Single<DejaVuResult<CatFactResponse>>
+        fun invalidate(): Flow<DejaVuResult<CatFactResponse>>
     }
 }

@@ -103,8 +103,6 @@ dependencies {
 
     implementation libs.volley
 
-    implementation libs.rxdogtag
-
     implementation libs.okhttp
     implementation libs.okhttp.logging
 

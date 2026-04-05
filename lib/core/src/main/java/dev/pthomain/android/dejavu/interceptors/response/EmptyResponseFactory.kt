@@ -32,7 +32,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import java.util.*
 
 /**
@@ -48,12 +50,10 @@ internal class EmptyResponseFactory<E>(
         E : NetworkErrorPredicate {
 
     /**
-     * TODO JavaDoc
-     * Returns a Single emitting a ResponseWrapper with no response and a status of
-     * either DONE or EMPTY.
+     * Returns an Empty DejaVuResult with no response and an EmptyResponseException.
      *
      * @param networkToken the instruction token for this call
-     * @return an empty ResponseWrapper emitting Single
+     * @return an empty DejaVuResult
      */
     fun <R : Any> createEmptyResponse(networkToken: RequestToken<Cache, R>) =
             Empty(
@@ -63,11 +63,10 @@ internal class EmptyResponseFactory<E>(
             )
 
     /**
-     * Returns a Single emitting a ResponseWrapper with no response and a status of
-     * either DONE or EMPTY.
+     * Returns a Result DejaVuResult with no response and a status of DONE.
      *
      * @param networkToken the instruction token for this call
-     * @return an empty ResponseWrapper emitting Single
+     * @return a done DejaVuResult
      */
     fun <R : Any, O : Local> createDoneResponse(networkToken: RequestToken<O, R>) =
             Result(
@@ -80,25 +79,25 @@ internal class EmptyResponseFactory<E>(
             )
 
     /**
-     * Wraps a callable action into an Observable that only emits an empty ResponseWrapper (with a DONE status).
+     * Wraps a callable action into a Flow that only emits an empty DejaVuResult (with a DONE status).
      *
      * @param instructionToken the original request's instruction token
-     * @param action the callable action to execute as an Observable
+     * @param action the callable action to execute before emitting
      *
-     * @return an Observable emitting an empty ResponseWrapper (with a DONE status)
+     * @return a Flow emitting an empty DejaVuResult (with a DONE status)
      */
-    fun <R : Any, O : Operation> createEmptyResponseObservable(
+    fun <R : Any, O : Operation> createEmptyResponseFlow(
             instructionToken: RequestToken<O, R>,
             action: () -> Unit = {}
-    ) =
-            Observable.defer {
-                Observable.just(
-                        @Suppress("UNCHECKED_CAST") //This is enforced by CacheInterceptor
-                        when (instructionToken.instruction.operation) {
-                            is Cache -> createEmptyResponse(instructionToken as RequestToken<Cache, R>)
-                            else -> createDoneResponse(instructionToken as RequestToken<out Local, R>)
-                        } as DejaVuResult<R>
-                ).doOnSubscribe { action() }
+    ): Flow<DejaVuResult<R>> =
+            flow {
+                action()
+                @Suppress("UNCHECKED_CAST") //This is enforced by CacheInterceptor
+                val result = when (instructionToken.instruction.operation) {
+                    is Cache -> createEmptyResponse(instructionToken as RequestToken<Cache, R>)
+                    else -> createDoneResponse(instructionToken as RequestToken<out Local, R>)
+                } as DejaVuResult<R>
+                emit(result)
             }
 
     class EmptyResponseException(override val cause: Exception) : NoSuchElementException("The response was empty")

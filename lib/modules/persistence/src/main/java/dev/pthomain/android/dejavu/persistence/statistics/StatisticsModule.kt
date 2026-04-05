@@ -23,15 +23,16 @@
 
 package dev.pthomain.android.dejavu.persistence.statistics
 
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 abstract class StatisticsModule {
 
     fun provideStatisticsCompiler(): StatisticsCompiler =
             object : StatisticsCompiler { //FIXME
-                override fun getStatistics() = Single.error<CacheStatistics>(
-                        IllegalStateException("Cache statistics are not supported at the moment")
-                )
+                override fun getStatistics(): Flow<CacheStatistics> = flow {
+                    throw IllegalStateException("Cache statistics are not supported at the moment")
+                }
             }
 
 }

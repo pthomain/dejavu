@@ -33,7 +33,7 @@ import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import dev.pthomain.android.dejavu.retrofit.operation.DejaVuHeader
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -45,66 +45,66 @@ interface RetrofitSingleClients : SingleClients {
 
         @GET(ENDPOINT)
         @Cache
-        override fun get(): Single<CatFactResponse>
+        override fun get(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "compress")
-        override fun compressed(): Single<CatFactResponse>
+        override fun compressed(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "encrypt")
-        override fun encrypted(): Single<CatFactResponse>
+        override fun encrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(serialisation = "compress,encrypt")
-        override fun compressedEncrypted(): Single<CatFactResponse>
+        override fun compressedEncrypted(): Flow<CatFactResponse>
 
         // GET freshOnly
 
         @GET(ENDPOINT)
         @Cache(priority = STALE_NOT_ACCEPTED)
-        override fun freshOnly(): Single<CatFactResponse>
+        override fun freshOnly(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "compress"
         )
-        override fun freshOnlyCompressed(): Single<CatFactResponse>
+        override fun freshOnlyCompressed(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "encrypt"
         )
-        override fun freshOnlyEncrypted(): Single<CatFactResponse>
+        override fun freshOnlyEncrypted(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(
                 priority = STALE_NOT_ACCEPTED,
                 serialisation = "compress,encrypt"
         )
-        override fun freshOnlyCompressedEncrypted(): Single<CatFactResponse>
+        override fun freshOnlyCompressedEncrypted(): Flow<CatFactResponse>
 
         // REFRESH
 
         @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_ACCEPTED_FIRST)
-        override fun refresh(): Single<CatFactResponse>
+        override fun refresh(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
-        override fun refreshFreshOnly(): Single<CatFactResponse>
+        override fun refreshFreshOnly(): Flow<CatFactResponse>
 
         // OFFLINE
 
         @GET(ENDPOINT)
         @Cache(priority = OFFLINE_STALE_ACCEPTED)
-        override fun offline(): Single<CatFactResponse>
+        override fun offline(): Flow<CatFactResponse>
 
         @GET(ENDPOINT)
         @Cache(priority = OFFLINE_STALE_NOT_ACCEPTED)
-        override fun offlineFreshOnly(): Single<CatFactResponse>
+        override fun offlineFreshOnly(): Flow<CatFactResponse>
     }
 
     interface Operations : SingleClients.Operations {
@@ -112,17 +112,17 @@ interface RetrofitSingleClients : SingleClients {
 
         @DELETE(ENDPOINT)
         @Clear
-        override fun clearCache(): Single<DejaVuResult<CatFactResponse>>
+        override fun clearCache(): Flow<DejaVuResult<CatFactResponse>>
 
         // INVALIDATE
 
         @DELETE(ENDPOINT)
         @Invalidate
-        override fun invalidate(): Single<DejaVuResult<CatFactResponse>>
+        override fun invalidate(): Flow<DejaVuResult<CatFactResponse>>
 
         //HEADER
 
         @GET(ENDPOINT)
-        fun execute(@Header(DejaVuHeader) operation: Operation): Single<DejaVuResult<CatFactResponse>>
+        fun execute(@Header(DejaVuHeader) operation: Operation): Flow<DejaVuResult<CatFactResponse>>
     }
 }

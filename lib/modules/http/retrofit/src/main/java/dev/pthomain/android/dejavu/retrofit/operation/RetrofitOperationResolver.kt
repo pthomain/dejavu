@@ -94,7 +94,7 @@ internal class RetrofitOperationResolver<E, R> private constructor(
             logger.d(
                     this,
                     "No cache operation found for $methodDescription,"
-                            + " the call will be adapted with the default RxJava adapter."
+                            + " the call will not be intercepted by DejaVu."
             )
             null
         }

@@ -33,10 +33,6 @@ import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.Glitchy
-import dev.pthomain.android.glitchy.retrofit.GlitchyRetrofit
-import dev.pthomain.android.glitchy.retrofit.interceptors.RetrofitInterceptors
-import retrofit2.CallAdapter
 
 /**
  * Manual dependency injection component for the Retrofit module.
@@ -79,10 +75,7 @@ internal class DejaVuRetrofitComponent<E>(
 
     val headerInterceptor = HeaderInterceptor()
 
-    val callAdapterFactory: CallAdapter.Factory = Glitchy.builder<E>(parentComponent.errorFactory)
-            .extend(GlitchyRetrofit.extension<E, OperationReturnType>())
-            .withReturnTypeParser(operationReturnTypeParser)
-            .withInterceptors(retrofitInterceptors)
-            .build()
-            .callAdapterFactory
+    // TODO: Create a custom DejaVuCallAdapterFactory that returns Flow<DejaVuResult<T>>
+    // The previous Glitchy-based call adapter has been removed.
+    // This will be implemented in Phase 8 (HTTP modules refactoring).
 }

@@ -34,12 +34,12 @@ class DejaVuVolleyBuilder<E> internal constructor(
         val resolvedSerialiser = this.serialiser
                 ?: throw IllegalStateException("A Serialiser must be provided via withSerialiser()")
 
-        val volleyObservableFactory = VolleyObservable.Factory<E>(
+        val volleyFlowFactory = VolleyFlowFactory.Factory<E>(
                 component.errorFactory,
                 resolvedSerialiser,
                 component.interceptorFactory
         )
 
-        return DejaVuVolley(volleyObservableFactory)
+        return DejaVuVolley(volleyFlowFactory)
     }
 }

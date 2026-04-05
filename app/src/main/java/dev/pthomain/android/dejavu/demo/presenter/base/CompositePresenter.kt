@@ -30,7 +30,7 @@ import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.volley.VolleyPresenter
-import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.Job
 
 internal class CompositePresenter(
         override val mvpView: DemoActivity,
@@ -41,7 +41,8 @@ internal class CompositePresenter(
 
     private var presenter: DemoPresenter = retrofitAnnotationDemoPresenter
 
-    override var subscriptions = CompositeDisposable()
+    // TODO: Replace with CoroutineScope after DI migration
+    // override var subscriptions = CompositeDisposable()
 
     enum class Method {
         RETROFIT_ANNOTATION,

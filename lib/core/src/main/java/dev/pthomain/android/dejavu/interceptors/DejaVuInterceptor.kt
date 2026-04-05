@@ -42,9 +42,10 @@ import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.error.Outcome
 import dev.pthomain.android.dejavu.error.Outcome.Error
 import dev.pthomain.android.dejavu.error.Outcome.Success
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 /**
  * Wraps and composes with the interceptors dealing with error handling, cache and response decoration.
@@ -54,13 +55,13 @@ import io.reactivex.Single
  * @param requestMetadata the associated request metadata
  * @param hasher the class handling the request hashing for unicity
  * @param dateFactory the factory transforming timestamps to dates
- * @param hashingErrorObservableFactory the factory used to create a hashing error observable
+ * @param hashingErrorFlowFactory the factory used to create a hashing error flow
  * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
  * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
  * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
  *
- * @see dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
- * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.NetworkInterceptor
+ * @see dev.pthomain.android.dejavu.interceptors.CacheInterceptor
  * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
  */
 class DejaVuInterceptor<E, R : Any> internal constructor(
@@ -71,13 +72,12 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
         private val logger: Logger,
         private val dateFactory: DateFactory,
         serialisationArgumentValidator: SerialisationArgumentValidator,
-        private val hashingErrorObservableFactory: () -> Observable<Any>,
+        private val hashingErrorFlowFactory: () -> Flow<Any>,
         private val networkInterceptorFactory: NetworkInterceptor.Factory<E>,
         private val cacheInterceptorFactory: CacheInterceptor.Factory<E>,
         private val responseInterceptorFactory: ResponseInterceptor.Factory<E>
-) : ObservableTransformer<Any, Any>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) where E : Throwable,
+      E : NetworkErrorPredicate {
 
     init {
         if (operation is Cache && operation.serialisation.isNotBlank())
@@ -85,26 +85,13 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
     }
 
     /**
-     * Composes Observables with the wrapped interceptors
+     * Intercepts the upstream Flow with the wrapped interceptors.
      *
      * @param upstream the call to intercept
      * @return the call intercepted with the inner interceptors
      */
-    override fun apply(upstream: Observable<Any>) =
-            composeInternal(upstream)
-
-    /**
-     * Composes Observables with the wrapped interceptors and only emits the
-     * final response (if intercepted).
-     *
-     * @param upstream the call to intercept
-     * @return the call intercepted with the inner interceptors
-     */
-    fun apply(upstream: Single<Any>) =
-            upstream.toObservable()
-                    .compose(this)
-                    .filter { (it as? HasMetadata<*, *, *>)?.cacheToken?.status?.isFinal ?: true }
-                    .firstOrError()
+    fun intercept(upstream: Flow<Any>): Flow<Any> =
+            interceptInternal(upstream)
 
     /**
      * Deals with the internal composition.
@@ -112,7 +99,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      * @param upstream the call to intercept
      * @return the call intercepted with the inner interceptors
      */
-    private fun composeInternal(upstream: Observable<Any>): Observable<Any> {
+    private fun interceptInternal(upstream: Flow<Any>): Flow<Any> {
         val requestDate = dateFactory(null)
         val hashedRequestMetadata = hasher.hash(requestMetadata)
 
@@ -134,21 +121,21 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
             if (operation is Remote) {
                 @Suppress("UNCHECKED_CAST")
                 instructionToken as RequestToken<out Remote, R>
-                upstream.map { checkOutcome(it, instructionToken) }
-                        .compose(networkInterceptorFactory.create(instructionToken))
-                        .compose(cacheInterceptor)
-                        .compose(responseInterceptor)
+                val networkIntercepted = networkInterceptorFactory.create(instructionToken)
+                        .intercept(upstream.map { checkOutcome(it, instructionToken) })
+                val cacheIntercepted = cacheInterceptor.intercept(networkIntercepted)
+                responseInterceptor.intercept(cacheIntercepted)
             } else {
-                Observable.just(LocalOperationToken<R>())
-                        .compose(cacheInterceptor)
-                        .compose(responseInterceptor)
+                val localFlow = flowOf(LocalOperationToken<R>())
+                val cacheIntercepted = cacheInterceptor.intercept(localFlow)
+                responseInterceptor.intercept(cacheIntercepted)
             }
         } else {
             logger.e(
                     this,
                     "The request metadata could not be hashed, this request won't be cached: $requestMetadata"
             )
-            hashingErrorObservableFactory()
+            hashingErrorFlowFactory()
         }
     }
 
@@ -185,10 +172,9 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
      * @param networkInterceptorFactory the factory providing NetworkInterceptors dealing with network handling
      * @param cacheInterceptorFactory the factory providing CacheInterceptors dealing with the cache
      * @param responseInterceptorFactory the factory providing ResponseInterceptors dealing with response decoration
-     * @param configuration the global cache configuration
      *
-     * @see dev.pthomain.android.dejavu.interceptors.network.NetworkInterceptor
-     * @see dev.pthomain.android.dejavu.interceptors.cache.CacheInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.NetworkInterceptor
+     * @see dev.pthomain.android.dejavu.interceptors.CacheInterceptor
      * @see dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
      */
     class Factory<E> internal constructor(
@@ -222,7 +208,7 @@ class DejaVuInterceptor<E, R : Any> internal constructor(
                         logger,
                         dateFactory,
                         serialisationArgumentValidator,
-                        { Observable.error(IllegalStateException("The request could not be hashed")) },
+                        { flow { throw IllegalStateException("The request could not be hashed") } },
                         networkInterceptorFactory,
                         cacheInterceptorFactory,
                         responseInterceptorFactory

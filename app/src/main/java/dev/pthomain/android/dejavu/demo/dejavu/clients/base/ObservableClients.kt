@@ -25,51 +25,50 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.base
 
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 interface ObservableClients {
 
     interface Data {
         // GET
 
-        fun get(): Observable<CatFactResponse>
-        fun compressed(): Observable<CatFactResponse>
-        fun encrypted(): Observable<CatFactResponse>
-        fun compressedEncrypted(): Observable<CatFactResponse>
+        fun get(): Flow<CatFactResponse>
+        fun compressed(): Flow<CatFactResponse>
+        fun encrypted(): Flow<CatFactResponse>
+        fun compressedEncrypted(): Flow<CatFactResponse>
 
         // GET freshOnly
 
-        fun freshOnly(): Observable<CatFactResponse>
-        fun freshOnlyCompressed(): Observable<CatFactResponse>
-        fun freshOnlyEncrypted(): Observable<CatFactResponse>
-        fun freshOnlyCompressedEncrypted(): Observable<CatFactResponse>
+        fun freshOnly(): Flow<CatFactResponse>
+        fun freshOnlyCompressed(): Flow<CatFactResponse>
+        fun freshOnlyEncrypted(): Flow<CatFactResponse>
+        fun freshOnlyCompressedEncrypted(): Flow<CatFactResponse>
 
         // REFRESH
 
-        fun refresh(): Observable<CatFactResponse>
-        fun refreshCompressed(): Observable<CatFactResponse>
-        fun refreshEncrypted(): Observable<CatFactResponse>
-        fun refreshCompressedEncrypted(): Observable<CatFactResponse>
+        fun refresh(): Flow<CatFactResponse>
+        fun refreshCompressed(): Flow<CatFactResponse>
+        fun refreshEncrypted(): Flow<CatFactResponse>
+        fun refreshCompressedEncrypted(): Flow<CatFactResponse>
 
-        fun refreshFreshOnly(): Observable<CatFactResponse>
-        fun refreshCompressedFreshOnly(): Observable<CatFactResponse>
-        fun refreshEncryptedFreshOnly(): Observable<CatFactResponse>
-        fun refreshCompressedEncryptedFreshOnly(): Observable<CatFactResponse>
+        fun refreshFreshOnly(): Flow<CatFactResponse>
+        fun refreshCompressedFreshOnly(): Flow<CatFactResponse>
+        fun refreshEncryptedFreshOnly(): Flow<CatFactResponse>
+        fun refreshCompressedEncryptedFreshOnly(): Flow<CatFactResponse>
 
         // OFFLINE
 
-        fun offline(): Single<CatFactResponse>
-        fun offlineFreshOnly(): Single<CatFactResponse>
+        fun offline(): Flow<CatFactResponse>
+        fun offlineFreshOnly(): Flow<CatFactResponse>
     }
 
     interface Operations {
         // CLEAR
 
-        fun clearCache(): Observable<DejaVuResult<CatFactResponse>>
+        fun clearCache(): Flow<DejaVuResult<CatFactResponse>>
 
         // INVALIDATE
 
-        fun invalidate(): Observable<DejaVuResult<CatFactResponse>>
+        fun invalidate(): Flow<DejaVuResult<CatFactResponse>>
     }
 }

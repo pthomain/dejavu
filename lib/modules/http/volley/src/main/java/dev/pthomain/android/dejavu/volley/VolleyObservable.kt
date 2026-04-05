@@ -37,36 +37,38 @@ import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.serialisation.Serialiser
 import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.Observer
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
-class VolleyObservable<E, R : Any> private constructor(
+/**
+ * Creates a Flow from a Volley request using callbackFlow.
+ */
+class VolleyFlowFactory<E, R : Any> private constructor(
         private val requestQueue: RequestQueue,
         private val serialiser: Serialiser,
         private val requestMetadata: RequestMetadata<R>
-) : Observable<Any>()
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) where E : Throwable,
+      E : NetworkErrorPredicate {
 
-    private lateinit var observer: Observer<in Any>
-
-    override fun subscribeActual(observer: Observer<in Any>) {
-        this.observer = observer
-        requestQueue.add(StringRequest(
+    /**
+     * Creates a Flow that wraps the Volley callback-based API.
+     */
+    fun asFlow(): Flow<Any> = callbackFlow {
+        val request = StringRequest(
                 Request.Method.GET,
                 requestMetadata.url,
-                Listener(::onResponse),
-                ErrorListener(::onError)
-        ))
-    }
+                Listener<String> { response ->
+                    trySend(serialiser.deserialise(response, requestMetadata.responseClass))
+                    close()
+                },
+                ErrorListener { volleyError ->
+                    close(volleyError)
+                }
+        )
+        requestQueue.add(request)
 
-    private fun onResponse(response: String) {
-        observer.onNext(serialiser.deserialise(response, requestMetadata.responseClass))
-        observer.onComplete()
-    }
-
-    private fun onError(volleyError: VolleyError) {
-        observer.onError(volleyError)
+        awaitClose { request.cancel() }
     }
 
     class Factory<E> internal constructor(
@@ -81,46 +83,44 @@ class VolleyObservable<E, R : Any> private constructor(
                 requestQueue: RequestQueue,
                 operation: Operation,
                 requestMetadata: PlainRequestMetadata<R>
-        ) = create(
+        ): Flow<DejaVuResult<R>> = create(
                 requestQueue,
                 operation,
                 true,
                 requestMetadata
-        ) as Observable<DejaVuResult<R>>
+        ) as Flow<DejaVuResult<R>>
 
         @Suppress("UNCHECKED_CAST") // This is enforced by DejaVuInterceptor
         fun <R : Any> create(
                 requestQueue: RequestQueue,
                 operation: Operation,
                 requestMetadata: PlainRequestMetadata<R>
-        ) = create(
+        ): Flow<R> = create(
                 requestQueue,
                 operation,
                 false,
                 requestMetadata
-        ) as Observable<R>
+        ) as Flow<R>
 
         private fun <R : Any> create(
                 requestQueue: RequestQueue,
                 operation: Operation,
                 asResult: Boolean,
                 requestMetadata: PlainRequestMetadata<R>
-        ) = VolleyObservable<E, R>(
-                requestQueue,
-                serialiser,
-                requestMetadata
-        ).compose(
-                Glitchy.builder(errorFactory)
-                        .withInterceptors(Interceptors.After(
-                                dejaVuInterceptorFactory.create(
-                                        asResult,
-                                        operation,
-                                        requestMetadata
-                                )
-                        ))
-                        .emitOutcome(asResult)
-                        .build()
-                        .interceptor
-        )
+        ): Flow<Any> {
+            val volleyFlow = VolleyFlowFactory<E, R>(
+                    requestQueue,
+                    serialiser,
+                    requestMetadata
+            ).asFlow()
+
+            val interceptor = dejaVuInterceptorFactory.create(
+                    asResult,
+                    operation,
+                    requestMetadata
+            )
+
+            return interceptor.intercept(volleyFlow)
+        }
     }
 }

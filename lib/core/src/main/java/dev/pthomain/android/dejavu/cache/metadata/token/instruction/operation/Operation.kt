@@ -87,7 +87,7 @@ sealed class Operation(val type: Type) {
     sealed class Local(type: Type) : Operation(type) {
         /**
          * INVALIDATE instructions invalidate the currently cached data if present and do not return any data.
-         * They should usually be used with a Completable. However, if used with a Single or Observable,
+         * When collected from a Flow,
          * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
          *
          * This operation will clear entries of the type defined in the associated RequestMetadata.
@@ -98,7 +98,7 @@ sealed class Operation(val type: Type) {
 
         /**
          * CLEAR instructions clear the cached data for this call if present and do not return any data.
-         * They should usually be used with a Completable. However, if used with a Single or Observable,
+         * When collected from a Flow,
          * they will return an empty response with cache metadata (if the response implements CacheMetadata.Holder).
          *
          * This operation will clear entries of the type defined in the associated RequestMetadata.

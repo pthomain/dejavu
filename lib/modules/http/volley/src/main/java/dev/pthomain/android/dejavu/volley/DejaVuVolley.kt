@@ -10,7 +10,7 @@ import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
 class DejaVuVolley<E> internal constructor(
-        val observableFactory : VolleyObservable.Factory<E>
+        val flowFactory : VolleyFlowFactory.Factory<E>
 ) where E : Throwable,
         E : NetworkErrorPredicate {
 

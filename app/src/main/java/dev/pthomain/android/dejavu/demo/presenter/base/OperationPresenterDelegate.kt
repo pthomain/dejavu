@@ -9,18 +9,22 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
 
 internal class OperationPresenterDelegate(
-        private val executor: (Operation) -> Observable<DejaVuResult<CatFactResponse>>
+        private val executor: (Operation) -> Flow<DejaVuResult<CatFactResponse>>
 ) {
 
-    fun getDataObservable(
+    fun getDataFlow(
             cachePriority: CachePriority,
             encrypt: Boolean,
             compress: Boolean
-    ) =
+    ): Flow<CatFactResponse> =
             executeOperation(Operation.Remote.Cache(
                     priority = cachePriority,
                     serialisation = when {
@@ -29,24 +33,25 @@ internal class OperationPresenterDelegate(
                         compress -> "compress"
                         else -> ""
                     }
-            )).flatMap {
+            )).flatMapConcat {
                 when (it) {
-                    is Response<CatFactResponse, *> -> Observable.just(it.response)
-                    is Empty<*, *, *> -> Observable.error(it.exception)
-                    is Result<*, *> -> Observable.empty()
+                    is Response<CatFactResponse, *> -> flowOf(it.response)
+                    is Empty<*, *, *> -> flow { throw it.exception }
+                    is Result<*, *> -> emptyFlow()
                 }
             }
 
-    fun getOfflineSingle(freshness: FreshnessPriority) =
-            executeOperation(
-                    Operation.Remote.Cache(priority = CachePriority.with(OFFLINE, freshness))
-            ).firstOrError().flatMap {
-                when (it) {
-                    is Response<CatFactResponse, *> -> Single.just(it.response)
-                    is Empty<*, *, *> -> Single.error(it.exception)
-                    is Result<*, *> -> Single.error(NoSuchElementException(
-                            "This operation does not emit any response: ${it.cacheToken.instruction.operation.type}")
-                    )
+    fun getOfflineFlow(freshness: FreshnessPriority): Flow<CatFactResponse> =
+            flow {
+                val result = executeOperation(
+                        Operation.Remote.Cache(priority = CachePriority.with(OFFLINE, freshness))
+                ).first()
+
+                when (result) {
+                    is Response<CatFactResponse, *> -> emit(result.response)
+                    is Empty<*, *, *> -> throw result.exception
+                    is Result<*, *> -> throw NoSuchElementException(
+                            "This operation does not emit any response: ${result.cacheToken.instruction.operation.type}")
                 }
             }
 

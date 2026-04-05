@@ -23,51 +23,9 @@
 
 package dev.pthomain.android.dejavu.di.integration.component
 
-import androidx.sqlite.db.SupportSQLiteDatabase
-import androidx.sqlite.db.SupportSQLiteOpenHelper
-import dagger.Component
-import dev.pthomain.android.dejavu.cache.CacheManager
-import dev.pthomain.android.dejavu.di.integration.module.IntegrationModule
-import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.persistence.file.FileStore
-import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
-import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.utils.Function1
-import dev.pthomain.android.dejavu.error.DejaVuError
-import dev.pthomain.android.mumbo.base.EncryptionManager
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import java.util.*
-import javax.inject.Singleton
-
-@Singleton
-@Component(modules = [IntegrationModule::class])
-internal interface IntegrationDejaVuComponent : DejaVuComponent<DejaVuError> {
-
-    fun dateFactory(): Function1<Long?, Date>
-    fun serialiser(): dev.pthomain.android.dejavu.serialisation.Serialiser
-    fun encryptionManager(): EncryptionManager?
-    fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
-    fun sqlOpenHelper(): SupportSQLiteOpenHelper?
-    fun database(): SupportSQLiteDatabase?
-    fun hasher(): Hasher
-    fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<DejaVuError>
-    fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<DejaVuError>?
-    fun filePersistenceManagerFactory(): KeyValuePersistenceManager.FileFactory<DejaVuError>
-    fun fileStoreFactory(): dev.pthomain.android.dejavu.persistence.file.FileStore.Factory<DejaVuError>
-    fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<DejaVuError>
-    fun memoryStoreFactory(): dev.pthomain.android.dejavu.persistence.memory.MemoryStore.Factory
-    fun cacheManager(): CacheManager<DejaVuError>
-    fun cacheInterceptorFactory(): CacheInterceptor.Factory<DejaVuError>
-    fun responseInterceptorFactory(): ResponseInterceptor.Factory<DejaVuError>
-    fun defaultAdapterFactory(): RxJava2CallAdapterFactory
-    fun annotationProcessor(): AnnotationProcessor<DejaVuError>
-    fun emptyResponseFactory(): EmptyResponseFactory<DejaVuError>
-    fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
-    fun persistenceManagerFactory(): PersistenceManagerFactory<DejaVuError>
-
+// TODO: This integration component needs to be rewritten after Phase 3 (DI migration).
+// It previously relied on Dagger, RxJava2CallAdapterFactory, and many types that have
+// been refactored in Phase 2. The DI system is being migrated from Koin/Dagger to manual DI.
+interface IntegrationDejaVuComponent {
+    // Placeholder - needs rewriting after DI migration
 }

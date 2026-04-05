@@ -30,12 +30,13 @@ import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.di.DateFactory
-import dev.pthomain.android.dejavu.utils.swapLambdaWhen
-import dev.pthomain.android.dejavu.utils.swapWhenDefault
+import dev.pthomain.android.dejavu.utils.waitForNetwork
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
-import io.reactivex.ObservableTransformer
-import java.util.concurrent.TimeUnit.SECONDS
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This interceptor adds a connectivity timeout to the network call, which defines a maximum
@@ -54,32 +55,39 @@ internal class NetworkInterceptor<O : Remote, R : Any, T : RequestToken<out O, R
         private val logger: Logger,
         private val dateFactory: DateFactory,
         private val requestToken: T
-) : ObservableTransformer<DejaVuResult<R>, DejaVuResult<R>>
-        where E : Throwable,
-              E : NetworkErrorPredicate {
+) where E : Throwable,
+      E : NetworkErrorPredicate {
 
     /**
-     * The composition method converting an upstream response Observable to an Observable emitting
-     * a ResponseWrapper holding the response or the converted exception.
+     * Intercepts the upstream response Flow, optionally adding request timeout
+     * and connectivity timeout behaviour.
      *
-     * @param upstream the upstream response Observable, typically as emitted by a Retrofit client.
-     * @return the composed Observable emitting a ResponseWrapper and optionally delayed for network availability
+     * @param upstream the upstream response Flow, typically as emitted by a Retrofit client.
+     * @return the intercepted Flow emitting a DejaVuResult, optionally delayed for network availability
      */
-    override fun apply(upstream: Observable<DejaVuResult<R>>) =
+    fun intercept(upstream: Flow<DejaVuResult<R>>): Flow<DejaVuResult<R>> =
             with(requestToken.instruction) {
                 if (operation is Cache) {
-                    upstream.compose {
-                        with((operation as Cache).requestTimeOutInSeconds) {
-                            if (this != null && this > 0) it.timeout(toLong(), SECONDS) //fixing timeout not working in OkHttp
-                            else it
-                        }
-                    }.compose {
-                        (operation as Cache).connectivityTimeoutInSeconds.swapWhenDefault(null)?.let { timeOut ->
-                            upstream.swapLambdaWhen(timeOut > 0L) {
-                                upstream.waitForNetwork(context, logger)
-                                        .timeout(timeOut.toLong(), SECONDS)
+                    val requestTimeOut = (operation as Cache).requestTimeOutInSeconds
+                    val connectivityTimeout = (operation as Cache).connectivityTimeoutInSeconds
+                        .let { if (it == null || it == -1) null else it }
+
+                    flow {
+                        // Handle connectivity timeout: wait for network before collecting upstream
+                        if (connectivityTimeout != null && connectivityTimeout > 0) {
+                            withTimeout(connectivityTimeout.toLong().seconds) {
+                                context.waitForNetwork()
                             }
-                        } ?: it
+                        }
+
+                        // Handle request timeout
+                        if (requestTimeOut != null && requestTimeOut > 0) {
+                            withTimeout(requestTimeOut.toLong().seconds) {
+                                emitAll(upstream)
+                            }
+                        } else {
+                            emitAll(upstream)
+                        }
                     }
                 } else upstream
             }

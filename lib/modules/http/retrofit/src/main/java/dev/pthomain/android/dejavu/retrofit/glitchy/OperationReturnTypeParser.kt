@@ -49,8 +49,7 @@ internal class OperationReturnTypeParser<E>(
 
         val methodDescription = "call returning " + getTypedName(
                 responseClass,
-                parsedDejaVuType.metadata.isDejaVuResult,
-                parsedDejaVuType.metadata.isSingle
+                parsedDejaVuType.metadata.isDejaVuResult
         )
 
         val annotationOperation = try {
@@ -95,10 +94,9 @@ internal class OperationReturnTypeParser<E>(
     }
 
     private fun getTypedName(responseClass: Class<*>,
-                             asResult: Boolean,
-                             isSingle: Boolean) =
+                             asResult: Boolean) =
             String.format(
-                    if (isSingle) "Single<%s>" else "Observable<%s>",
+                    "Flow<%s>",
                     String.format(
                             if (asResult) "DejaVuResult<%s>" else "%s",
                             responseClass.simpleName

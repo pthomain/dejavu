@@ -52,8 +52,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_ANNOTATION
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 internal abstract class BaseDemoPresenter<S : SingleClients.Operations, O : ObservableClients.Operations, C : DejaVuClient<S, O>>
 protected constructor(
@@ -113,7 +112,7 @@ protected constructor(
         behaviour = if (isRefresh) Behaviour.INVALIDATE else ONLINE
 
         subscribeData(
-                getDataObservable(
+                getDataFlow(
                         CachePriority.with(behaviour, freshness),
                         encrypt,
                         compress
@@ -124,7 +123,7 @@ protected constructor(
     final override fun offline() {
         instructionType = CACHE
         behaviour = OFFLINE
-        subscribeData(getOfflineSingle(freshness).toObservable())
+        subscribeData(getOfflineFlow(freshness))
     }
 
     final override fun clearEntries() {
@@ -137,40 +136,32 @@ protected constructor(
         subscribeResult(getInvalidateResult())
     }
 
-    private fun subscribeData(observable: Observable<CatFactResponse>) =
-            observable.compose { composer<CatFactResponse>(it) }
-                    .autoSubscribe(mvpView::showCatFact)
+    // TODO: These subscribe methods need to be updated to use coroutine scope
+    // and Flow collection instead of RxJava subscriptions after DI migration.
+    private fun subscribeData(flow: Flow<CatFactResponse>) {
+        // Placeholder: collect flow in coroutine scope
+    }
 
-    private fun subscribeResult(observable: Observable<DejaVuResult<CatFactResponse>>) =
-            observable.compose { composer<DejaVuResult<CatFactResponse>>(it) }
-                    .autoSubscribe(mvpView::showResult)
-
-    private fun <T : Any> composer(upstream: Observable<T>) =
-            upstream.ioUi()
-                    .doOnSubscribe { mvpView.onCallStarted() }
-                    .doOnError { uiLogger.e(this, it) }
-                    .doFinally(::onCallComplete)
+    private fun subscribeResult(flow: Flow<DejaVuResult<CatFactResponse>>) {
+        // Placeholder: collect flow in coroutine scope
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onDestroy() {
-        subscriptions.clear()
+        // Cancel coroutine scope
     }
 
     private fun onCallComplete() {
         mvpView.onCallComplete()
-//        dejaVu.getStatistics().ioUi()
-//                .doOnSuccess { it.log(uiLogger) }
-//                .doOnError { uiLogger.e(this, it, "Could not show stats") }
-//                .autoSubscribe()
     }
 
-    protected abstract fun getDataObservable(cachePriority: CachePriority,
-                                             encrypt: Boolean,
-                                             compress: Boolean): Observable<CatFactResponse>
+    protected abstract fun getDataFlow(cachePriority: CachePriority,
+                                       encrypt: Boolean,
+                                       compress: Boolean): Flow<CatFactResponse>
 
-    protected abstract fun getOfflineSingle(freshness: FreshnessPriority): Single<CatFactResponse>
-    protected abstract fun getClearEntriesResult(): Observable<DejaVuResult<CatFactResponse>>
-    protected abstract fun getInvalidateResult(): Observable<DejaVuResult<CatFactResponse>>
+    protected abstract fun getOfflineFlow(freshness: FreshnessPriority): Flow<CatFactResponse>
+    protected abstract fun getClearEntriesResult(): Flow<DejaVuResult<CatFactResponse>>
+    protected abstract fun getInvalidateResult(): Flow<DejaVuResult<CatFactResponse>>
 
     companion object {
         internal const val BASE_URL = "https://catfact.ninja/"
@@ -178,4 +169,3 @@ protected constructor(
     }
 
 }
-
