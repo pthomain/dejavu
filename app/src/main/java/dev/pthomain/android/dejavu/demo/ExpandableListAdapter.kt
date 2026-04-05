@@ -41,9 +41,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
-import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.*
-import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -51,7 +49,7 @@ internal class ExpandableListAdapter(context: Context)
     : BaseExpandableListAdapter() {
 
     private val inflater = context.getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-    private val simpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss")
+    private val simpleDateFormat = SimpleDateFormat("MM/dd/YY hh:mm:ss", Locale.getDefault())
 
     private val headers: LinkedList<String> = LinkedList()
     private val logs: LinkedList<String> = LinkedList()
@@ -60,8 +58,7 @@ internal class ExpandableListAdapter(context: Context)
     private var callStart = 0L
 
     fun onStart(
-            method: Method,
-            useSingle: Boolean,
+            useAnnotations: Boolean,
             operation: Operation
     ) {
         headers.clear()
@@ -70,9 +67,10 @@ internal class ExpandableListAdapter(context: Context)
 
         callStart = System.currentTimeMillis()
 
-        val header = "Retrofit Call"
+        val method = if (useAnnotations) "Annotation" else "Header"
+        val header = "Retrofit Call ($method)"
         headers.add(header)
-        children[header] = listOf(Triple(method, useSingle, operation))
+        children[header] = listOf("Operation: $operation")
 
         notifyDataSetChanged()
     }
@@ -83,7 +81,7 @@ internal class ExpandableListAdapter(context: Context)
             is Response<CatFactResponse, *> -> showResponse(result.response)
 
             is Empty<CatFactResponse, *, *> -> showHeaderAndBody(
-                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, DejaVuError>),
+                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, Glitch>),
                     "No response due to filtering or exception"
             )
 
@@ -121,7 +119,7 @@ internal class ExpandableListAdapter(context: Context)
 
         when (internalResult) {
             is InternalResult.Response -> with(internalResult.response.cacheToken) {
-                if(operation is Remote.Cache) {
+                if (operation is Remote.Cache) {
                     info.add("Cache date: " + simpleDateFormat.format(requestDate))
                 }
                 expiryDate?.also {
@@ -133,10 +131,9 @@ internal class ExpandableListAdapter(context: Context)
                     )
                 }
 
-                val catFactHeader = "Here's a" +
-                        " ${if (status.isFresh) "FRESH" else "STALE"}" +
-                        " cat fact \uD83D\uDE3A" +
-                        " (from ${if (status.isFromCache) "cache" else "network"})"
+                val freshLabel = if (status.isFresh) "FRESH" else "STALE"
+                val sourceLabel = if (status.isFromCache) "cache" else "network"
+                val catFactHeader = "Here's a $freshLabel cat fact (from $sourceLabel)"
                 headers.add(catFactHeader)
                 children[catFactHeader] = listOf(internalResult.response.fact)
             }
@@ -208,22 +205,11 @@ internal class ExpandableListAdapter(context: Context)
                     .apply {
                         val child = getChild(groupPosition, childPosition)
                         val text = findViewById<TextView>(R.id.listItem)
-                        val instruction = findViewById<InstructionView>(R.id.instruction)
+                        val instruction = findViewById<View>(R.id.instruction)
 
-                        if (child is String) {
-                            text.visibility = View.VISIBLE
-                            instruction.visibility = View.GONE
-                            text.text = child
-                        } else if (child is Triple<*, *, *>) {
-                            text.visibility = View.GONE
-                            instruction.visibility = View.VISIBLE
-                            instruction.setOperation(
-                                    child.first as Method,
-                                    child.second as Boolean,
-                                    child.third as Operation,
-                                    CatFactResponse::class.java
-                            )
-                        }
+                        text.visibility = View.VISIBLE
+                        instruction.visibility = View.GONE
+                        text.text = child?.toString() ?: ""
                     }
 
     override fun getChildrenCount(groupPosition: Int) = children[headers[groupPosition]]!!.size
@@ -239,9 +225,13 @@ internal class ExpandableListAdapter(context: Context)
     override fun isChildSelectable(groupPosition: Int,
                                    childPosition: Int) = false
 
-    private sealed class InternalResult<O : Operation, T : CacheToken<O, CatFactResponse>>(
-            delegate: HasMetadata<CatFactResponse, O, T>
-    ) : HasMetadata<CatFactResponse, O, T> by delegate {
+    @Suppress("UNCHECKED_CAST")
+    private sealed class InternalResult<O : Operation, T : CacheToken<*, CatFactResponse>>(
+            private val delegate: HasMetadata<CatFactResponse, *, T>
+    ) : HasMetadata<CatFactResponse, O, T> {
+
+        override val cacheToken: T get() = delegate.cacheToken
+        override val callDuration: CallDuration get() = delegate.callDuration
 
         class Response(
                 val response: CatFactResponse
@@ -252,7 +242,7 @@ internal class ExpandableListAdapter(context: Context)
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(result)
 
         class Empty<O : Remote>(
-                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, DejaVuError>
+                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, Glitch>
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(empty)
     }
 

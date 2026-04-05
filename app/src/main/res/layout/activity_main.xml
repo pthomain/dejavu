@@ -86,69 +86,7 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:orientation="horizontal">
-
-        <RadioGroup
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/radio_button_observable"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:labelFor="@id/radio_button_retrofit_annotation"
-                android:text="Observable" />
-
-            <RadioButton
-                android:id="@+id/radio_button_single"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:labelFor="@id/radio_button_retrofit_header"
-                android:text="Single" />
-        </RadioGroup>
-
-        <RadioGroup
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/radio_button_kotlinx"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:labelFor="@id/radio_button_kotlinx"
-                android:text="Kotlinx" />
-        </RadioGroup>
-
-    </LinearLayout>
-
+    <!-- Retrofit method: Annotation vs Header -->
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="42dp"
@@ -184,6 +122,7 @@
 
     </RadioGroup>
 
+    <!-- Persistence: SQLite vs Memory -->
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="42dp"
@@ -191,23 +130,10 @@
         android:orientation="horizontal">
 
         <RadioButton
-            android:id="@+id/radio_button_file"
+            android:id="@+id/radio_button_database"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:labelFor="@id/radio_button_file"
-            android:text="File storage" />
-
-        <RadioButton
-            android:id="@+id/radio_button_database"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
 
         <TextView
             android:layout_width="0dp"
@@ -232,6 +158,7 @@
 
     </RadioGroup>
 
+    <!-- Options: Fresh only, Encrypt -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -250,19 +177,6 @@
             android:layout_weight="1"
             android:labelFor="@id/checkbox_fresh_only"
             android:text="Fresh only" />
-
-        <CheckBox
-            android:id="@+id/checkbox_compress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="false" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:labelFor="@id/checkbox_compress"
-            android:text="Compress" />
 
         <CheckBox
             android:id="@+id/checkbox_encrypt"

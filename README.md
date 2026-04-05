@@ -1,106 +1,128 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/21c1e62561044bf49195b21e8ce3aa02)](https://app.codacy.com/manual/pthomain/dejavu?utm_source=github.com&utm_medium=referral&utm_content=pthomain/dejavu&utm_campaign=Badge_Grade_Dashboard)[![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu) [![Known Vulnerabilities](https://snyk.io/test/github/pthomain/dejavu/badge.svg)](https://snyk.io/test/github/pthomain/dejavu)
+# DejaVu 3.0.0
 
-DejaVu provides a locally controlled cache for API responses. It is used to:
+Dead-simple, transparent API caching for Android with Kotlin Coroutines and Flow.
 
-- reduce the need for unnecessary network calls
-- speed up UI loading by displaying previous data while new data is being fetched
-- provide offline data when the network is unavailable
+## Features
 
-It is fully customisable and supports compression / encryption. 
+- **Transparent caching** -- Just swap the CallAdapter factory (Retrofit) or install the plugin (Ktor)
+- **Flow-based** -- Emits stale-then-fresh data as a reactive Flow
+- **Multiple persistence backends** -- Room (SQLite) for persistent cache, in-memory for session cache
+- **Annotation-driven** -- `@Cache`, `@DoNotCache`, `@Invalidate`, `@Clear`
+- **Encryption** -- Optional AES-256-GCM encryption via Google Tink
+- **Custom error handling** -- Pluggable `ErrorFactory` with `Outcome` sealed class
+- **Minimal setup** -- Builder pattern with sensible defaults
 
-What sets it apart is that it is designed to work with as little setup as possible and does not require any refactoring of your existing code.
-You can start caching your Retrofit calls simply by adding an annotation to the existing client's methods without needing to change their signature or any call handling code. 
+## Quick Start
 
-Alternatively, you can leave your clients' code entirely untouched and decide which call to cache be implementing a cache predicate which will intercept any request and let you decide ad hoc caching rules before the network call is made.
-All requests are cached uniquely based on the query parameters and response model class. The cache can also be invalidated or cleared on a per request basis (taking the original parameters into account for request uniqueness).
-
-This library's goal is to introduce no side effect to the existing code and it was designed to be added or removed completely transparently.
-This is achieved by swapping the default RxJava call adapter factory on Retrofit with the one the library provides, which constrains all the needed changes to the Retrofit setup.
-
-There is support for customisable encryption (choice of JetPack Security on 23+, Facebook Conceal on 16+ or any preferred custom implementation) and Snappy compression (https://github.com/google/snappy).
-
-Code example
------------------
-
-Set the library up, here with encryption:
+### Retrofit
 
 ```kotlin
-val dejaVu = DejaVu.builder()
-                   .encryption(if (SDK_INT >= 23) Mumbo::tink else Mumbo::conceal)
-                   .build(context, GsonSerialiser(gson))
-```
+// 1. Build DejaVu
+val dejaVu = DejaVu.defaultBuilder(context).build()
 
-Update your Retrofit setup:
+// 2. Build DejaVu Retrofit
+val dejaVuRetrofit = DejaVu.defaultBuilder(context)
+    .extend(DejaVuRetrofit.extension())
+    .build()
 
-```kotlin
+// 3. Add to Retrofit
 val retrofit = Retrofit.Builder()
-                     /** Usual setup goes here **/
-                    // Swap your default RxJava call adapter factory
-                    .addCallAdapterFactory(dejaVu.retrofitCallAdapterFactory) 
-                    .build()
+    .baseUrl("https://api.example.com/")
+    .addCallAdapterFactory(dejaVuRetrofit.callAdapterFactory)
+    .build()
+
+// 4. Annotate your API
+interface MyApi {
+    @Cache(durationInSeconds = 300)
+    @GET("users/{id}")
+    fun getUser(@Path("id") id: String): Flow<DejaVuResult<User>>
+}
 ```
 
-Update your existing Retrofit client by adding an annotation to the call you want to cache:
+### Ktor
 
 ```kotlin
-interface UserClient {
+val dejaVu = DejaVu.defaultBuilder(context).build()
 
-    @GET("users")
-    @Cache(durationInSeconds = 300) // DejaVu cache annotation 
-    fun getUsers(
-        status: UserStatus = ACTIVE,
-        limit : Int = 20    
-    ): Single<UserResponse>
-
+val client = HttpClient(OkHttp) {
+    install(DejaVuPlugin) {
+        interceptorFactory = dejaVu.interceptorFactory
+    }
 }
+
+// Use cache DSL on requests
+val user: DejaVuResult<User> = client.get("/users/1") {
+    cache(duration = 5.minutes, priority = FRESH_PREFERRED)
+}.body()
 ```
 
-Retrofit support
-----------------
+## Cache Operations
 
-This library provides an adapter to be used during the setup of Retrofit which handles the cache transparently.
-This means caching can be added to existing codebases using Retrofit/RxJava with minimal effort and almost no refactoring.
+| Annotation | Description |
+|---|---|
+| `@Cache(durationInSeconds)` | Cache response for specified duration |
+| `@DoNotCache` | Skip caching for this call |
+| `@Invalidate` | Mark cached data as stale |
+| `@Clear` | Remove cached entries |
 
-Volley / other networking lib support
--------------------------------------
+## Cache Priority
 
-It is possible to use the cache interceptor with other networking libs, take a look at the demo app for an example implementation for Volley.
+- `FRESH_ONLY` -- Only return fresh data, wait for network
+- `FRESH_PREFERRED` -- Return fresh if available, stale as fallback
+- `STALE_ACCEPTED` -- Return stale immediately, then fresh from network
+- `OFFLINE` -- Only return cached data, never hit network
 
-The documentation below will refer exclusively to the Retrofit implementation.
+## Persistence
 
-Serialisation support
----------------------
+```kotlin
+// Room (default) -- persistent across app restarts
+DejaVu.defaultBuilder(context)
+    .withPersistence(SqlitePersistence(context))
+    .build()
 
-You can provide your own serialisation by implementing the `Serialiser` interface. This needs to be the same implementation that you use to handle your API models.
-
-Coroutines support
-------------------
-
-Coroutines are not currently supported but are on the roadmap. However, this library is using RxJava and coroutine support will still require RxJava as a dependency.
-
-Adding the dependency [![](https://jitpack.io/v/pthomain/dejavu.svg)](https://jitpack.io/#pthomain/dejavu)
----------------------
-
-To add the library to your project, add the following block to your root gradle file:
-
-```
-allprojects {
- repositories {
-    jcenter()
-    maven { url "https://jitpack.io" }
- }
-}
- ```
- 
- Then add the following dependency to your module:
- 
- ```
- dependencies {
-    compile 'com.github.pthomain:dejavu:2.1.0-beta1'
-}
+// Memory -- session-only, lost on app termination
+DejaVu.defaultBuilder(context)
+    .withPersistence(MemoryPersistence())
+    .build()
 ```
 
-Documentation
--------------
+## Encryption
 
-Coming soon...
+```kotlin
+DejaVu.defaultBuilder(context)
+    .withEncryption(Encryption(context)) // Tink AES-256-GCM
+    .build()
+```
+
+## Modules
+
+| Module | Artifact | Description |
+|---|---|---|
+| `lib:core` | `dejavu-core` | Core caching logic |
+| `lib:modules:http:retrofit` | `dejavu-retrofit` | Retrofit integration |
+| `lib:modules:http:ktor` | `dejavu-ktor` | Ktor client plugin |
+| `lib:modules:persistence:sqlite` | `dejavu-persistence-room` | Room persistence |
+| `lib:modules:persistence:memory` | `dejavu-persistence-memory` | In-memory persistence |
+| `lib:modules:serialisation:kotlinx` | `dejavu-serialisation-kotlinx` | kotlinx.serialization |
+| `lib:modules:serialisation:decorators:encryption` | `dejavu-encryption` | Tink encryption |
+
+## Migration from v2
+
+- RxJava `Observable<T>` -> Kotlin `Flow<T>`
+- `Single<T>` -> `Flow<T>` (single emission)
+- Koin DI -> `DejaVu.defaultBuilder(context).build()`
+- Gson/Moshi -> kotlinx.serialization (data classes need `@Serializable`)
+- Volley -> Use Ktor module instead
+- File persistence -> Use Room (SQLite) module
+- Mumbo encryption -> Tink encryption (automatic migration)
+- Compression decorator -> Removed
+
+## Requirements
+
+- Android API 24+ (Nougat)
+- Kotlin 2.1+
+- Coroutines 1.10+
+
+## License
+
+Apache License 2.0
