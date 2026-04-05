@@ -38,8 +38,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Ca
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Kotlinx
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
@@ -67,8 +66,7 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
     private val databaseRadio by lazy { findViewById<View>(R.id.radio_button_database)!! }
     private val memoryRadio by lazy { findViewById<View>(R.id.radio_button_memory)!! }
 
-    private val gsonRadio by lazy { findViewById<View>(R.id.radio_button_gson)!! }
-    private val moshiRadio by lazy { findViewById<View>(R.id.radio_button_moshi)!! }
+    private val kotlinxRadio by lazy { findViewById<View>(R.id.radio_button_kotlinx)!! }
 
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
@@ -117,8 +115,7 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
         observableRadio.setOnClickListener { presenter.useSingle = false }
         singleRadio.setOnClickListener { presenter.useSingle = true }
 
-        gsonRadio.setOnClickListener { presenter.serialiserType = Gson }
-        moshiRadio.setOnClickListener { presenter.serialiserType = Moshi }
+        kotlinxRadio.setOnClickListener { presenter.serialiserType = Kotlinx }
 
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }

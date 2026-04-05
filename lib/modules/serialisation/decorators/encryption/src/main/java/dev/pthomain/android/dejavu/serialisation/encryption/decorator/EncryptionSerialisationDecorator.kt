@@ -26,16 +26,15 @@ package dev.pthomain.android.dejavu.serialisation.encryption.decorator
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
-import dev.pthomain.android.mumbo.base.EncryptionManager
+import dev.pthomain.android.dejavu.serialisation.encryption.TinkEncryptionManager
 
 /**
- * Optional encryption step of the serialisation process
+ * Optional encryption step of the serialisation process using Google Tink.
  *
- * @param encryptionManager an instance of EncryptionManager
- * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.Builder.withEncryption
+ * @param encryptionManager an instance of TinkEncryptionManager
  */
 internal class EncryptionSerialisationDecorator(
-        private val encryptionManager: EncryptionManager
+        private val encryptionManager: TinkEncryptionManager
 ) : SerialisationDecorator {
 
     override val uniqueName = "ENCRYPT"
@@ -43,8 +42,8 @@ internal class EncryptionSerialisationDecorator(
     /**
      * Implements optional encryption during the serialisation process.
      *
-     * @param responseWrapper the wrapper associated with the payload being serialised
-     * @param metadata the overall metadata associated with the current serialisation
+     * @param responseClass the class of the response being serialised
+     * @param operation the cache operation
      * @param payload the payload being serialised
      * @return the encrypted payload
      * @throws SerialisationException in case this encryption step failed
@@ -54,20 +53,19 @@ internal class EncryptionSerialisationDecorator(
             responseClass: Class<R>,
             operation: Cache,
             payload: ByteArray
-    ) =
-            with(encryptionManager) {
-                when {
-                    isEncryptionAvailable -> encryptBytes(payload, DATA_TAG)
-                    else -> null
-                } ?: throw SerialisationException("Could not encrypt data")
+    ): ByteArray =
+            try {
+                encryptionManager.encrypt(payload, DATA_TAG.toByteArray())
+            } catch (e: Exception) {
+                throw SerialisationException("Could not encrypt data", e)
             }
 
     /**
      * Implements optional decryption during the deserialisation process.
      *
-     * @param instructionToken the request's instruction token associated with the payload being deserialised
-     * @param metadata the overall metadata associated with the current serialisation
-     * @param payload the payload being serialised
+     * @param responseClass the class of the response being deserialised
+     * @param operation the cache operation
+     * @param payload the payload being deserialised
      * @return the decrypted payload
      * @throws SerialisationException in case this decryption step failed
      */
@@ -76,16 +74,14 @@ internal class EncryptionSerialisationDecorator(
             responseClass: Class<R>,
             operation: Cache,
             payload: ByteArray
-    ) =
-            with(encryptionManager) {
-                when {
-                    isEncryptionAvailable -> decryptBytes(payload, DATA_TAG)
-                    else -> null
-                } ?: throw SerialisationException("Could not decrypt data")
+    ): ByteArray =
+            try {
+                encryptionManager.decrypt(payload, DATA_TAG.toByteArray())
+            } catch (e: Exception) {
+                throw SerialisationException("Could not decrypt data", e)
             }
 
     companion object {
         internal const val DATA_TAG = "DATA_TAG"
     }
-
 }

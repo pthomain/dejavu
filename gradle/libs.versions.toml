@@ -21,7 +21,6 @@ androidxTestRules = "1.6.1"
 androidxTestJunit = "1.2.1"
 
 # Serialization
-moshi = "1.15.2"
 kotlinxSerialization = "1.7.3"
 
 # Networking
@@ -42,24 +41,8 @@ turbine = "1.2.0"
 # TODO: Remove in Phase 3 - Volley being removed
 volley = "1.1.1"
 
-# TODO: Remove in Phase 3 - Gson being replaced with kotlinx.serialization
+# TODO: Remove - Volley being removed
 gson = "2.8.6"
-
-# TODO: Remove in Phase 4 - Snappy compression being removed
-snappy = "0.4"
-
-# TODO: Remove in Phase 3 - Mumbo being replaced with Tink
-mumbo = "2.8"
-
-# TODO: Remove in Phase 3 - FlipTables being removed
-fliptables = "1.1.0"
-
-
-# TODO: Remove in Phase 4 - Requery being replaced with Room
-requery = "3.25.3"
-
-# TODO: Remove in Phase 3 - JitPack dependency
-jitpack = "1.0"
 
 [libraries]
 # Kotlin
@@ -86,8 +69,6 @@ androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidxT
 androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTestJunit" }
 
 # Serialization
-moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 
 # Networking
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
@@ -117,24 +98,8 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 # TODO: Remove in Phase 3 - Volley being removed
 volley = { module = "com.android.volley:volley", version.ref = "volley" }
 
-# TODO: Remove in Phase 3 - Gson being replaced with kotlinx.serialization
+# TODO: Remove - Gson kept temporarily for Retrofit converter
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-
-# TODO: Remove in Phase 4 - Snappy compression being removed
-snappy = { module = "org.iq80.snappy:snappy", version.ref = "snappy" }
-
-# TODO: Remove in Phase 3 - Mumbo being replaced with Tink
-mumbo = { module = "dev.pthomain:mumbo", version.ref = "mumbo" }
-
-# TODO: Remove in Phase 3 - FlipTables being removed
-fliptables = { module = "com.jakewharton.fliptables:fliptables", version.ref = "fliptables" }
-
-
-# TODO: Remove in Phase 4 - Requery being replaced with Room
-requery = { module = "io.requery:sqlite-android", version.ref = "requery" }
-
-# TODO: Remove in Phase 3 - JitPack dependency
-jitpack = { module = "com.github.jitpack:gradle-simple", version.ref = "jitpack" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

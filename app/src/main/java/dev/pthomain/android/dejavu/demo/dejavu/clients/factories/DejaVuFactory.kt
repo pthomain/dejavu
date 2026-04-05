@@ -24,8 +24,7 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
-import android.os.Build.VERSION.SDK_INT
-import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
@@ -35,40 +34,46 @@ import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import dev.pthomain.android.dejavu.serialisation.compression.Compression
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
 import dev.pthomain.android.dejavu.volley.DejaVuVolley
-import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import dev.pthomain.android.mumbo.Mumbo
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 
 class DejaVuFactory(
         private val logger: Logger,
         private val context: Context
 ) {
 
-    private val compressionDecorator = Compression(logger).serialisationDecorator
-
-    private val encryptionDecorator = Mumbo.builder()
-            .withContext(context)
-            .withLogger(logger)
-            .build()
-            .run { Encryption(if (SDK_INT >= 23) tink() else conceal()) }
-            .serialisationDecorator
+    private val encryptionDecorator = Encryption(context).serialisationDecorator
 
     var encrypt = false
     var compress = false
 
-    private val decorators = listOf(compressionDecorator, encryptionDecorator)
+    private val decorators = listOf(encryptionDecorator)
 
-    private fun persistenceComponentProvider(
+    private fun persistenceModuleProvider(
             persistence: PersistenceType,
             serialiser: Serialiser
     ) =
             when (persistence) {
-                FILE -> FilePersistence(decorators, serialiser)
-                MEMORY -> MemoryPersistence(decorators, serialiser)
-                SQLITE -> SqlitePersistence(decorators, serialiser)
+                FILE -> filePersistenceModule(serialiser)
+                MEMORY -> memoryPersistenceModule(serialiser)
+                SQLITE -> sqlitePersistenceModule(serialiser)
             }
+
+    private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
+            decorators,
+            serialiser
+    )
+
+    private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
+            decorators,
+            serialiser
+    )
+
+    private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
+            decorators,
+            serialiser
+    )
 
     enum class PersistenceType {
         FILE,
@@ -85,7 +90,7 @@ class DejaVuFactory(
             DejaVu.builder(
                     context,
                     errorFactoryType.errorFactory,
-                    persistenceComponentProvider(
+                    persistenceModuleProvider(
                             persistence,
                             serialiserType.serialiser
                     ),

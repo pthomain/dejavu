@@ -23,13 +23,12 @@
 
 package dev.pthomain.android.dejavu.serialisation.encryption
 
+import android.content.Context
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.encryption.decorator.EncryptionSerialisationDecorator
-import dev.pthomain.android.mumbo.base.EncryptionManager
 
-class Encryption(encryptionManager: EncryptionManager) : SerialisationDecorator.Provider {
+class Encryption(context: Context) : SerialisationDecorator.Provider {
 
     override val serialisationDecorator: SerialisationDecorator =
-            EncryptionSerialisationDecorator(encryptionManager)
-
+            EncryptionSerialisationDecorator(TinkEncryptionManager(context))
 }

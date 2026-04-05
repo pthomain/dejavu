@@ -21,23 +21,34 @@
  *
  */
 
-package dev.pthomain.android.dejavu.test
+package dev.pthomain.android.dejavu.serialisation.kotlinx
 
-import com.google.gson.Gson
 import dev.pthomain.android.dejavu.serialisation.SimpleSerialiser
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 /**
- * Custom Serialiser implementation wrapping Gson, used for tests only.
- * Production code uses KotlinxSerialiser.
+ * Custom Serialiser implementation using kotlinx.serialization.
+ *
+ * Uses reflective serializer lookup via [serializer] so that callers
+ * can keep passing a plain [Class] reference.
  */
-class GsonSerialiser(private val gson: Gson) : SimpleSerialiser() {
+class KotlinxSerialiser(
+    private val json: Json = Json { ignoreUnknownKeys = true }
+) : SimpleSerialiser() {
 
-    override fun <O : Any> serialise(target: O) =
-            gson.toJson(target)!!
+    @Suppress("UNCHECKED_CAST")
+    override fun <O : Any> serialise(target: O): String {
+        val serializer = serializer(target.javaClass)
+        return json.encodeToString(serializer, target)
+    }
 
     override fun <O> deserialise(
-            serialised: String,
-            targetClass: Class<O>
-    ) = gson.fromJson(serialised, targetClass)!!
-
+        serialised: String,
+        targetClass: Class<O>
+    ): O {
+        val serializer = serializer(targetClass)
+        @Suppress("UNCHECKED_CAST")
+        return json.decodeFromString(serializer, serialised) as O
+    }
 }

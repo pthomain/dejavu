@@ -45,11 +45,11 @@ import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
 import dev.pthomain.android.dejavu.test.network.model.User
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
-import dev.pthomain.android.dejavu.error.DejaVuError
-import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
-import dev.pthomain.android.dejavu.error.DejaVuError
-import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
-import dev.pthomain.android.mumbo.Mumbo
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
+import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
+// Mumbo removed -- encryption now uses Tink (tested separately)
 import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -77,14 +77,14 @@ internal abstract class BaseIntegrationTest<T : Any>(
     protected lateinit var cacheComponent: IntegrationDejaVuComponent
     protected lateinit var target: T
 
-    private lateinit var dejaVu: dev.pthomain.android.DejaVu<DejaVuError>
+    private lateinit var dejaVu: dev.pthomain.android.DejaVu<Glitch>
 
     protected open val configuration = dev.pthomain.android.DejaVu.Configuration(
             ApplicationProvider.getApplicationContext(),
             mock(),
-            DejaVuErrorFactory(),
+            GlitchFactory(),
             GsonSerialiser(Gson()),
-            Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
+            null, // encryption manager — Tink tested separately
             true,
             null,
             { _ -> null },
@@ -99,7 +99,7 @@ internal abstract class BaseIntegrationTest<T : Any>(
         }
     }
 
-    protected fun setUpWithConfiguration(configuration: dev.pthomain.android.DejaVu.Configuration<DejaVuError>) {
+    protected fun setUpWithConfiguration(configuration: dev.pthomain.android.DejaVu.Configuration<Glitch>) {
         cacheComponent = DaggerIntegrationDejaVuComponent.builder()
                 .integrationDejaVuModule(IntegrationModule(configuration))
                 .build()
@@ -172,8 +172,8 @@ internal abstract class BaseIntegrationTest<T : Any>(
                 }
             }
 
-    protected fun assertResponse(stubbedResponse: MockClient.ResponseWrapper<Cache, ResponseToken<Cache>, DejaVuError>,
-                                 actualResponse: MockClient.ResponseWrapper<*, *, DejaVuError>?,
+    protected fun assertResponse(stubbedResponse: MockClient.ResponseWrapper<Cache, ResponseToken<Cache>, Glitch>,
+                                 actualResponse: MockClient.ResponseWrapper<*, *, Glitch>?,
                                  expectedStatus: CacheStatus,
                                  fetchDate: Date = NOW,
                                  cacheDate: Date? = NOW,

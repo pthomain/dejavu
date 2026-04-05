@@ -49,7 +49,7 @@ import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.P
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.ErrorFactoryType.Default
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Kotlinx
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.RETROFIT_ANNOTATION
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +66,7 @@ protected constructor(
     private var instructionType = CACHE
     private var behaviour = ONLINE
 
-    override var serialiserType: SerialiserType = Gson
+    override var serialiserType: SerialiserType = Kotlinx
     protected var errorFactoryType: ErrorFactoryType<*> = Default
 
     final override var persistence = FILE
