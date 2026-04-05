@@ -21,29 +21,35 @@
  *
  */
 
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'dev.pthomain.dejavu'
+
+android {
+    namespace 'dev.pthomain.android.dejavu.ktor'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 35
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
     }
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
-}
+dependencies {
+    compileOnly project(':lib:core')
 
-include ':lib:core'
-include ':lib:modules:http:retrofit'
-include ':lib:modules:http:ktor'
-include ':lib:modules:serialisation'
-include ':lib:modules:serialisation:kotlinx'
-include ':lib:modules:serialisation:decorators:encryption'
-include ':lib:modules:persistence:memory'
-include ':lib:modules:persistence:sqlite'
-include ':app'
+    implementation appDependencies.ktorClientCore
+    implementation appDependencies.ktorClientContentNegotiation
+    implementation appDependencies.ktorSerializationJson
+    implementation appDependencies.kotlinCoroutines
+}

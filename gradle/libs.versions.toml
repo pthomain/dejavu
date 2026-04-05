@@ -38,11 +38,6 @@ mockitoKotlin = "5.4.0"
 robolectric = "4.14.1"
 turbine = "1.2.0"
 
-# TODO: Remove in Phase 3 - Volley being removed
-volley = "1.1.1"
-
-# TODO: Remove - Volley being removed
-gson = "2.8.6"
 
 [libraries]
 # Kotlin
@@ -72,7 +67,6 @@ androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "andro
 
 # Networking
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
@@ -95,11 +89,6 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
-# TODO: Remove in Phase 3 - Volley being removed
-volley = { module = "com.android.volley:volley", version.ref = "volley" }
-
-# TODO: Remove - Gson kept temporarily for Retrofit converter
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

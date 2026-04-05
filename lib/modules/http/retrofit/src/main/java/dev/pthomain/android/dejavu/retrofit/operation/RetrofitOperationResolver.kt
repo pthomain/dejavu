@@ -23,13 +23,13 @@
 
 package dev.pthomain.android.dejavu.retrofit.operation
 
-import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.toOperation
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver.Method.*
-import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import okhttp3.Request
 import retrofit2.Call
 
@@ -38,42 +38,45 @@ import retrofit2.Call
  */
 const val DejaVuHeader = "DejaVuHeader"
 
+/**
+ * Resolves the cache operation for a Retrofit call.
+ *
+ * The priority for cache operations is, in decreasing order:
+ * - operations returned by the cache predicate for the given RequestMetadata
+ * - operations defined in the request's DejaVu header
+ * - operations annotated on the request's call
+ *
+ * @param responseClass the response class for this call
+ * @param requestBodyConverter converts request bodies to Strings for hashing
+ * @param operationPredicate predicate that can override the operation for any request
+ * @param annotationOperation the operation derived from annotations
+ * @param methodDescription a description of the method for logging
+ * @param logger the logger
+ */
 internal class RetrofitOperationResolver<E, R> private constructor(
-        private val responseClass: Class<R>,
-        private val requestBodyConverter: (Request) -> String?,
-        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
-        private val annotationOperation: Operation?,
-        private val methodDescription: String,
-        private val logger: Logger
+    private val responseClass: Class<R>,
+    private val requestBodyConverter: (Request) -> String?,
+    private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+    private val annotationOperation: Operation?,
+    private val methodDescription: String,
+    private val logger: Logger
 ) where E : Throwable,
-        E : NetworkErrorPredicate {
+      E : NetworkErrorPredicate {
 
     /**
      * Resolves the cache operation if present.
-     * The priority for cache operations is, in decreasing order:
-     * - operations returned by the cache predicate for the given RequestMetadata
-     * - operations defined in the request's DejaVu header
-     * - operations annotated on the request's call
-     *
-     * N.B: if a call operation is defined using more than one method, only the operation
-     * provided via the method with the highest priority is used. The other operations are ignored.
-     * For instance, if a call is annotated with a @Cache annotation but the cache predicate
-     * returns a DoNotCache operation for its associated request metadata, then the DoNotCache
-     * operation takes precedence.
-     * @see DejaVu.Configuration.Builder.withOperationPredicate()
      */
     fun getResolvedOperation(call: Call<Any>): ResolvedOperation<R>? {
         val requestMetadata = PlainRequestMetadata(
-                responseClass,
-                call.request().url().toString(),
-                requestBodyConverter(call.request())
+            responseClass,
+            call.request().url().toString(),
+            requestBodyConverter(call.request())
         )
 
         val operationToMethod: Pair<Operation, Method>? =
-                getPredicateOperation(requestMetadata)?.let { it to PREDICATE }
-                        ?: getHeaderOperation(call)?.let { it to HEADER }
-                        ?: getAnnotationOperation()?.let { it to ANNOTATION }
-                        ?: null as Pair<Operation, Method>?
+            getPredicateOperation(requestMetadata)?.let { it to PREDICATE }
+                ?: getHeaderOperation(call)?.let { it to HEADER }
+                ?: getAnnotationOperation()?.let { it to ANNOTATION }
 
         return if (operationToMethod != null) {
             val (operation, method) = operationToMethod
@@ -84,35 +87,26 @@ internal class RetrofitOperationResolver<E, R> private constructor(
                 ANNOTATION -> "the call's cache annotation"
             }.let {
                 logger.d(
-                        this,
-                        "Found the following operation using $it for $methodDescription: $operation"
+                    this,
+                    "Found the following operation using $it for $methodDescription: $operation"
                 )
             }
 
             ResolvedOperation(operation, method, requestMetadata)
         } else {
             logger.d(
-                    this,
-                    "No cache operation found for $methodDescription,"
-                            + " the call will not be intercepted by DejaVu."
+                this,
+                "No cache operation found for $methodDescription, the call will proceed without caching."
             )
             null
         }
     }
 
-    /**
-     * @param requestMetadata the RequestMetadata for the current call
-     * @return the operation returned by the cache predicate for the given RequestMetadata, if any.
-     */
     private fun getPredicateOperation(requestMetadata: RequestMetadata<R>): Operation.Remote? {
         logger.d(this, "Checking cache predicate on $methodDescription")
         return operationPredicate(requestMetadata)
     }
 
-    /**
-     * @param call the current Retrofit call
-     * @return the operation deserialised from the call's DejavuHeader, if present and valid.
-     */
     private fun getHeaderOperation(call: Call<Any>): Operation? {
         logger.d(this, "Checking cache header on $methodDescription")
         val header = call.request().header(DejaVuHeader) ?: return null
@@ -123,19 +117,16 @@ internal class RetrofitOperationResolver<E, R> private constructor(
             null
         }
 
-        if(operation == null){
+        if (operation == null) {
             logger.e(
-                    this,
-                    "Found a header cache operation on $methodDescription but it could not be deserialised: $header"
+                this,
+                "Found a header cache operation on $methodDescription but it could not be deserialised: $header"
             )
         }
 
         return operation
     }
 
-    /**
-     * @return the call's annotated operation if present.
-     */
     private fun getAnnotationOperation(): Operation? {
         logger.d(this, "Checking the call's annotations on $methodDescription")
         return annotationOperation
@@ -148,29 +139,29 @@ internal class RetrofitOperationResolver<E, R> private constructor(
     }
 
     data class ResolvedOperation<R>(
-            val operation: Operation,
-            val method: Method,
-            val requestMetadata: PlainRequestMetadata<R>
+        val operation: Operation,
+        val method: Method,
+        val requestMetadata: PlainRequestMetadata<R>
     )
 
     internal class Factory<E>(
-            private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
-            private val requestBodyConverter: (Request) -> String?,
-            private val logger: Logger
+        private val operationPredicate: (RequestMetadata<*>) -> Operation.Remote?,
+        private val requestBodyConverter: (Request) -> String?,
+        private val logger: Logger
     ) where E : Throwable,
-            E : NetworkErrorPredicate {
+          E : NetworkErrorPredicate {
 
         fun <R> create(
-                methodDescription: String,
-                responseClass: Class<R>,
-                annotationOperation: Operation?
+            methodDescription: String,
+            responseClass: Class<R>,
+            annotationOperation: Operation?
         ) = RetrofitOperationResolver<E, R>(
-                responseClass,
-                requestBodyConverter,
-                operationPredicate,
-                annotationOperation,
-                methodDescription,
-                logger
+            responseClass,
+            requestBodyConverter,
+            operationPredicate,
+            annotationOperation,
+            methodDescription,
+            logger
         )
     }
 }

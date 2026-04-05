@@ -89,25 +89,19 @@ android {
 dependencies {
     implementation project(':lib:core')
     implementation project(':lib:modules:http:retrofit')
-    implementation project(':lib:modules:http:volley')
+    implementation project(':lib:modules:http:ktor')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
-    implementation project(':lib:modules:serialisation:gson')
-    implementation project(':lib:modules:serialisation:moshi')
-    implementation project(':lib:modules:serialisation:decorators:compression')
+    implementation project(':lib:modules:serialisation:kotlinx')
     implementation project(':lib:modules:serialisation:decorators:encryption')
 
     implementation libs.androidx.multidex
 
 
-    implementation libs.volley
-
     implementation libs.okhttp
     implementation libs.okhttp.logging
 
-    implementation libs.retrofit.converter.gson
-    implementation libs.moshi
-    implementation libs.moshi.kotlin
+    implementation libs.kotlinx.serialization.json
 
     implementation libs.androidx.appcompat
     implementation libs.androidx.browser

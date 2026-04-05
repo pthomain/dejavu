@@ -24,39 +24,54 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
+import android.os.Build.VERSION.SDK_INT
 import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.demo.dejavu.DejaVuRetrofitClient
-import dev.pthomain.android.dejavu.demo.dejavu.DejaVuVolleyClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
+import dev.pthomain.android.dejavu.persistence.file.di.FilePersistence
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.Serialiser
+import dev.pthomain.android.dejavu.serialisation.compression.Compression
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
-import dev.pthomain.android.dejavu.volley.DejaVuVolley
 import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.mumbo.Mumbo
 
 class DejaVuFactory(
         private val logger: Logger,
         private val context: Context
 ) {
 
-    private val encryptionDecorator = Encryption(context).serialisationDecorator
+    private val compressionDecorator = Compression(logger).serialisationDecorator
+
+    private val encryptionDecorator = Mumbo.builder()
+            .withContext(context)
+            .withLogger(logger)
+            .build()
+            .run { Encryption(if (SDK_INT >= 23) tink() else conceal()) }
+            .serialisationDecorator
 
     var encrypt = false
     var compress = false
 
-    private val decorators = listOf(encryptionDecorator)
+    private val decorators = listOf(compressionDecorator, encryptionDecorator)
 
     private fun persistenceModuleProvider(
             persistence: PersistenceType,
             serialiser: Serialiser
     ) =
             when (persistence) {
+                FILE -> filePersistenceModule(serialiser)
                 MEMORY -> memoryPersistenceModule(serialiser)
                 SQLITE -> sqlitePersistenceModule(serialiser)
             }
+
+    private fun filePersistenceModule(serialiser: Serialiser) = FilePersistence(
+            decorators,
+            serialiser
+    )
 
     private fun memoryPersistenceModule(serialiser: Serialiser) = MemoryPersistence(
             decorators,
@@ -64,14 +79,12 @@ class DejaVuFactory(
     )
 
     private fun sqlitePersistenceModule(serialiser: Serialiser) = SqlitePersistence(
-            context,
             decorators,
-            serialiser,
-            logger,
-            TODO("dateFactory needed")
+            serialiser
     )
 
     enum class PersistenceType {
+        FILE,
         MEMORY,
         SQLITE
     }
@@ -104,18 +117,6 @@ class DejaVuFactory(
                     errorFactoryType
             ).extend(DejaVuRetrofit.extension<E>()).build()
 
-    private fun <E> dejaVuVolley(
-            persistence: PersistenceType,
-            serialiserType: SerialiserType,
-            errorFactoryType: ErrorFactoryType<E>
-    ) where E : Throwable,
-            E : NetworkErrorPredicate =
-            dejaVuBuilder(
-                    persistence,
-                    serialiserType,
-                    errorFactoryType
-            ).extend(DejaVuVolley.extension<E>()).build()
-
     fun <E> createRetrofit(
             persistence: PersistenceType,
             serialiserType: SerialiserType,
@@ -124,21 +125,6 @@ class DejaVuFactory(
             E : NetworkErrorPredicate =
             DejaVuRetrofitClient(
                     dejaVuRetrofit(
-                            persistence,
-                            serialiserType,
-                            errorFactoryType
-                    ),
-                    logger
-            )
-
-    fun <E> createVolley(
-            persistence: PersistenceType,
-            serialiserType: SerialiserType,
-            errorFactoryType: ErrorFactoryType<E>
-    ) where E : Throwable,
-            E : NetworkErrorPredicate =
-            DejaVuVolleyClient(
-                    dejaVuVolley(
                             persistence,
                             serialiserType,
                             errorFactoryType

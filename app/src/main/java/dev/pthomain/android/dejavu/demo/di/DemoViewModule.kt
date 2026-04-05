@@ -23,4 +23,93 @@
 
 package dev.pthomain.android.dejavu.demo.di
 
-// This module has been replaced by manual DI in DemoMvpContract.DemoViewComponent.create()
+import dev.pthomain.android.boilerplate.core.utils.log.CompositeLogger
+import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.boilerplate.core.utils.log.Printer
+import dev.pthomain.android.boilerplate.core.utils.log.SimpleLogger
+import dev.pthomain.android.dejavu.demo.DemoActivity
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter
+import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitAnnotationDemoPresenter
+import dev.pthomain.android.dejavu.demo.presenter.retrofit.RetrofitHeaderDemoPresenter
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
+
+internal class DemoViewModule(
+        private val demoActivity: DemoActivity,
+        private val onLogOutput: (String) -> Unit
+) {
+
+    val module = module {
+
+        single<Logger>(named("boilerplate")) {
+            SimpleLogger(
+                    true,
+                    demoActivity.packageName
+            )
+        }
+
+        single<Logger>(named("ui")) {
+            CompositeLogger(
+                    get(named("boilerplate")),
+                    SimpleLogger(
+                            true,
+                            demoActivity.packageName,
+                            object : Printer {
+                                override fun canPrint(className: String) =
+                                        !className.contains(SimpleLogger::class.java.`package`!!.name)
+
+                                override fun print(
+                                        priority: Int,
+                                        tag: String?,
+                                        targetClassName: String,
+                                        message: String
+                                ) {
+                                    clean(message).also {
+                                        if (!it.isBlank()) onLogOutput(it)
+                                    }
+                                }
+
+                                private fun clean(message: String) =
+                                        message.replace(Regex("(\\([^)]+\\))"), "")
+                                                .replace(Regex("\\n+"), "\n")
+                                                .trim()
+                            }
+                    )
+            )
+        }
+
+        single {
+            CompositeLogger(
+                    get(named("boilerplate")),
+                    get(named("ui"))
+            )
+        }
+
+        single {
+            RetrofitAnnotationDemoPresenter(
+                    demoActivity,
+                    get(named("ui"))
+            )
+        }
+
+        single {
+            RetrofitHeaderDemoPresenter(
+                    demoActivity,
+                    get(named("ui"))
+            )
+        }
+
+        single {
+            CompositePresenter(
+                    demoActivity,
+                    get(),
+                    get()
+            )
+        }
+
+        single<(Method) -> Unit> {
+            get<CompositePresenter>()
+        }
+    }
+}

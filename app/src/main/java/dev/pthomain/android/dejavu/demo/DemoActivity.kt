@@ -33,15 +33,21 @@ import android.widget.ExpandableListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.multidex.MultiDex
+import com.uber.rxdogtag.RxDogTag
+import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
 import dev.pthomain.android.dejavu.demo.DemoMvpContract.*
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory.PersistenceType.*
-import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Kotlinx
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Gson
+import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.SerialiserType.Moshi
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
+import dev.pthomain.android.dejavu.demo.di.DemoViewModule
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method
 import dev.pthomain.android.dejavu.demo.presenter.base.CompositePresenter.Method.*
+import io.reactivex.plugins.RxJavaPlugins
+import org.koin.dsl.koinApplication
 
 
 internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit {
@@ -60,12 +66,12 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
 
     private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
     private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
-    private val volleyRadio by lazy { findViewById<View>(R.id.radio_button_volley)!! }
-
+    private val fileRadio by lazy { findViewById<View>(R.id.radio_button_file)!! }
     private val databaseRadio by lazy { findViewById<View>(R.id.radio_button_database)!! }
     private val memoryRadio by lazy { findViewById<View>(R.id.radio_button_memory)!! }
 
-    private val kotlinxRadio by lazy { findViewById<View>(R.id.radio_button_kotlinx)!! }
+    private val gsonRadio by lazy { findViewById<View>(R.id.radio_button_gson)!! }
+    private val moshiRadio by lazy { findViewById<View>(R.id.radio_button_moshi)!! }
 
     private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
     private val compressCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_compress)!! }
@@ -78,19 +84,29 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
 
     override fun getPresenter() = presenter
 
-    override fun initialiseComponent() = DemoViewComponent.create(
-            this@DemoActivity,
-            this@DemoActivity
+    override fun initialiseComponent() = DemoViewComponent(
+            koinApplication {
+                modules(
+                        DemoViewModule(
+                                this@DemoActivity,
+                                this@DemoActivity
+                        ).module
+                )
+            }.koin
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RxDogTag.install()
         onCreateComponent(savedInstanceState)
     }
 
     override fun onComponentReady(component: DemoViewComponent) {
         this.presenter = component.presenter()
         this.presenterSwitcher = component.presenterSwitcher()
+        RxJavaPlugins.setErrorHandler { error ->
+            component.logger().e(this, error)
+        }
     }
 
     override fun attachBaseContext(base: Context) {
@@ -114,18 +130,18 @@ internal class DemoActivity : AppCompatActivity(), DemoMvpView, (String) -> Unit
         observableRadio.setOnClickListener { presenter.useSingle = false }
         singleRadio.setOnClickListener { presenter.useSingle = true }
 
-        kotlinxRadio.setOnClickListener { presenter.serialiserType = Kotlinx }
+        gsonRadio.setOnClickListener { presenter.serialiserType = Gson }
+        moshiRadio.setOnClickListener { presenter.serialiserType = Moshi }
 
         retrofitAnnotationRadio.setOnClickListener { presenterSwitcher(RETROFIT_ANNOTATION) }
         retrofitHeaderRadio.setOnClickListener { presenterSwitcher(RETROFIT_HEADER) }
-        volleyRadio.setOnClickListener { presenterSwitcher(VOLLEY) }
-
+        fileRadio.setOnClickListener { presenter.persistence = FILE }
         databaseRadio.setOnClickListener { presenter.persistence = SQLITE }
         memoryRadio.setOnClickListener { presenter.persistence = MEMORY }
 
         gitHubButton.setOnClickListener { openGithub() }
 
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = if (isChecked) FRESH_ONLY else ANY } //TODO FRESH_PREFERRED
+        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.freshness = ifElse(isChecked, FRESH_ONLY, ANY) } //TODO FRESH_PREFERRED
         compressCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.compress = isChecked }
         encryptCheckBox.setOnCheckedChangeListener { _, isChecked -> presenter.encrypt = isChecked }
 
