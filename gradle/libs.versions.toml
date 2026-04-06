@@ -31,6 +31,9 @@ ktor = "3.0.3"
 # Security
 tink = "1.16.0"
 
+# Utilities
+fliptables = "1.1.0"
+
 # Testing
 junit = "4.13.2"
 mockito = "5.14.2"
@@ -75,7 +78,10 @@ okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.
 # Security
 tink = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
 
-# Ktor (NEW - for future Ktor module)
+# Utilities
+fliptables = { module = "com.jakewharton.fliptables:fliptables", version.ref = "fliptables" }
+
+# Ktor
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
