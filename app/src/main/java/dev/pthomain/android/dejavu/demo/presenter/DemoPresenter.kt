@@ -45,11 +45,17 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.demo.DemoActivity
 import dev.pthomain.android.dejavu.demo.dejavu.clients.factories.DejaVuFactory
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 
 /**
  * Simplified presenter handling cache operations and UI updates.
@@ -62,7 +68,7 @@ internal class DemoPresenter(
 
     private val logger: Logger = AndroidLogger(activity.packageName)
     private val dejaVuFactory = DejaVuFactory(logger, activity)
-    private val disposables = CompositeDisposable()
+    private val scope = CoroutineScope(Dispatchers.Main + Job())
 
     private var instructionType = CACHE
     private var behaviour = ONLINE
@@ -103,11 +109,11 @@ internal class DemoPresenter(
         behaviour = if (isRefresh) Behaviour.INVALIDATE else ONLINE
 
         if (useAnnotations) {
-            subscribeData(getAnnotationDataObservable(isRefresh))
+            collectData(getAnnotationDataFlow(isRefresh))
         } else {
-            subscribeResult(
+            collectResult(
                     clients.headerClient.execute(getCacheOperation())
-                            .flatMap { toDataOrError(it) }
+                            .map { toDataOrThrow(it) }
             )
         }
     }
@@ -117,15 +123,15 @@ internal class DemoPresenter(
         behaviour = OFFLINE
 
         if (useAnnotations) {
-            val single = if (freshness == FRESH_ONLY)
+            val flow = if (freshness == FRESH_ONLY)
                 clients.annotationClient.offlineFreshOnly()
             else
                 clients.annotationClient.offline()
-            subscribeData(single.toObservable())
+            collectData(flow)
         } else {
-            subscribeResult(
+            collectResult(
                     clients.headerClient.execute(getCacheOperation())
-                            .flatMap { toDataOrError(it) }
+                            .map { toDataOrThrow(it) }
             )
         }
     }
@@ -133,22 +139,22 @@ internal class DemoPresenter(
     fun clearEntries() {
         instructionType = CLEAR
         if (useAnnotations) {
-            subscribeResult(clients.annotationClient.clearCache())
+            collectResult(clients.annotationClient.clearCache())
         } else {
-            subscribeResult(clients.headerClient.execute(Clear()))
+            collectResult(clients.headerClient.execute(Clear()))
         }
     }
 
     fun invalidate() {
         instructionType = INVALIDATE
         if (useAnnotations) {
-            subscribeResult(clients.annotationClient.invalidate())
+            collectResult(clients.annotationClient.invalidate())
         } else {
-            subscribeResult(clients.headerClient.execute(Invalidate))
+            collectResult(clients.headerClient.execute(Invalidate))
         }
     }
 
-    private fun getAnnotationDataObservable(isRefresh: Boolean): Observable<CatFactResponse> {
+    private fun getAnnotationDataFlow(isRefresh: Boolean): Flow<CatFactResponse> {
         val client = clients.annotationClient
         return if (isRefresh) {
             when {
@@ -167,44 +173,36 @@ internal class DemoPresenter(
         }
     }
 
-    private fun toDataOrError(result: DejaVuResult<CatFactResponse>): Observable<CatFactResponse> =
+    private fun toDataOrThrow(result: DejaVuResult<CatFactResponse>): CatFactResponse =
             when (result) {
-                is Response<CatFactResponse, *> -> Observable.just(result.response)
-                is Empty<*, *, *> -> Observable.error(result.exception)
-                is Result<*, *> -> Observable.empty()
+                is Response<CatFactResponse, *> -> result.response
+                is Empty<*, *, *> -> throw result.exception
+                is Result<*, *> -> throw IllegalStateException("Unexpected result type")
             }
 
-    private fun subscribeData(observable: Observable<CatFactResponse>) {
-        val disposable = observable
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { activity.onCallStarted() }
-                .doOnError { logger.e(this, it) }
-                .doFinally { activity.onCallComplete() }
-                .subscribe(
-                        { activity.showCatFact(it) },
-                        { logger.e(this, it) }
-                )
-        disposables.add(disposable)
+    private fun collectData(flow: Flow<CatFactResponse>) {
+        scope.launch {
+            flow.flowOn(Dispatchers.IO)
+                    .onStart { activity.onCallStarted() }
+                    .catch { logger.e(this@DemoPresenter, it) }
+                    .onCompletion { activity.onCallComplete() }
+                    .collect { activity.showCatFact(it) }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun subscribeResult(observable: Observable<DejaVuResult<CatFactResponse>>) {
-        val disposable = observable
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { activity.onCallStarted() }
-                .doOnError { logger.e(this, it) }
-                .doFinally { activity.onCallComplete() }
-                .subscribe(
-                        { activity.showResult(it) },
-                        { logger.e(this, it) }
-                )
-        disposables.add(disposable)
+    private fun collectResult(flow: Flow<DejaVuResult<CatFactResponse>>) {
+        scope.launch {
+            flow.flowOn(Dispatchers.IO)
+                    .onStart { activity.onCallStarted() }
+                    .catch { logger.e(this@DemoPresenter, it) }
+                    .onCompletion { activity.onCallComplete() }
+                    .collect { activity.showResult(it) }
+        }
     }
 
     fun onDestroy() {
-        disposables.clear()
+        scope.cancel()
     }
 
     enum class PersistenceType {

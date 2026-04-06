@@ -25,18 +25,15 @@ package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.Outcome
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
-import io.reactivex.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.rx2.asFlow
-import kotlinx.coroutines.rx2.asObservable
 import retrofit2.Call
 import retrofit2.CallAdapter
 import retrofit2.HttpException
@@ -45,12 +42,6 @@ import java.lang.reflect.Type
 /**
  * A Retrofit CallAdapter that converts a Call<R> into a Flow<*>,
  * optionally passing it through the DejaVu interceptor chain for caching.
- *
- * @param responseType the response type for Retrofit deserialisation
- * @param isDejaVuResult whether the return type is Flow<DejaVuResult<T>>
- * @param operation the cache operation parsed from annotations, or null
- * @param interceptorFactory factory for creating DejaVuInterceptor instances
- * @param errorFactory factory for creating typed errors
  */
 class DejaVuCallAdapter<R : Any, E>(
         private val responseType: Type,
@@ -64,21 +55,21 @@ class DejaVuCallAdapter<R : Any, E>(
 
     @Suppress("UNCHECKED_CAST")
     override fun adapt(call: Call<R>): Flow<*> {
-        // Create upstream Observable from Retrofit Call, wrapping in Outcome
-        val upstream: Observable<Any> = Observable.fromCallable {
+        // Create upstream Flow from Retrofit Call, wrapping in Outcome
+        val upstream: Flow<Any> = flow {
             try {
                 val response = call.clone().execute()
                 if (response.isSuccessful && response.body() != null) {
-                    Outcome.Success(response.body()!!) as Any
+                    emit(Outcome.Success(response.body()!!) as Any)
                 } else {
                     val error = errorFactory(HttpException(response))
-                    Outcome.Error(error) as Any
+                    emit(Outcome.Error(error) as Any)
                 }
             } catch (e: Exception) {
                 val error = errorFactory(e)
-                Outcome.Error(error) as Any
+                emit(Outcome.Error(error) as Any)
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
         if (operation == null) {
             // No cache operation - return raw response as Flow
@@ -88,7 +79,7 @@ class DejaVuCallAdapter<R : Any, E>(
                     is Outcome.Error<*> -> throw outcome.exception
                     else -> throw IllegalStateException("Unexpected outcome type")
                 }
-            }.asFlow()
+            }
         }
 
         // Build request metadata
@@ -105,7 +96,7 @@ class DejaVuCallAdapter<R : Any, E>(
                 requestMetadata
         )
 
-        // Apply the interceptor chain (which operates on Observable) and convert to Flow
-        return interceptor.apply(upstream).asFlow()
+        // Apply the Flow-based interceptor chain
+        return interceptor.intercept(upstream)
     }
 }

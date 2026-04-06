@@ -32,8 +32,7 @@ import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
 import dev.pthomain.android.dejavu.retrofit.operation.DejaVuHeader
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -47,59 +46,59 @@ interface AnnotationRetrofitClient {
 
     @GET(ENDPOINT)
     @Cache
-    fun get(): Observable<CatFactResponse>
+    fun get(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(serialisation = "encrypt")
-    fun getEncrypted(): Observable<CatFactResponse>
+    fun getEncrypted(): Flow<CatFactResponse>
 
     // Fresh only
 
     @GET(ENDPOINT)
     @Cache(priority = STALE_NOT_ACCEPTED)
-    fun getFreshOnly(): Observable<CatFactResponse>
+    fun getFreshOnly(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(priority = STALE_NOT_ACCEPTED, serialisation = "encrypt")
-    fun getFreshOnlyEncrypted(): Observable<CatFactResponse>
+    fun getFreshOnlyEncrypted(): Flow<CatFactResponse>
 
     // Refresh (invalidate + fetch)
 
     @GET(ENDPOINT)
     @Cache(priority = INVALIDATE_STALE_ACCEPTED_FIRST)
-    fun refresh(): Observable<CatFactResponse>
+    fun refresh(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(priority = INVALIDATE_STALE_ACCEPTED_FIRST, serialisation = "encrypt")
-    fun refreshEncrypted(): Observable<CatFactResponse>
+    fun refreshEncrypted(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED)
-    fun refreshFreshOnly(): Observable<CatFactResponse>
+    fun refreshFreshOnly(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(priority = INVALIDATE_STALE_NOT_ACCEPTED, serialisation = "encrypt")
-    fun refreshFreshOnlyEncrypted(): Observable<CatFactResponse>
+    fun refreshFreshOnlyEncrypted(): Flow<CatFactResponse>
 
     // Offline
 
     @GET(ENDPOINT)
     @Cache(priority = OFFLINE_STALE_ACCEPTED)
-    fun offline(): Single<CatFactResponse>
+    fun offline(): Flow<CatFactResponse>
 
     @GET(ENDPOINT)
     @Cache(priority = OFFLINE_STALE_NOT_ACCEPTED)
-    fun offlineFreshOnly(): Single<CatFactResponse>
+    fun offlineFreshOnly(): Flow<CatFactResponse>
 
     // Operations
 
     @DELETE(ENDPOINT)
     @Clear
-    fun clearCache(): Observable<DejaVuResult<CatFactResponse>>
+    fun clearCache(): Flow<DejaVuResult<CatFactResponse>>
 
     @DELETE(ENDPOINT)
     @Invalidate
-    fun invalidate(): Observable<DejaVuResult<CatFactResponse>>
+    fun invalidate(): Flow<DejaVuResult<CatFactResponse>>
 }
 
 /**
@@ -108,5 +107,5 @@ interface AnnotationRetrofitClient {
 interface HeaderRetrofitClient {
 
     @GET(ENDPOINT)
-    fun execute(@Header(DejaVuHeader) operation: Operation): Observable<DejaVuResult<CatFactResponse>>
+    fun execute(@Header(DejaVuHeader) operation: Operation): Flow<DejaVuResult<CatFactResponse>>
 }
