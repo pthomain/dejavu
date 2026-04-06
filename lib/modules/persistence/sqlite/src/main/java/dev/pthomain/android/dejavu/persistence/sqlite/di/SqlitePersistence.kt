@@ -23,6 +23,9 @@
 
 package dev.pthomain.android.dejavu.persistence.sqlite.di
 
+import android.content.Context
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.persistence.di.PersistenceModule
 import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
@@ -30,37 +33,28 @@ import dev.pthomain.android.dejavu.persistence.sqlite.DatabaseStatisticsCompiler
 import dev.pthomain.android.dejavu.persistence.sqlite.database.DejaVuDatabase
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 
 class SqlitePersistence(
         override val decorators: List<SerialisationDecorator>,
-        serialiser: Serialiser
-) : PersistenceManager.ModuleProvider {
+        private val serialiser: Serialiser
+) : PersistenceManager.ComponentProvider {
 
-    private val persistenceModule = PersistenceModule(decorators, serialiser).module
+    override fun create(
+            context: Context,
+            dateFactory: DateFactory,
+            logger: Logger
+    ): PersistenceManager {
+        val persistenceModule = PersistenceModule(decorators, serialiser)
+        val serialisationManager = persistenceModule.createSerialisationManager()
 
-    override val modules = persistenceModule + module {
+        val database = DejaVuDatabase.getInstance(context)
+        val cacheDao = database.cacheDao()
 
-        single { DejaVuDatabase.getInstance(get()) }
-
-        single { get<DejaVuDatabase>().cacheDao() }
-
-        single<PersistenceManager> {
-            DatabasePersistenceManager(
-                    get(),
-                    get(),
-                    get(),
-                    get(named("dateFactory"))
-            )
-        }
-
-        single {
-            DatabaseStatisticsCompiler(
-                    get(),
-                    get(named("dateFactory")),
-                    get()
-            )
-        }
+        return DatabasePersistenceManager(
+                cacheDao,
+                logger,
+                serialisationManager,
+                dateFactory
+        )
     }
 }
