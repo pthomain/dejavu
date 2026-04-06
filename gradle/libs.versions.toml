@@ -9,6 +9,7 @@ coroutines = "1.10.1"
 ksp = "2.1.0-1.0.29"
 
 # AndroidX
+androidxCollection = "1.4.5"
 androidxCore = "1.15.0"
 androidxAppcompat = "1.7.0"
 androidxSqlite = "2.4.0"
@@ -51,6 +52,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # AndroidX
+androidx-collection = { module = "androidx.collection:collection", version.ref = "androidxCollection" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidxAppcompat" }
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite" }

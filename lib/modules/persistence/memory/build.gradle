@@ -148,5 +148,6 @@ dependencies {
     api project(':lib:modules:persistence')
 
     implementation libs.androidx.multidex
+    implementation libs.androidx.collection
 
 }
