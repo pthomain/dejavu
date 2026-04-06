@@ -69,7 +69,7 @@ internal class RetrofitOperationResolver<E, R> private constructor(
     fun getResolvedOperation(call: Call<Any>): ResolvedOperation<R>? {
         val requestMetadata = PlainRequestMetadata(
             responseClass,
-            call.request().url().toString(),
+            call.request().url.toString(),
             requestBodyConverter(call.request())
         )
 

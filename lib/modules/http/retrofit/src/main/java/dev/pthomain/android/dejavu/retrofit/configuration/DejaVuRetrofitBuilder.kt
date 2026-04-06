@@ -41,13 +41,12 @@ import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
  * and resolving the necessary dependencies.
  */
 class DejaVuRetrofitBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>, E>
     where E : Throwable,
           E : NetworkErrorPredicate {
 
-    private var component: DejaVuComponent<E>? = null
+    internal var component: DejaVuComponent<E>? = null
 
-    override fun accept(component: DejaVuComponent<E>) = apply {
+    internal fun accept(component: DejaVuComponent<E>) = apply {
         this.component = component
     }
 
@@ -55,7 +54,7 @@ class DejaVuRetrofitBuilder<E> internal constructor()
      * Builds a DejaVuRetrofit instance by resolving dependencies from the
      * DejaVuComponent and creating the Retrofit call adapter factory.
      */
-    override fun build(): DejaVuRetrofit<E> {
+    fun build(): DejaVuRetrofit<E> {
         val component = this.component
             ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 
@@ -84,4 +83,21 @@ class DejaVuRetrofitBuilder<E> internal constructor()
             interceptorFactory
         )
     }
+}
+
+/**
+ * Internal adapter that bridges DejaVuRetrofitBuilder to the ExtensionBuilder interface.
+ */
+internal class DejaVuRetrofitExtensionBuilder<E> internal constructor()
+    : ExtensionBuilder<DejaVuRetrofitExtensionBuilder<E>, DejaVuRetrofitBuilder<E>, E>
+    where E : Throwable,
+          E : NetworkErrorPredicate {
+
+    private val retrofitBuilder = DejaVuRetrofitBuilder<E>()
+
+    override fun accept(component: DejaVuComponent<E>) = apply {
+        retrofitBuilder.accept(component)
+    }
+
+    override fun build(): DejaVuRetrofitBuilder<E> = retrofitBuilder
 }

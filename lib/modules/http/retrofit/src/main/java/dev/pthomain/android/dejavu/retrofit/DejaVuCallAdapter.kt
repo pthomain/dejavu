@@ -25,10 +25,10 @@ package dev.pthomain.android.dejavu.retrofit
 
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.error.Outcome
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -48,7 +48,7 @@ class DejaVuCallAdapter<R : Any, E>(
         private val isDejaVuResult: Boolean,
         private val operation: Operation?,
         private val interceptorFactory: DejaVuInterceptor.Factory<E>,
-        private val errorFactory: ErrorFactory<E>
+        private val operationResolverFactory: RetrofitOperationResolver.Factory<E>
 ) : CallAdapter<R, Flow<*>> where E : Throwable, E : NetworkErrorPredicate {
 
     override fun responseType(): Type = responseType
@@ -62,12 +62,10 @@ class DejaVuCallAdapter<R : Any, E>(
                 if (response.isSuccessful && response.body() != null) {
                     emit(Outcome.Success(response.body()!!) as Any)
                 } else {
-                    val error = errorFactory(HttpException(response))
-                    emit(Outcome.Error(error) as Any)
+                    emit(Outcome.Error(HttpException(response)) as Any)
                 }
             } catch (e: Exception) {
-                val error = errorFactory(e)
-                emit(Outcome.Error(error) as Any)
+                emit(Outcome.Error(e) as Any)
             }
         }.flowOn(Dispatchers.IO)
 

@@ -28,6 +28,7 @@ import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitBuilder
+import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitExtensionBuilder
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
@@ -51,7 +52,7 @@ class DejaVuRetrofit<E> internal constructor(
         fun <E> extension()
             where E : Throwable,
                   E : NetworkErrorPredicate =
-            DejaVuRetrofitBuilder<E>()
+            DejaVuRetrofitExtensionBuilder<E>()
 
         /**
          * Convenience builder that creates a DejaVuRetrofit instance directly
@@ -82,6 +83,7 @@ class DejaVuRetrofit<E> internal constructor(
             where E : Throwable,
                   E : NetworkErrorPredicate =
             DejaVu.builder(context, errorFactory, persistenceManagerProvider, logger)
-                .extend(DejaVuRetrofitBuilder())
+                .extend(DejaVuRetrofitExtensionBuilder<E>())
+                .build()
     }
 }

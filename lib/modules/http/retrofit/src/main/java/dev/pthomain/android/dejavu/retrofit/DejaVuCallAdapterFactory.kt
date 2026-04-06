@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import kotlinx.coroutines.flow.Flow
 import retrofit2.CallAdapter
@@ -38,14 +38,14 @@ import java.lang.reflect.Type
  * A Retrofit CallAdapter.Factory that detects Flow<*> return types and
  * creates DejaVuCallAdapter instances to integrate the DejaVu cache interceptor chain.
  *
- * @param annotationProcessor processes cache annotations on Retrofit methods
  * @param interceptorFactory factory for creating DejaVuInterceptor instances
- * @param errorFactory factory for creating typed errors
+ * @param annotationProcessor processes cache annotations on Retrofit methods
+ * @param operationResolverFactory factory for creating RetrofitOperationResolver instances
  */
 class DejaVuCallAdapterFactory<E> internal constructor(
-        private val annotationProcessor: AnnotationProcessor,
         private val interceptorFactory: DejaVuInterceptor.Factory<E>,
-        private val errorFactory: ErrorFactory<E>
+        private val annotationProcessor: AnnotationProcessor,
+        private val operationResolverFactory: RetrofitOperationResolver.Factory<E>
 ) : CallAdapter.Factory()
         where E : Throwable,
               E : NetworkErrorPredicate {
@@ -77,7 +77,7 @@ class DejaVuCallAdapterFactory<E> internal constructor(
                 isDejaVuResult,
                 operation,
                 interceptorFactory,
-                errorFactory
+                operationResolverFactory
         )
     }
 }

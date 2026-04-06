@@ -48,7 +48,7 @@ class DejaVuError(
     /**
      * Categorised error codes for common error scenarios.
      */
-    enum ErrorCode {
+    enum class ErrorCode {
         UNKNOWN,
         NETWORK,
         CONFIG,
