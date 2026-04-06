@@ -74,6 +74,7 @@ class DejaVuCallAdapterFactory<E> internal constructor(
 
         return DejaVuCallAdapter<Any, E>(
                 responseType,
+                getRawType(responseType),
                 isDejaVuResult,
                 operation,
                 interceptorFactory,

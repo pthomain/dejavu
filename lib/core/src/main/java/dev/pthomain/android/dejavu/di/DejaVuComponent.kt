@@ -48,7 +48,7 @@ import java.util.*
  * Manual dependency injection component that constructs the entire DejaVu dependency graph.
  * Replaces the previous Koin-based DejaVuModule.
  */
-internal class DejaVuComponent<E>(
+class DejaVuComponent<E>(
         val context: Context,
         val logger: Logger,
         val errorFactory: ErrorFactory<E>,
@@ -62,18 +62,18 @@ internal class DejaVuComponent<E>(
 
     val uriParser: (String) -> Uri = Uri::parse
 
-    val hasher = Hasher(
+    internal val hasher = Hasher(
             logger,
             uriParser
     )
 
-    val networkInterceptorFactory = NetworkInterceptor.Factory<E>(
+    internal val networkInterceptorFactory = NetworkInterceptor.Factory<E>(
             context,
             logger,
             dateFactory
     )
 
-    val cacheMetadataManager = CacheMetadataManager<E>(
+    internal val cacheMetadataManager = CacheMetadataManager<E>(
             errorFactory,
             persistenceManager,
             dateFactory,
@@ -81,12 +81,12 @@ internal class DejaVuComponent<E>(
             logger
     )
 
-    val emptyResponseFactory = EmptyResponseFactory<E>(
+    internal val emptyResponseFactory = EmptyResponseFactory<E>(
             errorFactory,
             dateFactory
     )
 
-    val cacheManager = CacheManager<E>(
+    internal val cacheManager = CacheManager<E>(
             persistenceManager,
             cacheMetadataManager,
             emptyResponseFactory,
@@ -94,11 +94,11 @@ internal class DejaVuComponent<E>(
             logger
     )
 
-    val cacheInterceptorFactory = CacheInterceptor.Factory<E>(
+    internal val cacheInterceptorFactory = CacheInterceptor.Factory<E>(
             cacheManager
     )
 
-    val responseInterceptorFactory = ResponseInterceptor.Factory<E>(
+    internal val responseInterceptorFactory = ResponseInterceptor.Factory<E>(
             logger,
             dateFactory
     )

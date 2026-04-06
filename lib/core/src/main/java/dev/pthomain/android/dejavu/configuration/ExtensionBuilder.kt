@@ -26,14 +26,14 @@ package dev.pthomain.android.dejavu.configuration
 import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
-internal interface ExtensionBuilder<B : ExtensionBuilder<B, D, E>, D, E>
+interface ExtensionBuilder<B : ExtensionBuilder<B, D, E>, D, E>
         where E : Throwable,
               E : NetworkErrorPredicate {
     fun accept(component: DejaVuComponent<E>): B
     fun build(): D
 }
 
-internal interface Extendable<E>
+interface Extendable<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
     fun <B : ExtensionBuilder<B, D, E>, D> extend(extensionBuilder: B): B

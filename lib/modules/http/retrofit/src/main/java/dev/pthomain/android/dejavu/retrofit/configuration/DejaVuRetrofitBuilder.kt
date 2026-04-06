@@ -88,7 +88,7 @@ class DejaVuRetrofitBuilder<E> internal constructor()
 /**
  * Internal adapter that bridges DejaVuRetrofitBuilder to the ExtensionBuilder interface.
  */
-internal class DejaVuRetrofitExtensionBuilder<E> internal constructor()
+class DejaVuRetrofitExtensionBuilder<E> internal constructor()
     : ExtensionBuilder<DejaVuRetrofitExtensionBuilder<E>, DejaVuRetrofitBuilder<E>, E>
     where E : Throwable,
           E : NetworkErrorPredicate {

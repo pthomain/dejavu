@@ -25,6 +25,7 @@ package dev.pthomain.android.dejavu.ktor
 
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.Outcome
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
@@ -100,16 +101,17 @@ val DejaVuPlugin = createClientPlugin("DejaVu", ::DejaVuPluginConfig) {
      * caching, staleness checks, and metadata decoration).
      */
     transformResponseBody { response, body, requestedType ->
-        val operation = response.request.attributes.getOrNull(DejaVuCacheAttribute)
+        val operation: Operation? = response.call.request.attributes.getOrNull(DejaVuCacheAttribute)
 
         if (operation != null && requestedType.type == DejaVuResult::class) {
             // Extract the inner type T from DejaVuResult<T>
-            val innerType = (requestedType.reifiedType as? ParameterizedType)
+            val javaType = requestedType.reifiedType
+            val innerType = (javaType as? ParameterizedType)
                 ?.actualTypeArguments?.firstOrNull()
 
             if (innerType != null) {
                 val responseClass = (innerType as? Class<*>) ?: Any::class.java
-                val url = response.request.url.toString()
+                val url = response.call.request.url.toString()
 
                 val requestMetadata = PlainRequestMetadata(
                     responseClass = responseClass,

@@ -45,6 +45,7 @@ import java.lang.reflect.Type
  */
 class DejaVuCallAdapter<R : Any, E>(
         private val responseType: Type,
+        private val responseClass: Class<*>,
         private val isDejaVuResult: Boolean,
         private val operation: Operation?,
         private val interceptorFactory: DejaVuInterceptor.Factory<E>,
@@ -82,7 +83,7 @@ class DejaVuCallAdapter<R : Any, E>(
 
         // Build request metadata
         val requestMetadata = PlainRequestMetadata(
-                responseClass = CallAdapter.Factory.getRawType(responseType) as Class<R>,
+                responseClass = responseClass as Class<R>,
                 url = call.request().url.toString(),
                 requestBody = call.request().body?.toString()
         )
