@@ -26,78 +26,58 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import io.reactivex.Observable
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import kotlinx.coroutines.flow.Flow
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 /**
- * A Retrofit CallAdapter.Factory that integrates DejaVu caching.
+ * A Retrofit CallAdapter.Factory that detects Flow<*> return types and
+ * creates DejaVuCallAdapter instances to integrate the DejaVu cache interceptor chain.
  *
- * This factory intercepts Retrofit calls whose return types are Observable<T>
- * or Observable<DejaVuResult<T>> and applies the DejaVu caching interceptor chain.
- *
- * Cache instructions are resolved from (in decreasing priority):
- * 1. The operation predicate for the given RequestMetadata
- * 2. The request's DejaVuHeader
- * 3. The call's cache annotation (@Cache, @DoNotCache, @Invalidate, @Clear)
- *
- * @param interceptorFactory the factory that creates DejaVuInterceptor instances
- * @param annotationProcessor processes Retrofit annotations into cache operations
- * @param operationResolverFactory resolves the final cache operation for a call
+ * @param annotationProcessor processes cache annotations on Retrofit methods
+ * @param interceptorFactory factory for creating DejaVuInterceptor instances
+ * @param errorFactory factory for creating typed errors
  */
-class DejaVuCallAdapterFactory<E>(
-    private val interceptorFactory: DejaVuInterceptor.Factory<E>,
-    private val annotationProcessor: AnnotationProcessor,
-    private val operationResolverFactory: RetrofitOperationResolver.Factory<E>
-) : CallAdapter.Factory() where E : Throwable, E : NetworkErrorPredicate {
+class DejaVuCallAdapterFactory<E> internal constructor(
+        private val annotationProcessor: AnnotationProcessor,
+        private val interceptorFactory: DejaVuInterceptor.Factory<E>,
+        private val errorFactory: ErrorFactory<E>
+) : CallAdapter.Factory()
+        where E : Throwable,
+              E : NetworkErrorPredicate {
 
     override fun get(
-        returnType: Type,
-        annotations: Array<out Annotation>,
-        retrofit: Retrofit
+            returnType: Type,
+            annotations: Array<out Annotation>,
+            retrofit: Retrofit
     ): CallAdapter<*, *>? {
-        // Only handle Observable return types
         val rawType = getRawType(returnType)
-        if (rawType != Observable::class.java) return null
+        if (rawType != Flow::class.java) return null
 
-        if (returnType !is ParameterizedType) {
-            throw IllegalStateException(
-                "Observable return type must be parameterized as Observable<T> or Observable<DejaVuResult<T>>"
-            )
-        }
+        val flowType = getParameterUpperBound(0, returnType as ParameterizedType)
+        val isDejaVuResult = getRawType(flowType) == DejaVuResult::class.java
 
-        // Extract inner type: Observable<DejaVuResult<T>> or Observable<T>
-        val observableType = getParameterUpperBound(0, returnType)
-        val isDejaVuResult = getRawType(observableType) == DejaVuResult::class.java
-
-        val responseType = if (isDejaVuResult && observableType is ParameterizedType) {
-            getParameterUpperBound(0, observableType)
+        val responseType = if (isDejaVuResult) {
+            getParameterUpperBound(0, flowType as ParameterizedType)
         } else {
-            observableType
+            flowType
         }
 
-        // Resolve operation from annotations
-        val annotationOperation = annotationProcessor.process(
-            annotations.filterIsInstance<Annotation>().toTypedArray(),
-            getRawType(responseType)
+        val operation = annotationProcessor.process(
+                annotations.toList().toTypedArray(),
+                getRawType(responseType)
         )
 
-        // If no annotation found, let Retrofit's default adapters handle it
-        if (annotationOperation == null && !isDejaVuResult) return null
-
-        val methodDescription = "${getRawType(responseType).simpleName} (${annotationOperation?.type?.name ?: "none"})"
-
         return DejaVuCallAdapter<Any, E>(
-            responseType,
-            isDejaVuResult,
-            annotationOperation,
-            interceptorFactory,
-            operationResolverFactory,
-            methodDescription
+                responseType,
+                isDejaVuResult,
+                operation,
+                interceptorFactory,
+                errorFactory
         )
     }
 }

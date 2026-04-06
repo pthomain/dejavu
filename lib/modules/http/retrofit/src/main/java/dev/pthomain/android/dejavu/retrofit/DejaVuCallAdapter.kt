@@ -23,86 +23,89 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
-import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
-import dev.pthomain.android.dejavu.error.Outcome
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
+import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
 import io.reactivex.Observable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.rx2.asFlow
+import kotlinx.coroutines.rx2.asObservable
 import retrofit2.Call
 import retrofit2.CallAdapter
+import retrofit2.HttpException
 import java.lang.reflect.Type
 
 /**
- * A Retrofit CallAdapter that converts a Retrofit Call into an Observable
- * and applies the DejaVu interceptor chain for caching.
+ * A Retrofit CallAdapter that converts a Call<R> into a Flow<*>,
+ * optionally passing it through the DejaVu interceptor chain for caching.
  *
- * This adapter:
- * 1. Converts the Retrofit Call<R> into an Observable<Outcome<R>>
- * 2. Resolves the cache operation (from predicate, header, or annotation)
- * 3. Applies the DejaVuInterceptor to the observable stream
- *
- * @param R the response type
- * @param E the error type
- * @param responseType the response type for Retrofit deserialization
- * @param isDejaVuResult whether the return type is wrapped in DejaVuResult
- * @param annotationOperation the cache operation from annotations, if any
+ * @param responseType the response type for Retrofit deserialisation
+ * @param isDejaVuResult whether the return type is Flow<DejaVuResult<T>>
+ * @param operation the cache operation parsed from annotations, or null
  * @param interceptorFactory factory for creating DejaVuInterceptor instances
- * @param operationResolverFactory factory for creating RetrofitOperationResolver instances
- * @param methodDescription a description of the method for logging
+ * @param errorFactory factory for creating typed errors
  */
-internal class DejaVuCallAdapter<R : Any, E>(
-    private val responseType: Type,
-    private val isDejaVuResult: Boolean,
-    private val annotationOperation: Operation?,
-    private val interceptorFactory: DejaVuInterceptor.Factory<E>,
-    private val operationResolverFactory: RetrofitOperationResolver.Factory<E>,
-    private val methodDescription: String
-) : CallAdapter<R, Observable<*>> where E : Throwable, E : NetworkErrorPredicate {
+class DejaVuCallAdapter<R : Any, E>(
+        private val responseType: Type,
+        private val isDejaVuResult: Boolean,
+        private val operation: Operation?,
+        private val interceptorFactory: DejaVuInterceptor.Factory<E>,
+        private val errorFactory: ErrorFactory<E>
+) : CallAdapter<R, Flow<*>> where E : Throwable, E : NetworkErrorPredicate {
 
     override fun responseType(): Type = responseType
 
     @Suppress("UNCHECKED_CAST")
-    override fun adapt(call: Call<R>): Observable<*> {
-        // Create the operation resolver for this specific call
-        val operationResolver = operationResolverFactory.create(
-            methodDescription,
-            responseType as Class<R>,
-            annotationOperation
-        )
-
-        // Resolve the operation (predicate > header > annotation)
-        val resolvedOperation = operationResolver.getResolvedOperation(call as Call<Any>)
-            ?: return Observable.fromCallable {
-                // No cache operation found -- execute the call directly
-                val response = call.clone().execute()
-                if (response.isSuccessful) {
-                    response.body()!!
-                } else {
-                    throw retrofit2.HttpException(response)
-                }
-            }
-
-        val operation = resolvedOperation.operation
-        val requestMetadata = resolvedOperation.requestMetadata
-
-        // Convert the Retrofit Call to an Observable emitting Outcome
+    override fun adapt(call: Call<R>): Flow<*> {
+        // Create upstream Observable from Retrofit Call, wrapping in Outcome
         val upstream: Observable<Any> = Observable.fromCallable {
-            val response = call.clone().execute()
-            if (response.isSuccessful) {
-                Outcome.Success(response.body()!!) as Any
-            } else {
-                throw retrofit2.HttpException(response)
+            try {
+                val response = call.clone().execute()
+                if (response.isSuccessful && response.body() != null) {
+                    Outcome.Success(response.body()!!) as Any
+                } else {
+                    val error = errorFactory(HttpException(response))
+                    Outcome.Error(error) as Any
+                }
+            } catch (e: Exception) {
+                val error = errorFactory(e)
+                Outcome.Error(error) as Any
             }
         }
 
-        // Create and apply the DejaVu interceptor
-        val interceptor = interceptorFactory.create(
-            isDejaVuResult,
-            operation,
-            requestMetadata
+        if (operation == null) {
+            // No cache operation - return raw response as Flow
+            return upstream.map { outcome ->
+                when (outcome) {
+                    is Outcome.Success<*> -> outcome.response
+                    is Outcome.Error<*> -> throw outcome.exception
+                    else -> throw IllegalStateException("Unexpected outcome type")
+                }
+            }.asFlow()
+        }
+
+        // Build request metadata
+        val requestMetadata = PlainRequestMetadata(
+                responseClass = CallAdapter.Factory.getRawType(responseType) as Class<R>,
+                url = call.request().url.toString(),
+                requestBody = call.request().body?.toString()
         )
 
-        return upstream.compose(interceptor)
+        // Create and apply DejaVu interceptor
+        val interceptor = interceptorFactory.create<R>(
+                isDejaVuResult,
+                operation,
+                requestMetadata
+        )
+
+        // Apply the interceptor chain (which operates on Observable) and convert to Flow
+        return interceptor.apply(upstream).asFlow()
     }
 }
