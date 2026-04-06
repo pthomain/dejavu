@@ -43,7 +43,7 @@ import java.lang.reflect.Type
  * A Retrofit CallAdapter that converts a Call<R> into a Flow<*>,
  * optionally passing it through the DejaVu interceptor chain for caching.
  */
-class DejaVuCallAdapter<R : Any, E>(
+internal class DejaVuCallAdapter<R : Any, E>(
         private val responseType: Type,
         private val responseClass: Class<*>,
         private val isDejaVuResult: Boolean,
