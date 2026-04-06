@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.test
 
-import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
@@ -39,14 +39,14 @@ import kotlinx.coroutines.flow.map
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
-                  private val gson: Gson) {
+                  private val json: Json = Json { ignoreUnknownKeys = true }) {
 
     fun <R : Any> flowStubbedResponse(fileName: String,
                                       responseClass: Class<R>,
                                       cacheToken: RequestToken<Cache, R>)
             : Flow<DejaVuResult<R>> =
             flowFile(fileName)
-                    .map { gson.fromJson(it, responseClass) }
+                    .map { json.decodeFromString(kotlinx.serialization.serializer(responseClass), it) as R }
                     .map {
                         Response(
                                 it,

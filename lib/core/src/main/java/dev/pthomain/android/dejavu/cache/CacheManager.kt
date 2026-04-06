@@ -204,7 +204,7 @@ internal class CacheManager<E>(
                                         status,
                                         requestDate,
                                         dateFactory(requestDate.time + (cacheOperation.durationInSeconds * 1000))
-                                ) //TODO check expiry date etc
+                                )
                             }
 
                             persistenceManager.put(updated.copy(cacheToken = cacheToken))

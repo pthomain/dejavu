@@ -24,25 +24,22 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
-import android.os.Build.VERSION.SDK_INT
-import com.google.gson.Gson
 import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.AnnotationRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.HeaderRetrofitClient
 import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter
 import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter.PersistenceType
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
 import dev.pthomain.android.dejavu.persistence.sqlite.di.SqlitePersistence
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
-import dev.pthomain.android.dejavu.serialisation.gson.GsonSerialiser
-import dev.pthomain.android.dejavu.error.DejaVuError
-import dev.pthomain.android.mumbo.Mumbo
+import dev.pthomain.android.dejavu.serialisation.kotlinx.KotlinxSerialiser
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 /**
  * Factory responsible for creating DejaVu-enabled Retrofit clients.
@@ -54,15 +51,10 @@ class DejaVuFactory(
         private val context: Context
 ) {
 
-    private val gson = Gson()
-    private val serialiser = GsonSerialiser(gson)
+    private val serialiser = KotlinxSerialiser()
 
-    private val encryptionDecorator: SerialisationDecorator = Mumbo.builder()
-            .withContext(context)
-            .withLogger(logger)
-            .build()
-            .run { Encryption(if (SDK_INT >= 23) tink() else conceal()) }
-            .serialisationDecorator
+    private val encryptionDecorator: SerialisationDecorator =
+            Encryption(context).serialisationDecorator
 
     private fun decorators(encrypt: Boolean): List<SerialisationDecorator> =
             if (encrypt) listOf(encryptionDecorator)
@@ -82,7 +74,7 @@ class DejaVuFactory(
     ): RetrofitClients {
         val dejaVuRetrofit = DejaVuRetrofit.builder<DejaVuError>(
                 context,
-                dev.pthomain.android.dejavu.error.DejaVuErrorFactory(),
+                DejaVuErrorFactory(),
                 persistenceModule(persistence, encrypt),
                 logger
         ).build()
@@ -90,7 +82,6 @@ class DejaVuFactory(
         val retrofit = Retrofit.Builder()
                 .baseUrl(DemoPresenter.BASE_URL)
                 .client(createOkHttpClient())
-                .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(dejaVuRetrofit.callAdapterFactory)
                 .build()
 

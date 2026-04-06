@@ -23,23 +23,21 @@
 
 package dev.pthomain.android.dejavu.di.integration.component
 
-import com.google.gson.Gson
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
 /**
  * Manual test component providing test infrastructure.
- * Replaces the previous Dagger-based IntegrationTestComponent.
  */
 internal class IntegrationTestComponent(
         baseUrl: String,
         assetsFolder: String
 ) {
-    val gson = Gson()
+    val json = Json { ignoreUnknownKeys = true }
     val mockClient = MockClient()
 
     val okHttpClient: OkHttpClient = OkHttpClient.Builder()
@@ -49,10 +47,9 @@ internal class IntegrationTestComponent(
     val retrofit: Retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
     val testClient: TestClient = retrofit.create(TestClient::class.java)
 
-    val assetHelper = AssetHelper(assetsFolder, gson)
+    val assetHelper = AssetHelper(assetsFolder, json)
 }

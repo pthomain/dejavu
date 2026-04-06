@@ -153,8 +153,8 @@ dependencies {
     api 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
 
-    testImplementation libs.retrofit.converter.gson
-    testImplementation libs.gson
+    testImplementation libs.retrofit
+    testImplementation libs.kotlinx.serialization.json
 
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.runner
