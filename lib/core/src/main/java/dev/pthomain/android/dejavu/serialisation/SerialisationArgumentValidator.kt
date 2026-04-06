@@ -5,7 +5,7 @@ import java.util.Locale.UK
 class SerialisationArgumentValidator(
         decorators: List<SerialisationDecorator>
 ) {
-    private val decoratorNames = decorators.map { it.uniqueName.toUpperCase(UK) }
+    private val decoratorNames = decorators.map { it.uniqueName.uppercase(UK) }
 
     fun validate(serialisation: String) {
         serialisation

@@ -48,7 +48,7 @@ import java.util.*
  * Manual dependency injection component that constructs the entire DejaVu dependency graph.
  * Replaces the previous Koin-based DejaVuModule.
  */
-class DejaVuComponent<E>(
+internal class DejaVuComponent<E>(
         val context: Context,
         val logger: Logger,
         val errorFactory: ErrorFactory<E>,
