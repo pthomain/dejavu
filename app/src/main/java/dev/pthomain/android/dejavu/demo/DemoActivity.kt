@@ -23,133 +23,279 @@
 
 package dev.pthomain.android.dejavu.demo
 
-import android.database.DataSetObserver
-import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import android.widget.CheckBox
-import android.widget.ExpandableListView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.browser.customtabs.CustomTabsIntent
-import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.ANY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.FreshnessPriority.FRESH_ONLY
-import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter.PersistenceType
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-internal class DemoActivity : AppCompatActivity(), (String) -> Unit {
+class DemoActivity : ComponentActivity() {
 
-    private lateinit var listAdapter: ExpandableListAdapter
-    private lateinit var presenter: DemoPresenter
-
-    private val loadButton by lazy { findViewById<View>(R.id.load_button)!! }
-    private val refreshButton by lazy { findViewById<View>(R.id.refresh_button)!! }
-    private val clearButton by lazy { findViewById<View>(R.id.clear_button)!! }
-    private val offlineButton by lazy { findViewById<View>(R.id.offline_button)!! }
-    private val invalidateButton by lazy { findViewById<View>(R.id.invalidate_button)!! }
-    private val gitHubButton by lazy { findViewById<View>(R.id.github)!! }
-
-    private val retrofitAnnotationRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_annotation)!! }
-    private val retrofitHeaderRadio by lazy { findViewById<View>(R.id.radio_button_retrofit_header)!! }
-
-    private val databaseRadio by lazy { findViewById<View>(R.id.radio_button_database)!! }
-    private val memoryRadio by lazy { findViewById<View>(R.id.radio_button_memory)!! }
-
-    private val freshOnlyCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_fresh_only)!! }
-    private val encryptCheckBox by lazy { findViewById<CheckBox>(R.id.checkbox_encrypt)!! }
-
-    private val listView by lazy { findViewById<ExpandableListView>(R.id.list)!! }
+    private val viewModel: DemoViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        presenter = DemoPresenter(this, this)
-
-        loadButton.setOnClickListener { presenter.loadCatFact(false) }
-        refreshButton.setOnClickListener { presenter.loadCatFact(true) }
-        clearButton.setOnClickListener { presenter.clearEntries() }
-        offlineButton.setOnClickListener { presenter.offline() }
-        invalidateButton.setOnClickListener { presenter.invalidate() }
-
-        retrofitAnnotationRadio.setOnClickListener {
-            presenter.useAnnotations = true
-        }
-        retrofitHeaderRadio.setOnClickListener {
-            presenter.useAnnotations = false
-        }
-
-        databaseRadio.setOnClickListener { presenter.persistence = PersistenceType.SQLITE }
-        memoryRadio.setOnClickListener { presenter.persistence = PersistenceType.MEMORY }
-
-        gitHubButton.setOnClickListener { openGithub() }
-
-        freshOnlyCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            presenter.freshness = if (isChecked) FRESH_ONLY else ANY
-        }
-        encryptCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            presenter.encrypt = isChecked
-        }
-
-        listAdapter = ExpandableListAdapter(this)
-        listView.setAdapter(listAdapter)
-
-        listAdapter.registerDataSetObserver(object : DataSetObserver() {
-            override fun onInvalidated() = onChanged()
-            override fun onChanged() {
-                for (x in 0 until listAdapter.groupCount) {
-                    listView.expandGroup(x)
-                }
+        setContent {
+            MaterialTheme {
+                DemoScreen(viewModel)
             }
-        })
+        }
     }
+}
 
-    override fun invoke(logLine: String) {
-        listAdapter.log(logLine)
-    }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DemoScreen(viewModel: DemoViewModel) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    fun showCatFact(response: CatFactResponse) {
-        listAdapter.showResponse(response)
-    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("DejaVu 3.0 Demo") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ActionButtons(
+                isLoading = state.isLoading,
+                onLoad = viewModel::loadCatFact,
+                onRefresh = viewModel::refreshCatFact,
+                onOffline = viewModel::goOffline,
+                onInvalidate = viewModel::invalidateCache,
+                onClear = viewModel::clearCache,
+                onClearLog = viewModel::clearLog
+            )
 
-    fun showResult(result: DejaVuResult<CatFactResponse>) {
-        listAdapter.showDejaVuResult(result)
-    }
+            SettingsSection(
+                state = state,
+                onHttpClientChange = viewModel::setHttpClient,
+                onPersistenceChange = viewModel::setPersistence,
+                onFreshOnlyChange = viewModel::setFreshOnly,
+                onEncryptChange = viewModel::setEncrypt
+            )
 
-    fun onCallStarted() {
-        listView.post {
-            setButtonsEnabled(false)
-            listAdapter.onStart(
-                    presenter.useAnnotations,
-                    presenter.getCacheOperation()
+            HorizontalDivider()
+
+            ResultsList(
+                results = state.results,
+                logLines = state.logLines,
+                modifier = Modifier.weight(1f)
             )
         }
     }
+}
 
-    fun onCallComplete() {
-        listView.post {
-            setButtonsEnabled(true)
-            listAdapter.onComplete()
+@Composable
+fun ActionButtons(
+    isLoading: Boolean,
+    onLoad: () -> Unit,
+    onRefresh: () -> Unit,
+    onOffline: () -> Unit,
+    onInvalidate: () -> Unit,
+    onClear: () -> Unit,
+    onClearLog: () -> Unit
+) {
+    if (isLoading) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = onLoad, modifier = Modifier.weight(1f), enabled = !isLoading) {
+            Text("Load")
+        }
+        Button(onClick = onRefresh, modifier = Modifier.weight(1f), enabled = !isLoading) {
+            Text("Refresh")
+        }
+        OutlinedButton(onClick = onClearLog, modifier = Modifier.weight(1f)) {
+            Text("Clear")
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilledTonalButton(onClick = onOffline, modifier = Modifier.weight(1f), enabled = !isLoading) {
+            Text("Offline")
+        }
+        FilledTonalButton(onClick = onInvalidate, modifier = Modifier.weight(1f), enabled = !isLoading) {
+            Text("Invalidate")
+        }
+        FilledTonalButton(onClick = onClear, modifier = Modifier.weight(1f), enabled = !isLoading) {
+            Text("Clear Cache")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsSection(
+    state: DemoUiState,
+    onHttpClientChange: (HttpClientType) -> Unit,
+    onPersistenceChange: (PersistenceType) -> Unit,
+    onFreshOnlyChange: (Boolean) -> Unit,
+    onEncryptChange: (Boolean) -> Unit
+) {
+    Text("HTTP Client", style = MaterialTheme.typography.labelMedium)
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        HttpClientType.entries.forEachIndexed { index, type ->
+            SegmentedButton(
+                selected = state.httpClient == type,
+                onClick = { onHttpClientChange(type) },
+                shape = SegmentedButtonDefaults.itemShape(index, HttpClientType.entries.size)
+            ) {
+                Text(
+                    when (type) {
+                        HttpClientType.RETROFIT_ANNOTATION -> "Annotation"
+                        HttpClientType.RETROFIT_HEADER -> "Header"
+                        HttpClientType.KTOR -> "Ktor"
+                    }, style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 
-    private fun setButtonsEnabled(isEnabled: Boolean) {
-        loadButton.isEnabled = isEnabled
-        refreshButton.isEnabled = isEnabled
-        clearButton.isEnabled = isEnabled
-        invalidateButton.isEnabled = isEnabled
-        offlineButton.isEnabled = isEnabled
-    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+            PersistenceType.entries.forEachIndexed { index, type ->
+                SegmentedButton(
+                    selected = state.persistence == type,
+                    onClick = { onPersistenceChange(type) },
+                    shape = SegmentedButtonDefaults.itemShape(index, PersistenceType.entries.size)
+                ) {
+                    Text(type.name, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = state.freshOnly, onCheckedChange = onFreshOnlyChange)
+            Text("Fresh", style = MaterialTheme.typography.bodySmall)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = state.encrypt, onCheckedChange = onEncryptChange)
+            Text("Encrypt", style = MaterialTheme.typography.bodySmall)
+        }
     }
+}
 
-    private fun openGithub() {
-        val builder = CustomTabsIntent.Builder()
-        val customTabsIntent = builder.build()
-        customTabsIntent.launchUrl(this, Uri.parse("https://github.com/pthomain/dejavu"))
+@Composable
+fun ResultsList(
+    results: List<CacheResultItem>,
+    logLines: List<String>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(results) { result ->
+            ResultCard(result)
+        }
+
+        if (logLines.isNotEmpty()) {
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text("Log", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            }
+            items(logLines) { line ->
+                Text(
+                    text = line,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultCard(result: CacheResultItem) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = when (result.source) {
+                "FRESH" -> MaterialTheme.colorScheme.primaryContainer
+                "STALE" -> MaterialTheme.colorScheme.tertiaryContainer
+                "NETWORK" -> MaterialTheme.colorScheme.secondaryContainer
+                "ERROR" -> MaterialTheme.colorScheme.errorContainer
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                result.status?.let {
+                    Text(
+                        text = it.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (result.duration.isNotEmpty()) {
+                    Text(
+                        text = result.duration,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            if (result.error != null) {
+                Text(
+                    text = result.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            } else if (result.fact != null) {
+                Text(
+                    text = result.fact,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
 }

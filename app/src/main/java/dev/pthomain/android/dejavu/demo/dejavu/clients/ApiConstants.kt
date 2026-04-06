@@ -21,18 +21,7 @@
  *
  */
 
-package dev.pthomain.android.dejavu.demo
+package dev.pthomain.android.dejavu.demo.dejavu.clients
 
-import android.content.Context
-import android.util.AttributeSet
-import androidx.appcompat.widget.AppCompatTextView
-
-/**
- * Custom view for displaying cache instruction details.
- * Retained as a placeholder for list_item layout compatibility.
- */
-class InstructionView @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
-) : AppCompatTextView(context, attrs, defStyleAttr)
+const val BASE_URL = "https://catfact.ninja/"
+const val ENDPOINT = "fact"

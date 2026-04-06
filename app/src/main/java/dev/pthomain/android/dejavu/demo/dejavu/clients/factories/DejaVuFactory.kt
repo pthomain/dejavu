@@ -24,11 +24,10 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 
 import android.content.Context
+import dev.pthomain.android.dejavu.demo.dejavu.clients.BASE_URL
 import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.AnnotationRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.HeaderRetrofitClient
-import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter
-import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter.PersistenceType
 import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
 import dev.pthomain.android.dejavu.persistence.memory.di.MemoryPersistence
@@ -50,6 +49,11 @@ class DejaVuFactory(
         private val logger: Logger,
         private val context: Context
 ) {
+
+    enum class PersistenceType {
+        MEMORY,
+        SQLITE
+    }
 
     private val serialiser = KotlinxSerialiser()
 
@@ -80,7 +84,7 @@ class DejaVuFactory(
         ).build()
 
         val retrofit = Retrofit.Builder()
-                .baseUrl(DemoPresenter.BASE_URL)
+                .baseUrl(BASE_URL)
                 .client(createOkHttpClient())
                 .addCallAdapterFactory(dejaVuRetrofit.callAdapterFactory)
                 .build()

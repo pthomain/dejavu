@@ -24,7 +24,9 @@
 package dev.pthomain.android.dejavu.demo.dejavu.clients.model
 
 import dev.pthomain.android.dejavu.cache.metadata.response.Cacheable
+import kotlinx.serialization.Serializable
 
+@Serializable
 class CatFactResponse : Cacheable<CatFactResponse>() {
 
     var fact: String? = null

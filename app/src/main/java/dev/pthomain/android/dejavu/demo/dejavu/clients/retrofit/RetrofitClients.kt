@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.demo.dejavu.clients.ENDPOINT
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter.Companion.ENDPOINT
 import dev.pthomain.android.dejavu.retrofit.annotations.Cache
 import dev.pthomain.android.dejavu.retrofit.annotations.Clear
 import dev.pthomain.android.dejavu.retrofit.annotations.Invalidate
