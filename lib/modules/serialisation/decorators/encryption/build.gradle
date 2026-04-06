@@ -149,5 +149,5 @@ dependencies {
 
     implementation libs.androidx.multidex
 
-    implementation libs.tink.android
+    implementation libs.tink
 }
