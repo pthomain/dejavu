@@ -24,11 +24,11 @@
 package dev.pthomain.android.dejavu.test.network.model
 
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.cache.metadata.response.HasResponseMetadata
+import dev.pthomain.android.dejavu.cache.metadata.response.HasMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 
-class TestResponse : ArrayList<User>(), HasResponseMetadata<TestResponse, Cache> {
+class TestResponse : ArrayList<User>(), HasMetadata<TestResponse, Cache, ResponseToken<Cache, TestResponse>> {
 
     override lateinit var cacheToken: ResponseToken<Cache, TestResponse>
 

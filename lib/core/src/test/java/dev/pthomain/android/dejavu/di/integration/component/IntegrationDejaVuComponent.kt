@@ -23,44 +23,11 @@
 
 package dev.pthomain.android.dejavu.di.integration.component
 
-import androidx.sqlite.db.SupportSQLiteDatabase
-import androidx.sqlite.db.SupportSQLiteOpenHelper
-import dagger.Component
-import dev.pthomain.android.dejavu.cache.CacheManager
-import dev.pthomain.android.dejavu.di.integration.module.IntegrationModule
-import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
-import dev.pthomain.android.dejavu.interceptors.response.EmptyResponseFactory
-import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.persistence.base.store.KeyValuePersistenceManager
-import dev.pthomain.android.dejavu.persistence.memory.MemoryStore
-import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
-import dev.pthomain.android.dejavu.shared.utils.Function1
+import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.error.DejaVuError
-import java.util.*
-import javax.inject.Singleton
 
-@Singleton
-@Component(modules = [IntegrationModule::class])
-internal interface IntegrationDejaVuComponent : DejaVuComponent<DejaVuError> {
-
-    fun dateFactory(): Function1<Long?, Date>
-    fun serialiser(): dev.pthomain.android.dejavu.serialisation.Serialiser
-    fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
-    fun sqlOpenHelper(): SupportSQLiteOpenHelper?
-    fun database(): SupportSQLiteDatabase?
-    fun hasher(): Hasher
-    fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<DejaVuError>
-    fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<DejaVuError>?
-    fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<DejaVuError>
-    fun memoryStoreFactory(): dev.pthomain.android.dejavu.persistence.memory.MemoryStore.Factory
-    fun cacheManager(): CacheManager<DejaVuError>
-    fun cacheInterceptorFactory(): CacheInterceptor.Factory<DejaVuError>
-    fun responseInterceptorFactory(): ResponseInterceptor.Factory<DejaVuError>
-    fun annotationProcessor(): AnnotationProcessor<DejaVuError>
-    fun emptyResponseFactory(): EmptyResponseFactory<DejaVuError>
-    fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
-    fun persistenceManagerFactory(): PersistenceManagerFactory<DejaVuError>
-
-}
+/**
+ * Type alias for the DejaVuComponent used in integration tests.
+ * Replaces the previous Dagger-based IntegrationDejaVuComponent.
+ */
+internal typealias IntegrationDejaVuComponent = DejaVuComponent<DejaVuError>
