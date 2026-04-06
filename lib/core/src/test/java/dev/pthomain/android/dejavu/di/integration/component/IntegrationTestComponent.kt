@@ -23,21 +23,33 @@
 
 package dev.pthomain.android.dejavu.di.integration.component
 
-import dagger.Component
-import dev.pthomain.android.dejavu.di.integration.module.IntegrationTestModule
 import dev.pthomain.android.dejavu.test.AssetHelper
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import javax.inject.Singleton
 
-@Singleton
-@Component(modules = [IntegrationTestModule::class])
-internal interface IntegrationTestComponent {
-    fun okHttpClient(): OkHttpClient
-    fun retrofit(): Retrofit
-    fun mockClient(): MockClient
-    fun testClient(): TestClient
-    fun assetHelper(): AssetHelper
+/**
+ * Manual test component providing test infrastructure.
+ */
+internal class IntegrationTestComponent(
+        baseUrl: String,
+        assetsFolder: String
+) {
+    val json = Json { ignoreUnknownKeys = true }
+    val mockClient = MockClient()
+
+    val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(mockClient)
+            .build()
+
+    val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .build()
+
+    val testClient: TestClient = retrofit.create(TestClient::class.java)
+
+    val assetHelper = AssetHelper(assetsFolder, json)
 }

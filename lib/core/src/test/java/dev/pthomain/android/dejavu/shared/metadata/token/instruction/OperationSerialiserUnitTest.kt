@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.shared.metadata.token.instruction
 
-import com.google.common.net.HttpHeaders.REFRESH
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate

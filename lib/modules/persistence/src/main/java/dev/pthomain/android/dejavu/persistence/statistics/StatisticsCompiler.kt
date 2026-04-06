@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.statistics
 
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Provides statistics reflecting the current state of the cache
@@ -31,8 +31,8 @@ import io.reactivex.Single
 interface StatisticsCompiler {
 
     /**
-     * @return a Single emitting cache statistics
+     * @return a Flow emitting cache statistics
      */
-    fun getStatistics(): Single<CacheStatistics>
+    fun getStatistics(): Flow<CacheStatistics>
 
 }

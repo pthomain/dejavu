@@ -23,28 +23,30 @@
 
 package dev.pthomain.android.dejavu.test
 
-import com.google.gson.Gson
-import dev.pthomain.android.boilerplate.core.utils.io.useAndLogError
+import kotlinx.serialization.json.Json
+
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.retrofit.response.DejaVuResult
-import dev.pthomain.android.dejavu.retrofit.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.di.integration.module.NOW
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import io.reactivex.Observable
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import java.io.*
 
 class AssetHelper(private val assetsFolder: String,
-                  private val gson: Gson) {
+                  private val json: Json = Json { ignoreUnknownKeys = true }) {
 
-    fun <R : Any> observeStubbedResponse(fileName: String,
-                                         responseClass: Class<R>,
-                                         cacheToken: RequestToken<Cache, R>)
-            : Observable<out DejaVuResult<R>> =
-            observeFile(fileName)
-                    .map { gson.fromJson(it, responseClass) }
+    fun <R : Any> flowStubbedResponse(fileName: String,
+                                      responseClass: Class<R>,
+                                      cacheToken: RequestToken<Cache, R>)
+            : Flow<DejaVuResult<R>> =
+            flowFile(fileName)
+                    .map { json.decodeFromString(kotlinx.serialization.serializer(responseClass), it) as R }
                     .map {
                         Response(
                                 it,
@@ -53,7 +55,6 @@ class AssetHelper(private val assetsFolder: String,
                                             instruction,
                                             FRESH,
                                             NOW,
-                                            NOW,
                                             NOW
                                     )
                                 },
@@ -61,16 +62,18 @@ class AssetHelper(private val assetsFolder: String,
                         )
                     }
 
-    fun observeFile(fileName: String): Observable<String> =
-            File(assetsFolder + fileName).let {
-                FileInputStream(it).useAndLogError({
-                    Observable.just(fileToString(it))
-                })
+    fun flowFile(fileName: String): Flow<String> =
+            File(assetsFolder + fileName).let { file ->
+                flow {
+                    FileInputStream(file).use { stream ->
+                        emit(fileToString(stream))
+                    }
+                }
             }
 
     @Throws(IOException::class)
     private fun fileToString(inputStream: InputStream) =
-            BufferedReader(InputStreamReader(inputStream, "UTF-8")).useAndLogError({ reader ->
+            BufferedReader(InputStreamReader(inputStream, "UTF-8")).use { reader ->
                 val builder = StringBuilder()
                 var line: String?
                 do {
@@ -81,6 +84,6 @@ class AssetHelper(private val assetsFolder: String,
                     }
                 } while (line != null)
                 builder.toString()
-            })
+            }
 
 }

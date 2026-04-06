@@ -37,7 +37,7 @@ internal class RequestBodyConverter : (Request) -> String? {
     override fun invoke(p1: Request) =
             try {
                 Buffer().apply {
-                    p1.newBuilder().build().body()?.writeTo(this)
+                    p1.newBuilder().build().body?.writeTo(this)
                 }.readUtf8()
             } catch (e: IOException) {
                 null

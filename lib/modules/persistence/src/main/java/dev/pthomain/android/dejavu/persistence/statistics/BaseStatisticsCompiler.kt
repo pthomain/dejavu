@@ -24,7 +24,8 @@
 package dev.pthomain.android.dejavu.persistence.statistics
 
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.util.*
 
 /**
@@ -33,10 +34,10 @@ import java.util.*
 abstract class BaseStatisticsCompiler<T, I : Iterable<T>> : StatisticsCompiler {
 
     /**
-     * @return a Single emitting cache statistics
+     * @return a Flow emitting cache statistics
      */
-    final override fun getStatistics() =
-            Single.fromCallable(::compileStatistics)
+    final override fun getStatistics(): Flow<CacheStatistics> =
+            flow { emit(compileStatistics()) }
 
     /**
      * Returns an Iterable of the local metadata entries of a type that can be converted to CacheEntry.

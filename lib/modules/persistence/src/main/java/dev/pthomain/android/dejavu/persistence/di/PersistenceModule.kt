@@ -23,31 +23,26 @@
 
 package dev.pthomain.android.dejavu.persistence.di
 
+import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.base.store.KeySerialiser
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
 import dev.pthomain.android.dejavu.serialisation.Serialiser
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 
+/**
+ * Shared persistence dependencies constructed manually.
+ * Replaces the previous Koin-based PersistenceModule.
+ */
 class PersistenceModule(
         private val decoratorList: List<SerialisationDecorator>,
         private val serialiser: Serialiser
 ) {
 
-    val module = module {
+    fun createSerialisationManager() = SerialisationManager(
+            serialiser,
+            ::String,
+            decoratorList
+    )
 
-        single { serialiser }
-
-        single {
-            SerialisationManager(
-                    serialiser,
-                    ::String,
-                    decoratorList
-            )
-        }
-
-        single { KeySerialiser(get(named("dateFactory"))) }
-
-    }
+    fun createKeySerialiser(dateFactory: DateFactory) = KeySerialiser(dateFactory)
 }

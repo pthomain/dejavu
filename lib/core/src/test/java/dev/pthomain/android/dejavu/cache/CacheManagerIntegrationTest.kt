@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.cache
 
-//internal class CacheManagerIntegrationTest : BaseIntegrationTest<CacheManager<Glitch>>(
+//internal class CacheManagerIntegrationTest : BaseIntegrationTest<CacheManager<DejaVuError>>(
 //        { it.cacheManager() }
 //) {
 //    //TODO

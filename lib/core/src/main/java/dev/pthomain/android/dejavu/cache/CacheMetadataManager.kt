@@ -23,8 +23,7 @@
 
 package dev.pthomain.android.dejavu.cache
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
@@ -35,8 +34,8 @@ import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
 
 /**
@@ -75,7 +74,7 @@ internal class CacheMetadataManager<E>(
             diskDuration: Int
     ): Response<R, Cache> {
         val hasCachedResponse = previousCachedResponse != null
-        val status = ifElse(hasCachedResponse, REFRESHED, NETWORK)
+        val status = if (hasCachedResponse) REFRESHED else NETWORK
 
         val predicateDuration = if (status.isFresh) {
             durationPredicate(TransientResponse(

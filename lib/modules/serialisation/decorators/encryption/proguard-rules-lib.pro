@@ -60,10 +60,8 @@
 -keep class com.google.auto.service.AutoService { *; }
 -keep class java.nio.file.** { *; }
 
-# autovalue gson extension
--keep class **.AutoParcelGson*
+# autovalue extension
 -keep class com.google.auto.**
--keepnames @auto.parcelgson.AutoParcelGson class *
 -dontwarn com.google.common.**
 -dontwarn com.google.javaformat.**
 -dontwarn com.google.auto.**
@@ -99,19 +97,9 @@
 -keep class dev.pthomain.** { *; }
 -keep interface dev.pthomain.** { *; }
 
-## GSON 2.2.4 specific rules ##
-
-# Gson uses generic type information stored in a class file when working with fields. Proguard
-# removes such information by default, so configure it to keep all of it.
--keepattributes Signature
-
-# For using GSON @Expose annotation
--keepattributes *Annotation*
--keepattributes EnclosingMethod
-
-# Gson specific classes
--keep class sun.misc.Unsafe { *; }
--keep class com.google.gson.stream.** { *; }
+# Tink
+-keep class com.google.crypto.tink.** { *; }
+-dontwarn com.google.crypto.tink.**
 
 # OkHttp
 -keepattributes Signature
@@ -132,13 +120,6 @@
 -keepclasseswithmembers class * {
     @retrofit2.http.* <methods>;
 }
-
-# Snappy
--dontwarn org.iq80.snappy.**
--dontwarn sun.misc.Unsafe
--dontwarn org.apache.hadoop.io.compress.*
--keep class org.apache.hadoop.io.compress.**. { *; }
--keep class org.iq80.snappy.** { *; }
 
 # Tests
 -dontwarn org.junit.**

@@ -32,9 +32,9 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
  * if you want to inherit from the default metadata holding and error handling mechanisms.
  * Alternatively, if your response class cannot extend this class, have it implement the
  * CacheMetadata.Holder interface in a similar fashion as this class' implementation.
- * To provide your own error handling via an error factory, see GlitchFactory.
+ * To provide your own error handling via an error factory, see DejaVuErrorFactory.
  *
- * @see dev.pthomain.android.dejavu.interceptors.error.glitch.GlitchFactory
+ * @see dev.pthomain.android.dejavu.error.DejaVuErrorFactory
  */
 abstract class Cacheable<R : Any> : HasMetadata<R, Remote, ResponseToken<Remote, R>> {
 

@@ -24,24 +24,24 @@
 package dev.pthomain.android.dejavu.configuration
 
 import android.content.Context
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.cache.metadata.response.TransientResponse
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.configuration.OperationPredicate.Inactive
-import dev.pthomain.android.dejavu.di.DejaVuModule
+import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.dejavu.di.defaultDateFactory
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import org.koin.dsl.koinApplication
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
 class DejaVuBuilder<E> internal constructor(
         private val context: Context,
         private val logger: Logger,
         private val errorFactory: ErrorFactory<E>,
-        private val persistenceManagerModule: PersistenceManager.ModuleProvider
-) : Extendable
+        private val persistenceManagerProvider: PersistenceManager.ComponentProvider
+) : Extendable<E>
         where E : Throwable,
               E : NetworkErrorPredicate {
 
@@ -54,7 +54,7 @@ class DejaVuBuilder<E> internal constructor(
      *
      * It will be called with the target response class and associated request metadata before
      * the call is made in order to establish the operation to associate with that request.
-     * @see Remote //TODO explain remote vs local
+     * @see Remote
      *
      * Returning null means the cache will instead take into account the directives defined
      * as annotation or header on that request (if present).
@@ -64,7 +64,7 @@ class DejaVuBuilder<E> internal constructor(
      *
      * Otherwise, you can implement your own predicate to return the appropriate operation base on
      * the given RequestMetadata for the request being made.
-     *///TODO rename to Provider
+     */
     fun withOperationPredicate(operationPredicate: (metadata: RequestMetadata<*>) -> Remote?) =
             apply { this.operationPredicate = operationPredicate }
 
@@ -76,30 +76,35 @@ class DejaVuBuilder<E> internal constructor(
      *
      * This is useful for responses containing cache duration information, enabling server-side
      * cache control.
-     *///TODO rename to Provider
+     */
     fun withDurationPredicate(durationPredicate: (TransientResponse<*>) -> Int?) =
             apply { this.durationPredicate = durationPredicate }
 
-    override fun <B : ExtensionBuilder<B, D>, D> extend(extensionBuilder: B) =
-            extensionBuilder.accept(modules())
+    internal fun buildComponent(): DejaVuComponent<E> {
+        val appContext = context.applicationContext
+        val dateFactory = defaultDateFactory
+        val persistenceManager = persistenceManagerProvider.create(appContext, dateFactory, logger)
 
-    private fun modules() = DejaVuModule(
-            context.applicationContext,
-            logger,
-            errorFactory,
-            persistenceManagerModule,
-            operationPredicate,
-            durationPredicate
-    ).modules
+        return DejaVuComponent(
+                appContext,
+                logger,
+                errorFactory,
+                persistenceManager,
+                persistenceManagerProvider.decorators,
+                operationPredicate,
+                durationPredicate,
+                dateFactory
+        )
+    }
+
+    override fun <B : ExtensionBuilder<B, D, E>, D> extend(extensionBuilder: B) =
+            extensionBuilder.accept(buildComponent())
 
     /**
      * Returns an instance of DejaVu.
      */
     fun build(): DejaVu<E> {
-        val koin = koinApplication {
-            modules(this@DejaVuBuilder.modules())
-        }.koin
-
-        return DejaVu(koin.get())
+        val component = buildComponent()
+        return DejaVu(component.interceptorFactory)
     }
 }

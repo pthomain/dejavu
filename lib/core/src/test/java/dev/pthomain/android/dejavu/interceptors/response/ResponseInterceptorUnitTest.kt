@@ -23,314 +23,100 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
-import dev.pthomain.android.DejaVu.Configuration.Companion.CachePredicate
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.cache.CacheException
 import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.response.Empty
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.INVALID_HASH
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.di.DateFactory
-import dev.pthomain.android.dejavu.interceptors.RxType.OBSERVABLE
-import dev.pthomain.android.dejavu.interceptors.RxType.WRAPPABLE
-import dev.pthomain.android.dejavu.retrofit.annotations.processor.CacheException
-import dev.pthomain.android.dejavu.test.*
-import dev.pthomain.android.dejavu.test.network.MockClient
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import io.reactivex.Observable
-import io.reactivex.observers.TestObserver
-import org.junit.Before
+import dev.pthomain.android.dejavu.utils.SilentLogger
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 import java.util.*
 
 class ResponseInterceptorUnitTest {
 
-    private lateinit var mockEmptyResponseFactory: EmptyResponseFactory<Glitch>
-    private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
-    private lateinit var mockEmptyException: Glitch
+    private val now = Date(1234L)
+    private val dateFactory: (Long?) -> Date = { if (it == null) now else Date(it) }
 
-    private val start = 1234L
-    private val mockDateFactory: DateFactory = { Date(4321L) }
-    private var num = 0
-
-    @Before
-    fun setUp() {
-        mockEmptyResponseFactory = mock()
-    }
-
-    @Test
-    fun testApplyObservable() {
-        testApply(false, false)
-    }
-
-    @Test
-    fun testApplySingle() {
-        testApply(true, false)
-    }
-
-    @Test
-    fun testApplyCompletable() {
-        testApply(false, true)
-    }
-
-    private fun testApply(isSingle: Boolean,
-                          isCompletable: Boolean) {
-        operationAndStatusSequence { (operation, cacheStatus) ->
-            trueFalseSequence { hasResponse ->
-                trueFalseSequence { isEmptyObservable ->
-                        sequenceOf(TestResponse::class.java, String::class.java).forEach { responseClass ->
-                            testApplyWithVariants(
-                                    responseClass,
-                                    isSingle,
-                                    isCompletable,
-                                    hasResponse,
-                                    isEmptyObservable,
-                                    cacheStatus,
-                                    operation
-                            )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun getExpiringDescription(operation: Cache) =
-            ",\noperation.priority = ${operation.priority},"
-
-    private fun testApplyWithVariants(responseClass: Class<*>,
-                                      isSingle: Boolean,
-                                      isCompletable: Boolean,
-                                      hasResponse: Boolean,
-                                      isEmptyUpstreamObservable: Boolean,
-                                      cacheStatus: CacheStatus,
-                                      operation: Operation) {
-        val context = "Iteration ${num++}" +
-                "\nResponse class = ${responseClass.simpleName}," +
-                "\nOperation = ${operation.type}," +
-                "\nCacheStatus = $cacheStatus," +
-                "\nisSingle = $isSingle," +
-                "\nisCompletable = $isCompletable," +
-                "\nhasResponse = $hasResponse," +
-                "\nisEmptyUpstreamObservable = $isEmptyUpstreamObservable," +
-                (if (operation is Cache) getExpiringDescription(operation) else "")
-
-        setUp() //reset mocks
-
-        val mockInstructionToken = instructionToken(operation)
-        mockEmptyException = Glitch(EmptyResponseFactory.EmptyResponseException)
-
-        val isValid = if (operation is Cache) {
-            val filterFresh = cacheStatus.isFresh || !operation.isFreshOnly()
-            val filterFinal = cacheStatus.isFinal
-
-            ifElse(
-                    filterFresh && filterFinal,
-                    ifElse(isSingle, cacheStatus.isFinal, true),
-                    false
+    private fun createInstruction() = CacheInstruction<Cache, TestResponse>(
+            Cache(durationInSeconds = 3600),
+            HashedRequestMetadata(
+                    TestResponse::class.java,
+                    "http://test.com/test",
+                    null,
+                    INVALID_HASH,
+                    INVALID_HASH
             )
-        } else true
+    )
 
-        val isEmptyUpstream = !hasResponse || isEmptyUpstreamObservable
-        val expectEmpty = isEmptyUpstream || !isValid
-
-        val mockUpstreamMetadata = ResponseMetadata(
-                mockInstructionToken.copy(status = if (isEmptyUpstream) EMPTY else cacheStatus),
-                Glitch::class.java,
-                if (isEmptyUpstream) mockEmptyException else null
+    @Test
+    fun `asResult=true returns DejaVuResult directly`() = runTest {
+        val instruction = createInstruction()
+        val response = Response<TestResponse, Cache>(
+                TestResponse(),
+                ResponseToken(instruction, FRESH, now),
+                CallDuration(0, 10, 10)
         )
 
-        val mockResponse = if (responseClass == String::class.java) "" else TestResponse()
+        val interceptor = ResponseInterceptor.Factory<DejaVuError>(SilentLogger, dateFactory)
+                .create<TestResponse>(asResult = true)
 
-        val mockUpstreamWrapper = MockClient.ResponseWrapper(
-                responseClass,
-                if (isEmptyUpstream) null else mockResponse,
-                mockUpstreamMetadata
+        val results = interceptor.intercept(flowOf(response)).toList()
+
+        assertEquals(1, results.size)
+        assertTrue("asResult=true should return DejaVuResult", results[0] is DejaVuResult<*>)
+    }
+
+    @Test
+    fun `asResult=false returns unwrapped response`() = runTest {
+        val instruction = createInstruction()
+        val testResponse = TestResponse()
+        val response = Response<TestResponse, Cache>(
+                testResponse,
+                ResponseToken(instruction, FRESH, now),
+                CallDuration(0, 10, 10)
         )
 
-        val mockUpstreamObservable = if (isEmptyUpstreamObservable)
-            Observable.empty<MockClient.ResponseWrapper<*, *, Glitch>>()
-        else
-            Observable.just(mockUpstreamWrapper)
+        val interceptor = ResponseInterceptor.Factory<DejaVuError>(SilentLogger, dateFactory)
+                .create<TestResponse>(asResult = false)
 
-        mockConfiguration = DejaVu.Configuration(
-                mock(),
-                mock(),
-                mock(),
-                mock(),
-                mock(),
-                true,
-                mock(),
-                CachePredicate.Inactive
+        val results = interceptor.intercept(flowOf(response)).toList()
+
+        assertEquals(1, results.size)
+        assertEquals(testResponse, results[0])
+    }
+
+    @Test
+    fun `asResult=false with Empty result throws exception`() = runTest {
+        val instruction = createInstruction()
+        val error = DejaVuError(IOException("test"))
+        val empty = Empty<TestResponse, Cache, DejaVuError>(
+                error,
+                RequestToken(instruction, EMPTY, now),
+                CallDuration(0, 0, 0)
         )
 
-        val rxType = ifElse(
-                isSingle,
-                RxType.SINGLE,
-                ifElse(isCompletable, WRAPPABLE, OBSERVABLE)
-        )
+        val interceptor = ResponseInterceptor.Factory<DejaVuError>(SilentLogger, dateFactory)
+                .create<TestResponse>(asResult = false)
 
-        val target = ResponseInterceptor(
-                mock(),
-                mockDateFactory,
-                mockEmptyResponseFactory,
-                mockConfiguration,
-                mockMetadataSubject,
-                mockInstructionToken,
-                rxType,
-                start
-        )
-
-
-        val expectedMetadata = mockUpstreamMetadata.copy(
-                cacheToken = mockInstructionToken.copy(status = if (expectEmpty) EMPTY else cacheStatus),
-                exception = if (expectEmpty) mockEmptyException else null,
-                callDuration = CallDuration(0, 0, 4321 - 1234)
-        )
-
-        val mockEmptyResponseWrapper = mockUpstreamWrapper.copy(
-                response = null,
-                metadata = expectedMetadata
-        )
-
-        whenever(mockEmptyResponseFactory.create(
-                eq(mockInstructionToken)
-        )).thenReturn(mockEmptyResponseWrapper)
-
-        val mockEmptyResponse = MockClient.ResponseWrapper<*, *, Glitch>(
-                String::class.java,
-                ifElse(
-                        responseClass == String::class.java,
-                        "",
-                        TestResponse()
-                ),
-                mock()
-        )
-
-        whenever(mockEmptyResponseFactory.create(
-                eq(mockInstructionToken)
-        )).thenReturn(mockEmptyResponse)
-
-        whenever(mockEmptyResponseFactory.create(
-                eq(mockInstructionToken)
-        )).thenReturn(null)
-
-        val testObserver = TestObserver<Any>()
-
-        target.apply(mockUpstreamObservable).subscribe(testObserver)
-
-        if (isValid) {
-                verifyAddMetadataIfPossible(
-                        responseClass,
-                        isCompletable,
-                        expectedMetadata,
-                        testObserver,
-                        context
-                )
-        } else {
-            verifyCheckForError(
-                    isCompletable,
-                    responseClass,
-                    testObserver,
-                    context
-            )
+        try {
+            interceptor.intercept(flowOf(empty)).toList()
+            assertTrue("Should have thrown", false)
+        } catch (e: DejaVuError) {
+            assertEquals(error, e)
         }
     }
-
-    private fun verifyCheckForError(isCompletable: Boolean,
-                                    responseClass: Class<*>,
-                                    testObserver: TestObserver<Any>,
-                                    context: String) {
-        val actualMetadata = (testObserver.values().firstOrNull() as? TestResponse)?.metadata
-
-        val expectedCacheException = CacheException(
-                CacheException.Type.METADATA,
-                "Could not add cache metadata to response '${responseClass.simpleName}'." +
-                        " If you want to enable metadata for this class, it needs extend the" +
-                        " 'CacheMetadata.Holder' interface." +
-                        " The 'mergeOnNextOnError' directive will be cause an exception to be thrown for classes" +
-                        " that do not support cache metadata."
-        )
-
-        if (isCompletable) { //TODO check this logic
-            //nothing to check
-        } else {
-            val expectedException = if (responseClass == TestResponse::class.java)
-                mockEmptyException
-            else expectedCacheException
-
-                verifyExpectedException(
-                        isCompletable,
-                        actualMetadata,
-                        mockEmptyException,
-                        testObserver,
-                        context
-                )
-        }
-    }
-
-    private fun verifyExpectedException(isCompletable: Boolean,
-                                        metadata: ResponseMetadata<Glitch>?,
-                                        expectedException: Exception,
-                                        testObserver: TestObserver<Any>,
-                                        context: String) {
-        val actualException = if (metadata == null || isCompletable)
-            testObserver.errors().firstOrNull()
-        else metadata.exception
-
-        assertNotNullWithContext(
-                actualException,
-                "Expected an exception that wasn't thrown",
-                context
-        )
-
-        assertEqualsWithContext(
-                expectedException.javaClass,
-                actualException!!.javaClass,
-                "Could not find the expected exception on the returned Observable: different type",
-                context
-        )
-
-        assertEqualsWithContext(
-                expectedException.message,
-                actualException.message,
-                "Could not find the expected exception on the returned Observable: different message",
-                context
-        )
-    }
-
-    private fun verifyAddMetadataIfPossible(responseClass: Class<*>,
-                                            isCompletable: Boolean,
-                                            expectedMetadata: ResponseMetadata<Glitch>,
-                                            testObserver: TestObserver<Any>,
-                                            context: String) {
-        if (!isCompletable) {
-            val actualMetadata = (testObserver.values().firstOrNull() as? TestResponse)?.metadata
-
-            if (responseClass != String::class.java) {
-                val result = testObserver.values().first()
-
-                assertNotNullWithContext(
-                        result,
-                        "Returned response was null, should have returned a valid wrapper",
-                        context
-                )
-
-                assertEqualsWithContext(
-                        expectedMetadata,
-                        actualMetadata,
-                        "Returned response metadata didn't match",
-                        context
-                )
-            }
-        }
-    }
-
 }

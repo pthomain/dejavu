@@ -23,7 +23,7 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-//internal class DejaVuInterceptorIntegrationTest : BaseIntegrationTest<DejaVuInterceptor.Factory<Glitch>>(
+//internal class DejaVuInterceptorIntegrationTest : BaseIntegrationTest<DejaVuInterceptor.Factory<DejaVuError>>(
 //        { it.dejaVuInterceptorFactory() }
 //) {
 //    //TODO

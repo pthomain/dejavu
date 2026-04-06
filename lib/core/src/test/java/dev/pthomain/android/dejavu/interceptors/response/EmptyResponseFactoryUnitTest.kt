@@ -23,74 +23,88 @@
 
 package dev.pthomain.android.dejavu.interceptors.response
 
-import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.EMPTY
-import dev.pthomain.android.dejavu.test.assertEqualsWithContext
-import dev.pthomain.android.dejavu.test.assertNotNullWithContext
-import dev.pthomain.android.dejavu.test.assertNullWithContext
-import dev.pthomain.android.dejavu.test.instructionToken
+import dev.pthomain.android.dejavu.cache.metadata.response.Empty
+import dev.pthomain.android.dejavu.cache.metadata.response.Result
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.DONE
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.INVALID_HASH
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import org.junit.Before
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.*
 
 class EmptyResponseFactoryUnitTest {
 
-    private lateinit var mockErrorFactory: ErrorFactory<Glitch>
+    private val now = Date(1234L)
+    private val dateFactory: (Long?) -> Date = { if (it == null) now else Date(it) }
+    private val errorFactory = DejaVuErrorFactory()
+    private val target = EmptyResponseFactory<DejaVuError>(errorFactory, dateFactory)
 
-    private lateinit var target: EmptyResponseFactory<Glitch>
+    @Test
+    fun `createEmptyResponse returns Empty with error for Cache operation`() {
+        val instruction = CacheInstruction<Cache, TestResponse>(
+                Cache(durationInSeconds = 3600),
+                HashedRequestMetadata(TestResponse::class.java, "http://test.com", null, INVALID_HASH, INVALID_HASH)
+        )
+        val token = RequestToken(instruction, INSTRUCTION, now)
 
-    //TODO update test for DONE and EMPTY
+        val result = target.createEmptyResponse(token)
 
-    @Before
-    fun setUp() {
-        mockErrorFactory = mock()
-        target = EmptyResponseFactory(mockErrorFactory)
+        assertTrue("Should be an Empty result", result is Empty<*, *, *>)
+        assertTrue("Exception should be a DejaVuError",
+                (result as Empty<*, *, *>).exception is DejaVuError)
     }
 
     @Test
-    fun testEmptyResponseWrapperObservable() {
-        val instructionToken = instructionToken()
-        val mockError = mock<Glitch>()
-
-        whenever(mockErrorFactory(any())).thenReturn(mockError)
-
-        val wrapper = target.create(instructionToken)
-
-        val captor = argumentCaptor<NoSuchElementException>()
-        verify(mockErrorFactory).invoke(captor.capture())
-        val capturedException = captor.firstValue
-
-        assertNotNullWithContext(
-                capturedException,
-                "Wrong exception"
+    fun `createDoneResponse returns Result with DONE status for Clear operation`() {
+        val instruction = CacheInstruction<Clear, TestResponse>(
+                Clear(),
+                HashedRequestMetadata(TestResponse::class.java, "http://test.com", null, INVALID_HASH, INVALID_HASH)
         )
+        val token = RequestToken(instruction, INSTRUCTION, now)
 
-        assertEqualsWithContext(
-                TestResponse::class.java,
-                wrapper.responseClass,
-                "Wrong response class"
-        )
+        val result = target.createDoneResponse(token)
 
-        assertNullWithContext(
-                wrapper.response,
-                "Response should be null"
-        )
-
-        val metadata = wrapper.metadata
-
-        assertEqualsWithContext(
-                mockError,
-                metadata.exception,
-                "Exception didn't match"
-        )
-
-        assertEqualsWithContext(
-                instructionToken.copy(status = EMPTY),
-                metadata.cacheToken,
-                "Cache token status should be EMPTY"
-        )
+        assertTrue("Should be a Result", result is Result<*, *>)
+        assertEquals(DONE, (result as Result<*, *>).cacheToken.status)
     }
 
+    @Test
+    fun `createEmptyResponseFlow emits single result for Cache operation`() = runTest {
+        val instruction = CacheInstruction<Cache, TestResponse>(
+                Cache(durationInSeconds = 3600),
+                HashedRequestMetadata(TestResponse::class.java, "http://test.com", null, INVALID_HASH, INVALID_HASH)
+        )
+        val token = RequestToken(instruction, INSTRUCTION, now)
+
+        val results = target.createEmptyResponseFlow(token).toList()
+
+        assertEquals(1, results.size)
+        assertTrue("Should emit an Empty result", results[0] is Empty<*, *, *>)
+    }
+
+    @Test
+    fun `createEmptyResponseFlow emits DONE result for Clear operation`() = runTest {
+        val instruction = CacheInstruction<Clear, TestResponse>(
+                Clear(),
+                HashedRequestMetadata(TestResponse::class.java, "http://test.com", null, INVALID_HASH, INVALID_HASH)
+        )
+        val token = RequestToken(instruction, INSTRUCTION, now)
+
+        val results = target.createEmptyResponseFlow(token).toList()
+
+        assertEquals(1, results.size)
+        assertTrue("Should emit a Result", results[0] is Result<*, *>)
+        assertEquals(DONE, (results[0] as Result<*, *>).cacheToken.status)
+    }
 }

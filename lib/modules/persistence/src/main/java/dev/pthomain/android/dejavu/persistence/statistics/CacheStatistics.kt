@@ -25,8 +25,7 @@ package dev.pthomain.android.dejavu.persistence.statistics
 
 import android.annotation.SuppressLint
 import com.jakewharton.fliptables.FlipTable
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import java.text.SimpleDateFormat
 import java.util.*
@@ -109,7 +108,7 @@ data class CacheEntrySummary(
         )
 
         return arrayOf(
-                ifElse(showClass, responseClass.format(), null),
+                if (showClass) responseClass.format() else null,
                 fresh.toString(),
                 stale.toString(),
                 dateFormat.format(oldestEntry),
@@ -135,7 +134,7 @@ data class CacheEntrySummary(
 
 private fun getCacheEntrySummaryColumnNames(showClass: Boolean = false) =
         arrayOf(
-                ifElse(showClass, "Response class", null),
+                if (showClass) "Response class" else null,
                 "Fresh",
                 "Stale",
                 "Oldest Entry",
@@ -160,7 +159,7 @@ data class CacheEntry(
 
     internal fun format(showClass: Boolean = false) =
             arrayOf(
-                    ifElse(showClass, responseClass.format(), null),
+                    if (showClass) responseClass.format() else null,
                     status.name,
                     dateFormat.format(cacheDate),
                     dateFormat.format(expiryDate)
@@ -183,7 +182,7 @@ data class CacheEntry(
 
 private fun getCacheEntryColumnNames(showClass: Boolean = false) =
         arrayOf(
-                ifElse(showClass, "Response class", null),
+                if (showClass) "Response class" else null,
                 "Status",
                 "Encrypted",
                 "Compressed",

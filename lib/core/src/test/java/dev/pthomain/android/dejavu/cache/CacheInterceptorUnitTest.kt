@@ -23,158 +23,153 @@
 
 package dev.pthomain.android.dejavu.cache
 
-import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.NOT_CACHED
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.response.Result
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.INVALID_HASH
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Clear
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.DoNotCache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.CacheInterceptor
-import dev.pthomain.android.dejavu.test.assertEqualsWithContext
-import dev.pthomain.android.dejavu.test.instructionToken
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.operationSequence
-import io.reactivex.Observable
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.*
 
 class CacheInterceptorUnitTest {
 
-    private lateinit var mockInstructionToken: RequestToken<Cache>
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
-    private lateinit var mockMetadata: ResponseMetadata<*, *, Glitch>
-    private lateinit var mockUpstream: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockUpstreamResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockReturnedResponseWrapper: ResponseWrapper<*, *, Glitch>
-    private lateinit var mockReturnedObservable: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockCacheManager: CacheManager<Glitch>
+    private val now = Date(1234L)
 
-    private val mockStart = 1234L
-    private val mockDateFactory: DateFactory = { Date(1234L) }
-
-    private fun getTarget(operation: Cache): CacheInterceptor<*, *, Glitch> {
-        mockCacheManager = mock()
-
-        mockInstructionToken = instructionToken(operation)
-        mockMetadata = ResponseMetadata(mockInstructionToken, Glitch::class.java)
-        mockErrorInterceptor = mock()
-
-        mockUpstreamResponseWrapper = ResponseWrapper(
-                TestResponse::class.java,
-                mock<TestResponse>(),
-                mockMetadata
-        )
-        mockUpstream = Observable.just(mockUpstreamResponseWrapper)
-
-        mockReturnedResponseWrapper = mock()
-        mockReturnedObservable = Observable.just(mockReturnedResponseWrapper)
-
-        whenever(mockErrorInterceptor.apply(any())).thenReturn(mockReturnedObservable)
-
-        return CacheInterceptor(
-                mockErrorInterceptor,
-                mockCacheManager,
-                mockDateFactory,
-                mockInstructionToken,
-                mockStart
-        )
-    }
-
-    @Test
-    fun testApplyCacheEnabledFalse() {
-        testApply(false)
-    }
-
-    @Test
-    fun testApplyCacheEnabledTrue() {
-        testApply(true)
-    }
-
-    private fun testApply(isCacheEnabled: Boolean) {
-        operationSequence { operation ->
-            val target = getTarget(
-                    ifElse(isCacheEnabled, operation, DoNotCache)
+    private fun <O : dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation> createToken(
+            operation: O
+    ): RequestToken<O, TestResponse> =
+            RequestToken(
+                    CacheInstruction(
+                            operation,
+                            HashedRequestMetadata(
+                                    TestResponse::class.java,
+                                    "http://test.com/test",
+                                    null,
+                                    INVALID_HASH,
+                                    INVALID_HASH
+                            )
+                    ),
+                    INSTRUCTION,
+                    now
             )
 
-            if (isCacheEnabled) {
-                when (operation) {
-                    is Cache -> prepareGetCachedResponse(operation)
-                    is Clear -> prepareClearCache()
-                    is Invalidate -> prepareInvalidate()
-                }
-            }
+    @Test
+    fun `Cache operation delegates to CacheManager getCachedResponse`() = runTest {
+        val mockCacheManager = mock<CacheManager<DejaVuError>>()
+        val token = createToken(Cache(durationInSeconds = 3600))
 
-            target.apply(mockUpstream).blockingFirst()
-
-            val responseCaptor = argumentCaptor<Observable<Any>>()
-            verify(mockErrorInterceptor).apply(responseCaptor.capture())
-
-            val responseWrapper = responseCaptor.firstValue.blockingFirst() as ResponseWrapper<*, *, Glitch>
-
-            if (isCacheEnabled) {
-                when (operation) {
-                    is Cache,
-                    is Clear,
-                    is Invalidate -> assertEqualsWithContext(
-                            mockReturnedResponseWrapper,
-                            responseWrapper,
-                            "The returned observable did not match",
-                            "Failure for operation $operation"
-                    )
-
-                    else -> verifyDoNotCache(
-                            operation,
-                            isCacheEnabled,
-                            responseWrapper
-                    )
-                }
-            } else {
-                verifyDoNotCache(
-                        operation,
-                        isCacheEnabled,
-                        responseWrapper
-                )
-            }
-        }
-    }
-
-    private fun prepareGetCachedResponse(operation: Cache) {
-        whenever(mockCacheManager.getCachedResponse(
-                eq(mockUpstream),
-                eq(mockInstructionToken.copy(instruction = mockInstructionToken.instruction.copy(operation = operation))),
-                eq(mockStart)
-        )).thenReturn(mockReturnedObservable)
-    }
-
-    private fun prepareClearCache() {
-        whenever(mockCacheManager.clearCache(
-                eq(mockInstructionToken)
-        )).thenReturn(mockReturnedObservable)
-    }
-
-    private fun prepareInvalidate() {
-        whenever(mockCacheManager.invalidate(
-                eq(mockInstructionToken)
-        )).thenReturn(mockReturnedObservable)
-    }
-
-    private fun verifyDoNotCache(operation: Operation,
-                                 isCacheEnabled: Boolean,
-                                 responseWrapper: ResponseWrapper<*, *, Glitch>) {
-        assertEqualsWithContext(
-                mockMetadata.copy(cacheToken = mockInstructionToken.copy(
-                        status = NOT_CACHED,
-                        fetchDate = Date(1234L),
-                        cacheDate = null,
-                        expiryDate = null
-                )),
-                responseWrapper.metadata,
-                "Response wrapper metadata didn't match for operation == $operation and isCacheEnabled == $isCacheEnabled"
+        val expectedResponse = Response<TestResponse, Cache>(
+                TestResponse(),
+                ResponseToken(token.instruction as CacheInstruction<Cache, TestResponse>, FRESH, now),
+                CallDuration(0, 0, 0)
         )
+
+        whenever(mockCacheManager.getCachedResponse(any(), any()))
+                .thenReturn(flowOf(expectedResponse))
+
+        val interceptor = CacheInterceptor.Factory<DejaVuError>(mockCacheManager)
+                .create(token)
+
+        val upstream = flowOf(expectedResponse as dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper<TestResponse>)
+        val results = interceptor.intercept(upstream).toList()
+
+        assertEquals(1, results.size)
+        assertTrue(results[0] is Response<*, *>)
     }
 
+    @Test
+    fun `Clear operation delegates to CacheManager clearCache`() = runTest {
+        val mockCacheManager = mock<CacheManager<DejaVuError>>()
+        val token = createToken(Clear())
+
+        val expectedResult = Result<TestResponse, Clear>(
+                RequestToken(token.instruction as CacheInstruction<Clear, TestResponse>, DONE, now),
+                CallDuration(0, 0, 0)
+        )
+
+        whenever(mockCacheManager.clearCache(any<RequestToken<Clear, TestResponse>>()))
+                .thenReturn(flowOf(expectedResult))
+
+        val interceptor = CacheInterceptor.Factory<DejaVuError>(mockCacheManager)
+                .create(token)
+
+        val upstream = flowOf(mock<dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper<TestResponse>>())
+        val results = interceptor.intercept(upstream).toList()
+
+        assertEquals(1, results.size)
+        assertTrue(results[0] is Result<*, *>)
+        assertEquals(DONE, (results[0] as Result<*, *>).cacheToken.status)
+    }
+
+    @Test
+    fun `Invalidate operation delegates to CacheManager invalidate`() = runTest {
+        val mockCacheManager = mock<CacheManager<DejaVuError>>()
+        val token = createToken(Invalidate)
+
+        val expectedResult = Result<TestResponse, Invalidate>(
+                RequestToken(token.instruction as CacheInstruction<Invalidate, TestResponse>, DONE, now),
+                CallDuration(0, 0, 0)
+        )
+
+        whenever(mockCacheManager.invalidate(any<RequestToken<Invalidate, TestResponse>>()))
+                .thenReturn(flowOf(expectedResult))
+
+        val interceptor = CacheInterceptor.Factory<DejaVuError>(mockCacheManager)
+                .create(token)
+
+        val upstream = flowOf(mock<dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper<TestResponse>>())
+        val results = interceptor.intercept(upstream).toList()
+
+        assertEquals(1, results.size)
+        assertTrue(results[0] is Result<*, *>)
+    }
+
+    @Test
+    fun `DoNotCache operation updates status to NOT_CACHED`() = runTest {
+        val mockCacheManager = mock<CacheManager<DejaVuError>>()
+        val token = createToken(DoNotCache)
+
+        val upstreamResponse = Response<TestResponse, DoNotCache>(
+                TestResponse(),
+                ResponseToken(
+                        CacheInstruction(DoNotCache, HashedRequestMetadata(
+                                TestResponse::class.java, "http://test.com/test", null, INVALID_HASH, INVALID_HASH
+                        )),
+                        NETWORK,
+                        now
+                ),
+                CallDuration(0, 0, 0)
+        )
+
+        val interceptor = CacheInterceptor.Factory<DejaVuError>(mockCacheManager)
+                .create(token)
+
+        @Suppress("UNCHECKED_CAST")
+        val upstream = flowOf(upstreamResponse as dev.pthomain.android.dejavu.cache.metadata.response.ResultWrapper<TestResponse>)
+        val results = interceptor.intercept(upstream).toList()
+
+        assertEquals(1, results.size)
+        assertTrue(results[0] is Response<*, *>)
+        assertEquals(NOT_CACHED, (results[0] as Response<*, *>).cacheToken.status)
+    }
 }

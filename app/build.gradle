@@ -24,20 +24,19 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlinx-serialization'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    namespace 'dev.pthomain.android.dejavu.demo'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdk 24
+        targetSdk 35
         versionCode 3
-        versionName "1.2"
+        versionName "3.0"
         vectorDrawables.useSupportLibrary = true
-
-        aaptOptions {
-            additionalParameters "--no-version-vectors"
-        }
     }
 
     buildTypes {
@@ -55,28 +54,40 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
-    packagingOptions {
-        exclude 'META-INF/services/javax.annotation.processing.Processor'
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/app_release.kotlin_module'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/eclipse.inf'
-        exclude 'about_files/LICENSE-2.0.txt'
-        exclude 'plugin.xml'
-        exclude 'plugin.properties'
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                'META-INF/services/javax.annotation.processing.Processor',
+                'META-INF/DEPENDENCIES.txt',
+                'META-INF/LICENSE.txt',
+                'META-INF/NOTICE.txt',
+                'META-INF/NOTICE',
+                'META-INF/LICENSE',
+                'META-INF/DEPENDENCIES',
+                'META-INF/ASL2.0',
+                'META-INF/app_release.kotlin_module',
+                'META-INF/notice.txt',
+                'META-INF/license.txt',
+                'META-INF/dependencies.txt',
+                'META-INF/LGPL2.1',
+                'META-INF/eclipse.inf',
+                'about_files/LICENSE-2.0.txt',
+                'plugin.xml',
+                'plugin.properties'
+            ]
+        }
     }
 
 }
@@ -84,32 +95,26 @@ android {
 dependencies {
     implementation project(':lib:core')
     implementation project(':lib:modules:http:retrofit')
-    implementation project(':lib:modules:http:volley')
-    implementation project(':lib:modules:persistence:file')
+    implementation project(':lib:modules:http:ktor')
     implementation project(':lib:modules:persistence:memory')
     implementation project(':lib:modules:persistence:sqlite')
-    implementation project(':lib:modules:serialisation:gson')
-    implementation project(':lib:modules:serialisation:moshi')
-    implementation project(':lib:modules:serialisation:decorators:compression')
+    implementation project(':lib:modules:serialisation:kotlinx')
     implementation project(':lib:modules:serialisation:decorators:encryption')
 
-    implementation appDependencies.multiDex
+    implementation libs.androidx.multidex
 
-    implementation appDependencies.koinCore
-    implementation appDependencies.koinCoreExt
+    implementation libs.okhttp
+    implementation libs.okhttp.logging
 
-    implementation appDependencies.volley
+    implementation libs.kotlinx.serialization.json
 
-    implementation appDependencies.boilerplate_ui
-    implementation appDependencies.rxDogTag
-
-    implementation appDependencies.okHttp
-    implementation appDependencies.okHttpLogging
-
-    implementation appDependencies.retrofitConverterGson
-    implementation appDependencies.moshi
-    implementation appDependencies.moshiKotlin
-
-    implementation appDependencies.appCompat
-    implementation appDependencies.browser
+    // Compose
+    implementation platform('androidx.compose:compose-bom:2024.12.01')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.7'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
 }

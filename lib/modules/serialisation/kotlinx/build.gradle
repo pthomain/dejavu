@@ -1,0 +1,53 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlinx-serialization'
+
+group = 'dev.pthomain.dejavu'
+
+android {
+    namespace 'dev.pthomain.android.dejavu.serialisation.kotlinx'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            multiDexEnabled true
+        }
+        release {
+            minifyEnabled true
+            multiDexEnabled false
+        }
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    compileOnly project(':lib:core')
+    implementation project(':lib:modules:serialisation')
+
+    implementation libs.androidx.multidex
+    implementation libs.kotlinx.serialization.json
+}

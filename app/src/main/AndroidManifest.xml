@@ -33,9 +33,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat">
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name="dev.pthomain.android.dejavu.demo.DemoActivity"
+            android:exported="true"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -20,15 +20,30 @@
  *  under the License.
  *
  */
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
 include ':lib:core'
-include ':lib:modules:http:volley'
 include ':lib:modules:http:retrofit'
+include ':lib:modules:http:ktor'
 include ':lib:modules:serialisation'
-include ':lib:modules:serialisation:gson'
-include ':lib:modules:serialisation:moshi'
-include ':lib:modules:serialisation:decorators:compression'
+include ':lib:modules:serialisation:kotlinx'
 include ':lib:modules:serialisation:decorators:encryption'
-include ':lib:modules:persistence:file'
 include ':lib:modules:persistence:memory'
 include ':lib:modules:persistence:sqlite'
 include ':app'

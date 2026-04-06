@@ -24,53 +24,66 @@
 package dev.pthomain.android.dejavu.retrofit
 
 import android.content.Context
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
 import dev.pthomain.android.dejavu.DejaVu
-import dev.pthomain.android.dejavu.configuration.DejaVuBuilder
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitBuilder
+import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitExtensionBuilder
+import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.utils.SilentLogger
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
 import retrofit2.CallAdapter
 
 /**
- * Contains the Retrofit call adapter, DejaVuInterceptor factory and current global configuration.
+ * Contains the Retrofit call adapter factory, DejaVuInterceptor factory,
+ * and the OkHttp header interceptor for stripping cache headers.
  */
 class DejaVuRetrofit<E> internal constructor(
-        val callAdapterFactory: CallAdapter.Factory,
-        val interceptorFactory : DejaVuInterceptor.Factory<E>
+    val callAdapterFactory: CallAdapter.Factory,
+    val headerInterceptor: HeaderInterceptor,
+    val interceptorFactory: DejaVuInterceptor.Factory<E>
 ) where E : Throwable,
-        E : NetworkErrorPredicate {
+      E : NetworkErrorPredicate {
 
     companion object {
 
         fun <E> extension()
-                where E : Throwable,
-                      E : NetworkErrorPredicate =
-                DejaVuRetrofitBuilder<E>()
+            where E : Throwable,
+                  E : NetworkErrorPredicate =
+            DejaVuRetrofitExtensionBuilder<E>()
 
-        fun <E> builder(dejaVuBuilder: DejaVuBuilder<E>)
-                where E : Throwable,
-                      E : NetworkErrorPredicate =
-                dejaVuBuilder.extend(extension<E>())
-
+        /**
+         * Convenience builder that creates a DejaVuRetrofit instance directly
+         * from the core dependencies, without requiring a separate DejaVuBuilder step.
+         *
+         * @param context the Android context
+         * @param errorFactory the factory for creating error instances
+         * @param persistenceManagerProvider the persistence backend provider
+         * @param logger the logger instance
+         * @return a DejaVuRetrofitBuilder ready to build
+         */
+        /**
+         * Convenience builder that creates a DejaVuRetrofit instance directly
+         * from the core dependencies, without requiring a separate DejaVuBuilder step.
+         *
+         * @param context the Android context
+         * @param errorFactory the factory for creating error instances
+         * @param persistenceManagerProvider the persistence backend provider
+         * @param logger the logger instance
+         * @return a DejaVuRetrofitBuilder ready to build
+         */
         fun <E> builder(
-                context: Context,
-                errorFactory: ErrorFactory<E>,
-                persistenceManagerModule: PersistenceManager.ModuleProvider,
-                logger: Logger = SilentLogger
-        ) where E : Throwable,
-                E : NetworkErrorPredicate =
-                builder(
-                        DejaVu.builder(
-                                context,
-                                errorFactory,
-                                persistenceManagerModule,
-                                logger
-                        )
-                )
+            context: Context,
+            errorFactory: ErrorFactory<E>,
+            persistenceManagerProvider: PersistenceManager.ComponentProvider,
+            logger: Logger = SilentLogger
+        ): DejaVuRetrofitBuilder<E>
+            where E : Throwable,
+                  E : NetworkErrorPredicate =
+            DejaVu.builder(context, errorFactory, persistenceManagerProvider, logger)
+                .extend(DejaVuRetrofitExtensionBuilder<E>())
+                .build()
     }
-
 }

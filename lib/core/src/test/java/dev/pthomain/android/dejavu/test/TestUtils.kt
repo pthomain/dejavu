@@ -23,17 +23,14 @@
 
 package dev.pthomain.android.dejavu.test
 
-
 import com.nhaarman.mockitokotlin2.atLeastOnce
 import com.nhaarman.mockitokotlin2.never
 import com.nhaarman.mockitokotlin2.verify
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.di.integration.module.NOW
-import dev.pthomain.android.dejavu.retrofit.annotations.DoNotCache
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
@@ -41,18 +38,13 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local.Invalidate
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
 import junit.framework.TestCase.*
 import org.junit.Assert.assertArrayEquals
 import org.mockito.internal.verification.VerificationModeFactory
 import org.mockito.verification.VerificationMode
-import retrofit2.CallAdapter
-import retrofit2.Retrofit
-import retrofit2.http.GET
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
+
+internal const val DEFAULT_URL = "http://test.com/testResponse"
 
 fun <E> expectException(exceptionType: Class<E>,
                         message: String,
@@ -125,83 +117,58 @@ fun withContext(description: String,
         if (context == null) description
         else "\n$context\n=> $description"
 
-fun assertGlitchWithContext(expectedGlitch: Glitch?,
-                            actualGlitch: Any?,
-                            context: String? = null) {
+fun assertDejaVuErrorWithContext(expectedError: DejaVuError?,
+                                 actualError: Any?,
+                                 context: String? = null) {
     assertTrueWithContext(
-            actualGlitch is Glitch,
-            withContext("Value was not a Glitch", context)
+            actualError is DejaVuError,
+            withContext("Value was not a DejaVuError", context)
     )
 
-    actualGlitch as Glitch?
+    actualError as DejaVuError?
 
-    val expectedCause = expectedGlitch?.cause
-    val actualCause = actualGlitch?.cause
+    val expectedCause = expectedError?.cause
+    val actualCause = actualError?.cause
 
     if (expectedCause == null) {
         assertTrueWithContext(
                 actualCause == null,
-                "Glitch cause should be null"
+                "DejaVuError cause should be null"
         )
     } else {
         assertFalseWithContext(
                 actualCause == null,
-                "Glitch cause shouldn't be null"
+                "DejaVuError cause shouldn't be null"
         )
 
         assertTrueWithContext(
                 expectedCause.javaClass == actualCause!!.javaClass,
-                "Glitch cause type was different"
+                "DejaVuError cause type was different"
         )
 
         assertTrueWithContext(
                 expectedCause.message == actualCause.message,
-                "Glitch cause message was different"
+                "DejaVuError cause message was different"
         )
 
         assertEqualsWithContext(
-                expectedGlitch.httpStatus,
-                actualGlitch?.httpStatus,
-                withContext("Glitch httpStatus didn't match", context)
+                expectedError.httpStatusCode,
+                actualError?.httpStatusCode,
+                withContext("DejaVuError httpStatusCode didn't match", context)
         )
 
         assertEqualsWithContext(
-                expectedGlitch.errorCode,
-                actualGlitch?.errorCode,
-                withContext("Glitch errorCode didn't match", context)
+                expectedError.errorCode,
+                actualError?.errorCode,
+                withContext("DejaVuError errorCode didn't match", context)
         )
 
         assertEqualsWithContext(
-                expectedGlitch.description,
-                actualGlitch?.description,
-                withContext("Glitch description didn't match", context)
+                expectedError.description,
+                actualError?.description,
+                withContext("DejaVuError description didn't match", context)
         )
     }
-}
-
-internal fun assertResponseWrapperWithContext(expected: MockClient.ResponseWrapper<*, *, Glitch>,
-                                              actual: MockClient.ResponseWrapper<*, *, Glitch>,
-                                              context: String? = null) {
-    assertEqualsWithContext(
-            expected.responseClass,
-            actual.responseClass,
-            "Response class didn't match",
-            context
-    )
-
-    assertEqualsWithContext(
-            expected.response,
-            actual.response,
-            "Responses didn't match",
-            context
-    )
-
-    assertEqualsWithContext(
-            expected.metadata,
-            actual.metadata,
-            "Response metadata didn't match",
-            context
-    )
 }
 
 internal fun <T> verifyWithContext(target: T,
@@ -263,13 +230,6 @@ fun assertByteArrayEqualsWithContext(expected: ByteArray?,
         )
     }
 }
-
-internal fun defaultResponseWrapper(metadata: ResponseMetadata<Cache, ResponseToken<Cache>, Glitch>,
-                                    response: TestResponse?) = MockClient.ResponseWrapper(
-        TestResponse::class.java,
-        response,
-        metadata
-)
 
 fun defaultRequestMetadata() = PlainRequestMetadata(
         TestResponse::class.java,
@@ -334,19 +294,5 @@ inline fun operationAndStatusSequence(action: (Pair<Operation, CacheStatus>) -> 
     }
 }
 
-fun callAdapterFactory(rxClass: Class<*>,
-                       retrofit: Retrofit,
-                       targetClass: Class<*>,
-                       constructor: (Type, Array<Annotation>, Retrofit) -> CallAdapter<Any, Any>) =
-        constructor.invoke(
-                object : ParameterizedType {
-                    override fun getRawType() = rxClass
-                    override fun getOwnerType() = null
-                    override fun getActualTypeArguments() = arrayOf<Type>(targetClass)
-                },
-                arrayOf(
-                        getAnnotation<GET>(listOf("/")),
-                        getAnnotation<Remote.DoNotCache>(emptyList())
-                ),
-                retrofit
-        )
+fun <T> ifElse(condition: Boolean, ifTrue: T, ifFalse: T): T =
+        if (condition) ifTrue else ifFalse

@@ -24,22 +24,17 @@
 package dev.pthomain.android.dejavu.test.network.retrofit
 
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
 import retrofit2.http.GET
 
 interface TestClient {
 
     @GET("/")
-    fun observable(): Observable<TestResponse>
+    fun flow(): Flow<TestResponse>
 
     @GET("/")
-    fun single(): Single<TestResponse>
-
-    @GET("/")
-    fun completable(): Completable
+    suspend fun suspend(): TestResponse
 
     @GET("/")
     fun call(): Call<TestResponse>

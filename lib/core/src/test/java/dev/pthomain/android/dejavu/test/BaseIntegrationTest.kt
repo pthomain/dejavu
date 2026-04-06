@@ -23,50 +23,36 @@
 
 package dev.pthomain.android.dejavu.test
 
-import androidx.annotation.CallSuper
-import androidx.test.core.app.ApplicationProvider
-import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.mock
-import dev.pthomain.android.DejaVu
-import dev.pthomain.android.dejavu.BuildConfig
-import dev.pthomain.android.dejavu.di.integration.component.DaggerIntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.di.integration.component.DaggerIntegrationTestComponent
+import dev.pthomain.android.dejavu.di.DejaVuComponent
 import dev.pthomain.android.dejavu.di.integration.component.IntegrationDejaVuComponent
-import dev.pthomain.android.dejavu.di.integration.module.IntegrationModule
-import dev.pthomain.android.dejavu.di.integration.module.IntegrationTestModule
+import dev.pthomain.android.dejavu.di.integration.module.ASSETS_FOLDER
+import dev.pthomain.android.dejavu.di.integration.module.BASE_URL
+import dev.pthomain.android.dejavu.di.integration.module.NOW
+import dev.pthomain.android.dejavu.di.integration.component.IntegrationTestComponent
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
-import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
+import dev.pthomain.android.dejavu.error.DejaVuError
+import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
 import dev.pthomain.android.dejavu.test.network.MockClient
 import dev.pthomain.android.dejavu.test.network.model.TestResponse
-import dev.pthomain.android.dejavu.test.network.model.User
 import dev.pthomain.android.dejavu.test.network.retrofit.TestClient
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.interceptor.error.glitch.GlitchFactory
-import dev.pthomain.android.mumbo.Mumbo
+import dev.pthomain.android.dejavu.utils.SilentLogger
 import okhttp3.OkHttpClient
 import org.junit.Before
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import retrofit2.Retrofit
 import java.io.IOException
 import java.util.*
 
-@RunWith(RobolectricTestRunner::class)
-@Config(packageName = BuildConfig.LIBRARY_PACKAGE_NAME)
 internal abstract class BaseIntegrationTest<T : Any>(
-        private val targetExtractor: (IntegrationDejaVuComponent) -> T,
-        private val useDefaultConfiguration: Boolean = true
+        private val targetExtractor: (IntegrationDejaVuComponent) -> T
 ) {
 
-    protected val NOW = Date(1234L)
+    protected val now = NOW
 
     protected lateinit var okHttpClient: OkHttpClient
     protected lateinit var retrofit: Retrofit
@@ -77,44 +63,26 @@ internal abstract class BaseIntegrationTest<T : Any>(
     protected lateinit var cacheComponent: IntegrationDejaVuComponent
     protected lateinit var target: T
 
-    private lateinit var dejaVu: dev.pthomain.android.DejaVu<Glitch>
-
-    protected open val configuration = dev.pthomain.android.DejaVu.Configuration(
-            ApplicationProvider.getApplicationContext(),
-            mock(),
-            GlitchFactory(),
-            GsonSerialiser(Gson()),
-            Mumbo(ApplicationProvider.getApplicationContext()).conceal(),
-            true,
-            null,
-            { _ -> null },
-            { _ -> null }
-    )
-
     @Before
-    @CallSuper
     open fun setUp() {
-        if (useDefaultConfiguration) {
-            setUpWithConfiguration(configuration)
-        }
-    }
+        cacheComponent = DejaVuComponent(
+                mock(), // context
+                SilentLogger(),
+                DejaVuErrorFactory(),
+                mock(), // persistenceManager
+                emptyList(), // decorators
+                { null }, // operationPredicate
+                { null }, // durationPredicate
+                { if (it == null) NOW else Date(it) } // dateFactory
+        )
 
-    protected fun setUpWithConfiguration(configuration: dev.pthomain.android.DejaVu.Configuration<Glitch>) {
-        cacheComponent = DaggerIntegrationDejaVuComponent.builder()
-                .integrationDejaVuModule(IntegrationModule(configuration))
-                .build()
+        val testComponent = IntegrationTestComponent(BASE_URL, ASSETS_FOLDER)
 
-        dejaVu = dev.pthomain.android.DejaVu(cacheComponent)
-
-        val testComponent = DaggerIntegrationTestComponent.builder()
-                .integrationTestModule(IntegrationTestModule(dejaVu))
-                .build()
-
-        okHttpClient = testComponent.okHttpClient()
-        retrofit = testComponent.retrofit()
-        mockClient = testComponent.mockClient()
-        testClient = testComponent.testClient()
-        assetHelper = testComponent.assetHelper()
+        okHttpClient = testComponent.okHttpClient
+        retrofit = testComponent.retrofit
+        mockClient = testComponent.mockClient
+        testClient = testComponent.testClient
+        assetHelper = testComponent.assetHelper
 
         target = targetExtractor(cacheComponent)
     }
@@ -132,85 +100,16 @@ internal abstract class BaseIntegrationTest<T : Any>(
         mockClient.enqueueIOException(exception)
     }
 
-    protected fun getStubbedTestResponse(instructionToken: RequestToken<Cache, TestResponse> = instructionToken()) =
-            assetHelper.observeStubbedResponse(
-                    TestResponse.STUB_FILE,
-                    TestResponse::class.java,
-                    instructionToken
-            ).blockingFirst()
-
-    protected fun getStubbedUserResponseWrapper(
-            instructionToken: RequestToken<Cache, User> = instructionToken(responseClass = User::class.java),
-            url: String = "http://test.com/userResponse"
-    ) =
-            assetHelper.observeStubbedResponse(
-                    UserResponse.STUB_FILE,
-                    TestResponse::class.java,
-                    instructionToken
-            ).blockingFirst()
-                    .let {
-                        val requestMetadata = instructionToken.instruction.requestMetadata
-
-                        with(it.metadata) {
-                            ResponseWrapper(
-                                    requestMetadata.responseClass,
-                                    (it.response as TestResponse).first(),
-                                    copy(
-                                            cacheToken = cacheToken.copy(
-                                                    CacheInstruction(
-                                                            cacheComponent.hasher().hash(
-                                                                    RequestMetadata.Plain(
-                                                                            requestMetadata.responseClass,
-                                                                            url
-                                                                    )
-                                                            ) as HashedRequestMetadata,
-                                                            cacheToken.instruction.operation
-                                                    )
-                                            )
-                                    )
-                            )
-                }
-            }
-
-    protected fun assertResponse(stubbedResponse: MockClient.ResponseWrapper<Cache, ResponseToken<Cache>, Glitch>,
-                                 actualResponse: MockClient.ResponseWrapper<*, *, Glitch>?,
-                                 expectedStatus: CacheStatus,
-                                 fetchDate: Date = NOW,
-                                 cacheDate: Date? = NOW,
-                                 expiryDate: Date? = Date(NOW.time + stubbedResponse.metadata.cacheToken.instruction.operation.durationInSeconds * 1000)) {
-        assertNotNullWithContext(
-                actualResponse,
-                "Actual response should not be null"
-        )
-
-        assertEqualsWithContext(
-                stubbedResponse.response,
-                actualResponse!!.response,
-                "Response didn't match"
-        )
-
-        assertEqualsWithContext(
-                ResponseToken(
-                        stubbedResponse.metadata.cacheToken.instruction,
-                        expectedStatus,
-                        fetchDate,
-                        cacheDate,
-                        expiryDate
-                ),
-                actualResponse.metadata.cacheToken,
-                "Cache token didn't match"
-        )
-    }
-
     protected fun instructionToken(operation: Cache = Cache(durationInSeconds = 3600),
                                    responseClass: Class<*> = TestResponse::class.java,
                                    url: String = "http://test.com/testResponse") =
-            InstructionToken(
+            RequestToken(
                     CacheInstruction(
                             operation,
-                            cacheComponent.hasher().hash(PlainRequestMetadata(responseClass, url)
+                            cacheComponent.hasher.hash(PlainRequestMetadata(responseClass, url)
                             ) as HashedRequestMetadata
-                    )
+                    ),
+                    CacheStatus.INSTRUCTION,
+                    now
             )
 }
-

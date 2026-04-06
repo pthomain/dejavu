@@ -23,46 +23,13 @@
 
 package dev.pthomain.android.dejavu.configuration.error
 
-import dev.pthomain.android.dejavu.cache.CacheException
-import dev.pthomain.android.glitchy.core.interceptor.error.ErrorFactory
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.ErrorCode.CONFIG
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch.Companion.NON_HTTP_STATUS
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory
+import dev.pthomain.android.dejavu.error.DejaVuErrorFactory
 
 /**
- * Default implementation of ErrorFactory handling some usual base exceptions.
- *
- * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.errorFactory for overriding this factory
- * @see Glitch
+ * @deprecated Use [DejaVuErrorFactory] instead. This class is kept only for backward compatibility.
  */
-class DejaVuGlitchFactory(private val glitchFactory: GlitchFactory)
-    : ErrorFactory<Glitch> by glitchFactory {
-
-    /**
-     * Converts a throwable to a Glitch, containing some metadata around the exception
-     *
-     * @param throwable the given throwable to make sense of
-     * @return an instance of Glitch
-     */
-    override fun invoke(throwable: Throwable) =
-            when (throwable) {
-                is CacheException -> getConfigError(throwable)
-                else -> glitchFactory(throwable)
-            }
-
-    /**
-     * Converts an CacheException to a Glitch
-     *
-     * @param throwable the original exception
-     * @return the converted Glitch
-     */
-    private fun getConfigError(throwable: CacheException) =
-            Glitch(
-                    throwable,
-                    NON_HTTP_STATUS,
-                    CONFIG,
-                    "Configuration error"
-            )
-
-}
+@Deprecated(
+    "Use DejaVuErrorFactory instead",
+    replaceWith = ReplaceWith("DejaVuErrorFactory", "dev.pthomain.android.dejavu.error.DejaVuErrorFactory")
+)
+typealias DejaVuGlitchFactory = DejaVuErrorFactory

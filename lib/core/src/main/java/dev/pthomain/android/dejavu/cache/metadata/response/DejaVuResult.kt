@@ -28,7 +28,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
 /**
  * Type to use as a return for calls returning response wrappers as defined below.

@@ -25,7 +25,7 @@ package dev.pthomain.android.dejavu.interceptors.response
 
 
 //internal class ResponseInterceptorIntegrationTest
-//    : BaseIntegrationTest<Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<Glitch>>>(
+//    : BaseIntegrationTest<Function4<CacheToken, Boolean, Boolean, Long, ResponseInterceptor<DejaVuError>>>(
 //        { it.responseInterceptorFactory() }
 //) {
 //    //TODO

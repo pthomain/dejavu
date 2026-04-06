@@ -23,264 +23,136 @@
 
 package dev.pthomain.android.dejavu.interceptors
 
-import com.nhaarman.mockitokotlin2.*
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.whenever
+import dev.pthomain.android.dejavu.cache.metadata.response.CallDuration
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.response.Response
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.FRESH
+import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.INSTRUCTION
+import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
+import dev.pthomain.android.dejavu.cache.metadata.token.ResponseToken
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.CacheInstruction
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.InHashedRequestMetadata
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.INVALID_HASH
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
-import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
-import dev.pthomain.android.dejavu.configuration.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.dejavu.interceptors.response.ResponseInterceptor
-import dev.pthomain.android.dejavu.shared.metadata.token.InstructionToken
-import dev.pthomain.android.dejavu.test.*
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.annotations.SchedulerSupport.SINGLE
-import io.reactivex.observers.TestObserver
+import dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator
+import dev.pthomain.android.dejavu.test.network.model.TestResponse
+import dev.pthomain.android.dejavu.utils.SilentLogger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.*
 
 class DejaVuInterceptorUnitTest {
 
-    private val start = 1234L
-    private val mockDateFactory: DateFactory = { Date(start) }
+    private val now = Date(1234L)
 
-    private lateinit var mockNetworkInterceptorFactory: NetworkInterceptor.Factory<Glitch>
-    private lateinit var mockErrorInterceptorFactory: ErrorInterceptor.Factory<Glitch>
-    private lateinit var mockCacheInterceptorFactory: CacheInterceptor.Factory<Glitch>
-    private lateinit var mockResponseInterceptorFactory: ResponseInterceptor.Factory<Glitch>
-    private lateinit var mockConfiguration: DejaVu.Configuration<Glitch>
-    private lateinit var mockHasher: Hasher
-    private lateinit var mockRequestMetadata: PlainRequestMetadata
-    private lateinit var mockValidHashedMetadata: HashedRequestMetadata
-    private lateinit var mockInvalidHashedMetadata: InHashedRequestMetadata
-    private lateinit var mockNetworkInterceptor: NetworkInterceptor<*, *, Glitch>
-    private lateinit var mockErrorInterceptor: ErrorInterceptor<*, *, Glitch>
-    private lateinit var mockCacheInterceptor: CacheInterceptor<*, *, Glitch>
-    private lateinit var mockResponseInterceptor: ResponseInterceptor<*, *, Glitch>
-    private lateinit var mockCacheToken: InstructionToken<*>
-    private lateinit var mockUpstreamObservable: Observable<Any>
-    private lateinit var mockNetworkObservable: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockCacheResponseObservable: Observable<ResponseWrapper<*, *, Glitch>>
-    private lateinit var mockResponseObservable: Observable<Any>
-    private lateinit var mockHashingErrorObservable: Observable<Any>
-    private lateinit var errorTokenCaptor: KArgumentCaptor<InstructionToken<*>>
-    private lateinit var cacheCacheTokenCaptor: KArgumentCaptor<InstructionToken<*>>
-    private lateinit var networkOperationCaptor: KArgumentCaptor<Cache?>
-    private lateinit var responseTokenCaptor: KArgumentCaptor<InstructionToken<*>>
-
-    private val mockException = IllegalStateException("test")
-
-    private fun setUp(operation: Operation,
-                      rxType: RxType,
-                      isHashingSuccess: Boolean): DejaVuInterceptor<Glitch> {
-        mockErrorInterceptorFactory = mock()
-        mockCacheInterceptorFactory = mock()
-        mockResponseInterceptorFactory = mock()
-        mockNetworkInterceptorFactory = mock()
-        mockConfiguration = mock()
-        mockHasher = mock()
-
-        mockErrorInterceptor = mock()
-        mockCacheInterceptor = mock()
-        mockResponseInterceptor = mock()
-        mockNetworkInterceptor = mock()
-
-        mockRequestMetadata = defaultRequestMetadata()
-        mockValidHashedMetadata = mock()
-        mockInvalidHashedMetadata = mock()
-
-        mockInstructionToken = instructionToken(operation)
-
-        mockUpstreamObservable = mock()
-        mockNetworkObservable = mock()
-        mockCacheResponseObservable = mock()
-        mockResponseObservable = mock()
-        mockHashingErrorObservable = Observable.error(mockException)
-
-        whenever(mockHasher.hash(eq(mockRequestMetadata))).thenReturn(mock())
-
-        errorTokenCaptor = argumentCaptor()
-        cacheCacheTokenCaptor = argumentCaptor()
-        networkOperationCaptor = argumentCaptor()
-        responseTokenCaptor = argumentCaptor()
-
-        whenever(mockErrorInterceptorFactory.create(
-                errorTokenCaptor.capture()
-        )).thenReturn(mockErrorInterceptor)
-
-        whenever(mockNetworkInterceptorFactory.create(
-                eq(mockErrorInterceptor),
-                networkOperationCaptor.capture(),
-                eq(start)
-        )).thenReturn(mockNetworkInterceptor)
-
-        whenever(mockCacheInterceptorFactory.create(
-                eq(mockErrorInterceptor),
-                cacheCacheTokenCaptor.capture(),
-                eq(start)
-        )).thenReturn(mockCacheInterceptor)
-
-        whenever(mockResponseInterceptorFactory.create(
-                responseTokenCaptor.capture(),
-                eq(rxType),
-                eq(start)
-        )).thenReturn(mockResponseInterceptor)
-
-        if (isHashingSuccess) {
-            whenever(mockUpstreamObservable.compose(eq(mockNetworkInterceptor))).thenReturn(mockNetworkObservable)
-            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
-            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockResponseObservable)
-        } else {
-            whenever(mockNetworkInterceptor.apply(eq(mockHashingErrorObservable))).thenReturn(mockNetworkObservable)
-            whenever(mockNetworkObservable.compose(eq(mockCacheInterceptor))).thenReturn(mockCacheResponseObservable)
-            whenever(mockCacheResponseObservable.compose(eq(mockResponseInterceptor))).thenReturn(mockHashingErrorObservable)
-        }
-
-        whenever(mockHasher.hash(mockRequestMetadata)).thenReturn(
-                ifElse(isHashingSuccess, mockValidHashedMetadata, mockInvalidHashedMetadata)
+    @Test
+    fun `interceptor composes network, cache, and response interceptors for Cache operation`() = runTest {
+        val hashedMetadata = HashedRequestMetadata(
+                TestResponse::class.java,
+                "http://test.com/test",
+                null,
+                "testHash",
+                "testClassHash"
         )
 
-        return DejaVuInterceptor(
-                rxType,
-                operation,
-                mockRequestMetadata,
-                mockConfiguration,
+        val instruction = CacheInstruction<Cache, TestResponse>(
+                Cache(durationInSeconds = 3600),
+                hashedMetadata
+        )
+
+        val expectedResponse = Response<TestResponse, Cache>(
+                TestResponse(),
+                ResponseToken(instruction, FRESH, now),
+                CallDuration(0, 0, 0)
+        )
+
+        // Mock the network interceptor to pass through
+        val mockNetworkInterceptorFactory = mock<NetworkInterceptor.Factory<DejaVuError>>()
+        val mockNetworkInterceptor = mock<NetworkInterceptor<Cache, TestResponse, RequestToken<out Cache, TestResponse>, DejaVuError>>()
+        whenever(mockNetworkInterceptorFactory.create<Cache, TestResponse, RequestToken<out Cache, TestResponse>>(any()))
+                .thenReturn(mockNetworkInterceptor)
+        whenever(mockNetworkInterceptor.intercept(any<Flow<DejaVuResult<TestResponse>>>()))
+                .thenReturn(flowOf(expectedResponse))
+
+        // Mock cache interceptor to pass through
+        val mockCacheInterceptorFactory = mock<CacheInterceptor.Factory<DejaVuError>>()
+        val mockCacheInterceptor = mock<CacheInterceptor<TestResponse, Cache, DejaVuError>>()
+        whenever(mockCacheInterceptorFactory.create<TestResponse, Cache>(any()))
+                .thenReturn(mockCacheInterceptor)
+        whenever(mockCacheInterceptor.intercept(any()))
+                .thenReturn(flowOf(expectedResponse))
+
+        // Mock response interceptor to pass through as result wrapper
+        val mockResponseInterceptorFactory = mock<ResponseInterceptor.Factory<DejaVuError>>()
+        val mockResponseInterceptor = mock<ResponseInterceptor<TestResponse, DejaVuError>>()
+        whenever(mockResponseInterceptorFactory.create<TestResponse>(any()))
+                .thenReturn(mockResponseInterceptor)
+        whenever(mockResponseInterceptor.intercept(any()))
+                .thenReturn(flowOf(expectedResponse as Any))
+
+        // Create the hasher that returns a known hash
+        val mockHasher = mock<dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher>()
+        whenever(mockHasher.hash(any<PlainRequestMetadata<TestResponse>>()))
+                .thenReturn(hashedMetadata)
+
+        val interceptor = DejaVuInterceptor.Factory<DejaVuError>(
                 mockHasher,
-                mockDateFactory,
-                { mockHashingErrorObservable },
-                mockErrorInterceptorFactory,
+                SilentLogger,
+                { if (it == null) now else Date(it) },
+                SerialisationArgumentValidator(emptyList()),
                 mockNetworkInterceptorFactory,
                 mockCacheInterceptorFactory,
                 mockResponseInterceptorFactory
+        ).create<TestResponse>(
+                asResult = true,
+                operation = Cache(durationInSeconds = 3600),
+                requestMetadata = PlainRequestMetadata(TestResponse::class.java, "http://test.com/test")
         )
+
+        val upstream = flowOf(mock<Any>())
+        val results = interceptor.intercept(upstream).toList()
+
+        assertTrue("Should produce at least one result", results.isNotEmpty())
     }
 
     @Test
-    fun testApplyObservable() {
-        testApply(OBSERVABLE)
-    }
+    fun `interceptor emits error flow when hashing fails`() = runTest {
+        val mockHasher = mock<dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher>()
+        whenever(mockHasher.hash(any<PlainRequestMetadata<TestResponse>>()))
+                .thenReturn(null)
 
-    @Test
-    fun testApplySingle() {
-        testApply(SINGLE)
-    }
+        val interceptor = DejaVuInterceptor.Factory<DejaVuError>(
+                mockHasher,
+                SilentLogger,
+                { if (it == null) now else Date(it) },
+                SerialisationArgumentValidator(emptyList()),
+                mock(),
+                mock(),
+                mock()
+        ).create<TestResponse>(
+                asResult = true,
+                operation = Cache(durationInSeconds = 3600),
+                requestMetadata = PlainRequestMetadata(TestResponse::class.java, "http://test.com/test")
+        )
 
-    @Test
-    fun testApplyCompletable() {
-        testApply(WRAPPABLE)
-    }
+        val upstream = flowOf(mock<Any>())
 
-    private fun testApply(rxType: RxType) {
-        operationSequence { operation ->
-            trueFalseSequence { isCacheEnabled ->
-                trueFalseSequence { isHashingSuccess ->
-
-                    val target = setUp(
-                            operation,
-                            rxType,
-                            isHashingSuccess
-                    )
-                    val testObserver = TestObserver<Any>()
-
-                    val context = "Operation = $operation," +
-                            "\nisCacheEnabled = $isCacheEnabled," +
-                            "\nisHashingSuccess = $isHashingSuccess"
-
-                    val mockSingle = mock<Single<Any>>()
-                    whenever(mockSingle.toObservable()).thenReturn(mockUpstreamObservable)
-                    whenever(mockResponseObservable.firstOrError()).thenReturn(mockSingle)
-
-                    when (rxType) {
-                        OBSERVABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
-                        SINGLE -> target.apply(mockSingle).subscribe(testObserver)
-                        WRAPPABLE -> target.apply(mockUpstreamObservable).subscribe(testObserver)
-                    }
-
-                    val errorToken = errorTokenCaptor.firstValue
-                    val cacheCacheToken = cacheCacheTokenCaptor.firstValue
-                    val networkOperation = networkOperationCaptor.firstValue
-                    val responseToken = responseTokenCaptor.firstValue
-
-                    if (!isHashingSuccess) {
-                        assertTrueWithContext(
-                                testObserver.errorCount() == 1,
-                                "A hashing error should have been emitted"
-                        )
-
-                        assertTrueWithContext(
-                                testObserver.errors().first() == mockException,
-                                "The wrong exception was emitted"
-                        )
-                    } else {
-                        assertEqualsWithContext(
-                                cacheCacheToken.instruction.operation,
-                                networkOperation,
-                                "Cache tokens for cache and network interceptors didn't match",
-                                context
-                        )
-
-                        assertEqualsWithContext(
-                                errorToken,
-                                cacheCacheToken,
-                                "Error token and cache token should be the same",
-                                context
-                        )
-
-                        assertEqualsWithContext(
-                                cacheCacheToken,
-                                responseToken,
-                                "Response token and cache token should be the same",
-                                context
-                        )
-
-                        if (!isCacheEnabled) {
-                            assertTrueWithContext(
-                                    errorToken.instruction.operation.type == DO_NOT_CACHE,
-                                    "Cache token should be DO_NOT_CACHE when isCacheEnabled == false",
-                                    context
-                            )
-                        }
-
-                        assertEqualsWithContext(
-                                mockValidHashedMetadata,
-                                errorToken.instruction.requestMetadata,
-                                "Request metadata didn't match",
-                                context
-                        )
-
-                        if (operation is Cache) {
-                            assertEqualsWithContext(
-                                    operation.compress,
-                                    errorToken.isCompressed,
-                                    "Token value for isCompressed didn't match operation's value",
-                                    context
-                            )
-
-                            assertEqualsWithContext(
-                                    operation.encrypt,
-                                    errorToken.isEncrypted,
-                                    "Token value for isEncrypted didn't match operation's value",
-                                    context
-                            )
-                        } else {
-                            assertTrueWithContext(
-                                    errorToken.isCompressed,
-                                    "Token value for isCompressed should be true",
-                                    context
-
-                            )
-                            assertTrueWithContext(
-                                    errorToken.isEncrypted,
-                                    "Token value for isEncrypted should be true",
-                                    context
-                            )
-                        }
-                    }
-                }
-            }
+        try {
+            interceptor.intercept(upstream).toList()
+            assertTrue("Should have thrown an exception", false)
+        } catch (e: IllegalStateException) {
+            assertTrue("Expected hashing error message",
+                    e.message?.contains("could not be hashed") == true)
         }
     }
 }

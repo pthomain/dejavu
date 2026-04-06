@@ -23,10 +23,7 @@
 
 package dev.pthomain.android.dejavu.persistence.sqlite
 
-import android.content.ContentValues
-import androidx.sqlite.db.SupportSQLiteDatabase
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
 import dev.pthomain.android.dejavu.cache.metadata.token.RequestToken
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.HashedRequestMetadata
@@ -36,33 +33,29 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.di.DateFactory
 import dev.pthomain.android.dejavu.persistence.Persisted.Serialised
 import dev.pthomain.android.dejavu.persistence.base.BasePersistenceManager
-import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.COLUMNS.*
-import dev.pthomain.android.dejavu.persistence.sqlite.SqlOpenHelperCallback.Companion.TABLE_DEJA_VU
+import dev.pthomain.android.dejavu.persistence.sqlite.dao.CacheDao
+import dev.pthomain.android.dejavu.persistence.sqlite.entity.CacheEntry
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.SerialisationException
 import dev.pthomain.android.dejavu.serialisation.SerialisationManager
-import io.requery.android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE
-import java.io.Closeable
-import java.util.*
+import kotlinx.coroutines.runBlocking
 
 /**
- * Provides a PersistenceManager implementation saving the responses to a SQLite database.
+ * Provides a PersistenceManager implementation saving the responses to a Room database.
  *
- * @param database the opened database
+ * @param cacheDao the Room DAO for cache operations
  * @param serialisationManager used for the serialisation/deserialisation of the cache entries
  * @param dateFactory class providing the time, for the purpose of testing
- * @param contentValuesFactory converter from Map to ContentValues for testing purpose
  */
 class DatabasePersistenceManager internal constructor(
-        private val database: SupportSQLiteDatabase,
-        logger: Logger,
-        serialisationManager: SerialisationManager,
-        dateFactory: DateFactory,
-        private val contentValuesFactory: (Map<String, *>) -> ContentValues
+    private val cacheDao: CacheDao,
+    logger: Logger,
+    serialisationManager: SerialisationManager,
+    dateFactory: DateFactory
 ) : BasePersistenceManager(
-        logger,
-        serialisationManager,
-        dateFactory
+    logger,
+    serialisationManager,
+    dateFactory
 ) {
 
     override val decorator: SerialisationDecorator? = null
@@ -77,49 +70,26 @@ class DatabasePersistenceManager internal constructor(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> clearCache(
-            requestMetadata: HashedRequestMetadata<R>,
-            operation: Clear
+        requestMetadata: HashedRequestMetadata<R>,
+        operation: Clear
     ) {
-        val olderEntriesClause = ifElse(
-                operation.clearStaleEntriesOnly,
-                "${EXPIRY_DATE.columnName} < ?",
-                null
-        )
-
-        val requestClause = when (operation.scope) {
-            Scope.REQUEST -> "${REQUEST.columnName} = ?"
-            Scope.CLASS -> "${CLASS.columnName} = ?"
-            Scope.ALL -> null
-        }
-
-        val args = arrayListOf<String>().apply {
-            if (operation.clearStaleEntriesOnly) add(dateFactory(null).time.toString())
-            if (requestClause != null) {
-                add(when (operation.scope) {
-                    Scope.REQUEST -> requestMetadata.requestHash
-                    Scope.CLASS -> requestMetadata.classHash
-                    Scope.ALL -> throw IllegalStateException("This should not happen")
-                })
-            }
-        }
-
-        val query = arrayOf(
-                olderEntriesClause,
-                requestClause
-        ).filterNotNull()
-                .joinToString(separator = " AND ")
-
-        database.delete(
-                TABLE_DEJA_VU,
-                query,
-                args.toArray()
-        ).let { deleted ->
-            val entryType = requestMetadata.responseClass.simpleName
+        runBlocking {
             if (operation.clearStaleEntriesOnly) {
-                logger.d(this, "Deleted old $entryType entries from cache: $deleted found")
+                cacheDao.deleteExpired(dateFactory(null).time)
             } else {
-                logger.d(this, "Deleted all existing $entryType entries from cache: $deleted found")
+                when (operation.scope) {
+                    Scope.REQUEST -> cacheDao.deleteByHash(requestMetadata.requestHash)
+                    Scope.CLASS -> cacheDao.deleteByClass(requestMetadata.classHash)
+                    Scope.ALL -> cacheDao.deleteAll()
+                }
             }
+        }
+
+        val entryType = requestMetadata.responseClass.simpleName
+        if (operation.clearStaleEntriesOnly) {
+            logger.d(this, "Deleted old $entryType entries from cache")
+        } else {
+            logger.d(this, "Deleted all existing $entryType entries from cache")
         }
     }
 
@@ -133,48 +103,24 @@ class DatabasePersistenceManager internal constructor(
      */
     @Throws(SerialisationException::class)
     override fun <R : Any> get(requestMetadata: HashedRequestMetadata<R>): Serialised? {
-        val projection = arrayOf(
-                CACHE_DATE.columnName,
-                EXPIRY_DATE.columnName,
-                REQUEST.columnName,
-                CLASS.columnName,
-                SERIALISATION.columnName,
-                DATA.columnName
-        )
+        val simpleName = requestMetadata.responseClass.simpleName
 
-        val query = """
-            SELECT ${projection.joinToString(", ")}
-            FROM $TABLE_DEJA_VU
-            WHERE ${REQUEST.columnName} = '${requestMetadata.requestHash}'
-            LIMIT 1
-            """
+        return runBlocking {
+            cacheDao.getByHash(requestMetadata.requestHash)
+        }?.let { entry ->
+            logger.d(this, "Found a cached $simpleName")
 
-        return database.query(query).useAndLogError {
-            with(it) {
-                val simpleName = requestMetadata.responseClass.simpleName
-                if (count != 0 && moveToNext()) {
-                    logger.d(this, "Found a cached $simpleName")
-
-                    val cacheDate = dateFactory(getLong(getColumnIndex(CACHE_DATE.columnName)))
-                    val expiryDate = dateFactory(getLong(getColumnIndex(EXPIRY_DATE.columnName)))
-                    val requestHash = getString(getColumnIndex(REQUEST.columnName))
-                    val classHash = getString(getColumnIndex(CLASS.columnName))
-                    val serialisation = getString(getColumnIndex(SERIALISATION.columnName))
-                    val localData = getBlob(getColumnIndex(DATA.columnName))
-
-                    Serialised(
-                            requestHash,
-                            classHash,
-                            cacheDate,
-                            expiryDate,
-                            serialisation,
-                            localData
-                    )
-                } else {
-                    logger.d(this, "Found no cached $simpleName")
-                    null
-                }
-            }
+            Serialised(
+                entry.requestHash,
+                entry.classHash,
+                dateFactory(entry.cacheDate),
+                dateFactory(entry.expiryDate),
+                entry.serialisation,
+                entry.data
+            )
+        } ?: run {
+            logger.d(this, "Found no cached $simpleName")
+            null
         }
     }
 
@@ -186,25 +132,16 @@ class DatabasePersistenceManager internal constructor(
      * @return a Boolean indicating whether the data marked for invalidation was found or not
      */
     override fun <R : Any> forceInvalidation(token: RequestToken<*, R>): Boolean {
-        val map = mapOf(EXPIRY_DATE.columnName to 0)
-        val selection = "${REQUEST.columnName} = ?"
-
         val requestMetadata = token.instruction.requestMetadata
-        val selectionArgs = arrayOf(requestMetadata.requestHash)
-
-        val results = database.update(
-                TABLE_DEJA_VU,
-                CONFLICT_REPLACE,
-                contentValuesFactory(map),
-                selection,
-                selectionArgs
-        )
+        val results = runBlocking {
+            cacheDao.updateExpiryDate(requestMetadata.requestHash, 0L)
+        }
 
         val foundIt = results > 0
 
         logger.d(
-                this,
-                "Invalidating cache for ${requestMetadata.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
+            this,
+            "Invalidating cache for ${requestMetadata.responseClass.simpleName}: ${if (foundIt) "done" else "nothing found"}"
         )
 
         return foundIt
@@ -223,32 +160,21 @@ class DatabasePersistenceManager internal constructor(
         val cacheToken = response.cacheToken
         val requestMetadata = cacheToken.instruction.requestMetadata
 
-        val values = HashMap<String, Any>()
-
-        values[REQUEST.columnName] = requestMetadata.requestHash
-        values[CLASS.columnName] = requestMetadata.classHash
-        values[CACHE_DATE.columnName] = cacheToken.requestDate.time
-        values[EXPIRY_DATE.columnName] = cacheToken.expiryDate!!.time
-        values[SERIALISATION.columnName] = cacheToken.instruction.operation.serialisation
-        values[DATA.columnName] = serialised
+        val entry = CacheEntry(
+            requestHash = requestMetadata.requestHash,
+            classHash = requestMetadata.classHash,
+            cacheDate = cacheToken.requestDate.time,
+            expiryDate = cacheToken.expiryDate!!.time,
+            serialisation = cacheToken.instruction.operation.serialisation,
+            data = serialised
+        )
 
         try {
-            database.insert(
-                    TABLE_DEJA_VU,
-                    CONFLICT_REPLACE,
-                    contentValuesFactory(values)
-            )
+            runBlocking {
+                cacheDao.insert(entry)
+            }
         } catch (e: Exception) {
             throw SerialisationException("Could not save the response to database", e)
         }
     }
-
-    private fun <T : Closeable?, R> T.useAndLogError(block: (T) -> R) =
-            try {
-                use(block)
-            } catch (e: Exception) {
-                logger.e(this@DatabasePersistenceManager, e, "Caught an IO exception")
-                throw e
-            }
-
 }

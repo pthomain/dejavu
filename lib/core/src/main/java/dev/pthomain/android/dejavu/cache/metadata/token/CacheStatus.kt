@@ -23,7 +23,6 @@
 
 package dev.pthomain.android.dejavu.cache.metadata.token
 
-import dev.pthomain.android.boilerplate.core.utils.kotlin.ifElse
 import dev.pthomain.android.dejavu.cache.metadata.token.CacheStatus.*
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote.Cache
 import java.util.*
@@ -36,10 +35,8 @@ enum class CacheStatus(
         /**
          * Whether or not the status is final, meaning that no subsequent response will be emitted.
          * STALE is the only non-final status, which means another (final) response will be emitted
-         * after it. In the case of RxJava Singles, a single element will be emitted, which means only
-         * responses with a final status can be emitted by Singles unless the global
-         * allowNonFinalForSingle directive is set to true and filterFinal is set to false on
-         * the call's directives.
+         * after it. When collecting a Flow with first(), only responses with a final status
+         * will be returned unless filterFinal is set to false on the call's directives.
          *
          * //TODO update this
          * @see dev.pthomain.android.dejavu.configuration.DejaVu.Configuration.allowNonFinalForSingle
@@ -100,7 +97,7 @@ enum class CacheStatus(
      *
      * - the freshOnly directive is set to false for this call
      *
-     * - the data is returned via an Observable and not a Single (in which case only
+     * - the data is returned via a multi-emission Flow (when collecting with first(), only
      * a final response is returned, i.e. either REFRESHED, COULD_NOT_REFRESH or EMPTY).
      */
     STALE(false, false, false, true),
@@ -119,21 +116,19 @@ enum class CacheStatus(
 
     /**
      * Returned after a STALE response with NETWORK data from a successful network call or
-     * alternatively as a single response if the freshOnly directive is set or the response
-     * is returned via a Single rather than an Observable.
+     * alternatively as a single response if the freshOnly directive is set.
      */
     REFRESHED(true, false, true, false),
 
     /**
      * Returned after a STALE response with STALE data from an unsuccessful network call or
-     * alternatively as a single response if the response is returned via a Single rather
-     * than an Observable.
+     * alternatively as a single response if the freshOnly directive is not set.
      * This would only happen if the freshOnly directive is set to false for this call,
      * otherwise an EMPTY response is returned.
      *
      * Metadata on this response will contain an exception, or if the response does not
      * implement CacheMetadata.Holder, the exception will be delivered using the default
-     * RxJava error mechanism.
+     * Flow error mechanism.
      */
     COULD_NOT_REFRESH(true, false, false, true, true),
 
@@ -144,7 +139,7 @@ enum class CacheStatus(
      * meaning that an empty response is returned with the exception added to the metadata
      * (if possible: /!\ mergeOnNextOnError should only be used for calls returning a response
      * implementing the CacheMetadata.Holder interface. Failing this, the metadata can't be set
-     * and the exception is delivered via the default RxJava error mechanism, potentially causing
+     * and the exception is delivered via the default Flow error mechanism, potentially causing
      * a crash if the method was not implemented).
      *
      * OR
@@ -155,7 +150,7 @@ enum class CacheStatus(
      *
      * Metadata on this response will contain an exception, or if the response does not
      * implement CacheMetadata.Holder, the exception will be delivered using the default
-     * RxJava error mechanism.
+     * Flow error mechanism.
      */
     EMPTY(true, false, true, false, true),
 
@@ -168,10 +163,10 @@ enum class CacheStatus(
     /**
      * This field indicates a response that won't be succeeded by another one.
      *
-     * Non-final responses (like STALE) are only emitted with an Observable if certain
+     * Non-final responses (like STALE) are only emitted within a Flow if certain
      * conditions are met.
      *
-     * A Single will only ever emit final responses.
+     * When collecting with first(), only final responses will be returned.
      *
      * Non-final responses will be followed by at least one more response as part of the
      * same call.
@@ -190,8 +185,6 @@ enum class CacheStatus(
 fun ((Long?) -> Date).getCacheStatus(
         expiryDate: Date,
         operation: Cache = Cache()
-) = ifElse(
-        this(null).time >= expiryDate.time,
-        ifElse(operation.priority.behaviour.isOffline(), OFFLINE_STALE, STALE),
-        FRESH
-)
+) = if (this(null).time >= expiryDate.time)
+        if (operation.priority.behaviour.isOffline()) OFFLINE_STALE else STALE
+    else FRESH
