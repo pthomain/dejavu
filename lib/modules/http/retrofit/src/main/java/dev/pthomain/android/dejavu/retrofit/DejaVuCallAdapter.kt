@@ -26,8 +26,8 @@ package dev.pthomain.android.dejavu.retrofit
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import dev.pthomain.android.glitchy.core.interceptor.outcome.Outcome
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.Outcome
 import io.reactivex.Observable
 import retrofit2.Call
 import retrofit2.CallAdapter

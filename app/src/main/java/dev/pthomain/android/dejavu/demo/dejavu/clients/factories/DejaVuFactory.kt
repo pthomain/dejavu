@@ -26,7 +26,7 @@ package dev.pthomain.android.dejavu.demo.dejavu.clients.factories
 import android.content.Context
 import android.os.Build.VERSION.SDK_INT
 import com.google.gson.Gson
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
+import dev.pthomain.android.dejavu.utils.Logger
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.AnnotationRetrofitClient
 import dev.pthomain.android.dejavu.demo.dejavu.clients.retrofit.HeaderRetrofitClient
 import dev.pthomain.android.dejavu.demo.presenter.DemoPresenter
@@ -37,7 +37,7 @@ import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.serialisation.SerialisationDecorator
 import dev.pthomain.android.dejavu.serialisation.encryption.Encryption
 import dev.pthomain.android.dejavu.serialisation.gson.GsonSerialiser
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import dev.pthomain.android.mumbo.Mumbo
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -80,11 +80,9 @@ class DejaVuFactory(
             persistence: PersistenceType,
             encrypt: Boolean
     ): RetrofitClients {
-        val dejaVuRetrofit = DejaVuRetrofit.builder<Glitch>(
+        val dejaVuRetrofit = DejaVuRetrofit.builder<DejaVuError>(
                 context,
-                dev.pthomain.android.dejavu.configuration.error.DejaVuGlitchFactory(
-                        dev.pthomain.android.glitchy.core.interceptor.error.glitch.GlitchFactory()
-                ),
+                dev.pthomain.android.dejavu.error.DejaVuErrorFactory(),
                 persistenceModule(persistence, encrypt),
                 logger
         ).build()

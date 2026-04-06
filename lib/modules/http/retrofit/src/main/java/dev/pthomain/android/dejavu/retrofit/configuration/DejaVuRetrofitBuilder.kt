@@ -24,74 +24,64 @@
 package dev.pthomain.android.dejavu.retrofit.configuration
 
 import dev.pthomain.android.dejavu.configuration.ExtensionBuilder
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.di.DejaVuComponent
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import dev.pthomain.android.dejavu.retrofit.DejaVuCallAdapterFactory
 import dev.pthomain.android.dejavu.retrofit.DejaVuRetrofit
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
 import dev.pthomain.android.dejavu.retrofit.operation.RequestBodyConverter
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
-import org.koin.core.module.Module
-import org.koin.dsl.koinApplication
 
 /**
  * Builder for creating DejaVuRetrofit instances.
  *
  * This builder integrates with the core DejaVu builder pattern via the
- * ExtensionBuilder interface, receiving Koin modules from the parent builder
+ * ExtensionBuilder interface, receiving a DejaVuComponent from the parent builder
  * and resolving the necessary dependencies.
  */
 class DejaVuRetrofitBuilder<E> internal constructor()
-    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>>
+    : ExtensionBuilder<DejaVuRetrofitBuilder<E>, DejaVuRetrofit<E>, E>
     where E : Throwable,
           E : NetworkErrorPredicate {
 
-    private var parentModules: List<Module>? = null
+    private var component: DejaVuComponent<E>? = null
 
-    override fun accept(modules: List<Module>) = apply {
-        parentModules = modules
+    override fun accept(component: DejaVuComponent<E>) = apply {
+        this.component = component
     }
 
     /**
      * Builds a DejaVuRetrofit instance by resolving dependencies from the
-     * parent Koin modules and creating the Retrofit call adapter factory.
+     * DejaVuComponent and creating the Retrofit call adapter factory.
      */
     override fun build(): DejaVuRetrofit<E> {
-        val parentModules = this.parentModules
+        val component = this.component
             ?: throw IllegalStateException("This builder needs to call DejaVuBuilder::extend")
 
-        return koinApplication {
-            modules(parentModules)
-        }.koin.run {
-            val interceptorFactory = get<DejaVuInterceptor.Factory<E>>()
-            val logger = get<dev.pthomain.android.boilerplate.core.utils.log.Logger>()
-            val serialisationArgumentValidator = get<dev.pthomain.android.dejavu.serialisation.SerialisationArgumentValidator>()
+        val interceptorFactory = component.interceptorFactory
+        val logger = component.logger
+        val serialisationArgumentValidator = component.serialisationArgumentValidator
+        val operationPredicate = component.operationPredicate
 
-            @Suppress("UNCHECKED_CAST")
-            val operationPredicate = get<(dev.pthomain.android.dejavu.cache.metadata.token.instruction.RequestMetadata<*>) -> dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote?>(
-                org.koin.core.qualifier.named("operationPredicate")
-            )
+        val annotationProcessor = AnnotationProcessor(logger, serialisationArgumentValidator)
 
-            val annotationProcessor = AnnotationProcessor(logger, serialisationArgumentValidator)
+        val operationResolverFactory = RetrofitOperationResolver.Factory<E>(
+            operationPredicate,
+            RequestBodyConverter(),
+            logger
+        )
 
-            val operationResolverFactory = RetrofitOperationResolver.Factory<E>(
-                operationPredicate,
-                RequestBodyConverter(),
-                logger
-            )
+        val callAdapterFactory = DejaVuCallAdapterFactory(
+            interceptorFactory,
+            annotationProcessor,
+            operationResolverFactory
+        )
 
-            val callAdapterFactory = DejaVuCallAdapterFactory(
-                interceptorFactory,
-                annotationProcessor,
-                operationResolverFactory
-            )
-
-            DejaVuRetrofit(
-                callAdapterFactory,
-                HeaderInterceptor(),
-                interceptorFactory
-            )
-        }
+        return DejaVuRetrofit(
+            callAdapterFactory,
+            HeaderInterceptor(),
+            interceptorFactory
+        )
     }
 }

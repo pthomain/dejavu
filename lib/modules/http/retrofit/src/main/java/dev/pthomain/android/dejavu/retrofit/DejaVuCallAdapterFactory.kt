@@ -27,7 +27,7 @@ import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.retrofit.operation.RetrofitOperationResolver
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 import io.reactivex.Observable
 import retrofit2.CallAdapter
 import retrofit2.Retrofit

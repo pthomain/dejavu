@@ -41,7 +41,7 @@ import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Op
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Local
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.Operation.Remote
 import dev.pthomain.android.dejavu.demo.dejavu.clients.model.CatFactResponse
-import dev.pthomain.android.glitchy.core.interceptor.error.glitch.Glitch
+import dev.pthomain.android.dejavu.error.DejaVuError
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -81,7 +81,7 @@ internal class ExpandableListAdapter(context: Context)
             is Response<CatFactResponse, *> -> showResponse(result.response)
 
             is Empty<CatFactResponse, *, *> -> showHeaderAndBody(
-                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, Glitch>),
+                    InternalResult.Empty(result as Empty<CatFactResponse, out Remote, DejaVuError>),
                     "No response due to filtering or exception"
             )
 
@@ -242,7 +242,7 @@ internal class ExpandableListAdapter(context: Context)
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(result)
 
         class Empty<O : Remote>(
-                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, Glitch>
+                val empty: dev.pthomain.android.dejavu.cache.metadata.response.Empty<CatFactResponse, O, DejaVuError>
         ) : InternalResult<O, RequestToken<O, CatFactResponse>>(empty)
     }
 

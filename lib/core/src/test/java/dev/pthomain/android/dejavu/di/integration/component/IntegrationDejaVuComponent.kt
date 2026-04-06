@@ -37,34 +37,30 @@ import dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager
 import dev.pthomain.android.dejavu.retrofit.annotations.processor.AnnotationProcessor
 import dev.pthomain.android.dejavu.cache.metadata.token.instruction.Hasher
 import dev.pthomain.android.dejavu.shared.utils.Function1
-import dev.pthomain.android.glitchy.interceptor.error.glitch.Glitch
-import dev.pthomain.android.mumbo.base.EncryptionManager
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import dev.pthomain.android.dejavu.error.DejaVuError
 import java.util.*
 import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [IntegrationModule::class])
-internal interface IntegrationDejaVuComponent : DejaVuComponent<Glitch> {
+internal interface IntegrationDejaVuComponent : DejaVuComponent<DejaVuError> {
 
     fun dateFactory(): Function1<Long?, Date>
     fun serialiser(): dev.pthomain.android.dejavu.serialisation.Serialiser
-    fun encryptionManager(): EncryptionManager?
     fun sqlOpenHelperCallback(): SupportSQLiteOpenHelper.Callback?
     fun sqlOpenHelper(): SupportSQLiteOpenHelper?
     fun database(): SupportSQLiteDatabase?
     fun hasher(): Hasher
-    fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<Glitch>
-    fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<Glitch>?
-    fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<Glitch>
+    fun serialisationManagerFactory(): dev.pthomain.android.dejavu.serialisation.SerialisationManager.Factory<DejaVuError>
+    fun databasePersistenceManagerFactory(): dev.pthomain.android.dejavu.persistence.sqlite.DatabasePersistenceManager.Factory<DejaVuError>?
+    fun memoryPersistenceManagerFactory(): KeyValuePersistenceManager.MemoryFactory<DejaVuError>
     fun memoryStoreFactory(): dev.pthomain.android.dejavu.persistence.memory.MemoryStore.Factory
-    fun cacheManager(): CacheManager<Glitch>
-    fun cacheInterceptorFactory(): CacheInterceptor.Factory<Glitch>
-    fun responseInterceptorFactory(): ResponseInterceptor.Factory<Glitch>
-    fun defaultAdapterFactory(): RxJava2CallAdapterFactory
-    fun annotationProcessor(): AnnotationProcessor<Glitch>
-    fun emptyResponseFactory(): EmptyResponseFactory<Glitch>
+    fun cacheManager(): CacheManager<DejaVuError>
+    fun cacheInterceptorFactory(): CacheInterceptor.Factory<DejaVuError>
+    fun responseInterceptorFactory(): ResponseInterceptor.Factory<DejaVuError>
+    fun annotationProcessor(): AnnotationProcessor<DejaVuError>
+    fun emptyResponseFactory(): EmptyResponseFactory<DejaVuError>
     fun supportSQLiteOpenHelper(): SupportSQLiteOpenHelper?
-    fun persistenceManagerFactory(): PersistenceManagerFactory<Glitch>
+    fun persistenceManagerFactory(): PersistenceManagerFactory<DejaVuError>
 
 }

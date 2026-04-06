@@ -23,8 +23,8 @@
 
 package dev.pthomain.android.dejavu.demo.presenter
 
-import dev.pthomain.android.boilerplate.core.utils.log.Logger
-import dev.pthomain.android.boilerplate.core.utils.log.SimpleLogger
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.demo.AndroidLogger
 import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
 import dev.pthomain.android.dejavu.cache.metadata.response.Empty
 import dev.pthomain.android.dejavu.cache.metadata.response.Response
@@ -60,7 +60,7 @@ internal class DemoPresenter(
         private val onLogOutput: (String) -> Unit
 ) {
 
-    private val logger: Logger = SimpleLogger(true, activity.packageName)
+    private val logger: Logger = AndroidLogger(activity.packageName)
     private val dejaVuFactory = DejaVuFactory(logger, activity)
     private val disposables = CompositeDisposable()
 

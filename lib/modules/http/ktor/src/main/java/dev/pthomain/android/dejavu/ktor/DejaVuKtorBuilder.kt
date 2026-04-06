@@ -24,7 +24,7 @@
 package dev.pthomain.android.dejavu.ktor
 
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
 
 /**
  * Builder for creating DejaVuKtor instances.

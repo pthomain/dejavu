@@ -23,10 +23,16 @@
 
 package dev.pthomain.android.dejavu.retrofit
 
+import android.content.Context
+import dev.pthomain.android.dejavu.DejaVu
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.persistence.PersistenceManager
 import dev.pthomain.android.dejavu.retrofit.configuration.DejaVuRetrofitBuilder
 import dev.pthomain.android.dejavu.retrofit.interceptors.HeaderInterceptor
-import dev.pthomain.android.glitchy.core.interceptor.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.utils.Logger
+import dev.pthomain.android.dejavu.utils.SilentLogger
 import retrofit2.CallAdapter
 
 /**
@@ -46,5 +52,36 @@ class DejaVuRetrofit<E> internal constructor(
             where E : Throwable,
                   E : NetworkErrorPredicate =
             DejaVuRetrofitBuilder<E>()
+
+        /**
+         * Convenience builder that creates a DejaVuRetrofit instance directly
+         * from the core dependencies, without requiring a separate DejaVuBuilder step.
+         *
+         * @param context the Android context
+         * @param errorFactory the factory for creating error instances
+         * @param persistenceManagerProvider the persistence backend provider
+         * @param logger the logger instance
+         * @return a DejaVuRetrofitBuilder ready to build
+         */
+        /**
+         * Convenience builder that creates a DejaVuRetrofit instance directly
+         * from the core dependencies, without requiring a separate DejaVuBuilder step.
+         *
+         * @param context the Android context
+         * @param errorFactory the factory for creating error instances
+         * @param persistenceManagerProvider the persistence backend provider
+         * @param logger the logger instance
+         * @return a DejaVuRetrofitBuilder ready to build
+         */
+        fun <E> builder(
+            context: Context,
+            errorFactory: ErrorFactory<E>,
+            persistenceManagerProvider: PersistenceManager.ComponentProvider,
+            logger: Logger = SilentLogger
+        ): DejaVuRetrofitBuilder<E>
+            where E : Throwable,
+                  E : NetworkErrorPredicate =
+            DejaVu.builder(context, errorFactory, persistenceManagerProvider, logger)
+                .extend(DejaVuRetrofitBuilder())
     }
 }
