@@ -36,6 +36,7 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:name="dev.pthomain.android.dejavu.demo.DemoActivity"
+            android:exported="true"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
