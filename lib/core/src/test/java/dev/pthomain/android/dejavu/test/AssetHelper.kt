@@ -55,7 +55,6 @@ class AssetHelper(private val assetsFolder: String,
                                             instruction,
                                             FRESH,
                                             NOW,
-                                            NOW,
                                             NOW
                                     )
                                 },
@@ -66,7 +65,7 @@ class AssetHelper(private val assetsFolder: String,
     fun flowFile(fileName: String): Flow<String> =
             File(assetsFolder + fileName).let { file ->
                 flow {
-                    FileInputStream(file).useAndLogError { stream ->
+                    FileInputStream(file).use { stream ->
                         emit(fileToString(stream))
                     }
                 }
@@ -74,7 +73,7 @@ class AssetHelper(private val assetsFolder: String,
 
     @Throws(IOException::class)
     private fun fileToString(inputStream: InputStream) =
-            BufferedReader(InputStreamReader(inputStream, "UTF-8")).useAndLogError({ reader ->
+            BufferedReader(InputStreamReader(inputStream, "UTF-8")).use { reader ->
                 val builder = StringBuilder()
                 var line: String?
                 do {
@@ -85,6 +84,6 @@ class AssetHelper(private val assetsFolder: String,
                     }
                 } while (line != null)
                 builder.toString()
-            })
+            }
 
 }

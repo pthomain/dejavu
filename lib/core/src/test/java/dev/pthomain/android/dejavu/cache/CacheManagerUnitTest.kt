@@ -123,7 +123,7 @@ class CacheManagerUnitTest {
 
         val operation = Cache(
                 durationInSeconds = 3600,
-                priority = dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.OFFLINE_FIRST
+                priority = dev.pthomain.android.dejavu.cache.metadata.token.instruction.operation.CachePriority.OFFLINE_STALE_ACCEPTED
         )
         val instruction = createCacheInstruction(operation)
         val token = RequestToken(instruction, INSTRUCTION, now)
