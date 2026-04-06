@@ -23,17 +23,27 @@
 
 package dev.pthomain.android.dejavu.ktor
 
+import dev.pthomain.android.dejavu.cache.metadata.response.DejaVuResult
+import dev.pthomain.android.dejavu.cache.metadata.token.instruction.PlainRequestMetadata
+import dev.pthomain.android.dejavu.error.ErrorFactory
+import dev.pthomain.android.dejavu.error.Outcome
 import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
-import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.api.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import java.lang.reflect.ParameterizedType
 
 /**
  * Configuration for the DejaVu Ktor client plugin.
  *
  * @property interceptorFactory the DejaVuInterceptor.Factory used to create interceptors
  *     for caching. Must be set before the plugin is installed.
+ * @property errorFactory the ErrorFactory used to convert exceptions to the appropriate
+ *     error type. Must be set before the plugin is installed.
  */
 class DejaVuPluginConfig {
     var interceptorFactory: DejaVuInterceptor.Factory<*>? = null
+    var errorFactory: ErrorFactory<*>? = null
 }
 
 /**
@@ -43,11 +53,18 @@ class DejaVuPluginConfig {
  * and applies the DejaVu caching interceptor chain. Requests without cache
  * attributes pass through unmodified.
  *
+ * The plugin uses [transformResponseBody] to intercept responses when the caller
+ * expects a [DejaVuResult] type. It wraps the already-fetched response body in
+ * an [Outcome.Success], feeds it through the DejaVu interceptor chain (which
+ * handles cache storage, staleness checks, and metadata decoration), and returns
+ * the resulting [DejaVuResult].
+ *
  * Usage:
  * ```
  * val client = HttpClient {
  *     install(DejaVuPlugin) {
  *         interceptorFactory = dejaVu.interceptorFactory
+ *         errorFactory = myErrorFactory
  *     }
  * }
  *
@@ -58,37 +75,66 @@ class DejaVuPluginConfig {
  * }
  * ```
  *
- * The plugin currently intercepts at the Send phase and checks for cache
- * attributes on each request. Full cache integration (serving from cache,
- * storing responses) requires the DejaVuInterceptor chain to be wired through
- * the response pipeline.
- *
- * TODO: Implement full response body interception for cache storage and retrieval.
- * The current implementation passes through to the network and marks requests
- * for cache processing. A complete implementation would:
- * 1. Check the cache before making a network request
- * 2. Serve cached responses when appropriate (based on priority)
- * 3. Store network responses in the cache
- * 4. Emit both cached and fresh responses for STALE_ACCEPTED_FIRST priority
+ * For stale-then-fresh patterns (where the Flow emits multiple values),
+ * use [cachedFlow] from [DejaVuKtor] instead of the plugin's single-shot
+ * response transformation.
  */
 val DejaVuPlugin = createClientPlugin("DejaVu", ::DejaVuPluginConfig) {
     val interceptorFactory = pluginConfig.interceptorFactory
-        ?: throw IllegalStateException(
+        ?: error(
             "DejaVuPlugin requires an interceptorFactory. " +
                 "Set it via: install(DejaVuPlugin) { interceptorFactory = ... }"
         )
+    val errorFactory = pluginConfig.errorFactory
+        ?: error(
+            "DejaVuPlugin requires an errorFactory. " +
+                "Set it via: install(DejaVuPlugin) { errorFactory = ... }"
+        )
 
-    onRequest { request, _ ->
-        val cacheOperation = request.attributes.getOrNull(DejaVuCacheAttribute)
-        if (cacheOperation != null) {
-            // The cache operation is attached to the request attributes.
-            // It will be read by the response handling phase to apply caching.
-            // For now, we just ensure the attribute is propagated.
-        }
+    /**
+     * Transform response bodies when the caller requests a [DejaVuResult] type.
+     *
+     * This hook fires after the network response has been received. When the request
+     * was marked with cache attributes and the caller expects a [DejaVuResult], the
+     * response body is routed through DejaVu's interceptor chain (which handles
+     * caching, staleness checks, and metadata decoration).
+     */
+    transformResponseBody { response, body, requestedType ->
+        val operation = response.request.attributes.getOrNull(DejaVuCacheAttribute)
+
+        if (operation != null && requestedType.type == DejaVuResult::class) {
+            // Extract the inner type T from DejaVuResult<T>
+            val innerType = (requestedType.reifiedType as? ParameterizedType)
+                ?.actualTypeArguments?.firstOrNull()
+
+            if (innerType != null) {
+                val responseClass = (innerType as? Class<*>) ?: Any::class.java
+                val url = response.request.url.toString()
+
+                val requestMetadata = PlainRequestMetadata(
+                    responseClass = responseClass,
+                    url = url,
+                    requestBody = null
+                )
+
+                @Suppress("UNCHECKED_CAST")
+                val typedInterceptorFactory = interceptorFactory
+                    as DejaVuInterceptor.Factory<Nothing>
+
+                val interceptor = typedInterceptorFactory.create(
+                    asResult = true,
+                    operation = operation,
+                    requestMetadata = requestMetadata as PlainRequestMetadata<Any>
+                )
+
+                // Wrap the already-fetched body in an Outcome and create an upstream Flow
+                val upstream = flowOf(Outcome.Success(body) as Any)
+
+                // Apply DejaVu's interceptor chain and collect the first result.
+                // Note: this only returns the first emission. For stale-then-fresh
+                // patterns that emit multiple values, use cachedFlow() instead.
+                interceptor.intercept(upstream).first()
+            } else null
+        } else null
     }
-
-    // TODO: Implement transformResponseBody to intercept and cache responses.
-    // This requires converting the Ktor response pipeline to work with
-    // DejaVuInterceptor's Observable-based API, or adapting it to work
-    // with suspend functions directly.
 }

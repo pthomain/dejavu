@@ -48,8 +48,8 @@ android {
 dependencies {
     compileOnly project(':lib:core')
 
-    implementation appDependencies.ktorClientCore
-    implementation appDependencies.ktorClientContentNegotiation
-    implementation appDependencies.ktorSerializationJson
-    implementation appDependencies.kotlinCoroutines
+    implementation libs.ktor.client.core
+    implementation libs.ktor.client.content.negotiation
+    implementation libs.ktor.serialization.json
+    implementation libs.kotlinx.coroutines.core
 }

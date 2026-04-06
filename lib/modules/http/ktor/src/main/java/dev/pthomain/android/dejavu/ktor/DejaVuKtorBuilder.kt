@@ -23,16 +23,18 @@
 
 package dev.pthomain.android.dejavu.ktor
 
-import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
+import dev.pthomain.android.dejavu.error.ErrorFactory
 import dev.pthomain.android.dejavu.error.NetworkErrorPredicate
+import dev.pthomain.android.dejavu.interceptors.DejaVuInterceptor
 
 /**
- * Builder for creating DejaVuKtor instances.
+ * Builder for creating [DejaVuKtor] instances.
  *
  * Usage:
  * ```
  * val dejaVuKtor = DejaVuKtorBuilder<MyError>()
  *     .withInterceptorFactory(dejaVu.interceptorFactory)
+ *     .withErrorFactory(myErrorFactory)
  *     .build()
  * ```
  *
@@ -43,6 +45,7 @@ class DejaVuKtorBuilder<E>
           E : NetworkErrorPredicate {
 
     private var interceptorFactory: DejaVuInterceptor.Factory<E>? = null
+    private var errorFactory: ErrorFactory<E>? = null
 
     /**
      * Sets the DejaVuInterceptor.Factory to use for caching.
@@ -54,16 +57,29 @@ class DejaVuKtorBuilder<E>
     }
 
     /**
-     * Builds a DejaVuKtor instance.
+     * Sets the ErrorFactory to use for converting exceptions.
      *
-     * @throws IllegalStateException if interceptorFactory has not been set
+     * @param factory the error factory
+     */
+    fun withErrorFactory(factory: ErrorFactory<E>) = apply {
+        this.errorFactory = factory
+    }
+
+    /**
+     * Builds a [DejaVuKtor] instance.
+     *
+     * @throws IllegalStateException if interceptorFactory or errorFactory has not been set
      */
     fun build(): DejaVuKtor<E> {
         val factory = interceptorFactory
             ?: throw IllegalStateException(
                 "interceptorFactory must be set via withInterceptorFactory()"
             )
+        val errors = errorFactory
+            ?: throw IllegalStateException(
+                "errorFactory must be set via withErrorFactory()"
+            )
 
-        return DejaVuKtor(factory)
+        return DejaVuKtor(factory, errors)
     }
 }
